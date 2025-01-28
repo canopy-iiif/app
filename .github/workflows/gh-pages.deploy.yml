@@ -32,7 +32,7 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build:static
+        run: npm run build
 
       - name: Bypass Jekyll
         run: touch ./out/.nojekyll
