@@ -21,9 +21,9 @@
  */
 
 import { createRequire } from "node:module";
-import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { spawn } from "node:child_process";
 
 /** Logging helpers */
 
@@ -189,7 +189,10 @@ async function main() {
       await api.build();
       log("Build complete");
       // Optional CI verification if enabled via env
-      if (process.env.CANOPY_VERIFY === "1" || process.env.CANOPY_VERIFY === "true") {
+      if (
+        process.env.CANOPY_VERIFY === "1" ||
+        process.env.CANOPY_VERIFY === "true"
+      ) {
         verifyBuildOutput(process.env.CANOPY_OUT_DIR || "site");
       }
     }
@@ -210,7 +213,7 @@ main().catch((e) => {
   process.exit(1);
 });
 
-// ---- Build verification (moved from packages/helpers/verify-build.js) --------
+/** Verify build output */
 
 function verifyBuildOutput(outDir = "site") {
   const root = path.resolve(outDir);

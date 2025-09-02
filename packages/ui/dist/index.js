@@ -36,9 +36,9 @@ function Fallback({ name, ...props }) {
 
 // src/HelloWorld.jsx
 import React4 from "react";
-function HelloWorld() {
+var HelloWorld = () => {
   return /* @__PURE__ */ React4.createElement("div", null, "Hello, World!");
-}
+};
 export {
   Fallback,
   HelloWorld,
