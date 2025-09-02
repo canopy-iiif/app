@@ -13,6 +13,11 @@ Thank you for contributing to Canopy. This repository is a monorepo with a priva
 - Build once: `npm run build`
 - Dev server (watch + live reload): `npm run dev` (serves `site/` at `http://localhost:3000`)
 
+Entrypoint
+- Both commands call `node app/scripts/index.mjs`.
+- In dev, it starts the UI watcher (`@canopy-iiif/ui`) and the library dev server.
+- In build, it builds UI assets once and then builds the site with the library.
+
 ## Versioning
 
 - Semver: patch = fixes/internal, minor = features, major = breaking.
@@ -37,7 +42,7 @@ Thank you for contributing to Canopy. This repository is a monorepo with a priva
 This repo is the source for a separate template repository:
 - Pushing to `main` triggers `.github/workflows/release-and-template.yml`.
 - After a successful publish, the workflow prepares a clean template (excludes dev‑only paths) and force‑pushes it to `canopy-iiif/template`.
-- In the template, dependencies on `@canopy-iiif/*` are set to the latest published versions.
+- In the template, dependencies on `@canopy-iiif/*` are set to the latest published versions and `build`/`dev` run `node app/scripts/index.mjs`.
 
 ## Pull Requests
 - Keep PRs focused and small. Include rationale and test plan.

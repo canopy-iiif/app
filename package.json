@@ -1,15 +1,15 @@
 {
   "name": "@canopy-iiif/app",
-  "version": "0.4.5",
+  "version": "0.5.0",
   "description": "",
   "private": true,
-  "main": "index.js",
+  "main": "app/scripts/index.mjs",
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "build": "npm -w @canopy-iiif/ui run build && node -e \"require('@canopy-iiif/lib').build()\"",
-    "dev": "npm -w @canopy-iiif/ui run watch & node -e \"require('@canopy-iiif/lib').dev()\"",
+    "build": "node app/scripts/index.mjs",
+    "dev": "node app/scripts/index.mjs",
     "test": "echo \"No tests yet\" && exit 0",
     "changeset": "changeset",
     "version:packages": "node packages/helpers/version-bump.js",

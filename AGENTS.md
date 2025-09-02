@@ -3,23 +3,30 @@
 This repository is a minimal Node.js project. Use this guide to add code and grow the project consistently and safely.
 
 ## Project Structure & Module Organization
-- `src/`: application code (entrypoint `src/index.js`).
-- `tests/`: unit tests and fixtures.
-- `assets/`: static files if needed.
-- `packages/helpers/`: local tooling and maintenance scripts (kept out of root).
-- Root: `package.json`, `.gitignore`, docs.
+- `app/`: app entry and styles
+  - `app/scripts/index.mjs`: single stable entry for dev/build (orchestrates UI + lib)
+  - `app/styles/`: optional app CSS
+- `content/`: MDX pages and section layouts
+- `assets/`: static files copied into `site/`
+- `packages/`: workspaces
+  - `packages/lib` (`@canopy-iiif/lib`): builder (CommonJS) exposing `build()` and `dev()`
+  - `packages/ui` (`@canopy-iiif/ui`): UI runtime assets (bundled by esbuild)
+  - `packages/helpers`: maintenance scripts
+- Root: `package.json`, `.gitignore`, `.github/workflows/*`, docs
 
 ## Build, Test, and Development Commands
 - `npm install`: install dependencies.
-- `npm test`: currently a placeholder; configure a real test runner before use.
-- Run locally: `node src/index.js` (after creating the entry file).
+- `npm run dev`: starts UI watcher and dev server (port 3000).
+- `npm run build`: builds UI assets, then the static site to `site/`.
+- `npm test`: placeholder; configure a real test runner before use.
 
-Recommended scripts to add in `package.json`:
+Recommended scripts in `package.json`:
 ```json
 {
   "scripts": {
-    "dev": "node src/index.js",
-    "test": "jest --runInBand",
+    "dev": "node app/scripts/index.mjs",
+    "build": "node app/scripts/index.mjs",
+    "test": "echo \"No tests yet\" && exit 0",
     "lint": "eslint .",
     "format": "prettier -w ."
   }
@@ -80,7 +87,7 @@ Goal: Allow authors to fully compose the search page via MDX, while the builder 
 
 ## Helpers Package and Root Cleanliness
 
-- Keep the repository root clean. Do not add a top-level `scripts/` folder.
+- Keep the repository root clean. Do not add ad-hoc top-level `scripts/`.
 - All helper scripts live under `packages/helpers/`.
 - Examples:
   - Release guard: `node packages/helpers/guard-publish.js`
@@ -122,13 +129,13 @@ Goal: Allow authors to fully compose the search page via MDX, while the builder 
 - Release guard: `node packages/helpers/guard-publish.js`
 - Build verification: `node packages/helpers/verify-build.js`
 
--## Release and Template Workflow
+--## Release and Template Workflow
 
 - Strategy: releases are published via Changesets; only after a successful publish does the workflow prepare and force‑push a clean template to `canopy-iiif/template`.
 - Trigger: `.github/workflows/release-and-template.yml` runs on `push` to `main` (and can be dispatched manually). It uses `changesets/action` to publish and exposes whether a release occurred; the template push runs only when a publish happened.
-- What it does:
+-- What it does:
   - Copies the repo into `dist-template/`, excluding dev‑only paths (e.g., `.git`, `node_modules`, `packages`, `.cache`, `.changeset`, template workflows, agent docs).
-  - Rewrites `dist-template/package.json` to remove workspaces, swap `workspace:*` deps for published versions of `@canopy-iiif/lib` and `@canopy-iiif/ui`, and set `build`/`dev` scripts to use the lib directly.
+  - Rewrites `dist-template/package.json` to remove workspaces, swap `workspace:*` deps for published versions of `@canopy-iiif/lib` and `@canopy-iiif/ui`, and set `build`/`dev` scripts to run `node app/scripts/index.mjs`.
   - Patches the Pages deploy workflow in the template to inline the build verify step (no helpers package there).
   - Force‑pushes the result to `main` of `${OWNER}/template` (org: `canopy-iiif`).
 - Setup required:

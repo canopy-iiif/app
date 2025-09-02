@@ -1,5 +1,11 @@
 # @canopy-iiif/lib
 
+## 0.5.0
+
+### Minor Changes
+
+- chore: version bump (minor) via helper script.
+
 ## 0.4.5
 
 ### Patch Changes
