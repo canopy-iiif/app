@@ -21,6 +21,27 @@ jobs:
           node-version: '20'
           registry-url: https://registry.npmjs.org
           cache: 'npm'
+          scope: '@canopy-iiif'
+          always-auth: true
+
+      - name: Verify npm token present
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NPM_TOKEN" ]; then
+            echo "Missing NPM_TOKEN secret in repository settings" >&2
+            exit 1
+          fi
+
+      - name: Authenticate to npm
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+          echo "always-auth=true" >> ~/.npmrc
+          echo "@canopy-iiif:registry=https://registry.npmjs.org/" >> ~/.npmrc
+          npm config get registry
+          npm whoami || true
 
       - name: Install dependencies
         run: |
@@ -36,6 +57,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   template:
     needs: release
@@ -98,4 +120,3 @@ jobs:
           git commit -m "Update template from app/main (post-release)"
           git remote add origin "https://x-access-token:${TEMPLATE_PUSH_TOKEN}@github.com/${TARGET_REPO}.git"
           git push --force origin main
-
