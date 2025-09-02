@@ -1,4 +1,4 @@
-# Canopy IIIF App
+# Canopy IIIF
 
 [![Deploy to GitHub Pages](https://github.com/canopy-iiif/app/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/canopy-iiif/app/actions/workflows/deploy-pages.yml)
 
