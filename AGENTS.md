@@ -122,10 +122,10 @@ Goal: Allow authors to fully compose the search page via MDX, while the builder 
 - Release guard: `node packages/helpers/guard-publish.js`
 - Build verification: `node packages/helpers/verify-build.js`
 
-## Template Workflow
+-## Release and Template Workflow
 
-- Strategy: this repo (`app`) prepares a clean template and force‑pushes it to a separate repo `template` on every push to `main`.
-- Trigger: `.github/workflows/template.yml` runs on `push` to `main`.
+- Strategy: releases are published via Changesets; only after a successful publish does the workflow prepare and force‑push a clean template to `canopy-iiif/template`.
+- Trigger: `.github/workflows/release-and-template.yml` runs on `push` to `main` (and can be dispatched manually). It uses `changesets/action` to publish and exposes whether a release occurred; the template push runs only when a publish happened.
 - What it does:
   - Copies the repo into `dist-template/`, excluding dev‑only paths (e.g., `.git`, `node_modules`, `packages`, `.cache`, `.changeset`, template workflows, agent docs).
   - Rewrites `dist-template/package.json` to remove workspaces, swap `workspace:*` deps for published versions of `@canopy-iiif/lib` and `@canopy-iiif/ui`, and set `build`/`dev` scripts to use the lib directly.

@@ -12,7 +12,7 @@
     "dev": "npm -w @canopy-iiif/ui run watch & node -e \"require('@canopy-iiif/lib').dev()\"",
     "test": "echo \"No tests yet\" && exit 0",
     "changeset": "changeset",
-    "version:packages": "changeset version",
+    "version:packages": "node packages/helpers/version-bump.js",
     "release": "node packages/helpers/guard-publish.js && changeset publish"
   },
   "dependencies": {

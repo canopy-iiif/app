@@ -1,14 +1,45 @@
-name: Update template branch
+name: Release and Template
 
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  build-template:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: https://registry.npmjs.org
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm config set fund false
+          npm config set audit false
+          npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+
+      - name: Changesets release
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          publish: npm run release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  template:
+    needs: release
+    if: needs.release.result == 'success' && needs.release.outputs.published == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -20,20 +51,16 @@ jobs:
           node-version: 20
           registry-url: https://registry.npmjs.org
 
-      - name: Resolve published @canopy-iiif/lib version
-        id: ver_lib
+      - name: Resolve published versions
+        id: ver
         run: |
-          echo "VERSION=$(npm view @canopy-iiif/lib version || echo '')" >> $GITHUB_OUTPUT
-
-      - name: Resolve published @canopy-iiif/ui version
-        id: ver_ui
-        run: |
-          echo "VERSION=$(npm view @canopy-iiif/ui version || echo '')" >> $GITHUB_OUTPUT
+          echo "LIB=$(npm view @canopy-iiif/lib version || echo '')" >> $GITHUB_OUTPUT
+          echo "UI=$(npm view @canopy-iiif/ui version || echo '')" >> $GITHUB_OUTPUT
 
       - name: Prepare clean template
         env:
-          LIB_VERSION: ${{ steps.ver_lib.outputs.VERSION }}
-          UI_VERSION: ${{ steps.ver_ui.outputs.VERSION }}
+          LIB_VERSION: ${{ steps.ver.outputs.LIB }}
+          UI_VERSION: ${{ steps.ver.outputs.UI }}
         run: |
           rm -rf dist-template
           mkdir -p dist-template
@@ -46,6 +73,7 @@ jobs:
             --exclude ".changeset" \
             --exclude ".github/workflows/template.yml" \
             --exclude ".github/workflows/retarget-pr-base.yml" \
+            --exclude ".github/workflows/release-and-template.yml" \
             ./ dist-template/
 
           node -e "const fs=require('fs');const p='dist-template/package.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));const vLib=process.env.LIB_VERSION||'';const vUi=process.env.UI_VERSION||'';if(j.dependencies){if(j.dependencies['@canopy-iiif/lib']) j.dependencies['@canopy-iiif/lib']=vLib?('^'+vLib):'*'; if(j.dependencies['@canopy-iiif/ui']) j.dependencies['@canopy-iiif/ui']=vUi?('^'+vUi):'*'; for(const k of Object.keys(j.dependencies)){ if(j.dependencies[k]==='workspace:*') j.dependencies[k]='*'; }} if(j.workspaces) delete j.workspaces; j.scripts=j.scripts||{}; j.scripts.build='node -e \\\"require(\\\\\\'@canopy-iiif/lib\\\\\\').build()\\\"'; j.scripts.dev='node -e \\\"require(\\\\\\'@canopy-iiif/lib\\\\\\').dev()\\\"'; j.devDependencies=j.devDependencies||{}; if(!j.devDependencies.esbuild) j.devDependencies.esbuild='^0.21.4'; fs.writeFileSync(p, JSON.stringify(j,null,2));"
@@ -64,9 +92,10 @@ jobs:
           fi
           cd dist-template
           git init -b main
-          git config user.name "Mat Jordan"
-          git config user.email "mat@northwestern.edu"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
-          git commit -m "Update template from app/main"
+          git commit -m "Update template from app/main (post-release)"
           git remote add origin "https://x-access-token:${TEMPLATE_PUSH_TOKEN}@github.com/${TARGET_REPO}.git"
           git push --force origin main
+
