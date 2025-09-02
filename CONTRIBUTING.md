@@ -13,25 +13,31 @@ Thank you for contributing to Canopy. This repository is a monorepo with a priva
 - Build once: `npm run build`
 - Dev server (watch + live reload): `npm run dev` (serves `site/` at `http://localhost:3000`)
 
-## Versioning & Releases (Changesets)
-We version root and library together.
-1. Create a changeset: `npm run changeset` (select bump type).
-2. Apply versions: `npm run version:packages` (updates versions and changelogs). Commit the changes.
-3. Publish library: `npm run release`
-   - Runs `scripts/guard-publish.js` (root app must be private; only `@canopy-iiif/lib` publishable).
-   - Runs `changeset publish` (publishes changed, non‑private packages).
+## Versioning
 
-## Publishing Setup
-- NPM auth (local): `npm login` with access to `@canopy-iiif` org.
-- NPM auth (CI): set `NPM_TOKEN` and run `npm config set //registry.npmjs.org/:_authToken $NPM_TOKEN` before `npm run release`.
-- Library config: `packages/lib/package.json` has `publishConfig.access: public`.
+- Semver: patch = fixes/internal, minor = features, major = breaking.
+- Command: `npm run version:packages` with a bump flag:
+  - Minor: `npm run version:packages -- --minor`
+  - Patch: `npm run version:packages`
+  - Major: `npm run version:packages -- --major`
+- Scope: `@canopy-iiif/lib` and `@canopy-iiif/ui` version together; the root app stays private and auto‑syncs its version.
+- Don’t hand‑edit versions or changelogs; the script and Changesets handle it.
 
-## Template Branch Workflow
-This repo is the source of a GitHub Template:
-- Pushing to `main` triggers `.github/workflows/template.yml`.
-- The workflow builds a clean template (excludes `packages/`, `.cache/`, `node_modules/`).
-- It rewrites the root dependency to use the latest published `@canopy-iiif/lib` version.
-- The result force‑pushes to the `template` branch. Mark the repo as a Template and set default branch to `template` for best UX.
+## Release Flow
+
+- Open a PR with changes and get approval.
+- Run the version bump command and commit:
+  - Commit updated `package.json` and `CHANGELOG.md` files.
+- Merge to `main`. The Release workflow:
+  - Publishes `@canopy-iiif/lib` and `@canopy-iiif/ui` to npm.
+  - Keeps the root app private (guarded by a pre‑publish check).
+  - If a publish happened, prepares and pushes a cleaned template repository.
+
+## Template Workflow
+This repo is the source for a separate template repository:
+- Pushing to `main` triggers `.github/workflows/release-and-template.yml`.
+- After a successful publish, the workflow prepares a clean template (excludes dev‑only paths) and force‑pushes it to `canopy-iiif/template`.
+- In the template, dependencies on `@canopy-iiif/*` are set to the latest published versions.
 
 ## Pull Requests
 - Keep PRs focused and small. Include rationale and test plan.

@@ -18,30 +18,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
           registry-url: https://registry.npmjs.org
-          cache: 'npm'
-          scope: '@canopy-iiif'
+          cache: "npm"
+          scope: "@canopy-iiif"
           always-auth: true
-
-      - name: Verify npm token present
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          if [ -z "$NPM_TOKEN" ]; then
-            echo "Missing NPM_TOKEN secret in repository settings" >&2
-            exit 1
-          fi
-
-      - name: Authenticate to npm
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
-          echo "always-auth=true" >> ~/.npmrc
-          echo "@canopy-iiif:registry=https://registry.npmjs.org/" >> ~/.npmrc
-          npm config get registry
-          npm whoami || true
 
       - name: Install dependencies
         run: |
