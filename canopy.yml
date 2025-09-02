@@ -1,5 +1,5 @@
 collection:
-  uri: https://iiif.archive.org/iiif/3/abolition-now-images/collection.json
+  uri: https://api.dc.library.northwestern.edu/api/v2/collections/cd92fb8d-76a7-4e72-be0f-78a5839caa89?as=iiif
 iiif:
   # Max number of manifests to process per chunk
   chunkSize: 20

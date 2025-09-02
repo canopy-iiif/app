@@ -1,6 +1,6 @@
 # Canopy IIIF App
 
-[![Deploy to GitHub Pages](https://github.com/mathewjordan/can/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/mathewjordan/can/actions/workflows/deploy-pages.yml)
+[![Deploy to GitHub Pages](https://github.com/canopy-iiif/app/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/canopy-iiif/app/actions/workflows/deploy-pages.yml)
 
 Static site generator powered by MDX and IIIF. Use `@canopy-iiif/lib` to build content from `content/` and generate HTML in `site/`.
 
@@ -99,11 +99,6 @@ Notes:
 - Enable Pages: in repository Settings → Pages → set Source to "GitHub Actions" (or use the workflow’s automatic enablement if allowed).
 - Trigger: pushes to `main` (or run manually via Actions → "Deploy to GitHub Pages").
 - Output: the workflow uploads the `site/` folder as the Pages artifact and deploys it.
-- Live site URL:
-
-<!-- PAGES_URL_START -->
-
-Live: https://mathewjordan.github.io/can/
 
 <!-- PAGES_URL_END -->
 
@@ -111,6 +106,18 @@ Live: https://mathewjordan.github.io/can/
   - `canopy.yml` → `iiif.chunkSize`, `iiif.concurrency` to control fetch/build parallelism.
   - Env overrides (in workflow): `CANOPY_CHUNK_SIZE`, `CANOPY_FETCH_CONCURRENCY`, and `CANOPY_COLLECTION_URI` (use a small collection for faster CI).
 - Project Pages base path: links currently use absolute `/…`. If deploying under `/<repo>` you may want base‑path aware links; open an issue if you want this wired in.
+
+## Template Workflow
+
+- This repository (`app`) maintains a separate template repository (`template`).
+- On push to `main`, `.github/workflows/template.yml` builds a clean template and force‑pushes it to `canopy-iiif/template` (branch `main`).
+- The workflow:
+  - Excludes dev‑only paths (`.git`, `node_modules`, `packages`, `.cache`, `.changeset`, internal workflows/docs).
+  - Rewrites `package.json` to remove workspaces and depend on published `@canopy-iiif/lib`/`@canopy-iiif/ui` versions; sets `build`/`dev` scripts to call the lib directly.
+  - Patches the template’s deploy workflow to include an inline “verify HTML generated” step.
+- Setup:
+  - Create the `template` repo under the `canopy-iiif` org (or your chosen owner) and add a `TEMPLATE_PUSH_TOKEN` secret (PAT with repo write access) to this repo’s secrets.
+  - Optionally mark `template` as a Template repository so users can click “Use this template”.
 
 ## Contributing
 

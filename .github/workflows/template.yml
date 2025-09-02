@@ -21,13 +21,19 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - name: Resolve published @canopy-iiif/lib version
-        id: ver
+        id: ver_lib
         run: |
           echo "VERSION=$(npm view @canopy-iiif/lib version || echo '')" >> $GITHUB_OUTPUT
 
+      - name: Resolve published @canopy-iiif/ui version
+        id: ver_ui
+        run: |
+          echo "VERSION=$(npm view @canopy-iiif/ui version || echo '')" >> $GITHUB_OUTPUT
+
       - name: Prepare clean template
         env:
-          VERSION: ${{ steps.ver.outputs.VERSION }}
+          LIB_VERSION: ${{ steps.ver_lib.outputs.VERSION }}
+          UI_VERSION: ${{ steps.ver_ui.outputs.VERSION }}
         run: |
           rm -rf dist-template
           mkdir -p dist-template
@@ -42,18 +48,25 @@ jobs:
             --exclude ".github/workflows/retarget-pr-base.yml" \
             ./ dist-template/
 
-          node -e "const fs=require('fs');const v=process.env.VERSION||'';const p='dist-template/package.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));if(j.dependencies&&j.dependencies['@canopy-iiif/lib']){j.dependencies['@canopy-iiif/lib']=v?('^'+v):'*'}fs.writeFileSync(p,JSON.stringify(j,null,2))"
+          node -e "const fs=require('fs');const p='dist-template/package.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));const vLib=process.env.LIB_VERSION||'';const vUi=process.env.UI_VERSION||'';if(j.dependencies){if(j.dependencies['@canopy-iiif/lib']) j.dependencies['@canopy-iiif/lib']=vLib?('^'+vLib):'*'; if(j.dependencies['@canopy-iiif/ui']) j.dependencies['@canopy-iiif/ui']=vUi?('^'+vUi):'*'; for(const k of Object.keys(j.dependencies)){ if(j.dependencies[k]==='workspace:*') j.dependencies[k]='*'; }} if(j.workspaces) delete j.workspaces; j.scripts=j.scripts||{}; j.scripts.build='node -e \\\"require(\\\\\\'@canopy-iiif/lib\\\\\\').build()\\\"'; j.scripts.dev='node -e \\\"require(\\\\\\'@canopy-iiif/lib\\\\\\').dev()\\\"'; j.devDependencies=j.devDependencies||{}; if(!j.devDependencies.esbuild) j.devDependencies.esbuild='^0.21.4'; fs.writeFileSync(p, JSON.stringify(j,null,2));"
 
-      - name: Push to template branch
+          # Update Pages workflow verify step (no helpers in template)
+          node -e "const fs=require('fs'),path='dist-template/.github/workflows/deploy-pages.yml'; if(fs.existsSync(path)){ let y=fs.readFileSync(path,'utf8'); y=y.replace(/node packages\\/helpers\\/verify-build\\.js/g, 'node -e \\\"const fs=require(\\\\\\'fs\\\\\\'),p=\\\\\\'site\\\\\\',path=require(\\\\\\'path\\\\\\');function hasHtml(d){if(!fs.existsSync(d))return false;for(const e of fs.readdirSync(d,{withFileTypes:true})){const fp=path.join(d,e.name);if(e.isDirectory()){if(hasHtml(fp))return true;} else if(e.isFile()&&e.name.toLowerCase().endsWith(\\\\\\'.html\\\\\\')) return true;}return false;}if(!hasHtml(p)){console.error(\\\\\\'No HTML pages generated\\\\\\');process.exit(1);}\\\"'); fs.writeFileSync(path, y); }"
+
+      - name: Push to template repository (main)
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TEMPLATE_PUSH_TOKEN: ${{ secrets.TEMPLATE_PUSH_TOKEN }}
+          TARGET_REPO: ${{ github.repository_owner }}/template
         run: |
+          if [ -z "$TEMPLATE_PUSH_TOKEN" ]; then
+            echo "Missing TEMPLATE_PUSH_TOKEN secret with repo write access to $TARGET_REPO" >&2
+            exit 1
+          fi
           cd dist-template
           git init -b main
           git config user.name "Mat Jordan"
           git config user.email "mat@northwestern.edu"
           git add .
-          git commit -m "Create new template from main"
-          git branch -M template
-          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
-          git push --force origin template
+          git commit -m "Update template from app/main"
+          git remote add origin "https://x-access-token:${TEMPLATE_PUSH_TOKEN}@github.com/${TARGET_REPO}.git"
+          git push --force origin main

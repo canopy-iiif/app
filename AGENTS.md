@@ -122,6 +122,20 @@ Goal: Allow authors to fully compose the search page via MDX, while the builder 
 - Release guard: `node packages/helpers/guard-publish.js`
 - Build verification: `node packages/helpers/verify-build.js`
 
+## Template Workflow
+
+- Strategy: this repo (`app`) prepares a clean template and force‑pushes it to a separate repo `template` on every push to `main`.
+- Trigger: `.github/workflows/template.yml` runs on `push` to `main`.
+- What it does:
+  - Copies the repo into `dist-template/`, excluding dev‑only paths (e.g., `.git`, `node_modules`, `packages`, `.cache`, `.changeset`, template workflows, agent docs).
+  - Rewrites `dist-template/package.json` to remove workspaces, swap `workspace:*` deps for published versions of `@canopy-iiif/lib` and `@canopy-iiif/ui`, and set `build`/`dev` scripts to use the lib directly.
+  - Patches the Pages deploy workflow in the template to inline the build verify step (no helpers package there).
+  - Force‑pushes the result to `main` of `${OWNER}/template` (org: `canopy-iiif`).
+- Setup required:
+  - Create the `template` repository under the `canopy-iiif` org.
+  - Add a secret in this repo named `TEMPLATE_PUSH_TOKEN` (PAT with `repo` write access to `canopy-iiif/template`).
+  - Optional: mark `template` as a Template repository in GitHub settings.
+
 We index two sources: IIIF Manifests ("works") and static MDX pages ("pages"). Keep this simple and predictable.
 
 - Record shape: `{ id?, title, href, type }`
