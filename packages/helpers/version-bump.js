@@ -39,8 +39,42 @@ function run(cmd, args, opts) {
   const bump = parseArgs(process.argv);
   const created = writeChangeset(bump);
   // Apply versioning based on pending changesets (including the one we just wrote)
-  const bin = path.resolve('node_modules/.bin/changeset');
-  run(process.execPath, [bin, 'version']);
+  // Use the JS entry directly to avoid shell shim incompatibilities
+  let cli;
+  try {
+    cli = require.resolve('@changesets/cli/bin.js');
+  } catch (e) {
+    console.error('[version-bump] @changesets/cli not found. Install it as a devDependency.');
+    process.exit(1);
+  }
+  run(process.execPath, [cli, 'version']);
+
+  // Keep root app version in sync with fixed workspace packages
+  try {
+    const libPkgPath = path.resolve('packages/lib/package.json');
+    const uiPkgPath = path.resolve('packages/ui/package.json');
+    const libVersion = fs.existsSync(libPkgPath)
+      ? JSON.parse(fs.readFileSync(libPkgPath, 'utf8')).version
+      : null;
+    const uiVersion = fs.existsSync(uiPkgPath)
+      ? JSON.parse(fs.readFileSync(uiPkgPath, 'utf8')).version
+      : null;
+    const newVersion = libVersion || uiVersion;
+    if (!newVersion) throw new Error('Could not determine new version from lib/ui');
+
+    const rootPkgPath = path.resolve('package.json');
+    const rootPkg = JSON.parse(fs.readFileSync(rootPkgPath, 'utf8'));
+    const prev = rootPkg.version;
+    if (prev !== newVersion) {
+      rootPkg.version = newVersion;
+      fs.writeFileSync(rootPkgPath, JSON.stringify(rootPkg, null, 2) + '\n');
+      console.log(`[version-bump] Synced root version ${prev} -> ${newVersion}`);
+    } else {
+      console.log('[version-bump] Root version already matches', newVersion);
+    }
+  } catch (e) {
+    console.warn('[version-bump] Warning syncing root version:', e.message);
+  }
+
   console.log(`[version-bump] Applied ${bump} bump using ${path.basename(created)}`);
 })();
-
