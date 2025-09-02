@@ -1,6 +1,6 @@
 {
   "name": "@canopy-iiif/app",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "",
   "private": true,
   "main": "app/scripts/canopy-build.mjs",
@@ -11,9 +11,9 @@
     "build": "node app/scripts/canopy-build.mjs",
     "dev": "node app/scripts/canopy-build.mjs",
     "test": "echo \"No tests yet\" && exit 0",
-    "changeset": "changeset",
+    "changeset": "node packages/helpers/run-changeset.js",
     "version:packages": "node packages/helpers/version-bump.js",
-    "release": "node packages/helpers/guard-publish.js && changeset publish"
+    "release": "node packages/helpers/guard-publish.js && node packages/helpers/run-changeset.js publish"
   },
   "dependencies": {
     "@canopy-iiif/ui": "workspace:*",
@@ -21,12 +21,5 @@
     "@samvera/clover-iiif": "^3.0.0"
   },
   "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "@changesets/cli": "^2.27.1",
-    "@mdx-js/mdx": "^3.1.0",
-    "@mdx-js/react": "^3.1.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
-  }
+  "license": "MIT"
 }

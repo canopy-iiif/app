@@ -40,14 +40,8 @@ function run(cmd, args, opts) {
   const created = writeChangeset(bump);
   // Apply versioning based on pending changesets (including the one we just wrote)
   // Use the JS entry directly to avoid shell shim incompatibilities
-  let cli;
-  try {
-    cli = require.resolve('@changesets/cli/bin.js');
-  } catch (e) {
-    console.error('[version-bump] @changesets/cli not found. Install it as a devDependency.');
-    process.exit(1);
-  }
-  run(process.execPath, [cli, 'version']);
+  const runner = path.resolve('packages/helpers/run-changeset.js');
+  run(process.execPath, [runner, 'version']);
 
   // Keep root app version in sync with fixed workspace packages
   try {
