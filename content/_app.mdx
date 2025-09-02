@@ -1,0 +1,29 @@
+export const Head = () => (
+  <>
+    <meta name="theme-color" content="#111" />
+  </>
+);
+
+export default function App({ children }) {
+  return (
+    <>
+      <header className="site-header">
+        <a href="/" className="brand">Canopy IIIF</a>
+        <nav style={{ display: 'flex', gap: '0.75rem' }}>
+          <a href="/">Home</a>
+          <a href="/docs">Docs</a>
+          <a href="/search">Search</a>
+        </nav>
+      </header>
+
+      <main className="content">
+        {children}
+      </main>
+
+      <footer className="site-footer">
+        Built with Canopy
+      </footer>
+    </>
+
+);
+}
