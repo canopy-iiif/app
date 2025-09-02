@@ -22,6 +22,8 @@
 
 import { createRequire } from "node:module";
 import { spawn } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
 
 /** Logging helpers */
 
@@ -166,6 +168,12 @@ async function main() {
   const mode = getMode();
   log(`Mode: ${mode}`);
 
+  // Verification-only: allow CI to run `node app/scripts/canopy-build.mjs --verify`
+  if (new Set(process.argv.slice(2)).has("--verify")) {
+    verifyBuildOutput(process.env.CANOPY_OUT_DIR || "site");
+    return;
+  }
+
   // Prepare UI first so assets exist or watcher is running
   await prepareUi(mode);
 
@@ -180,6 +188,10 @@ async function main() {
       log("Building site...");
       await api.build();
       log("Build complete");
+      // Optional CI verification if enabled via env
+      if (process.env.CANOPY_VERIFY === "1" || process.env.CANOPY_VERIFY === "true") {
+        verifyBuildOutput(process.env.CANOPY_OUT_DIR || "site");
+      }
     }
   } finally {
     // Cleanup
@@ -197,3 +209,25 @@ main().catch((e) => {
   err(e && e.stack ? e.stack : e && e.message ? e.message : String(e));
   process.exit(1);
 });
+
+// ---- Build verification (moved from packages/helpers/verify-build.js) --------
+
+function verifyBuildOutput(outDir = "site") {
+  const root = path.resolve(outDir);
+  function walk(dir) {
+    let count = 0;
+    if (!fs.existsSync(dir)) return 0;
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const e of entries) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) count += walk(p);
+      else if (e.isFile() && p.toLowerCase().endsWith(".html")) count++;
+    }
+    return count;
+  }
+  const pages = walk(root);
+  if (!pages) {
+    throw new Error("CI check failed: no HTML pages generated in 'site/'.");
+  }
+  log(`CI check: found ${pages} HTML page(s) in ${root}.`);
+}

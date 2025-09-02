@@ -2,7 +2,7 @@
 
 [![Deploy to GitHub Pages](https://github.com/canopy-iiif/app/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/canopy-iiif/app/actions/workflows/deploy-pages.yml)
 
-Static site generator powered by MDX and IIIF. The stable app entry at `app/scripts/index.mjs` orchestrates UI assets and calls the library to build from `content/` into `site/`.
+Static site generator powered by MDX and IIIF. The stable app entry at `app/scripts/canopy-build.mjs` orchestrates UI assets and calls the library to build from `content/` into `site/`.
 
 ## Quick Start
 
@@ -11,7 +11,7 @@ Static site generator powered by MDX and IIIF. The stable app entry at `app/scri
 - Build: `npm run build`
 
 Entrypoint details
-- Both commands run `node app/scripts/index.mjs`.
+- Both commands run `node app/scripts/canopy-build.mjs`.
 - Dev mode starts the UI watcher (`@canopy-iiif/ui`) and the dev server from `@canopy-iiif/lib`.
 - Build mode builds the UI once, then runs the site build from `@canopy-iiif/lib`.
 
@@ -118,7 +118,7 @@ Notes:
 - On push to `main`, `.github/workflows/release-and-template.yml` publishes packages and, when a publish occurs, builds a clean template and force‑pushes it to `canopy-iiif/template` (branch `main`).
 - The workflow:
   - Excludes dev‑only paths (`.git`, `node_modules`, `packages`, `.cache`, `.changeset`, internal workflows/docs).
-  - Rewrites `package.json` to remove workspaces and depend on published `@canopy-iiif/lib`/`@canopy-iiif/ui` versions; sets `build`/`dev` scripts to run `node app/scripts/index.mjs`.
+  - Rewrites `package.json` to remove workspaces and depend on published `@canopy-iiif/lib`/`@canopy-iiif/ui` versions; sets `build`/`dev` scripts to run `node app/scripts/canopy-build.mjs`.
   - Patches the template’s deploy workflow to include an inline “verify HTML generated” step.
 - Setup:
   - Create the `template` repo under the `canopy-iiif` org (or your chosen owner) and add a `TEMPLATE_PUSH_TOKEN` secret (PAT with repo write access) to this repo’s secrets.

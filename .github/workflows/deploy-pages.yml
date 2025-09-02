@@ -60,7 +60,7 @@ jobs:
         run: npm run build
 
       - name: Verify pages were generated
-        run: node packages/helpers/verify-build.js
+        run: node app/scripts/canopy-build.mjs --verify
 
       - name: Inspect build output
         run: |

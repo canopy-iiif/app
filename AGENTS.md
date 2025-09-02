@@ -4,7 +4,7 @@ This repository is a minimal Node.js project. Use this guide to add code and gro
 
 ## Project Structure & Module Organization
 - `app/`: app entry and styles
-  - `app/scripts/index.mjs`: single stable entry for dev/build (orchestrates UI + lib)
+  - `app/scripts/canopy-build.mjs`: single stable entry for dev/build (orchestrates UI + lib)
   - `app/styles/`: optional app CSS
 - `content/`: MDX pages and section layouts
 - `assets/`: static files copied into `site/`
@@ -24,8 +24,8 @@ Recommended scripts in `package.json`:
 ```json
 {
   "scripts": {
-    "dev": "node app/scripts/index.mjs",
-    "build": "node app/scripts/index.mjs",
+    "dev": "node app/scripts/canopy-build.mjs",
+    "build": "node app/scripts/canopy-build.mjs",
     "test": "echo \"No tests yet\" && exit 0",
     "lint": "eslint .",
     "format": "prettier -w ."
@@ -135,7 +135,7 @@ Goal: Allow authors to fully compose the search page via MDX, while the builder 
 - Trigger: `.github/workflows/release-and-template.yml` runs on `push` to `main` (and can be dispatched manually). It uses `changesets/action` to publish and exposes whether a release occurred; the template push runs only when a publish happened.
 -- What it does:
   - Copies the repo into `dist-template/`, excluding dev‑only paths (e.g., `.git`, `node_modules`, `packages`, `.cache`, `.changeset`, template workflows, agent docs).
-  - Rewrites `dist-template/package.json` to remove workspaces, swap `workspace:*` deps for published versions of `@canopy-iiif/lib` and `@canopy-iiif/ui`, and set `build`/`dev` scripts to run `node app/scripts/index.mjs`.
+  - Rewrites `dist-template/package.json` to remove workspaces, swap `workspace:*` deps for published versions of `@canopy-iiif/lib` and `@canopy-iiif/ui`, and set `build`/`dev` scripts to run `node app/scripts/canopy-build.mjs`.
   - Patches the Pages deploy workflow in the template to inline the build verify step (no helpers package there).
   - Force‑pushes the result to `main` of `${OWNER}/template` (org: `canopy-iiif`).
 - Setup required:

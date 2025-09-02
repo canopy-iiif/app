@@ -1,15 +1,15 @@
 {
   "name": "@canopy-iiif/app",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "",
   "private": true,
-  "main": "app/scripts/index.mjs",
+  "main": "app/scripts/canopy-build.mjs",
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "build": "node app/scripts/index.mjs",
-    "dev": "node app/scripts/index.mjs",
+    "build": "node app/scripts/canopy-build.mjs",
+    "dev": "node app/scripts/canopy-build.mjs",
     "test": "echo \"No tests yet\" && exit 0",
     "changeset": "changeset",
     "version:packages": "node packages/helpers/version-bump.js",
