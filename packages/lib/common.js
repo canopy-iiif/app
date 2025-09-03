@@ -33,6 +33,20 @@ function withBase(href) {
   return href;
 }
 
+// Apply BASE_PATH to any absolute href/src attributes found in an HTML string.
+function applyBaseToHtml(html) {
+  if (!BASE_PATH) return html;
+  try {
+    let out = String(html || '');
+    // Avoid protocol-relative (//example.com) by using a negative lookahead
+    out = out.replace(/(href|src)=(\")\/(?!\/)/g, `$1=$2${BASE_PATH}/`);
+    out = out.replace(/(href|src)=(\')\/(?!\/)/g, `$1=$2${BASE_PATH}/`);
+    return out;
+  } catch (_) {
+    return html;
+  }
+}
+
 module.exports = {
   fs,
   fsp,
@@ -46,4 +60,5 @@ module.exports = {
   cleanDir,
   htmlShell,
   withBase,
+  applyBaseToHtml,
 };

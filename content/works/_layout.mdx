@@ -2,16 +2,4 @@
 type: work
 ---
 
-<HelloWorld />
-
-## Canvases
-
-<ul>
-  {(props.manifest?.items || []).map((canvas) => (
-    <li key={canvas.id}>{canvas.label?.en?.[0] || canvas.id}</li>
-  ))}
-</ul>
-
 <Viewer iiifContent={props.manifest.id} />
-
-Similar works:

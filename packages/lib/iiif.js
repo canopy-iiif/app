@@ -484,13 +484,14 @@ async function buildIiifCollectionPages(CONFIG) {
                 .split(path.sep)
                 .join("/")
             : null;
-          const html = htmlShell({
+          let html = htmlShell({
             title,
             body,
             cssHref: cssRel || "styles.css",
             scriptHref: jsRel,
             headExtra: head,
           });
+          try { html = require('./common').applyBaseToHtml(html); } catch (_) {}
           await fsp.writeFile(outPath, html, "utf8");
           lns.push([`✓ Created ${path.relative(process.cwd(), outPath)}`, 'green']);
           searchRecords.push({

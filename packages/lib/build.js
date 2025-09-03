@@ -64,7 +64,9 @@ async function compileMdxFile(filePath, outPath, extraProps = {}) {
   const jsRel = needsHydrate
     ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'canopy-viewer.js')).split(path.sep).join('/')
     : null;
-  return htmlShell({ title, body, cssHref: cssRel || 'styles.css', scriptHref: jsRel, headExtra: head });
+  const html = htmlShell({ title, body, cssHref: cssRel || 'styles.css', scriptHref: jsRel, headExtra: head });
+  const { applyBaseToHtml } = require('./common');
+  return applyBaseToHtml(html);
 }
 
 async function processEntry(absPath) {
@@ -205,11 +207,12 @@ async function build() {
   // Ensure search artifacts
   try {
     const searchPath = path.join(OUT_DIR, 'search.html');
-    if (!fs.existsSync(searchPath)) {
+    const needCreatePage = !fs.existsSync(searchPath);
+    if (needCreatePage) {
       await search.writeSearchIndex([]);
       await search.ensureSearchRuntime();
       await search.buildSearchPage();
-      logLine('✓ Created search page (empty index)', 'cyan');
+      logLine('✓ Created search page', 'cyan');
     }
     // Always (re)write the search index combining IIIF and MDX pages
     const mdxRecords = (PAGES || [])
@@ -219,8 +222,18 @@ async function build() {
     const combined = [...iiifRecords, ...mdxRecords];
     await search.writeSearchIndex(combined);
     await search.ensureSearchRuntime();
-    await search.buildSearchPage();
-    logLine(`✓ Search index: ${combined.length} records\n`, 'cyan');
+    // No need to rebuild search.html again; it doesn't embed the index contents
+    // Itemize counts by type for a clearer summary
+    const counts = new Map();
+    for (const r of combined) {
+      const t = String((r && r.type) || 'page').toLowerCase();
+      counts.set(t, (counts.get(t) || 0) + 1);
+    }
+    const parts = Array.from(counts.entries())
+      .sort((a, b) => (b[1] - a[1]) || a[0].localeCompare(b[0]))
+      .map(([t, n]) => `${t}: ${n}`);
+    const breakdown = parts.length ? `: ${parts.join(', ')}` : '';
+    logLine(`✓ Search index: ${combined.length} total records${breakdown}\n`, 'cyan');
   } catch (_) {}
 }
 

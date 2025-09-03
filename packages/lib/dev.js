@@ -222,13 +222,31 @@ function startServer() {
     }
     if (pathname === '/') pathname = '/index.html';
 
-    // Try path as-is, falling back to adding .html for extensionless routes
-    const candidates = [
-      path.join(OUT_DIR, pathname),
-      path.join(OUT_DIR, pathname + '.html')
-    ];
-
-    let filePath = candidates.find((p) => fs.existsSync(p));
+    // Resolve candidate paths in order:
+    // 1) as-is
+    // 2) add .html for extensionless
+    // 3) if a directory, use its index.html
+    let filePath = null;
+    const candidateA = path.join(OUT_DIR, pathname);
+    const candidateB = path.join(OUT_DIR, pathname + '.html');
+    if (fs.existsSync(candidateA)) {
+      filePath = candidateA;
+    } else if (fs.existsSync(candidateB)) {
+      filePath = candidateB;
+    }
+    if (!filePath) {
+      // Try directory index for extensionless or folder routes
+      const maybeDir = path.join(OUT_DIR, pathname);
+      if (fs.existsSync(maybeDir)) {
+        try {
+          const st = fs.statSync(maybeDir);
+          if (st.isDirectory()) {
+            const idx = path.join(maybeDir, 'index.html');
+            if (fs.existsSync(idx)) filePath = idx;
+          }
+        } catch (_) {}
+      }
+    }
     if (!filePath) {
       res.statusCode = 404;
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
@@ -237,13 +255,31 @@ function startServer() {
     }
 
     // Prevent path traversal by ensuring resolved path stays under SITE_DIR
-    const resolved = path.resolve(filePath);
+    let resolved = path.resolve(filePath);
     if (!resolved.startsWith(OUT_DIR)) {
       res.statusCode = 403;
       res.end('Forbidden');
       return;
     }
 
+    // If a directory slipped through, try its index.html
+    try {
+      const st = fs.statSync(resolved);
+      if (st.isDirectory()) {
+        const idx = path.join(resolved, 'index.html');
+        if (fs.existsSync(idx)) {
+          filePath = idx;
+          resolved = path.resolve(filePath);
+        } else {
+          res.statusCode = 404;
+          res.end('Not Found');
+          return;
+        }
+      }
+    } catch (_) {}
+
+    // Ensure resolved reflects the final filePath
+    resolved = path.resolve(filePath);
     const ext = path.extname(resolved).toLowerCase();
     res.statusCode = 200;
     res.setHeader('Content-Type', MIME[ext] || 'application/octet-stream');
