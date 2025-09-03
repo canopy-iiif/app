@@ -157,12 +157,27 @@ async function compileMdxFile(filePath, outPath, extraProps = {}) {
         .split(path.sep)
         .join("/")
     : null;
+  // Detect pages that require client-side React (flagged by components)
+  const needsReact = body.includes('data-react-root') || body.includes('data-canopy-react');
+  let vendorTag = '';
+  if (needsReact) {
+    try {
+      await mdx.ensureReactGlobals();
+      const vendorAbs = path.join(OUT_DIR, 'scripts', 'react-globals.js');
+      let vendorRel = path.relative(path.dirname(outPath), vendorAbs).split(path.sep).join('/');
+      try { const stv = fs.statSync(vendorAbs); vendorRel += `?v=${Math.floor(stv.mtimeMs || Date.now())}`; } catch (_) {}
+      vendorTag = `<script src="${vendorRel}"></script>`;
+    } catch (_) {}
+  }
+  // If hydration needed, include hydration script
+  let headExtra = head;
+  const bodyWithScript = body;
   const html = htmlShell({
     title,
-    body,
+    body: bodyWithScript,
     cssHref: cssRel || "styles.css",
     scriptHref: jsRel,
-    headExtra: head,
+    headExtra: vendorTag + headExtra,
   });
   const { applyBaseToHtml } = require("./common");
   return applyBaseToHtml(html);

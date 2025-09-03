@@ -27,7 +27,7 @@ async function run() {
     format: 'esm',
     sourcemap: true,
     target: ['node18'],
-    external: ['react', 'react-dom', '@samvera/clover-iiif/*'],
+    external: ['react', 'react-dom', 'flexsearch', '@samvera/clover-iiif/*'],
     logLevel: 'info',
     metafile: false
   }).then(() => null).catch((e) => {
@@ -44,7 +44,7 @@ async function run() {
       format: 'esm',
       sourcemap: true,
       target: ['node18'],
-      external: ['react', 'react-dom', '@samvera/clover-iiif/*'],
+      external: ['react', 'react-dom', 'flexsearch', '@samvera/clover-iiif/*'],
       logLevel: 'info'
     });
     await context.watch();
@@ -53,4 +53,3 @@ async function run() {
 }
 
 run();
-

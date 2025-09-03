@@ -238,68 +238,37 @@ async function loadCustomLayout(defaultLayout) {
 }
 
 async function ensureClientRuntime() {
-  // Bundle a tiny browser runtime that hydrates Viewer placeholders using React.
+  // No hydrated UI runtime required.
+  return;
+}
+
+// Build a small React globals vendor for client-side React pages.
+async function ensureReactGlobals() {
   let esbuild = null;
-  try {
-    esbuild = require('../ui/node_modules/esbuild');
-  } catch (_) {
-    try { esbuild = require('esbuild'); } catch (_) {}
-  }
-  if (!esbuild) { try { require('./log').log('Hydration runtime skipped (no esbuild)\n', 'yellow', { dim: true }); } catch (_) {} return; }
-  const entry = `
-    import React from 'react';
-    import { createRoot } from 'react-dom/client';
-    import * as UI from '@canopy-iiif/ui';
-    import CloverViewer from '@samvera/clover-iiif/viewer';
-    function hydrateCanopy() {
-      document.querySelectorAll('[data-canopy-hydrate]').forEach((el) => {
-        if (el.__hydrated) return; el.__hydrated = true;
-        const name = el.getAttribute('data-component') || '';
-        const raw = el.getAttribute('data-props') || '';
-        let props = {};
-        try { props = raw ? JSON.parse(decodeURIComponent(raw)) : {}; } catch (_) {}
-        let Comp = UI && UI[name];
-        if (!Comp && (name === 'Viewer' || name === 'CloverViewer')) Comp = CloverViewer;
-        if (!Comp) return;
-        const root = createRoot(el);
-        root.render(React.createElement(Comp, props));
-      });
-      document.querySelectorAll('[data-canopy-viewer]').forEach((el) => {
-        if (el.__hydrated) return; el.__hydrated = true;
-        const iiifContent = el.getAttribute('data-iiif-content') || '';
-        const root = createRoot(el);
-        root.render(React.createElement(CloverViewer, { iiifContent }));
-      });
-    }
-    if (document.readyState !== 'loading') hydrateCanopy();
-    else document.addEventListener('DOMContentLoaded', hydrateCanopy);
-  `;
+  try { esbuild = require('../ui/node_modules/esbuild'); } catch (_) { try { esbuild = require('esbuild'); } catch (_) {} }
+  if (!esbuild) return;
+  const { path } = require('./common');
   ensureDirSync(OUT_DIR);
-  const viewerOut = path.join(OUT_DIR, 'canopy-viewer.js');
+  const scriptsDir = path.join(OUT_DIR, 'scripts');
+  ensureDirSync(scriptsDir);
+  const vendorFile = path.join(scriptsDir, 'react-globals.js');
+  const globalsEntry = `
+    import React from 'react';
+    import * as ReactDOM from 'react-dom';
+    import { createRoot, hydrateRoot } from 'react-dom/client';
+    (function(){ try{ window.React = React; window.ReactDOM = ReactDOM; window.ReactDOMClient = { createRoot, hydrateRoot }; }catch(e){} })();
+  `;
   await esbuild.build({
-    stdin: {
-      contents: entry,
-      resolveDir: process.cwd(),
-      loader: 'js',
-      sourcefile: 'canopy-viewer-entry.js',
-    },
-    outfile: viewerOut,
+    stdin: { contents: globalsEntry, resolveDir: process.cwd(), loader: 'js', sourcefile: 'react-globals-entry.js' },
+    outfile: vendorFile,
     platform: 'browser',
     format: 'iife',
     bundle: true,
-    sourcemap: true,
+    sourcemap: false,
     target: ['es2018'],
     logLevel: 'silent',
+    minify: true,
   });
-  try {
-    const { logLine } = require('./log');
-    const { fs, path } = require('./common');
-    let size = 0;
-    try { const st = fs.statSync(viewerOut); size = st.size || 0; } catch (_) {}
-    const kb = size ? ` (${(size/1024).toFixed(1)} KB)` : '';
-    const rel = path.relative(process.cwd(), viewerOut).split(path.sep).join('/');
-    logLine(`✓ Wrote ${rel}${kb}`,'cyan');
-  } catch (_) {}
 }
 
 module.exports = {
@@ -311,5 +280,6 @@ module.exports = {
   loadCustomLayout,
   loadAppWrapper,
   ensureClientRuntime,
+  ensureReactGlobals,
   resetMdxCaches: function() { try { DIR_LAYOUTS.clear(); } catch (_) {}; APP_WRAPPER = null; },
 };

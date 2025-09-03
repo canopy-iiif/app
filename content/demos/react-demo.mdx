@@ -1,0 +1,44 @@
+---
+type: page
+---
+
+# React Demo Widget
+
+This page demonstrates loading React on demand only when needed.
+
+Below is a placeholder that flags this page as requiring client-side React. The build includes a tiny React vendor script only for this page.
+
+<div id="demo-react-root" data-react-root></div>
+
+<script>
+{`
+(function(){
+  function mount(){
+    try {
+      var React = window.React;
+      var ReactDOMClient = window.ReactDOMClient;
+      var el = document.getElementById('demo-react-root');
+      if (!React || !ReactDOMClient || !el) return;
+      var e = React.createElement;
+      function Demo(){
+        return e('div', {
+          style: {
+            padding: '0.75rem 1rem',
+            border: '1px solid #e5e7eb',
+            borderRadius: '6px',
+            background: '#f9fafb'
+          }
+        }, 'Hello from a client-side React demo!');
+      }
+      var root = ReactDOMClient.createRoot(el);
+      root.render(e(Demo));
+    } catch (e) {}
+  }
+  if (document.readyState !== 'loading') mount();
+  else document.addEventListener('DOMContentLoaded', mount);
+})();
+`}
+</script>
+
+You can view source to see the `data-react-root` marker and the small inline script.
+

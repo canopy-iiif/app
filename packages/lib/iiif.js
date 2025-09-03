@@ -491,12 +491,15 @@ async function buildIiifCollectionPages(CONFIG) {
                 .split(path.sep)
                 .join("/")
             : null;
+          // Include hydration script via htmlShell
+          let headExtra = head;
+          let pageBody = body;
           let html = htmlShell({
             title,
-            body,
+            body: pageBody,
             cssHref: cssRel || "styles.css",
             scriptHref: jsRel,
-            headExtra: head,
+            headExtra,
           });
           try { html = require('./common').applyBaseToHtml(html); } catch (_) {}
           await fsp.writeFile(outPath, html, "utf8");
