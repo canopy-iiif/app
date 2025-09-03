@@ -1,7 +1,7 @@
 collection:
-  uri: https://api.dc.library.northwestern.edu/api/v2/collections/cd92fb8d-76a7-4e72-be0f-78a5839caa89?as=iiif
+  uri: https://api.dc.library.northwestern.edu/api/v2/search?query=%28joan+baez%29&size=40&as=iiif
 iiif:
   # Max number of manifests to process per chunk
-  chunkSize: 20
+  chunkSize: 10
   # Concurrent fetch/build workers per chunk
-  concurrency: 3
+  concurrency: 5

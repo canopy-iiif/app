@@ -18,7 +18,10 @@ async function ensureSearchRuntime() {
       const data = await res.json();
       const index = new FlexSearch.Index({ tokenize: 'forward' });
       const idToRec = new Map();
-      data.forEach((rec, i) => { index.add(i, rec.title || ''); idToRec.set(i, rec); });
+      data.forEach((rec, i) => {
+        try { index.add(i, (rec && rec.title) ? String(rec.title) : ''); } catch (_) {}
+        idToRec.set(i, rec || {});
+      });
       const $ = (sel) => document.querySelector(sel);
       const input = $('#search-input');
       const resultsContainer = $('#search-results');
@@ -123,16 +126,20 @@ async function ensureSearchRuntime() {
     else document.addEventListener('DOMContentLoaded', boot);
   `;
   ensureDirSync(OUT_DIR);
-  await esbuild.build({
-    stdin: { contents: entry, resolveDir: process.cwd(), loader: 'js', sourcefile: 'search-entry.js' },
-    outfile: path.join(OUT_DIR, 'search.js'),
-    platform: 'browser',
-    format: 'iife',
-    bundle: true,
-    sourcemap: true,
-    target: ['es2018'],
-    logLevel: 'silent',
-  });
+  try {
+    await esbuild.build({
+      stdin: { contents: entry, resolveDir: process.cwd(), loader: 'js', sourcefile: 'search-entry.js' },
+      outfile: path.join(OUT_DIR, 'search.js'),
+      platform: 'browser',
+      format: 'iife',
+      bundle: true,
+      sourcemap: true,
+      target: ['es2018'],
+      logLevel: 'silent',
+    });
+  } catch (e) {
+    console.warn('Search: Skipping runtime bundle:', e && e.message ? e.message : e);
+  }
 }
 
 async function buildSearchPage() {
@@ -202,9 +209,30 @@ async function buildSearchPage() {
   }
 }
 
+function toSafeString(val, fallback = '') {
+  try { return String(val == null ? fallback : val); } catch (_) { return fallback; }
+}
+
+function sanitizeRecord(r) {
+  const title = toSafeString(r && r.title, '');
+  const href = toSafeString(r && r.href, '');
+  const type = toSafeString(r && r.type, 'page');
+  // Clamp very long titles to keep index small and robust
+  const safeTitle = title.length > 300 ? title.slice(0, 300) + '…' : title;
+  return { title: safeTitle, href, type };
+}
+
 async function writeSearchIndex(records) {
   const idxPath = path.join(OUT_DIR, 'search-index.json');
-  await fsp.writeFile(idxPath, JSON.stringify(records || [], null, 2), 'utf8');
+  const list = Array.isArray(records) ? records : [];
+  const safe = list.map(sanitizeRecord);
+  const json = JSON.stringify(safe, null, 2);
+  // Warn if the index is unusually large (> 10MB)
+  const approxBytes = Buffer.byteLength(json, 'utf8');
+  if (approxBytes > 10 * 1024 * 1024) {
+    console.warn('Search: index size is large (', Math.round(approxBytes / (1024 * 1024)), 'MB ). Consider narrowing sources.');
+  }
+  await fsp.writeFile(idxPath, json, 'utf8');
 }
 
 module.exports = {

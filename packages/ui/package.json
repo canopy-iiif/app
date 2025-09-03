@@ -1,6 +1,6 @@
 {
   "name": "@canopy-iiif/ui",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "private": false,
   "license": "MIT",
   "author": "Mat Jordan <mat@northwestern.edu>",
@@ -27,8 +27,5 @@
     "build": "node ./scripts/build-ui.mjs",
     "watch": "WATCH=1 node ./scripts/build-ui.mjs",
     "prepublishOnly": "npm run build"
-  },
-  "dependencies": {
-    "@radix-ui/themes": "^3.2.1"
   }
 }
