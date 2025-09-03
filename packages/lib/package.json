@@ -1,6 +1,6 @@
 {
   "name": "@canopy-iiif/lib",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "private": false,
   "license": "MIT",
   "main": "index.js",

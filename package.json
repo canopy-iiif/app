@@ -1,6 +1,6 @@
 {
   "name": "@canopy-iiif/app",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "",
   "private": true,
   "main": "app/scripts/canopy-build.mjs",
@@ -18,7 +18,9 @@
   "dependencies": {
     "@canopy-iiif/ui": "workspace:*",
     "@canopy-iiif/lib": "workspace:*",
-    "@samvera/clover-iiif": "^3.0.0"
+    "@samvera/clover-iiif": "^3.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "author": "",
   "license": "MIT"
