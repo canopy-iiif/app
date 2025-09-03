@@ -49,6 +49,44 @@ async function ensureSearchRuntime() {
       external: [],
     });
   } catch (_) {}
+  const shimReactPlugin = {
+    name: 'shim-react-globals',
+    setup(build) {
+      build.onResolve({ filter: /^react$/ }, () => ({ path: 'react', namespace: 'react-shim' }));
+      build.onLoad({ filter: /.*/, namespace: 'react-shim' }, () => ({
+        contents: [
+          "const R = (typeof window!=='undefined' && window.React) || {};\n",
+          "export default R;\n",
+          "export const useState = R.useState;\n",
+          "export const useMemo = R.useMemo;\n",
+          "export const useEffect = R.useEffect;\n",
+          "export const useRef = R.useRef;\n",
+          "export const Fragment = R.Fragment;\n",
+          "export const createElement = R.createElement;\n",
+        ].join(''),
+        loader: 'js',
+      }));
+      build.onResolve({ filter: /^react-dom\/client$/ }, () => ({ path: 'react-dom/client', namespace: 'rdc-shim' }));
+      build.onLoad({ filter: /.*/, namespace: 'rdc-shim' }, () => ({
+        contents: [
+          "const C = (typeof window!=='undefined' && window.ReactDOMClient) || {};\n",
+          "export const createRoot = C.createRoot;\n",
+          "export const hydrateRoot = C.hydrateRoot;\n",
+        ].join(''),
+        loader: 'js',
+      }));
+      build.onResolve({ filter: /^react-dom$/ }, () => ({ path: 'react-dom', namespace: 'rd-shim' }));
+      build.onLoad({ filter: /.*/, namespace: 'rd-shim' }, () => ({
+        contents: "export default (typeof window!=='undefined' && window.ReactDOM) || {};\n",
+        loader: 'js',
+      }));
+      build.onResolve({ filter: /^flexsearch$/ }, () => ({ path: 'flexsearch', namespace: 'flex-shim' }));
+      build.onLoad({ filter: /.*/, namespace: 'flex-shim' }, () => ({
+        contents: "export default (typeof window!=='undefined' && window.FlexSearch) || {};\n",
+        loader: 'js',
+      }));
+    }
+  };
   await esbuild.build({
     entryPoints: [entry],
     outfile: outFile,
@@ -58,10 +96,7 @@ async function ensureSearchRuntime() {
     sourcemap: true,
     target: ['es2018'],
     logLevel: 'silent',
-    external: ['react', 'react-dom', 'react-dom/client', 'flexsearch'],
-    banner: {
-      js: "try{var React=window.React;var ReactDOM=window.ReactDOM;var ReactDOMClient=window.ReactDOMClient;}catch(e){}",
-    },
+    plugins: [shimReactPlugin],
   });
   try {
     const { logLine } = require('./log');
@@ -76,33 +111,34 @@ async function buildSearchPage() {
   try {
     const outPath = path.join(OUT_DIR, 'search.html');
     ensureDirSync(path.dirname(outPath));
-    // Minimal mount container; React app handles UI
-    let content = React.createElement(
-      'div',
-      null,
-      React.createElement('h1', null, 'Search'),
-      React.createElement('div', { id: 'search-root' })
-    );
-
-    // Wrap with App and MDX provider for consistent shell and base-aware anchors
-    let MDXProvider = null;
-    try { const mod = await import('@mdx-js/react'); MDXProvider = mod.MDXProvider || mod.default || null; } catch (_) { MDXProvider = null; }
-    const Anchor = function A(props) {
-      let { href = '', ...rest } = props || {};
-      href = withBase(href);
-      return React.createElement('a', { href, ...rest }, props.children);
-    };
-    let uiComponents = {};
-    try { uiComponents = await import('@canopy-iiif/ui'); } catch (_) { uiComponents = {}; }
-    let IIIFCard = null; try { IIIFCard = require('./components/IIIFCard'); } catch (_) { IIIFCard = null; }
-    const compMap = { ...uiComponents, a: Anchor };
-    if (IIIFCard) compMap.IIIFCard = IIIFCard;
-    const { loadAppWrapper } = require('./mdx');
-    const app = await loadAppWrapper();
-    const wrappedApp = app && app.App ? React.createElement(app.App, null, content) : content;
-    const page = MDXProvider ? React.createElement(MDXProvider, { components: compMap }, wrappedApp) : wrappedApp;
-    let body = ReactDOMServer.renderToStaticMarkup(page);
-    const head = app && app.Head ? ReactDOMServer.renderToStaticMarkup(React.createElement(app.Head)) : '';
+    // If the author provided content/search/_layout.mdx, render it via MDX; otherwise fall back.
+    const searchLayoutPath = path.join(path.resolve('content'), 'search', '_layout.mdx');
+    let body = '';
+    let head = '';
+    if (require('./common').fs.existsSync(searchLayoutPath)) {
+      try {
+        const mdx = require('./mdx');
+        const rendered = await mdx.compileMdxFile(searchLayoutPath, outPath, {});
+        body = rendered && rendered.body ? rendered.body : '';
+        head = rendered && rendered.head ? rendered.head : '';
+      } catch (e) {
+        console.warn('Search: Failed to render content/search/_layout.mdx, falling back:', e && e.message ? e.message : e);
+      }
+    }
+    if (!body) {
+      // Minimal mount container; React SearchApp mounts into #search-root
+      let content = React.createElement(
+        'div',
+        null,
+        React.createElement('h1', null, 'Search'),
+        React.createElement('div', { id: 'search-root' })
+      );
+      const { loadAppWrapper } = require('./mdx');
+      const app = await loadAppWrapper();
+      const wrappedApp = app && app.App ? React.createElement(app.App, null, content) : content;
+      body = ReactDOMServer.renderToStaticMarkup(wrappedApp);
+      head = app && app.Head ? ReactDOMServer.renderToStaticMarkup(React.createElement(app.Head)) : '';
+    }
     const importMap = '';
     const cssRel = path.relative(path.dirname(outPath), path.join(OUT_DIR, 'styles.css')).split(path.sep).join('/');
     const jsAbs = path.join(OUT_DIR, 'search.js');
