@@ -126,10 +126,11 @@ async function ensureSearchRuntime() {
     else document.addEventListener('DOMContentLoaded', boot);
   `;
   ensureDirSync(OUT_DIR);
+  const outFile = path.join(OUT_DIR, 'search.js');
   try {
     await esbuild.build({
       stdin: { contents: entry, resolveDir: process.cwd(), loader: 'js', sourcefile: 'search-entry.js' },
-      outfile: path.join(OUT_DIR, 'search.js'),
+      outfile: outFile,
       platform: 'browser',
       format: 'iife',
       bundle: true,
@@ -137,6 +138,15 @@ async function ensureSearchRuntime() {
       target: ['es2018'],
       logLevel: 'silent',
     });
+    try {
+      const { logLine } = require('./log');
+      const { fs, path } = require('./common');
+      let size = 0;
+      try { const st = fs.statSync(outFile); size = st.size || 0; } catch (_) {}
+      const kb = size ? ` (${(size/1024).toFixed(1)} KB)` : '';
+      const rel = path.relative(process.cwd(), outFile).split(path.sep).join('/');
+      logLine(`✓ Wrote ${rel}${kb}`, 'cyan');
+    } catch (_) {}
   } catch (e) {
     console.warn('Search: Skipping runtime bundle:', e && e.message ? e.message : e);
   }

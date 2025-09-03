@@ -272,6 +272,7 @@ async function ensureClientRuntime() {
     else document.addEventListener('DOMContentLoaded', hydrateCanopy);
   `;
   ensureDirSync(OUT_DIR);
+  const viewerOut = path.join(OUT_DIR, 'canopy-viewer.js');
   await esbuild.build({
     stdin: {
       contents: entry,
@@ -279,7 +280,7 @@ async function ensureClientRuntime() {
       loader: 'js',
       sourcefile: 'canopy-viewer-entry.js',
     },
-    outfile: path.join(OUT_DIR, 'canopy-viewer.js'),
+    outfile: viewerOut,
     platform: 'browser',
     format: 'iife',
     bundle: true,
@@ -287,6 +288,15 @@ async function ensureClientRuntime() {
     target: ['es2018'],
     logLevel: 'silent',
   });
+  try {
+    const { logLine } = require('./log');
+    const { fs, path } = require('./common');
+    let size = 0;
+    try { const st = fs.statSync(viewerOut); size = st.size || 0; } catch (_) {}
+    const kb = size ? ` (${(size/1024).toFixed(1)} KB)` : '';
+    const rel = path.relative(process.cwd(), viewerOut).split(path.sep).join('/');
+    logLine(`✓ Wrote ${rel}${kb}`,'cyan');
+  } catch (_) {}
 }
 
 module.exports = {
