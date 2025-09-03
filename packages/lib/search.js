@@ -4,152 +4,47 @@ const { path, withBase } = require('./common');
 const { ensureDirSync, OUT_DIR, htmlShell, fsp } = require('./common');
 
 async function ensureSearchRuntime() {
-  let esbuild = null;
-  try { esbuild = require('../ui/node_modules/esbuild'); } catch (_) {
-    try { esbuild = require('esbuild'); } catch (_) {}
-  }
-  if (!esbuild) return;
-  const { BASE_PATH } = require('./common');
-  const entry = `
-    import FlexSearch from 'flexsearch';
-    async function boot() {
-      const res = await fetch('./search-index.json').catch(() => null);
-      if (!res || !res.ok) return;
-      const data = await res.json();
-      const index = new FlexSearch.Index({ tokenize: 'forward' });
-      const idToRec = new Map();
-      data.forEach((rec, i) => {
-        try { index.add(i, (rec && rec.title) ? String(rec.title) : ''); } catch (_) {}
-        idToRec.set(i, rec || {});
-      });
-      const $ = (sel) => document.querySelector(sel);
-      const input = $('#search-input');
-      const resultsContainer = $('#search-results');
-      const listAll = resultsContainer && resultsContainer.tagName === 'UL' ? resultsContainer : null;
-      const countEl = $('#search-count');
-      const summaryEl = $('#search-summary');
-      const filtersEl = $('#search-filters');
-      // Discover types and prepare filters dynamically
-      const types = Array.from(new Set(data.map((r) => r && r.type ? String(r.type) : 'page')));
-      const typeKey = (t) => String(t || 'page').toLowerCase().replace(/[^a-z0-9_-]+/g, '-');
-      const typeFilters = new Map();
-      types.forEach((t) => {
-        const key = typeKey(t);
-        const cbId = 'search-filter-' + key;
-        let cb = document.getElementById(cbId);
-        if (!cb && filtersEl) {
-          const label = document.createElement('label');
-          cb = document.createElement('input');
-          cb.type = 'checkbox';
-          cb.id = cbId;
-          cb.checked = true;
-          label.appendChild(cb);
-          label.appendChild(document.createTextNode(' ' + t.charAt(0).toUpperCase() + t.slice(1)));
-          filtersEl.appendChild(label);
-        }
-        typeFilters.set(t, cb ? !!cb.checked : true);
-        if (cb) cb.addEventListener('change', () => { typeFilters.set(t, !!cb.checked); search(input ? input.value : ''); });
-      });
-      let currentQuery = '';
-      function render(ids) {
-        // Group by type
-        const grouped = new Map();
-        (ids || []).forEach((i) => {
-          const r = idToRec.get(i);
-          if (!r) return;
-          const esc = (s) => String(s||'').replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-          var base = ${JSON.stringify(BASE_PATH)};
-          var pref = base ? base : '';
-          var href = (pref ? pref : '') + '/' + r.href;
-          const li = '<li><a href="' + href + '">' + esc(r.title || r.href) + '</a></li>';
-          const t = r.type || 'page';
-          if (!grouped.has(t)) grouped.set(t, []);
-          grouped.get(t).push(li);
-        });
-        // Try specific per-type lists if present
-        let usedSpecific = false;
-        grouped.forEach((items, t) => {
-          const el = document.getElementById('search-results-' + typeKey(t));
-          if (el) {
-            usedSpecific = true;
-            const enabled = typeFilters.get(t) !== false;
-            el.innerHTML = enabled ? (items.join('') || '<li><em>No ' + t + ' results</em></li>') : '';
-          }
-        });
-        // Count shown across enabled groups
-        let shown = 0;
-        grouped.forEach((items, t) => { if (typeFilters.get(t) !== false) shown += items.length; });
-        if (!usedSpecific) {
-          if (resultsContainer && resultsContainer.tagName !== 'UL') {
-            const html = types.map((t) => {
-              if (typeFilters.get(t) === false) return '';
-              const items = grouped.get(t) || [];
-              const title = t.charAt(0).toUpperCase() + t.slice(1);
-              const lis = items.join('') || '<li><em>No ' + t + ' results</em></li>';
-              return '<h2>' + title + '</h2><ul id="search-results-' + typeKey(t) + '">' + lis + '</ul>';
-            }).join('');
-            resultsContainer.innerHTML = html || '<p><em>No results</em></p>';
-          } else if (listAll) {
-            const combined = [];
-            types.forEach((t) => { if (typeFilters.get(t) !== false) combined.push(...(grouped.get(t) || [])); });
-            listAll.innerHTML = combined.join('') || '<li><em>No results</em></li>';
-          }
-        }
-        if (countEl) countEl.textContent = String(shown);
-        if (summaryEl) {
-          const esc = (s) => String(s||'').replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-          const total = data.length;
-          if (currentQuery) {
-            summaryEl.innerHTML = 'Found <strong>' + shown + '</strong> of ' + total + ' for \u201C' + esc(currentQuery) + '\u201D';
-          } else {
-            summaryEl.innerHTML = 'Showing <strong>' + shown + '</strong> of ' + total + ' items';
-          }
-        }
-      }
-      function showAll() { render(data.map((_, i) => i)); }
-      function search(q) {
-        if (!q) { currentQuery=''; showAll(); return; }
-        currentQuery = q;
-        const ids = index.search(q, { limit: 200 });
-        render(Array.isArray(ids) ? ids : []);
-      }
-      const params = new URLSearchParams(location.search);
-      const initial = params.get('q') || '';
-      if (input) {
-        input.value = initial;
-        input.addEventListener('input', (e) => search(e.target.value));
-      }
-      // Filter events are wired when filters are created above
-      if (initial) search(initial); else showAll();
-    }
-    if (document.readyState !== 'loading') boot();
-    else document.addEventListener('DOMContentLoaded', boot);
-  `;
+  const { fs, path, BASE_PATH } = require('./common');
   ensureDirSync(OUT_DIR);
-  const outFile = path.join(OUT_DIR, 'search.js');
-  try {
-    await esbuild.build({
-      stdin: { contents: entry, resolveDir: process.cwd(), loader: 'js', sourcefile: 'search-entry.js' },
-      outfile: outFile,
-      platform: 'browser',
-      format: 'iife',
-      bundle: true,
-      sourcemap: true,
-      target: ['es2018'],
-      logLevel: 'silent',
-    });
-    try {
-      const { logLine } = require('./log');
-      const { fs, path } = require('./common');
-      let size = 0;
-      try { const st = fs.statSync(outFile); size = st.size || 0; } catch (_) {}
-      const kb = size ? ` (${(size/1024).toFixed(1)} KB)` : '';
-      const rel = path.relative(process.cwd(), outFile).split(path.sep).join('/');
-      logLine(`✓ Wrote ${rel}${kb}`, 'cyan');
-    } catch (_) {}
-  } catch (e) {
-    console.warn('Search: Skipping runtime bundle:', e && e.message ? e.message : e);
+  // Copy FlexSearch IIFE to site/
+  let vendorSrc = null;
+  try { vendorSrc = require.resolve('flexsearch/dist/flexsearch.light.min.js'); } catch (_) {}
+  if (!vendorSrc) {
+    console.warn('Search: FlexSearch vendor not found; skipping runtime');
+    return;
   }
+  const vendorDest = path.join(OUT_DIR, 'flexsearch.light.min.js');
+  try { fs.copyFileSync(vendorSrc, vendorDest); } catch (e) {
+    console.warn('Search: Failed to copy FlexSearch vendor:', e && e.message ? e.message : e);
+    return;
+  }
+  try {
+    const { logLine } = require('./log');
+    const relVendor = path.relative(process.cwd(), vendorDest).split(path.sep).join('/');
+    logLine(`✓ Wrote ${relVendor}`, 'cyan');
+  } catch (_) {}
+  const outFile = path.join(OUT_DIR, 'search.js');
+  const base = String(BASE_PATH || '');
+  const runtime = `/* Canopy prebundled search runtime */\n` +
+`(function(){\n` +
+`  var BASE = ${JSON.stringify(base)} || '';\n` +
+`  function $(sel){ return document.querySelector(sel); }\n` +
+`  function typeKey(t){ return String(t||'page').toLowerCase().replace(/[^a-z0-9_-]+/g,'-'); }\n` +
+`  function loadFlex(cb){ if (window.FlexSearch){ cb&&cb(); return; } var s=document.createElement('script'); s.src='./flexsearch.light.min.js'; s.onload=function(){ cb&&cb(); }; s.onerror=function(){ cb&&cb(); }; document.head.appendChild(s);}\n` +
+`  function buildWorkItem(rec, href){ var li=document.createElement('li'); li.className='search-result work'; var a=document.createElement('a'); a.href=href; a.className='card'; var fig=document.createElement('figure'); fig.style.margin='0'; if(rec.thumbnail){ var img=document.createElement('img'); img.src=String(rec.thumbnail||''); img.alt=String(rec.title||''); img.loading='lazy'; img.style.display='block'; img.style.width='100%'; img.style.height='auto'; img.style.borderRadius='4px'; fig.appendChild(img);} var fc=document.createElement('figcaption'); fc.style.marginTop='8px'; var strong=document.createElement('strong'); strong.textContent=String(rec.title||rec.href||''); fc.appendChild(strong); fig.appendChild(fc); a.appendChild(fig); li.appendChild(a); return li.outerHTML; }\n` +
+`  function buildPageItem(rec, href){ var li=document.createElement('li'); li.className='search-result page'; var a=document.createElement('a'); a.href=href; a.textContent=String(rec.title||rec.href||''); li.appendChild(a); return li.outerHTML; }\n` +
+`  function start(){ var input=$('#search-input'); var resultsContainer=$('#search-results'); var listAll=(resultsContainer&&resultsContainer.tagName==='UL')?resultsContainer:null; var countEl=$('#search-count'); var summaryEl=$('#search-summary'); var filtersEl=$('#search-filters');\n` +
+`    fetch('./search-index.json').then(function(r){return r.ok?r.json():[]}).catch(function(){return[]}).then(function(data){ var index=new window.FlexSearch.Index({tokenize:'forward'}); var idToRec=new Map(); data.forEach(function(rec,i){ try{ index.add(i, (rec&&rec.title)?String(rec.title):''); }catch(e){} idToRec.set(i, rec||{}); }); var types=Array.from(new Set(data.map(function(r){ return (r&&r.type)?String(r.type):'page'; }))); var typeFilters=new Map(); types.forEach(function(t){ var key=typeKey(t); var cbId='search-filter-'+key; var cb=document.getElementById(cbId); if(!cb && filtersEl){ var label=document.createElement('label'); cb=document.createElement('input'); cb.type='checkbox'; cb.id=cbId; cb.checked=true; label.appendChild(cb); label.appendChild(document.createTextNode(' '+t.charAt(0).toUpperCase()+t.slice(1))); filtersEl.appendChild(label);} typeFilters.set(t, cb?!!cb.checked:true); if(cb) cb.addEventListener('change', function(){ typeFilters.set(t, !!cb.checked); search(input?input.value:''); }); }); var currentQuery=''; function render(ids){ var grouped=new Map(); (ids||[]).forEach(function(i){ var r=idToRec.get(i); if(!r) return; var href=(BASE?BASE:'') + '/' + r.href; var html=((r.type||'page')==='work' && r.thumbnail) ? buildWorkItem(r, href) : buildPageItem(r, href); var t=r.type||'page'; if(!grouped.has(t)) grouped.set(t, []); grouped.get(t).push(html); }); var shown=0; grouped.forEach(function(items,t){ if(typeFilters.get(t)!==false) shown+=items.length; }); var usedSpecific=false; grouped.forEach(function(items,t){ var el=document.getElementById('search-results-'+typeKey(t)); if(el){ usedSpecific=true; var enabled=(typeFilters.get(t)!==false); el.innerHTML= enabled ? (items.join('') || '<li><em>No '+t+' results</em></li>') : ''; }}); if(!usedSpecific){ if(resultsContainer && resultsContainer.tagName!=='UL'){ var html=types.map(function(t){ if(typeFilters.get(t)===false) return ''; var items=grouped.get(t)||[]; var title=t.charAt(0).toUpperCase()+t.slice(1); var lis=items.join('') || '<li><em>No '+t+' results</em></li>'; return '<h2>'+title+'</h2><ul id=\"search-results-'+typeKey(t)+'\">'+lis+'</ul>'; }).join(''); resultsContainer.innerHTML = html || '<p><em>No results</em></p>'; } else if (listAll){ var combined=[]; types.forEach(function(t){ if(typeFilters.get(t)!==false) combined.push.apply(combined, grouped.get(t)||[]); }); listAll.innerHTML = combined.join('') || '<li><em>No results</em></li>'; }} if(countEl) countEl.textContent=String(shown); if(summaryEl){ var total=data.length; summaryEl.textContent = currentQuery ? ('Found '+shown+' of '+total+' for “'+currentQuery+'”') : ('Showing '+shown+' of '+total+' items'); } } function showAll(){ render(data.map(function(_,i){return i;})); } function search(q){ if(!q){ currentQuery=''; showAll(); return; } currentQuery=q; var ids=index.search(q, { limit: 200 }); render(Array.isArray(ids)?ids:[]); } var params=new URLSearchParams(location.search); var initial=params.get('q')||''; if(input){ input.value=initial; input.addEventListener('input', function(e){ search(e.target.value); }); } if(initial) search(initial); else showAll(); }); }\n` +
+`  if(document.readyState!=='loading') loadFlex(start); else document.addEventListener('DOMContentLoaded', function(){ loadFlex(start); });\n` +
+`})();\n`;
+  try { fs.writeFileSync(outFile, runtime, 'utf8'); } catch (e) { console.warn('Search: Failed to write runtime:', e && e.message ? e.message : e); return; }
+  try {
+    const { logLine } = require('./log');
+    let size = 0; try { const st = fs.statSync(outFile); size = st.size || 0; } catch (_) {}
+    const kb = size ? ` (${(size/1024).toFixed(1)} KB)` : '';
+    const rel = path.relative(process.cwd(), outFile).split(path.sep).join('/');
+    logLine(`✓ Wrote ${rel}${kb}`, 'cyan');
+  } catch (_) {}
 }
 
 async function buildSearchPage() {

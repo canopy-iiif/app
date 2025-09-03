@@ -1,6 +1,11 @@
 collection:
   uri: https://api.dc.library.northwestern.edu/api/v2/collections/cd92fb8d-76a7-4e72-be0f-78a5839caa89?as=iiif
 iiif:
+  thumbnails:
+    # Enable to create thumbnails for Manifests missing `thumbnail` property
+    unsafe: false
+    # Preferred thumbnail size in pixels (width/height)
+    preferredSize: 400
   # Max number of manifests to process per chunk
   chunkSize: 10
   # Concurrent fetch/build workers per chunk

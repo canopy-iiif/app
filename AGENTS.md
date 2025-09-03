@@ -110,11 +110,16 @@ Goal: Allow authors to fully compose the search page via MDX, while the builder 
 - The collection URI is configured via `canopy.yml` (`collection.uri`) or the `CANOPY_COLLECTION_URI` environment variable.
 - Output pages are written to `site/works/<slug>.html`.
 - Performance tuning: `iiif.chunkSize` and `iiif.concurrency` in `canopy.yml`, or env vars `CANOPY_CHUNK_SIZE` and `CANOPY_FETCH_CONCURRENCY`.
+- Thumbnails:
+  - Configure under `iiif.thumbnails` in `canopy.yml`:
+    - `unsafe`: false by default; when true, uses an expanded strategy that may perform additional requests.
+    - `preferredSize`: numeric size (default 1200); this repo currently uses 400.
+  - A resolved thumbnail URL is stored on each Manifest in `.cache/iiif/index.json` as `thumbnail`.
 
 ## IIIF Cache
 
 - Location: `.cache/iiif/`
-  - `index.json`: primary index with `byId` (Collection/Manifest ids → slugs/parents) and `collection` metadata (uri, hash, updatedAt).
+  - `index.json`: primary index with `byId` (Collection/Manifest ids → slugs/parents) and `collection` metadata (uri, hash, updatedAt). Manifest entries may include a `thumbnail` URL when configured.
   - `manifests/{slug}.json`: cached normalized Manifest JSON per work.
 - Changing the configured collection URI resets the manifest cache. To force a clean fetch, delete `.cache/iiif/`.
 

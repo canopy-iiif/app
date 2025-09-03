@@ -64,6 +64,15 @@ Place static files under `assets/` and they will be copied to the site root, pre
 - Performance: tune with `iiif.chunkSize` and `iiif.concurrency` in `canopy.yml` or via env `CANOPY_CHUNK_SIZE` and `CANOPY_FETCH_CONCURRENCY`.
 - Cache notes: switching `collection.uri` resets the manifest cache; you can also delete `.cache/iiif/` to force a refetch.
 
+### Thumbnails
+
+- Config keys (in `canopy.yml` under `iiif.thumbnails`):
+  - `unsafe` (boolean, default `false`): when `true`, uses an expanded strategy that may perform extra requests to find a representative image.
+  - `preferredSize` (number, default `1200`): target width/height in pixels when selecting a thumbnail.
+- Behavior: during the IIIF build, a thumbnail URL is resolved for each Manifest and stored on its entry in `.cache/iiif/index.json` as `thumbnail`.
+- Safety: with `unsafe: false`, a simpler/safer selection is used; with `unsafe: true`, the helper may probe additional sources to find a better image at the requested size.
+- Current project setting: `preferredSize: 400`.
+
 ## Search Page (MDX Composition)
 
 Compose the search UI with MDX at `content/search/_layout.mdx`. The builder injects a `search` prop so you can place the primitives anywhere:

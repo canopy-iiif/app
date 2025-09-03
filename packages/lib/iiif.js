@@ -212,14 +212,19 @@ async function loadConfig() {
     try {
       const raw = await fsp.readFile(configPath, "utf8");
       const data = yaml.load(raw) || {};
+      const d = data || {};
+      const di = d.iiif || {};
       CONFIG = {
         collection: {
-          uri:
-            (data.collection && data.collection.uri) || CONFIG.collection.uri,
+          uri: (d.collection && d.collection.uri) || CONFIG.collection.uri,
         },
         iiif: {
-          chunkSize: Number((data.iiif && data.iiif.chunkSize) || CONFIG.iiif.chunkSize) || CONFIG.iiif.chunkSize,
-          concurrency: Number((data.iiif && data.iiif.concurrency) || CONFIG.iiif.concurrency) || CONFIG.iiif.concurrency,
+          chunkSize: Number(di.chunkSize || CONFIG.iiif.chunkSize) || CONFIG.iiif.chunkSize,
+          concurrency: Number(di.concurrency || CONFIG.iiif.concurrency) || CONFIG.iiif.concurrency,
+          thumbnails: {
+            unsafe: !!(di.thumbnails && di.thumbnails.unsafe === true),
+            preferredSize: Number(di.thumbnails && di.thumbnails.preferredSize) || 1200,
+          }
         }
       };
       console.log(
@@ -361,6 +366,8 @@ async function buildIiifCollectionPages(CONFIG) {
   const chunks = Math.max(1, Math.ceil(tasks.length / chunkSize));
   try { logLine(`Aggregating ${tasks.length} Manifest(s) in ${chunks} chunk(s)...\n`, 'cyan'); } catch (_) {}
   const searchRecords = [];
+  const unsafeThumbs = !!(CONFIG && CONFIG.iiif && CONFIG.iiif.thumbnails && CONFIG.iiif.thumbnails.unsafe === true);
+  const thumbSize = (CONFIG && CONFIG.iiif && CONFIG.iiif.thumbnails && CONFIG.iiif.thumbnails.preferredSize) || 1200;
   for (let ci = 0; ci < chunks; ci++) {
     const chunk = tasks.slice(ci * chunkSize, (ci + 1) * chunkSize);
     try {
@@ -494,11 +501,27 @@ async function buildIiifCollectionPages(CONFIG) {
           try { html = require('./common').applyBaseToHtml(html); } catch (_) {}
           await fsp.writeFile(outPath, html, "utf8");
           lns.push([`✓ Created ${path.relative(process.cwd(), outPath)}`, 'green']);
+          // Resolve thumbnail URL for this manifest (safe by default; expanded "unsafe" if configured)
+          let thumbUrl = '';
+          try {
+            const { getThumbnailUrl } = require('./thumbs');
+            const url = await getThumbnailUrl(manifest, thumbSize, unsafeThumbs);
+            if (url) {
+              thumbUrl = String(url);
+              const idx = await loadManifestIndex();
+              if (Array.isArray(idx.byId)) {
+                const entry = idx.byId.find((e) => e && e.id === String(manifest.id || id) && e.type === 'Manifest');
+                if (entry) { entry.thumbnail = String(url); await saveManifestIndex(idx); }
+              }
+            }
+          } catch (_) {}
+          // Push search record including thumbnail (if available)
           searchRecords.push({
             id: String(manifest.id || id),
             title,
             href: href.split(path.sep).join("/"),
             type: 'work',
+            thumbnail: thumbUrl || undefined,
           });
         } catch (e) {
           lns.push([`IIIF: failed to render for ${id || '<unknown>'} — ${e.message}`, 'red']);

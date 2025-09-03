@@ -177,6 +177,8 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
   const mod = await import(pathToFileURL(tmpFile).href + bust);
   const MDXContent = mod.default || mod.MDXContent || mod;
   const components = await loadUiComponents();
+  let IIIFCard = null;
+  try { IIIFCard = require('./components/IIIFCard'); } catch (_) { IIIFCard = null; }
   const MDXProvider = await getMdxProvider();
   // Base path support for anchors
   const Anchor = function A(props) {
@@ -192,6 +194,7 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
     : contentNode;
   const withApp = React.createElement(app.App, null, withLayout);
   const compMap = { ...components, a: Anchor };
+  if (IIIFCard) compMap.IIIFCard = IIIFCard;
   const page = MDXProvider
     ? React.createElement(MDXProvider, { components: compMap }, withApp)
     : withApp;

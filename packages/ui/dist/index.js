@@ -39,7 +39,33 @@ import React4 from "react";
 var HelloWorld = () => {
   return /* @__PURE__ */ React4.createElement("div", null, "Hello, World!");
 };
+
+// src/layout/Card.jsx
+import React5 from "react";
+function Card({
+  href,
+  src,
+  alt,
+  title,
+  subtitle,
+  className,
+  style,
+  children,
+  ...rest
+}) {
+  const caption = /* @__PURE__ */ React5.createElement("figcaption", { style: { marginTop: 8 } }, title ? /* @__PURE__ */ React5.createElement("strong", { style: { display: "block" } }, title) : null, subtitle ? /* @__PURE__ */ React5.createElement("span", { style: { display: "block", color: "#6b7280" } }, subtitle) : null, children);
+  return /* @__PURE__ */ React5.createElement("a", { href, className, style, ...rest }, /* @__PURE__ */ React5.createElement("figure", { style: { margin: 0 } }, src ? /* @__PURE__ */ React5.createElement(
+    "img",
+    {
+      src,
+      alt: alt || title || "",
+      loading: "lazy",
+      style: { display: "block", width: "100%", height: "auto", borderRadius: 4 }
+    }
+  ) : null, caption));
+}
 export {
+  Card,
   Fallback,
   HelloWorld,
   Hydrate,
