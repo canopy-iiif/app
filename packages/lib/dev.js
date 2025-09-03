@@ -6,6 +6,7 @@ const { build } = require('./build');
 const http = require('http');
 const url = require('url');
 const { CONTENT_DIR, OUT_DIR, ASSETS_DIR, ensureDirSync } = require('./common');
+const twHelper = (() => { try { return require('../helpers/build-tailwind'); } catch (_) { return null; } })();
 const PORT = Number(process.env.PORT || 3000);
 let onBuildSuccess = () => {};
 let onBuildStart = () => {};
@@ -318,6 +319,53 @@ function dev() {
   }
   runBuild();
   startServer();
+  // Start Tailwind watcher if config + input exist
+  try {
+    const root = process.cwd();
+    const appStylesDir = path.join(root, 'app', 'styles');
+    const twConfigsRoot = ['tailwind.config.js','tailwind.config.cjs','tailwind.config.mjs','tailwind.config.ts']
+      .map((n) => path.join(root, n));
+    const twConfigsApp = ['tailwind.config.js','tailwind.config.cjs','tailwind.config.mjs','tailwind.config.ts']
+      .map((n) => path.join(appStylesDir, n));
+    let configPath = [...twConfigsApp, ...twConfigsRoot].find((p) => { try { return fs.existsSync(p); } catch (_) { return false; } });
+    const inputCandidates = [path.join(appStylesDir, 'index.css'), path.join(CONTENT_DIR, '_styles.css')];
+    let inputCss = inputCandidates.find((p) => { try { return fs.existsSync(p); } catch (_) { return false; } });
+    // Generate fallback config and input if missing
+    if (!configPath) {
+      try {
+        const { CACHE_DIR } = require('./common');
+        const genDir = path.join(CACHE_DIR, 'tailwind');
+        ensureDirSync(genDir);
+        const genCfg = path.join(genDir, 'tailwind.config.js');
+        const cfg = `module.exports = {\n  presets: [require('@canopy-iiif/ui/tailwind-preset')],\n  content: [\n    './content/**/*.{mdx,html}',\n    './site/**/*.html',\n    './packages/ui/**/*.{js,jsx,ts,tsx}',\n    './packages/lib/components/**/*.{js,jsx}',\n  ],\n  theme: { extend: {} },\n};\n`;
+        fs.writeFileSync(genCfg, cfg, 'utf8');
+        configPath = genCfg;
+      } catch (_) { configPath = null; }
+    }
+    if (!inputCss) {
+      try {
+        const { CACHE_DIR } = require('./common');
+        const genDir = path.join(CACHE_DIR, 'tailwind');
+        ensureDirSync(genDir);
+        const genCss = path.join(genDir, 'index.css');
+        fs.writeFileSync(genCss, `@tailwind base;\n@tailwind components;\n@tailwind utilities;\n`, 'utf8');
+        inputCss = genCss;
+      } catch (_) { inputCss = null; }
+    }
+    const outputCss = path.join(OUT_DIR, 'styles.css');
+    if (configPath && inputCss && twHelper && typeof twHelper.watchTailwind === 'function') {
+      // Ensure output dir exists and start watcher
+      ensureDirSync(path.dirname(outputCss));
+      const child = twHelper.watchTailwind({ input: inputCss, output: outputCss, config: configPath, minify: false });
+      if (child) {
+        console.log('[tailwind] watching', inputCss);
+        // Watch compiled CSS and trigger reload when it updates
+        try {
+          fs.watch(outputCss, { persistent: false }, () => { try { onBuildSuccess(); } catch (_) {} });
+        } catch (_) {}
+      }
+    }
+  } catch (_) {}
   console.log('Watching', CONTENT_DIR, '(Ctrl+C to stop)');
   const rw = tryRecursiveWatch();
   if (!rw) watchPerDir();

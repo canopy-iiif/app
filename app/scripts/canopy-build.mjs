@@ -119,13 +119,19 @@ function loadLibraryApi() {
   try {
     lib = requireCjs("@canopy-iiif/lib");
   } catch (e) {
-    const hint = [
-      "Unable to load @canopy-iiif/lib.",
-      "Ensure dependencies are installed (npm install)",
-      "and that peer deps like 'react' are present.",
-    ].join(" ");
-    const detail = e && e.message ? `\nCaused by: ${e.message}` : "";
-    throw new Error(`${hint}${detail}`);
+    // Fallback: load local workspace directly (dev convenience)
+    try {
+      const localPath = new URL('../../packages/lib/index.js', import.meta.url).pathname;
+      lib = requireCjs(localPath);
+    } catch (e2) {
+      const hint = [
+        "Unable to load @canopy-iiif/lib.",
+        "Ensure dependencies are installed (npm install)",
+        "and that peer deps like 'react' are present.",
+      ].join(" ");
+      const detail = (e && e.message ? `\nCaused by: ${e.message}` : "") + (e2 && e2.message ? `\nFallback error: ${e2.message}` : "");
+      throw new Error(`${hint}${detail}`);
+    }
   }
   const api =
     lib && (typeof lib.build === "function" || typeof lib.dev === "function")

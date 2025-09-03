@@ -8,10 +8,14 @@
   "type": "module",
   "main": "./dist/index.js",
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.js",
+    "./tailwind-preset": "./tailwind-preset.js",
+    "./tailwind-typography": "./tailwind-typography.js"
   },
   "files": [
-    "dist/**"
+    "dist/**",
+    "tailwind-preset.js",
+    "tailwind-typography.js"
   ],
   "publishConfig": {
     "access": "public"

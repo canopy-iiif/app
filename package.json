@@ -21,6 +21,7 @@
     "@samvera/clover-iiif": "^3.0.0"
   },
   "devDependencies": {
+    "tailwindcss": "^3.4.10",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

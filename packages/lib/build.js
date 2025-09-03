@@ -54,15 +54,86 @@ function mapOutPath(filePath) {
 }
 
 async function ensureStyles() {
-  const dest = path.join(OUT_DIR, "styles.css");
-  const custom = path.join(CONTENT_DIR, "_styles.css");
+  const dest = path.join(OUT_DIR, 'styles.css');
+  const customContentCss = path.join(CONTENT_DIR, '_styles.css');
+  const appStylesDir = path.join(process.cwd(), 'app', 'styles');
+  const customAppCss = path.join(appStylesDir, 'index.css');
   ensureDirSync(path.dirname(dest));
-  if (fs.existsSync(custom)) {
-    await fsp.copyFile(custom, dest);
-    return;
+
+  // If Tailwind config exists and CLI is available, compile using app/styles or content css
+  const root = process.cwd();
+  const twConfigsRoot = [
+    path.join(root, 'tailwind.config.js'),
+    path.join(root, 'tailwind.config.cjs'),
+    path.join(root, 'tailwind.config.mjs'),
+    path.join(root, 'tailwind.config.ts'),
+  ];
+  const twConfigsApp = [
+    path.join(appStylesDir, 'tailwind.config.js'),
+    path.join(appStylesDir, 'tailwind.config.cjs'),
+    path.join(appStylesDir, 'tailwind.config.mjs'),
+    path.join(appStylesDir, 'tailwind.config.ts'),
+  ];
+  let configPath = [...twConfigsApp, ...twConfigsRoot].find((p) => {
+    try { return fs.existsSync(p); } catch (_) { return false; }
+  });
+  // If no explicit config, generate a minimal default under .cache
+  if (!configPath) {
+    try {
+      const { CACHE_DIR } = require('./common');
+      const genDir = path.join(CACHE_DIR, 'tailwind');
+      ensureDirSync(genDir);
+      const genCfg = path.join(genDir, 'tailwind.config.js');
+      const cfg = `module.exports = {\n  presets: [require('@canopy-iiif/ui/tailwind-preset')],\n  content: [\n    './content/**/*.{mdx,html}',\n    './site/**/*.html',\n    './packages/ui/**/*.{js,jsx,ts,tsx}',\n    './packages/lib/components/**/*.{js,jsx}',\n  ],\n  theme: { extend: {} },\n};\n`;
+      fs.writeFileSync(genCfg, cfg, 'utf8');
+      configPath = genCfg;
+    } catch (_) { configPath = null; }
   }
-  const css = `:root{--max-w:760px;--muted:#6b7280}*{box-sizing:border-box}body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif;max-width:var(--max-w);margin:2rem auto;padding:0 1rem;line-height:1.6}a{color:#2563eb;text-decoration:none}a:hover{text-decoration:underline}.site-header,.site-footer{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:1rem 0;border-bottom:1px solid #e5e7eb}.site-footer{border-bottom:0;border-top:1px solid #e5e7eb;color:var(--muted)}.brand{font-weight:600}.content pre{background:#f6f8fa;padding:1rem;overflow:auto}.content code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;background:#f6f8fa;padding:.1rem .3rem;border-radius:4px}`;
-  await fsp.writeFile(dest, css, "utf8");
+  const inputCss = fs.existsSync(customAppCss)
+    ? customAppCss
+    : (fs.existsSync(customContentCss) ? customContentCss : null);
+  // If no input CSS present, generate a small default in cache
+  let generatedInput = null;
+  if (!inputCss) {
+    try {
+      const { CACHE_DIR } = require('./common');
+      const genDir = path.join(CACHE_DIR, 'tailwind');
+      ensureDirSync(genDir);
+      generatedInput = path.join(genDir, 'index.css');
+      const css = `@tailwind base;\n@tailwind components;\n@tailwind utilities;\n`;
+      fs.writeFileSync(generatedInput, css, 'utf8');
+    } catch (_) { generatedInput = null; }
+  }
+  if (configPath && inputCss) {
+    try {
+      const helper = require('../helpers/build-tailwind');
+      const ok = await helper.buildTailwind({ input: inputCss || generatedInput, output: dest, config: configPath, minify: true });
+      if (ok) return; // Tailwind compiled CSS
+    } catch (_) {
+      // fallthrough to copy or default
+    }
+  }
+
+  // If a custom CSS exists (non-TW or TW not available), copy it as-is.
+  function isTailwindSource(p) {
+    try { const s = fs.readFileSync(p, 'utf8'); return /@tailwind\s+(base|components|utilities)/.test(s); } catch (_) { return false; }
+  }
+  if (fs.existsSync(customAppCss)) {
+    if (!isTailwindSource(customAppCss)) {
+      await fsp.copyFile(customAppCss, dest);
+      return;
+    }
+  }
+  if (fs.existsSync(customContentCss)) {
+    if (!isTailwindSource(customContentCss)) {
+      await fsp.copyFile(customContentCss, dest);
+      return;
+    }
+  }
+
+  // Default minimal CSS
+  const css = `:root{--max-w:760px;--muted:#6b7280}*{box-sizing:border-box}body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif;max-width:var(--max-w);margin:2rem auto;padding:0 1rem;line-height:1.6}a{color:#2563eb;text-decoration:none}a:hover{text-decoration:underline}.site-header,.site-footer{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:1rem 0;border-bottom:1px solid #e5e7eb}.site-footer{border-bottom:0;border-top:1px solid #e5e7eb;color:var(--muted)}.brand{font-weight:600}.content pre{background:#f6f8fa;padding:1rem;overflow:auto}.content code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;background:#f6f8fa;padding:.1rem .3rem;border-radius:4px}.tabs{display:flex;gap:.5rem;align-items:center;border-bottom:1px solid #e5e7eb;margin:.5rem 0}.tab{background:none;border:0;color:#374151;padding:.25rem .5rem;border-radius:.375rem;cursor:pointer}.tab:hover{color:#111827}.tab-active{color:#2563eb;border:1px solid #e5e7eb;border-bottom:0;background:#fff}.masonry{column-gap:1rem;column-count:1}@media(min-width:768px){.masonry{column-count:2}}@media(min-width:1024px){.masonry{column-count:3}}.masonry>*{break-inside:avoid;margin-bottom:1rem;display:block}[data-grid-variant=masonry]{column-gap:var(--grid-gap,1rem);column-count:var(--cols-base,1)}@media(min-width:768px){[data-grid-variant=masonry]{column-count:var(--cols-md,2)}}@media(min-width:1024px){[data-grid-variant=masonry]{column-count:var(--cols-lg,3)}}[data-grid-variant=masonry]>*{break-inside:avoid;margin-bottom:var(--grid-gap,1rem);display:block}[data-grid-variant=grid]{display:grid;grid-template-columns:repeat(var(--cols-base,1),minmax(0,1fr));gap:var(--grid-gap,1rem)}@media(min-width:768px){[data-grid-variant=grid]{grid-template-columns:repeat(var(--cols-md,2),minmax(0,1fr))}}@media(min-width:1024px){[data-grid-variant=grid]{grid-template-columns:repeat(var(--cols-lg,3),minmax(0,1fr))}}`;
+  await fsp.writeFile(dest, css, 'utf8');
 }
 
 async function compileMdxFile(filePath, outPath, extraProps = {}) {
@@ -302,7 +373,7 @@ async function build() {
       logLine("✓ Created search page", "cyan");
     }
     // Always (re)write the search index combining IIIF and MDX pages
-    const mdxRecords = (PAGES || [])
+    let mdxRecords = (PAGES || [])
       .filter((p) => p && p.href && p.searchInclude)
       .map((p) => ({
         title: p.title || p.href,
@@ -310,7 +381,20 @@ async function build() {
         type: p.searchType || "page",
       }));
     const iiifRecords = Array.isArray(searchRecords) ? searchRecords : [];
-    const combined = [...iiifRecords, ...mdxRecords];
+    let combined = [...iiifRecords, ...mdxRecords];
+    // Optional: generate a mock search index for testing (no network needed)
+    if (process.env.CANOPY_MOCK_SEARCH === '1') {
+      const mock = [];
+      const svg = encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="400" height="300" fill="#dbeafe"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="24" fill="#1d4ed8">Mock</text></svg>');
+      const thumb = `data:image/svg+xml;charset=utf-8,${svg}`;
+      for (let i = 1; i <= 120; i++) {
+        mock.push({ title: `Mock Work #${i}`, href: `works/mock-${i}.html`, type: 'work', thumbnail: thumb });
+      }
+      mock.push({ title: 'Mock Doc A', href: 'getting-started/index.html', type: 'docs' });
+      mock.push({ title: 'Mock Doc B', href: 'getting-started/example.html', type: 'docs' });
+      mock.push({ title: 'Mock Page', href: 'index.html', type: 'page' });
+      combined = mock;
+    }
     try {
       logLine(`• Updating search index (${combined.length})...`, "blue");
     } catch (_) {}

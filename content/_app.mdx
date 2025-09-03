@@ -6,23 +6,24 @@ export const Head = () => (
 
 export default function App({ children }) {
   return (
-    <>
-      <header className="site-header">
-        <a href="/" className="brand">Canopy IIIF</a>
-        <nav style={{ display: 'flex', gap: '0.75rem' }}>
-          <a href="/search">Search</a>
-          <a href="/getting-started">Getting Started</a>
-        </nav>
+    <div className="min-h-screen bg-white text-slate-800 flex flex-col">
+      <header className="border-b border-slate-200">
+        <div className="mx-auto max-w-content w-full px-4 py-3 flex items-center justify-between">
+          <a href="/" className="brand-link text-lg">Canopy IIIF</a>
+          <nav className="flex items-center gap-4">
+            <a href="/search" className="hover:underline">Search</a>
+            <a href="/getting-started" className="hover:underline">Getting Started</a>
+          </nav>
+        </div>
       </header>
 
-      <main className="content">
+      <main className="flex-1 mx-auto max-w-content w-full px-4 py-6">
         {children}
       </main>
 
-      <footer className="site-footer">
-        (footer)
+      <footer className="border-t border-slate-200 text-slate-500">
+        <div className="mx-auto max-w-content w-full px-4 py-6">(footer)</div>
       </footer>
-    </>
-
-);
+    </div>
+  );
 }

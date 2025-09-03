@@ -1,13 +1,6 @@
 # Search
 
-<div>
-  {/* This is where the search form would go */}
-  {props.search.form}
-  <div className="search-grid">
-    <aside>
-      <strong>Results:</strong> {props.search.count}
-      <div>{props.search.summary}</div>
-    </aside>
-    <section>{props.search.results}</section>
-  </div>
+<div className="mx-auto max-w-content w-full px-4 py-6">
+  <div id="search-root"></div>
+  {/* React SearchApp mounts into #search-root */}
 </div>
