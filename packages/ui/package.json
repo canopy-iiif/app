@@ -1,8 +1,10 @@
 {
   "name": "@canopy-iiif/ui",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "private": false,
   "license": "MIT",
+  "author": "Mat Jordan <mat@northwestern.edu>",
+  "homepage": "https://canopy-iiif.github.io/docs/",
   "type": "module",
   "main": "./dist/index.js",
   "exports": {

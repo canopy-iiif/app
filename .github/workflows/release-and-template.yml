@@ -101,6 +101,6 @@ jobs:
           git config user.name "Mat Jordan"
           git config user.email "mat@northwestern.edu"
           git add .
-          git commit -m "Update template from app/main (post-release)"
+          git commit -m "Update template from app/main"
           git remote add origin "https://x-access-token:${TEMPLATE_PUSH_TOKEN}@github.com/${TARGET_REPO}.git"
           git push --force origin main
