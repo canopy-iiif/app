@@ -275,6 +275,8 @@ async function build() {
       try {
         logLine("• Preparing search (initial)...", "blue", { bright: true });
       } catch (_) {}
+      // Build result item template (if present) up-front so it can be inlined
+      try { await search.ensureResultTemplate(); } catch (_) {}
       try {
         logLine("  - Writing empty index...", "blue");
       } catch (_) {}
@@ -327,7 +329,12 @@ async function build() {
         try { logLine('! Search runtime not bundled (final timeout)\n', 'yellow'); } catch (_) {}
       }
     }
-    // No need to rebuild search.html again; it doesn't embed the index contents
+    // Rebuild result item template after content processing to capture latest
+    try { await search.ensureResultTemplate(); } catch (_) {}
+    // Rebuild search.html to inline the latest result template
+    try { logLine('• Updating search.html...', 'blue'); } catch (_) {}
+    await search.buildSearchPage();
+    try { logLine('✓ Search page updated', 'cyan'); } catch (_) {}
     // Itemize counts by type for a clearer summary
     const counts = new Map();
     for (const r of combined) {

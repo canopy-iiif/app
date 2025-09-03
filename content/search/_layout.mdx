@@ -1,14 +1,13 @@
 # Search
 
 <div>
-  <div>
-    {/* This is where the search form would go */}
-    {props.search.form}
-  </div>
-  <label>{props.search.count} results found</label>
-  <span>{props.search.summary}</span>
-  <div>
-    {/* This is where results would go */}
-    {props.search.results}
+  {/* This is where the search form would go */}
+  {props.search.form}
+  <div className="search-grid">
+    <aside>
+      <strong>Results:</strong> {props.search.count}
+      <div>{props.search.summary}</div>
+    </aside>
+    <section>{props.search.results}</section>
   </div>
 </div>
