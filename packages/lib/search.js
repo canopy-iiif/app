@@ -42,7 +42,7 @@ function createSearchStore() {
   (async () => {
     try {
       const Flex = (window && window.FlexSearch) || (await import('flexsearch')).default;
-      const data = await fetch('./search-index.json').then((r) => r.ok ? r.json() : []);
+      const data = await fetch('./api/search-index.json').then((r) => r.ok ? r.json() : []);
       const idx = new Flex.Index({ tokenize: 'forward' });
       data.forEach((rec, i) => { try { idx.add(i, rec && rec.title ? String(rec.title) : ''); } catch (_) {} });
       const ts = Array.from(new Set(data.map((r) => String((r && r.type) || 'page'))));
@@ -117,7 +117,9 @@ async function ensureSearchRuntime() {
   try { esbuild = require('../ui/node_modules/esbuild'); } catch (_) { try { esbuild = require('esbuild'); } catch (_) {} }
   if (!esbuild) { console.warn('Search: skipped bundling (no esbuild)'); return; }
   const entry = path.join(__dirname, 'search-app.jsx');
-  const outFile = path.join(OUT_DIR, 'search.js');
+  const scriptsDir = path.join(OUT_DIR, 'scripts');
+  ensureDirSync(scriptsDir);
+  const outFile = path.join(scriptsDir, 'search.js');
   // Ensure a global React shim is available to reduce search.js size
   try {
     const scriptsDir = path.join(OUT_DIR, 'scripts');
@@ -263,8 +265,8 @@ async function buildSearchPage() {
       head = app && app.Head ? ReactDOMServer.renderToStaticMarkup(React.createElement(app.Head)) : '';
     }
     const importMap = '';
-    const cssRel = path.relative(path.dirname(outPath), path.join(OUT_DIR, 'styles.css')).split(path.sep).join('/');
-    const jsAbs = path.join(OUT_DIR, 'search.js');
+    const cssRel = path.relative(path.dirname(outPath), path.join(OUT_DIR, 'styles', 'styles.css')).split(path.sep).join('/');
+    const jsAbs = path.join(OUT_DIR, 'scripts', 'search.js');
     let jsRel = path.relative(path.dirname(outPath), jsAbs).split(path.sep).join('/');
     let v = '';
     try { const st = require('fs').statSync(jsAbs); v = `?v=${Math.floor(st.mtimeMs || Date.now())}`; } catch (_) {}
@@ -300,7 +302,9 @@ function sanitizeRecord(r) {
 }
 
 async function writeSearchIndex(records) {
-  const idxPath = path.join(OUT_DIR, 'search-index.json');
+  const apiDir = path.join(OUT_DIR, 'api');
+  ensureDirSync(apiDir);
+  const idxPath = path.join(apiDir, 'search-index.json');
   const list = Array.isArray(records) ? records : [];
   const safe = list.map(sanitizeRecord);
   const json = JSON.stringify(safe, null, 2);

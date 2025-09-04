@@ -5,6 +5,13 @@ import React, { useEffect, useState } from "react";
 export const Viewer = (props) => {
   const [CloverViewer, setCloverViewer] = useState(null);
 
+  const options = {
+    informationPanel: {
+      open: false,
+      renderAbout: false,
+    },
+  };
+
   useEffect(() => {
     let mounted = true;
     const canUseDom =
@@ -28,17 +35,20 @@ export const Viewer = (props) => {
 
   if (!CloverViewer) {
     // SSR placeholder for client hydration; props provided as JSON
-    let json = '{}';
+    let json = "{}";
     try {
       json = JSON.stringify(props || {});
     } catch (_) {
-      json = '{}';
+      json = "{}";
     }
     return (
       <div data-canopy-viewer="1">
-        <script type="application/json" dangerouslySetInnerHTML={{ __html: json }} />
+        <script
+          type="application/json"
+          dangerouslySetInnerHTML={{ __html: json }}
+        />
       </div>
     );
   }
-  return <CloverViewer {...props} />;
+  return <CloverViewer options={options} {...props} />;
 };

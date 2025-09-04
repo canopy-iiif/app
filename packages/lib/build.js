@@ -14,6 +14,10 @@ const iiif = require("./iiif");
 const search = require("./search");
 const { log, logLine } = require("./log");
 
+// Cache IIIF search records between builds (dev mode) so MDX-only rebuilds
+// can skip re-fetching IIIF while still keeping search results for works.
+let IIIF_RECORDS_CACHE = [];
+
 let PAGES = [];
 const LAYOUT_META = new Map(); // cache: dir -> frontmatter data for _layout.mdx in that dir
 
@@ -54,11 +58,12 @@ function mapOutPath(filePath) {
 }
 
 async function ensureStyles() {
-  const dest = path.join(OUT_DIR, 'styles.css');
+  const stylesDir = path.join(OUT_DIR, 'styles');
+  const dest = path.join(stylesDir, 'styles.css');
   const customContentCss = path.join(CONTENT_DIR, '_styles.css');
   const appStylesDir = path.join(process.cwd(), 'app', 'styles');
   const customAppCss = path.join(appStylesDir, 'index.css');
-  ensureDirSync(path.dirname(dest));
+  ensureDirSync(stylesDir);
 
   // If Tailwind config exists and CLI is available, compile using app/styles or content css
   const root = process.cwd();
@@ -124,7 +129,7 @@ async function ensureStyles() {
       const args = ['-i', input, '-o', output];
       if (config) args.push('-c', config);
       if (minify) args.push('--minify');
-      const res = spawnSync(cli.cmd, [...cli.args, ...args], { stdio: 'inherit' });
+      const res = spawnSync(cli.cmd, [...cli.args, ...args], { stdio: 'inherit', env: { ...process.env, BROWSERSLIST_IGNORE_OLD_DATA: '1' } });
       return !!res && res.status === 0;
     } catch (_) { return false; }
   }
@@ -165,14 +170,14 @@ async function compileMdxFile(filePath, outPath, extraProps = {}) {
     extraProps
   );
   const cssRel = path
-    .relative(path.dirname(outPath), path.join(OUT_DIR, "styles.css"))
+    .relative(path.dirname(outPath), path.join(OUT_DIR, "styles", "styles.css"))
     .split(path.sep)
     .join("/");
   const needsHydrate =
     body.includes("data-canopy-hydrate") || body.includes("data-canopy-viewer");
   const jsRel = needsHydrate
     ? path
-        .relative(path.dirname(outPath), path.join(OUT_DIR, "canopy-viewer.js"))
+        .relative(path.dirname(outPath), path.join(OUT_DIR, "scripts", "canopy-viewer.js"))
         .split(path.sep)
         .join("/")
     : null;
@@ -283,7 +288,9 @@ async function copyAssets() {
 
 // No global default layout; directory-scoped layouts are resolved per-page
 
-async function build() {
+async function build(options = {}) {
+  const opt = options || {};
+  const skipIiif = !!opt.skipIiif;
   if (!fs.existsSync(CONTENT_DIR)) {
     console.error("No content directory found at", CONTENT_DIR);
     process.exit(1);
@@ -300,8 +307,12 @@ async function build() {
     )
       LAYOUT_META.clear();
   } catch (_) {}
-  await cleanDir(OUT_DIR);
-  logLine("✓ Cleaned output directory\n", "cyan");
+  if (!skipIiif) {
+    await cleanDir(OUT_DIR);
+    logLine("✓ Cleaned output directory\n", "cyan");
+  } else {
+    try { logLine("• Incremental rebuild (skip IIIF, no clean)\n", "blue"); } catch (_) {}
+  }
   // Defer styles until after pages are generated so Tailwind can scan site HTML
   await mdx.ensureClientRuntime();
   logLine("✓ Prepared client hydration runtime\n", "cyan", { dim: true });
@@ -309,9 +320,16 @@ async function build() {
   await copyAssets();
   // No-op: global layout removed
 
-  // Build IIIF works + collect search records
-  const CONFIG = await iiif.loadConfig();
-  const { searchRecords } = await iiif.buildIiifCollectionPages(CONFIG);
+  // Build IIIF works + collect search records (or reuse cache in incremental mode)
+  let searchRecords = [];
+  if (!skipIiif) {
+    const CONFIG = await iiif.loadConfig();
+    const res = await iiif.buildIiifCollectionPages(CONFIG);
+    searchRecords = Array.isArray(res && res.searchRecords) ? res.searchRecords : [];
+    IIIF_RECORDS_CACHE = searchRecords;
+  } else {
+    searchRecords = Array.isArray(IIIF_RECORDS_CACHE) ? IIIF_RECORDS_CACHE : [];
+  }
 
   // Collect pages metadata for sitemap injection
   const pages = [];
@@ -470,8 +488,10 @@ async function build() {
 
   // Now that HTML/JS artifacts exist (including search.js), build styles so Tailwind can
   // pick up classes from generated output and runtime bundles.
-  await ensureStyles();
-  logLine("✓ Wrote styles.css\n", "cyan");
+  if (!process.env.CANOPY_SKIP_STYLES) {
+    await ensureStyles();
+    logLine("✓ Wrote styles.css\n", "cyan");
+  }
 }
 
 module.exports = { build };

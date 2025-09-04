@@ -37,7 +37,7 @@ function createSearchStore() {
   (async () => {
     try {
       const Flex = (window && window.FlexSearch) || (await import('flexsearch')).default;
-      const data = await fetch('./search-index.json').then((r) => r.ok ? r.json() : []);
+      const data = await fetch('./api/search-index.json').then((r) => r.ok ? r.json() : []);
       const idx = new Flex.Index({ tokenize: 'forward' });
       data.forEach((rec, i) => { try { idx.add(i, rec && rec.title ? String(rec.title) : ''); } catch (_) {} });
       const ts = Array.from(new Set(data.map((r) => String((r && r.type) || 'page'))));

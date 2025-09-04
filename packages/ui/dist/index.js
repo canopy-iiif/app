@@ -906,6 +906,12 @@ function Card({
 import React4, { useEffect, useState } from "react";
 var Viewer = (props) => {
   const [CloverViewer, setCloverViewer] = useState(null);
+  const options = {
+    informationPanel: {
+      open: false,
+      renderAbout: false
+    }
+  };
   useEffect(() => {
     let mounted = true;
     const canUseDom = typeof window !== "undefined" && typeof document !== "undefined";
@@ -929,9 +935,15 @@ var Viewer = (props) => {
     } catch (_) {
       json = "{}";
     }
-    return /* @__PURE__ */ React4.createElement("div", { "data-canopy-viewer": "1" }, /* @__PURE__ */ React4.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
+    return /* @__PURE__ */ React4.createElement("div", { "data-canopy-viewer": "1" }, /* @__PURE__ */ React4.createElement(
+      "script",
+      {
+        type: "application/json",
+        dangerouslySetInnerHTML: { __html: json }
+      }
+    ));
   }
-  return /* @__PURE__ */ React4.createElement(CloverViewer, { ...props });
+  return /* @__PURE__ */ React4.createElement(CloverViewer, { options, ...props });
 };
 
 // src/layout/TestFile.jsx

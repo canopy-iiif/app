@@ -21,10 +21,23 @@ function resolveTailwindCli() {
 const PORT = Number(process.env.PORT || 3000);
 let onBuildSuccess = () => {};
 let onBuildStart = () => {};
+let nextBuildSkipIiif = false; // hint set by watchers
+
+function prettyPath(p) {
+  try {
+    let rel = path.relative(process.cwd(), p);
+    if (!rel) rel = '.';
+    rel = rel.split(path.sep).join('/');
+    if (!rel.startsWith('./') && !rel.startsWith('../')) rel = './' + rel;
+    return rel;
+  } catch (_) { return p; }
+}
 
 async function runBuild() {
   try {
-    await build();
+    const hint = { skipIiif: !!nextBuildSkipIiif };
+    nextBuildSkipIiif = false;
+    await build(hint);
     try { onBuildSuccess(); } catch (_) {}
   } catch (e) {
     console.error('Build failed:', e && e.message ? e.message : e);
@@ -35,7 +48,9 @@ function tryRecursiveWatch() {
   try {
     const watcher = fs.watch(CONTENT_DIR, { recursive: true }, (eventType, filename) => {
       if (!filename) return;
-      console.log(`[watch] ${eventType}: ${filename}`);
+      try { console.log(`[watch] ${eventType}: ${prettyPath(path.join(CONTENT_DIR, filename))}`); } catch (_) {}
+      // If an MDX file changed, we can skip IIIF for the next build
+      try { if (/\.mdx$/i.test(filename)) nextBuildSkipIiif = true; } catch (_) {}
       try { onBuildStart(); } catch (_) {}
       debounceBuild();
     });
@@ -58,9 +73,10 @@ function watchPerDir() {
     if (watchers.has(dir)) return;
     try {
       const w = fs.watch(dir, (eventType, filename) => {
-        console.log(`[watch] ${eventType}: ${path.join(dir, filename || '')}`);
+        try { console.log(`[watch] ${eventType}: ${prettyPath(path.join(dir, filename || ''))}`); } catch (_) {}
         // If a new directory appears, add a watcher for it on next scan
         scan(dir);
+        try { if (filename && /\.mdx$/i.test(filename)) nextBuildSkipIiif = true; } catch (_) {}
         try { onBuildStart(); } catch (_) {}
         debounceBuild();
       });
@@ -117,7 +133,7 @@ function tryRecursiveWatchAssets() {
   try {
     const watcher = fs.watch(ASSETS_DIR, { recursive: true }, (eventType, filename) => {
       if (!filename) return;
-      console.log(`[assets] ${eventType}: ${filename}`);
+      try { console.log(`[assets] ${eventType}: ${prettyPath(path.join(ASSETS_DIR, filename))}`); } catch (_) {}
       // Copy just the changed asset and trigger reload
       syncAsset(filename).then(() => { try { onBuildSuccess(); } catch (_) {} });
     });
@@ -135,7 +151,7 @@ function watchAssetsPerDir() {
     try {
       const w = fs.watch(dir, (eventType, filename) => {
         const rel = filename ? path.relative(ASSETS_DIR, path.join(dir, filename)) : path.relative(ASSETS_DIR, dir);
-        console.log(`[assets] ${eventType}: ${path.join(dir, filename || '')}`);
+        try { console.log(`[assets] ${eventType}: ${prettyPath(path.join(dir, filename || ''))}`); } catch (_) {}
         // If a new directory appears, add a watcher for it on next scan
         scan(dir);
         syncAsset(rel).then(() => { try { onBuildSuccess(); } catch (_) {} });
@@ -317,20 +333,30 @@ function startServer() {
   return server;
 }
 
-function dev() {
+async function dev() {
   if (!fs.existsSync(CONTENT_DIR)) {
     console.error('No content directory found at', CONTENT_DIR);
     process.exit(1);
   }
   console.log('Initial build...');
+  // In dev, let the Tailwind watcher own CSS generation to avoid duplicate
+  // one-off builds that print "Rebuilding..." messages. Skip ensureStyles()
+  // within build() by setting an environment flag.
+  process.env.CANOPY_SKIP_STYLES = process.env.DEV_ONCE ? '' : '1';
+  // Suppress noisy Browserslist old data warning in dev/tailwind
+  process.env.BROWSERSLIST_IGNORE_OLD_DATA = '1';
   if (process.env.DEV_ONCE) {
     // Build once and exit (used for tests/CI)
     runBuild().then(() => process.exit(0)).catch(() => process.exit(1));
     return;
   }
-  runBuild();
+  // Run the initial build synchronously so we don't start watchers too early
+  await runBuild();
+
+  // Start server after initial build completes
   startServer();
-  // Start Tailwind watcher if config + input exist
+
+  // Start Tailwind watcher if config + input exist (after initial build)
   try {
     const root = process.cwd();
     const appStylesDir = path.join(root, 'app', 'styles');
@@ -363,36 +389,95 @@ function dev() {
         inputCss = genCss;
       } catch (_) { inputCss = null; }
     }
-    const outputCss = path.join(OUT_DIR, 'styles.css');
+    const outputCss = path.join(OUT_DIR, 'styles', 'styles.css');
     if (configPath && inputCss) {
       // Ensure output dir exists and start watcher
       ensureDirSync(path.dirname(outputCss));
       let child = null;
-      if (twHelper && typeof twHelper.watchTailwind === 'function') {
-        child = twHelper.watchTailwind({ input: inputCss, output: outputCss, config: configPath, minify: false });
-      } else {
-        // Fallback: use CLI directly
-        const cli = resolveTailwindCli();
-        if (cli) {
-          const args = ['-i', inputCss, '-o', outputCss, '--watch', '-c', configPath];
-          child = spawn(cli.cmd, [...cli.args, ...args], { stdio: 'inherit' });
-        }
-      }
-      if (child) {
-        console.log('[tailwind] watching', inputCss);
-        // Watch compiled CSS and trigger reload when it updates
+      // Ensure output file exists (fallback minimal CSS if CLI/compile fails)
+      function writeFallbackCssIfMissing() {
         try {
-          fs.watch(outputCss, { persistent: false }, () => { try { onBuildSuccess(); } catch (_) {} });
+          if (!fs.existsSync(outputCss)) {
+            const base = `:root{--max-w:760px;--muted:#6b7280}*{box-sizing:border-box}body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif;max-width:var(--max-w);margin:2rem auto;padding:0 1rem;line-height:1.6}a{color:#2563eb;text-decoration:none}a:hover{text-decoration:underline}`;
+            ensureDirSync(path.dirname(outputCss));
+            fs.writeFileSync(outputCss, base + '\n', 'utf8');
+            console.log('[tailwind] wrote fallback CSS to', prettyPath(outputCss));
+          }
         } catch (_) {}
+      }
+      function fileSizeKb(p) { try { const st = fs.statSync(p); return st && st.size ? (st.size/1024).toFixed(1) : '0.0'; } catch (_) { return '0.0'; } }
+      // Initial one-off compile so the CSS exists before watcher starts
+      try {
+        const cliOnce = resolveTailwindCli();
+        if (cliOnce) {
+          const { spawnSync } = require('child_process');
+          const argsOnce = ['-i', inputCss, '-o', outputCss, '-c', configPath];
+          const res = spawnSync(cliOnce.cmd, [...cliOnce.args, ...argsOnce], { stdio: ['ignore','pipe','pipe'], env: { ...process.env, BROWSERSLIST_IGNORE_OLD_DATA: '1' } });
+          if (res && res.status === 0) {
+            console.log(`[tailwind] initial build ok (${fileSizeKb(outputCss)} KB) →`, prettyPath(outputCss));
+          } else {
+            console.warn('[tailwind] initial build failed; using fallback CSS');
+            try { if (res && res.stderr) process.stderr.write(res.stderr); } catch (_) {}
+            writeFallbackCssIfMissing();
+          }
+        } else {
+          console.warn('[tailwind] CLI not found; using fallback CSS');
+          writeFallbackCssIfMissing();
+        }
+      } catch (_) {}
+      // Prefer direct CLI spawn so we can mute initial rebuild logs
+      const cli = resolveTailwindCli();
+      if (cli) {
+        const args = ['-i', inputCss, '-o', outputCss, '--watch', '-c', configPath];
+        child = spawn(cli.cmd, [...cli.args, ...args], { stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, BROWSERSLIST_IGNORE_OLD_DATA: '1' } });
+        let unmuted = false;
+        // Unmute Tailwind logs after the first successful CSS write
+        try {
+          fs.watch(outputCss, { persistent: false }, () => {
+            if (!unmuted) {
+              unmuted = true;
+              console.log(`[tailwind] watching ${prettyPath(inputCss)} — compiled (${fileSizeKb(outputCss)} KB)`);
+            }
+            try { onBuildSuccess(); } catch (_) {}
+          });
+        } catch (_) {}
+        if (child.stdout) child.stdout.on('data', (d) => {
+          const s = d ? String(d) : '';
+          if (!unmuted) {
+            if (/error/i.test(s)) { try { process.stdout.write('[tailwind] ' + s); } catch (_) {} }
+          } else {
+            try { process.stdout.write(s); } catch (_) {}
+          }
+        });
+        if (child.stderr) child.stderr.on('data', (d) => {
+          const s = d ? String(d) : '';
+          if (!unmuted) {
+            if (s.trim()) { try { process.stderr.write('[tailwind] ' + s); } catch (_) {} }
+          } else {
+            try { process.stderr.write(s); } catch (_) {}
+          }
+        });
+        child.on('exit', (code) => {
+          if (code !== 0) {
+            console.error('[tailwind] watcher exited with code', code);
+          }
+        });
+      } else if (twHelper && typeof twHelper.watchTailwind === 'function') {
+        // Fallback to helper (cannot mute its initial logs)
+        child = twHelper.watchTailwind({ input: inputCss, output: outputCss, config: configPath, minify: false });
+        if (child) {
+          console.log('[tailwind] watching', prettyPath(inputCss));
+          try { fs.watch(outputCss, { persistent: false }, () => { try { onBuildSuccess(); } catch (_) {} }); } catch (_) {}
+        }
       }
     }
   } catch (_) {}
-  console.log('Watching', CONTENT_DIR, '(Ctrl+C to stop)');
+  console.log('[Watching]', prettyPath(CONTENT_DIR), '(Ctrl+C to stop)');
   const rw = tryRecursiveWatch();
   if (!rw) watchPerDir();
   // Watch assets for live copy without full rebuild
   if (fs.existsSync(ASSETS_DIR)) {
-    console.log('Watching', ASSETS_DIR, '(assets live-reload)');
+    console.log('[Watching]', prettyPath(ASSETS_DIR), '(assets live-reload)');
     const arw = tryRecursiveWatchAssets();
     if (!arw) watchAssetsPerDir();
   }

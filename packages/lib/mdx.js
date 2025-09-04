@@ -272,7 +272,9 @@ async function ensureClientRuntime() {
   }
   if (!esbuild) return;
   ensureDirSync(OUT_DIR);
-  const outFile = path.join(OUT_DIR, "canopy-viewer.js");
+  const scriptsDir = path.join(OUT_DIR, 'scripts');
+  ensureDirSync(scriptsDir);
+  const outFile = path.join(scriptsDir, "canopy-viewer.js");
   const entry = `
     import CloverViewer from '@samvera/clover-iiif/viewer';
 

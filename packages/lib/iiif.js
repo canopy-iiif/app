@@ -476,7 +476,7 @@ async function buildIiifCollectionPages(CONFIG) {
           const body = ReactDOMServer.renderToStaticMarkup(page);
           const head = app && app.Head ? ReactDOMServer.renderToStaticMarkup(React.createElement(app.Head)) : '';
           const cssRel = path
-            .relative(path.dirname(outPath), path.join(OUT_DIR, "styles.css"))
+            .relative(path.dirname(outPath), path.join(OUT_DIR, "styles", "styles.css"))
             .split(path.sep)
             .join("/");
           const needsHydrate =
@@ -486,7 +486,7 @@ async function buildIiifCollectionPages(CONFIG) {
             ? path
                 .relative(
                   path.dirname(outPath),
-                  path.join(OUT_DIR, "canopy-viewer.js")
+                  path.join(OUT_DIR, "scripts", "canopy-viewer.js")
                 )
                 .split(path.sep)
                 .join("/")
@@ -512,7 +512,7 @@ async function buildIiifCollectionPages(CONFIG) {
           let html = htmlShell({
             title,
             body: pageBody,
-            cssHref: cssRel || "styles.css",
+            cssHref: cssRel || "styles/styles.css",
             scriptHref: jsRel,
             headExtra,
           });
