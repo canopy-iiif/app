@@ -56,6 +56,18 @@ Recommended scripts in `package.json`:
 - Node version: pin with `.nvmrc` (e.g., `18`); run `nvm use`.
 - Dependencies: review with `npm audit` and update regularly.
 
+## Interactive Components (SSR + Hydration)
+
+- Components that depend on the browser must be SSR-safe. In `@canopy-iiif/ui`, render a placeholder in MDX on the server and dynamically import the real implementation in the browser. Example: `Viewer` uses a `data-canopy-viewer` placeholder.
+- In `@canopy-iiif/lib`, bundle small hydration runtimes that find placeholders and mount React components using React globals (`site/scripts/react-globals.js`). Avoid bundling React into these runtimes.
+- Shims: When bundling with esbuild, map `react`, `react-dom`, and `react-dom/client` to shims that read from `window.React` and `window.ReactDOMClient`. Mark heavy libs as `external` where they’re not needed (e.g., exclude `@samvera/clover-iiif/*` from the search runtime).
+
+Available components:
+- `<Viewer iiifContent="…" />` — wraps Clover viewer; hydrates via `site/canopy-viewer.js`.
+- Search (composable): `<SearchForm />`, `<SearchSummary />`, `<SearchResults />`, `<SearchTotal />` — hydrate via `site/search.js` and share a single client store.
+
+Pages that include these placeholders automatically receive the required scripts.
+
 ## Search Framework (MDX-driven)
 
 Goal: Allow authors to fully compose the search page via MDX, while the builder wires data and behavior.
@@ -70,13 +82,13 @@ Goal: Allow authors to fully compose the search page via MDX, while the builder 
 
 - Build steps:
   - `writeSearchIndex(records)`: writes `site/search-index.json`. Currently fed by IIIF build (`packages/lib/iiif.js`) and contains items `{ id, title, href }` for each Manifest page.
-  - `ensureSearchRuntime()`: bundles `site/search.js` with FlexSearch; it loads the JSON, indexes titles, and updates the DOM.
+- `ensureSearchRuntime()`: bundles `site/search.js` (React app) with FlexSearch; it loads the JSON, indexes titles, and renders the UI. It mounts into `[data-canopy-search]` (from `<Search />`) or `#search-root` if present.
   - `buildSearchPage()`: renders `content/search/_layout.mdx` (if present) with the `search` prop and wraps it with the App (`content/_app.mdx`) and MDXProvider.
 
 - Runtime behavior (site/search.js):
   - Loads `./search-index.json` and builds a FlexSearch index (title-only, forward tokenization).
-  - Binds to `#search-input` and `#search-results`; updates `#search-count` and `#search-summary` as the query changes.
-  - Initializes from `?q=` URL param.
+  - Renders a form, summary text, and a results list (with optional type filter) as a React app.
+  - Initializes from `?q=` and `?type=` URL params.
   - Resolves links with base path awareness via `CANOPY_BASE_PATH`.
 
 - Extensibility notes:

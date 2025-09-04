@@ -5,6 +5,7 @@ Thank you for contributing to Canopy. This repository is a monorepo with a priva
 ## Repository Layout
 - `@canopy-iiif/app` (root): private app, workspace orchestrator, dev entry (`npm run dev`).
 - `packages/lib` → `@canopy-iiif/lib`: publishable library exposing `build()` and `dev()`.
+- `packages/ui` → `@canopy-iiif/ui`: React UI components (ESM), bundled for server import and client hydration.
 - `content/`: MDX pages and per-folder layouts (e.g., `content/_layout.mdx`, `content/works/_layout.mdx`).
 - `.cache/iiif/`: cached IIIF collection and manifests.
 
@@ -17,6 +18,46 @@ Entrypoint
 - Both commands call `node app/scripts/canopy-build.mjs`.
 - In dev, it starts the UI watcher (`@canopy-iiif/ui`) and the library dev server.
 - In build, it builds UI assets once and then builds the site with the library.
+
+## Interactive Components: SSR-Safe Pattern
+
+Browser-only UI (e.g., components that touch `document` or depend on non-SSR libraries) must be SSR-safe:
+
+1) UI component (in `packages/ui`):
+   - Dynamically import the browser-only dependency inside `useEffect`.
+   - On the server, render a placeholder `<div data-canopy-*>` containing a JSON `<script type="application/json">` with props.
+
+   Example:
+
+   ```jsx
+   import React, { useEffect, useState } from 'react';
+   export function Viewer(props) {
+     const [Impl, setImpl] = useState(null);
+     useEffect(() => {
+       if (typeof window === 'undefined') return;
+       import('@samvera/clover-iiif/viewer').then((m) => setImpl(() => m.default || m));
+     }, []);
+     if (!Impl) return (
+       <div data-canopy-viewer>
+         <script type="application/json" dangerouslySetInnerHTML={{ __html: JSON.stringify(props||{}) }} />
+       </div>
+     );
+     return <Impl {...props} />;
+   }
+   ```
+
+2) Hydration runtime (in `packages/lib`):
+   - Bundle a small browser script with esbuild that finds placeholders and mounts the component.
+   - Use React globals injected by `site/scripts/react-globals.js` (do not bundle React into the runtime).
+   - Mark heavy libs not needed by that runtime as `external` to keep bundles slim (e.g., `@samvera/clover-iiif/*` for search).
+
+Existing examples:
+ - Viewer: placeholder from `@canopy-iiif/ui/iiif/Viewer`, hydration in `packages/lib/mdx.js` → `site/canopy-viewer.js`.
+ - Search: MDX placeholders (`SearchForm`, `SearchSummary`, `SearchResults`, `SearchTotal`) from `@canopy-iiif/ui/search/*`, runtime in `packages/lib/search.js` (shared client store) → `site/search.js`.
+
+Tips:
+ - Add a detection to inject React globals when a page contains your placeholder.
+ - Hard refresh during dev after changing bundles to avoid stale caches.
 
 ## Versioning
 

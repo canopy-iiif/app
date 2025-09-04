@@ -73,39 +73,49 @@ Place static files under `assets/` and they will be copied to the site root, pre
 - Safety: with `unsafe: false`, a simpler/safer selection is used; with `unsafe: true`, the helper may probe additional sources to find a better image at the requested size.
 - Current project setting: `preferredSize: 400`.
 
-## Search Page (MDX Composition)
+## Interactive Components (SSR + Hydration)
 
-Compose the search UI with MDX at `content/search/_layout.mdx`. The builder injects a `search` prop so you can place the primitives anywhere:
+Two interactive areas are available out of the box and render safely in MDX:
 
-- `props.search.form`: search input (`<input id="search-input" />`).
-- `props.search.results`: results container (`<ul id="search-results"></ul>`).
-- `props.search.count`: live count of shown results (`<span id="search-count"></span>`).
-- `props.search.summary`: live summary text (`<div id="search-summary"></div>`), e.g., “Found X of N for “query””.
+- Viewer: `<Viewer iiifContent="…" />` — wraps `@samvera/clover-iiif` and hydrates client‑side.
+- Search (composable): place any of these where you want on the page and they hydrate client‑side:
+  - `<SearchForm />` — input + type select
+  - `<SearchSummary />` — summary text (query/type aware)
+  - `<SearchResults />` — results list
+  - `<SearchTotal />` — live count of shown results
 
-Example:
+How it works:
+
+- MDX is rendered on the server. Browser‑only components emit a lightweight placeholder element.
+- The build injects `site/scripts/react-globals.js` and the relevant hydration script(s) into pages that need them.
+- On load, the hydration script finds placeholders, reads props (embedded as JSON), and mounts the React component.
+
+Usage examples:
 
 ```
-# Search
+// content/index.mdx
+## Demo
+<Viewer iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/…?as=iiif" />
 
-<div className="search-grid">
-  <aside>
-    <strong>Results:</strong> {props.search.count}
-    <div>{props.search.summary}</div>
-  </aside>
-  <section>
-    {props.search.form}
-    {props.search.results}
-  </section>
-</div>
+// content/search/_layout.mdx
+# Search
+<SearchForm />
+<SearchSummary />
+<SearchResults />
+<div className="sr-only">Total: <SearchTotal /></div>
 ```
 
 Notes:
 
-- If `content/search/_layout.mdx` is absent, a minimal fallback page is generated.
-- Client behavior is provided by `site/search.js`, which wires the input and updates count/summary.
-- Type filters and grouping:
-  - The search runtime auto-discovers record types in `search-index.json` (e.g., `page`, `work`, `docs`) and renders type checkboxes into `#search-filters`.
-  - Results are grouped by type inside `#search-results`. To control placement, add per-type lists with IDs `search-results-<type>` (e.g., `search-results-docs`), otherwise grouped sections are generated automatically.
+- You do not need to import components in MDX; they are auto‑provided by the MDX provider from `@canopy-iiif/ui`.
+- The Viewer and Search placeholders render minimal HTML on the server and hydrate in the browser.
+- The search runtime (`site/search.js`) uses FlexSearch and supports filtering by `type` (e.g., `work`, `page`, `docs`). The four subcomponents share a single client store so they stay in sync.
+
+Advanced layout (optional, future):
+
+- If you need full control over the search page layout, we'll expose a composable Search API (slots or render props) so you can place the form, summary, and results anywhere. Until then, `<Search />` renders a sensible default.
+
+Dot‑notation (future): we may also expose these as `<Search.Form />`, `<Search.Results />`, `<Search.Summary />`, `<Search.Total />` if needed.
 
 ## Deploy to GitHub Pages
 

@@ -392,10 +392,10 @@ async function ensureReactGlobals() {
   ensureDirSync(scriptsDir);
   const vendorFile = path.join(scriptsDir, "react-globals.js");
   const globalsEntry = `
-    import React from 'react';
+    import * as React from 'react';
     import * as ReactDOM from 'react-dom';
-    import { createRoot, hydrateRoot } from 'react-dom/client';
-    (function(){ try{ window.React = React; window.ReactDOM = ReactDOM; window.ReactDOMClient = { createRoot, hydrateRoot }; }catch(e){} })();
+    import * as ReactDOMClient from 'react-dom/client';
+    (function(){ try{ window.React = React; window.ReactDOM = ReactDOM; window.ReactDOMClient = ReactDOMClient; }catch(e){} })();
   `;
   await esbuild.build({
     stdin: {
@@ -412,6 +412,7 @@ async function ensureReactGlobals() {
     target: ["es2018"],
     logLevel: "silent",
     minify: true,
+    define: { 'process.env.NODE_ENV': '"production"' },
   });
 }
 

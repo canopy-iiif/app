@@ -32,6 +32,7 @@ async function ensureSearchRuntime() {
       target: ['es2018'],
       logLevel: 'silent',
       minify: true,
+      define: { 'process.env.NODE_ENV': '"production"' },
     });
     // Build FlexSearch globals shim
     const flexFile = path.join(scriptsDir, 'flexsearch-globals.js');
@@ -61,6 +62,7 @@ async function ensureSearchRuntime() {
           "export const useMemo = R.useMemo;\n",
           "export const useEffect = R.useEffect;\n",
           "export const useRef = R.useRef;\n",
+          "export const useSyncExternalStore = R.useSyncExternalStore;\n",
           "export const Fragment = R.Fragment;\n",
           "export const createElement = R.createElement;\n",
         ].join(''),
@@ -87,17 +89,23 @@ async function ensureSearchRuntime() {
       }));
     }
   };
-  await esbuild.build({
-    entryPoints: [entry],
-    outfile: outFile,
-    platform: 'browser',
-    format: 'iife',
-    bundle: true,
-    sourcemap: true,
-    target: ['es2018'],
-    logLevel: 'silent',
-    plugins: [shimReactPlugin],
-  });
+  try {
+    await esbuild.build({
+      entryPoints: [entry],
+      outfile: outFile,
+      platform: 'browser',
+      format: 'iife',
+      bundle: true,
+      sourcemap: true,
+      target: ['es2018'],
+      logLevel: 'silent',
+      plugins: [shimReactPlugin],
+      external: ['@samvera/clover-iiif/*'],
+    });
+  } catch (e) {
+    console.error('Search: bundle error:', e && e.message ? e.message : e);
+    return;
+  }
   try {
     const { logLine } = require('./log');
     let size = 0; try { const st = fs.statSync(outFile); size = st.size || 0; } catch (_) {}
