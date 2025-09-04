@@ -100,6 +100,7 @@ jobs:
             content: [
               './content/**/*.{mdx,html}',
               './site/**/*.html',
+              './site/**/*.js',
               './packages/ui/**/*.{js,jsx,ts,tsx}',
               './packages/lib/components/**/*.{js,jsx}',
             ],

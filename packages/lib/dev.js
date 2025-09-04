@@ -7,6 +7,17 @@ const http = require('http');
 const url = require('url');
 const { CONTENT_DIR, OUT_DIR, ASSETS_DIR, ensureDirSync } = require('./common');
 const twHelper = (() => { try { return require('../helpers/build-tailwind'); } catch (_) { return null; } })();
+function resolveTailwindCli() {
+  try {
+    const cliJs = require.resolve('tailwindcss/lib/cli.js');
+    return { cmd: process.execPath, args: [cliJs] };
+  } catch (_) {}
+  try {
+    const bin = path.join(process.cwd(), 'node_modules', '.bin', process.platform === 'win32' ? 'tailwindcss.cmd' : 'tailwindcss');
+    if (fs.existsSync(bin)) return { cmd: bin, args: [] };
+  } catch (_) {}
+  return null;
+}
 const PORT = Number(process.env.PORT || 3000);
 let onBuildSuccess = () => {};
 let onBuildStart = () => {};
@@ -337,7 +348,7 @@ function dev() {
         const genDir = path.join(CACHE_DIR, 'tailwind');
         ensureDirSync(genDir);
         const genCfg = path.join(genDir, 'tailwind.config.js');
-        const cfg = `module.exports = {\n  presets: [require('@canopy-iiif/ui/tailwind-preset')],\n  content: [\n    './content/**/*.{mdx,html}',\n    './site/**/*.html',\n    './packages/ui/**/*.{js,jsx,ts,tsx}',\n    './packages/lib/components/**/*.{js,jsx}',\n  ],\n  theme: { extend: {} },\n};\n`;
+        const cfg = `module.exports = {\n  presets: [require('@canopy-iiif/ui/tailwind-preset')],\n  content: [\n    './content/**/*.{mdx,html}',\n    './site/**/*.html',\n    './site/**/*.js',\n    './packages/ui/**/*.{js,jsx,ts,tsx}',\n    './packages/lib/components/**/*.{js,jsx}',\n  ],\n  theme: { extend: {} },\n};\n`;
         fs.writeFileSync(genCfg, cfg, 'utf8');
         configPath = genCfg;
       } catch (_) { configPath = null; }
@@ -353,10 +364,20 @@ function dev() {
       } catch (_) { inputCss = null; }
     }
     const outputCss = path.join(OUT_DIR, 'styles.css');
-    if (configPath && inputCss && twHelper && typeof twHelper.watchTailwind === 'function') {
+    if (configPath && inputCss) {
       // Ensure output dir exists and start watcher
       ensureDirSync(path.dirname(outputCss));
-      const child = twHelper.watchTailwind({ input: inputCss, output: outputCss, config: configPath, minify: false });
+      let child = null;
+      if (twHelper && typeof twHelper.watchTailwind === 'function') {
+        child = twHelper.watchTailwind({ input: inputCss, output: outputCss, config: configPath, minify: false });
+      } else {
+        // Fallback: use CLI directly
+        const cli = resolveTailwindCli();
+        if (cli) {
+          const args = ['-i', inputCss, '-o', outputCss, '--watch', '-c', configPath];
+          child = spawn(cli.cmd, [...cli.args, ...args], { stdio: 'inherit' });
+        }
+      }
       if (child) {
         console.log('[tailwind] watching', inputCss);
         // Watch compiled CSS and trigger reload when it updates

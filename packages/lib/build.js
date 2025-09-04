@@ -84,7 +84,7 @@ async function ensureStyles() {
       const genDir = path.join(CACHE_DIR, 'tailwind');
       ensureDirSync(genDir);
       const genCfg = path.join(genDir, 'tailwind.config.js');
-      const cfg = `module.exports = {\n  presets: [require('@canopy-iiif/ui/tailwind-preset')],\n  content: [\n    './content/**/*.{mdx,html}',\n    './site/**/*.html',\n    './packages/ui/**/*.{js,jsx,ts,tsx}',\n    './packages/lib/components/**/*.{js,jsx}',\n  ],\n  theme: { extend: {} },\n};\n`;
+      const cfg = `module.exports = {\n  presets: [require('@canopy-iiif/ui/tailwind-preset')],\n  content: [\n    './content/**/*.{mdx,html}',\n    './site/**/*.html',\n    './site/**/*.js',\n    './packages/ui/**/*.{js,jsx,ts,tsx}',\n    './packages/lib/components/**/*.{js,jsx}',\n  ],\n  theme: { extend: {} },\n};\n`;
       fs.writeFileSync(genCfg, cfg, 'utf8');
       configPath = genCfg;
     } catch (_) { configPath = null; }
@@ -104,14 +104,33 @@ async function ensureStyles() {
       fs.writeFileSync(generatedInput, css, 'utf8');
     } catch (_) { generatedInput = null; }
   }
-  if (configPath && inputCss) {
+  // Local helper to invoke Tailwind CLI without cross-package require
+  function resolveTailwindCli() {
     try {
-      const helper = require('../helpers/build-tailwind');
-      const ok = await helper.buildTailwind({ input: inputCss || generatedInput, output: dest, config: configPath, minify: true });
-      if (ok) return; // Tailwind compiled CSS
-    } catch (_) {
-      // fallthrough to copy or default
-    }
+      const cliJs = require.resolve('tailwindcss/lib/cli.js');
+      return { cmd: process.execPath, args: [cliJs] };
+    } catch (_) {}
+    try {
+      const localBin = path.join(process.cwd(), 'node_modules', '.bin', process.platform === 'win32' ? 'tailwindcss.cmd' : 'tailwindcss');
+      if (fs.existsSync(localBin)) return { cmd: localBin, args: [] };
+    } catch (_) {}
+    return null;
+  }
+  function buildTailwindCli({ input, output, config, minify = true }) {
+    try {
+      const cli = resolveTailwindCli();
+      if (!cli) return false;
+      const { spawnSync } = require('child_process');
+      const args = ['-i', input, '-o', output];
+      if (config) args.push('-c', config);
+      if (minify) args.push('--minify');
+      const res = spawnSync(cli.cmd, [...cli.args, ...args], { stdio: 'inherit' });
+      return !!res && res.status === 0;
+    } catch (_) { return false; }
+  }
+  if (configPath && (inputCss || generatedInput)) {
+    const ok = buildTailwindCli({ input: inputCss || generatedInput, output: dest, config: configPath, minify: true });
+    if (ok) return; // Tailwind compiled CSS
   }
 
   // If a custom CSS exists (non-TW or TW not available), copy it as-is.
@@ -283,8 +302,7 @@ async function build() {
   } catch (_) {}
   await cleanDir(OUT_DIR);
   logLine("✓ Cleaned output directory\n", "cyan");
-  await ensureStyles();
-  logLine("✓ Wrote styles.css\n", "cyan");
+  // Defer styles until after pages are generated so Tailwind can scan site HTML
   await mdx.ensureClientRuntime();
   logLine("✓ Prepared client hydration runtime\n", "cyan", { dim: true });
   // Copy assets from assets/ to site/
@@ -449,6 +467,11 @@ async function build() {
       "cyan"
     );
   } catch (_) {}
+
+  // Now that HTML/JS artifacts exist (including search.js), build styles so Tailwind can
+  // pick up classes from generated output and runtime bundles.
+  await ensureStyles();
+  logLine("✓ Wrote styles.css\n", "cyan");
 }
 
 module.exports = { build };
@@ -459,3 +482,4 @@ if (require.main === module) {
     process.exit(1);
   });
 }
+// After building search and pages, write styles so Tailwind can scan generated assets
