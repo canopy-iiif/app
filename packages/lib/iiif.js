@@ -493,6 +493,21 @@ async function buildIiifCollectionPages(CONFIG) {
             : null;
           // Include hydration script via htmlShell
           let headExtra = head;
+          // Ensure React globals are present for hydration if viewer present
+          const needsReact =
+            body.includes('data-react-root') ||
+            body.includes('data-canopy-react') ||
+            body.includes('data-canopy-viewer');
+          if (needsReact) {
+            try {
+              const { ensureReactGlobals } = require('./mdx');
+              await ensureReactGlobals();
+              const vendorAbs = path.join(OUT_DIR, 'scripts', 'react-globals.js');
+              let vendorRel = path.relative(path.dirname(outPath), vendorAbs).split(path.sep).join('/');
+              try { const stv = fs.statSync(vendorAbs); vendorRel += `?v=${Math.floor(stv.mtimeMs || Date.now())}`; } catch (_) {}
+              headExtra = `<script src="${vendorRel}"></script>` + headExtra;
+            } catch (_) {}
+          }
           let pageBody = body;
           let html = htmlShell({
             title,

@@ -43,11 +43,66 @@ function Card({
   ) : null, caption));
 }
 
+// src/iiif/Viewer.jsx
+import React4, { useEffect, useState } from "react";
+var Viewer = (props) => {
+  const [CloverViewer, setCloverViewer] = useState(null);
+  useEffect(() => {
+    let mounted = true;
+    const canUseDom = typeof window !== "undefined" && typeof document !== "undefined";
+    if (canUseDom) {
+      import("@samvera/clover-iiif/viewer").then((mod) => {
+        if (!mounted) return;
+        console.log(mod);
+        const Comp = mod && (mod.default || mod.Viewer || mod);
+        setCloverViewer(() => Comp);
+      }).catch(() => {
+      });
+    }
+    return () => {
+      mounted = false;
+    };
+  }, []);
+  if (!CloverViewer) {
+    let json = "{}";
+    try {
+      json = JSON.stringify(props || {});
+    } catch (_) {
+      json = "{}";
+    }
+    return /* @__PURE__ */ React4.createElement("div", { "data-canopy-viewer": "1" }, /* @__PURE__ */ React4.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
+  }
+  return /* @__PURE__ */ React4.createElement(CloverViewer, { ...props });
+};
+
+// src/layout/TestFile.jsx
+import React5, { useEffect as useEffect2, useState as useState2 } from "react";
+var TestFile = (props) => {
+  const [CloverViewer, setCloverViewer] = useState2(null);
+  useEffect2(() => {
+    let mounted = true;
+    const canUseDom = typeof window !== "undefined" && typeof document !== "undefined";
+    if (canUseDom) {
+      import("@samvera/clover-iiif/viewer").then((mod) => {
+        if (!mounted) return;
+        const Comp = mod && (mod.default || mod.Viewer || mod);
+        setCloverViewer(() => Comp);
+      }).catch(() => {
+      });
+    }
+    return () => {
+      mounted = false;
+    };
+  }, []);
+  if (!CloverViewer) return null;
+  return /* @__PURE__ */ React5.createElement(CloverViewer, { ...props });
+};
+
 // src/search/SearchForm.jsx
-import React4 from "react";
+import React6 from "react";
 function SearchForm({ query, onQueryChange, type = "all", onTypeChange, types = [] }) {
   const allTypes = Array.from(/* @__PURE__ */ new Set(["all", ...types]));
-  return /* @__PURE__ */ React4.createElement("form", { onSubmit: (e) => e.preventDefault(), className: "space-y-2" }, /* @__PURE__ */ React4.createElement(
+  return /* @__PURE__ */ React6.createElement("form", { onSubmit: (e) => e.preventDefault(), className: "space-y-2" }, /* @__PURE__ */ React6.createElement(
     "input",
     {
       id: "search-input",
@@ -57,7 +112,7 @@ function SearchForm({ query, onQueryChange, type = "all", onTypeChange, types = 
       onChange: (e) => onQueryChange && onQueryChange(e.target.value),
       className: "w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
     }
-  ), /* @__PURE__ */ React4.createElement("div", { className: "flex items-center gap-3 text-sm text-slate-600" }, /* @__PURE__ */ React4.createElement("label", { htmlFor: "search-type" }, "Type:"), /* @__PURE__ */ React4.createElement(
+  ), /* @__PURE__ */ React6.createElement("div", { className: "flex items-center gap-3 text-sm text-slate-600" }, /* @__PURE__ */ React6.createElement("label", { htmlFor: "search-type" }, "Type:"), /* @__PURE__ */ React6.createElement(
     "select",
     {
       id: "search-type",
@@ -65,14 +120,14 @@ function SearchForm({ query, onQueryChange, type = "all", onTypeChange, types = 
       onChange: (e) => onTypeChange && onTypeChange(e.target.value),
       className: "px-2 py-1 border border-slate-300 rounded-md bg-white"
     },
-    allTypes.map((t) => /* @__PURE__ */ React4.createElement("option", { key: t, value: t }, t.charAt(0).toUpperCase() + t.slice(1)))
+    allTypes.map((t) => /* @__PURE__ */ React6.createElement("option", { key: t, value: t }, t.charAt(0).toUpperCase() + t.slice(1)))
   )));
 }
 
 // src/search/SearchResults.jsx
-import React5 from "react";
+import React7 from "react";
 function WorkItem({ href, title, thumbnail }) {
-  return /* @__PURE__ */ React5.createElement("li", { className: "search-result work" }, /* @__PURE__ */ React5.createElement("a", { href, className: "card" }, /* @__PURE__ */ React5.createElement("figure", { style: { margin: 0 } }, thumbnail ? /* @__PURE__ */ React5.createElement(
+  return /* @__PURE__ */ React7.createElement("li", { className: "search-result work" }, /* @__PURE__ */ React7.createElement("a", { href, className: "card" }, /* @__PURE__ */ React7.createElement("figure", { style: { margin: 0 } }, thumbnail ? /* @__PURE__ */ React7.createElement(
     "img",
     {
       src: thumbnail,
@@ -80,29 +135,29 @@ function WorkItem({ href, title, thumbnail }) {
       loading: "lazy",
       style: { display: "block", width: "100%", height: "auto", borderRadius: 4 }
     }
-  ) : null, /* @__PURE__ */ React5.createElement("figcaption", { style: { marginTop: 8 } }, /* @__PURE__ */ React5.createElement("strong", null, title || href)))));
+  ) : null, /* @__PURE__ */ React7.createElement("figcaption", { style: { marginTop: 8 } }, /* @__PURE__ */ React7.createElement("strong", null, title || href)))));
 }
 function PageItem({ href, title }) {
-  return /* @__PURE__ */ React5.createElement("li", { className: "search-result page" }, /* @__PURE__ */ React5.createElement("a", { href }, title || href));
+  return /* @__PURE__ */ React7.createElement("li", { className: "search-result page" }, /* @__PURE__ */ React7.createElement("a", { href }, title || href));
 }
 function SearchResults({ results = [], type = "all" }) {
   if (!results.length) {
-    return /* @__PURE__ */ React5.createElement("div", { className: "text-slate-600" }, /* @__PURE__ */ React5.createElement("em", null, "No results"));
+    return /* @__PURE__ */ React7.createElement("div", { className: "text-slate-600" }, /* @__PURE__ */ React7.createElement("em", null, "No results"));
   }
-  return /* @__PURE__ */ React5.createElement("ul", { id: "search-results", className: "space-y-3" }, results.map(
-    (r, i) => r.type === "work" ? /* @__PURE__ */ React5.createElement(WorkItem, { key: i, href: r.href, title: r.title, thumbnail: r.thumbnail }) : /* @__PURE__ */ React5.createElement(PageItem, { key: i, href: r.href, title: r.title })
+  return /* @__PURE__ */ React7.createElement("ul", { id: "search-results", className: "space-y-3" }, results.map(
+    (r, i) => r.type === "work" ? /* @__PURE__ */ React7.createElement(WorkItem, { key: i, href: r.href, title: r.title, thumbnail: r.thumbnail }) : /* @__PURE__ */ React7.createElement(PageItem, { key: i, href: r.href, title: r.title })
   ));
 }
 
 // src/search/useSearch.js
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect as useEffect3, useMemo, useRef, useState as useState3 } from "react";
 function useSearch(query, type) {
-  const [records, setRecords] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [records, setRecords] = useState3([]);
+  const [loading, setLoading] = useState3(true);
   const indexRef = useRef(null);
   const idToRecRef = useRef([]);
-  const [types, setTypes] = useState([]);
-  useEffect(() => {
+  const [types, setTypes] = useState3([]);
+  useEffect3(() => {
     let cancelled = false;
     setLoading(true);
     import("flexsearch").then((mod) => {
@@ -168,6 +223,8 @@ export {
   HelloWorld,
   SearchForm,
   SearchResults,
+  TestFile,
+  Viewer,
   useSearch
 };
 //# sourceMappingURL=index.js.map

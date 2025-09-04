@@ -158,7 +158,7 @@ async function compileMdxFile(filePath, outPath, extraProps = {}) {
         .join("/")
     : null;
   // Detect pages that require client-side React (flagged by components)
-  const needsReact = body.includes('data-react-root') || body.includes('data-canopy-react');
+  const needsReact = body.includes('data-react-root') || body.includes('data-canopy-react') || body.includes('data-canopy-viewer');
   let vendorTag = '';
   if (needsReact) {
     try {
