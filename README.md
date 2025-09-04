@@ -11,6 +11,7 @@ Static site generator powered by MDX and IIIF. The stable app entry at `app/scri
 - Build: `npm run build`
 
 Entrypoint details
+
 - Both commands run `node app/scripts/canopy-build.mjs`.
 - Dev mode starts the UI watcher (`@canopy-iiif/ui`) and the dev server from `@canopy-iiif/lib`.
 - Build mode builds the UI once, then runs the site build from `@canopy-iiif/lib`.
