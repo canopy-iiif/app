@@ -1,5 +1,11 @@
 # @canopy-iiif/ui
 
+## 0.6.4
+
+### Patch Changes
+
+- chore: version bump (patch) via helper script.
+
 ## 0.6.3
 
 ### Patch Changes
