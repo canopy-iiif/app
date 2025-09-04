@@ -88,7 +88,44 @@ jobs:
           node -e "const fs=require('fs'),p='dist-template/.github/workflows/deploy-pages.yml'; if(fs.existsSync(p)){ let y=fs.readFileSync(p,'utf8'); y=y.replace(/node packages\\/helpers\\/verify-build\\.js/g,'node app/scripts/canopy-build.mjs --verify'); fs.writeFileSync(p,y); }"
 
           # Inject Tailwind config and styles into the template under app/styles (opt-in preset, full layers)
-          node -e "const fs=require('fs');const path=require('path');const stylesDir=path.join('dist-template','app','styles');const tp=path.join(stylesDir,'tailwind.config.js');const cssp=path.join(stylesDir,'index.css');fs.mkdirSync(stylesDir,{recursive:true});fs.writeFileSync(tp,`module.exports = {\n  presets: [require('@canopy-iiif/ui/tailwind-preset')],\n  content: [\n    './content/**/*.{mdx,html}',\n    './site/**/*.html',\n    './packages/ui/**/*.{js,jsx,ts,tsx}',\n    './packages/lib/components/**/*.{js,jsx}',\n  ],\n  theme: { extend: {} },\n  corePlugins: {\n    // preflight: false, // uncomment to disable base reset\n  },\n  plugins: [\n    // Opt-in: require('@tailwindcss/typography'),\n    // Opt-in: require('@tailwindcss/forms'),\n  ],\n  safelist: [\n    // Add dynamic classes here if needed\n  ],\n};\n`,'utf8');fs.writeFileSync(cssp,`@tailwind base;\n@tailwind components;\n@tailwind utilities;\n\n/* Example component layer overrides */\n@layer components {\n  .brand-link { @apply text-brand-600 hover:underline font-semibold; }\n}\n`,'utf8');"
+          node <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+          const stylesDir = path.join('dist-template','app','styles');
+          const tp = path.join(stylesDir,'tailwind.config.js');
+          const cssp = path.join(stylesDir,'index.css');
+          fs.mkdirSync(stylesDir,{recursive:true});
+          fs.writeFileSync(tp, `module.exports = {
+            presets: [require('@canopy-iiif/ui/tailwind-preset')],
+            content: [
+              './content/**/*.{mdx,html}',
+              './site/**/*.html',
+              './packages/ui/**/*.{js,jsx,ts,tsx}',
+              './packages/lib/components/**/*.{js,jsx}',
+            ],
+            theme: { extend: {} },
+            corePlugins: {
+              // preflight: false, // uncomment to disable base reset
+            },
+            plugins: [
+              // Opt-in: require('@tailwindcss/typography'),
+              // Opt-in: require('@tailwindcss/forms'),
+            ],
+            safelist: [
+              // Add dynamic classes here if needed
+            ],
+          };
+          `,'utf8');
+          fs.writeFileSync(cssp, `@tailwind base;
+          @tailwind components;
+          @tailwind utilities;
+
+          /* Example component layer overrides */
+          @layer components {
+            .brand-link { @apply text-brand-600 hover:underline font-semibold; }
+          }
+          `,'utf8');
+          NODE
 
       - name: Push to template repository (main)
         env:
