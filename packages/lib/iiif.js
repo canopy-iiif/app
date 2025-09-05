@@ -21,8 +21,14 @@ const IIIF_CACHE_COLLECTION = path.join(IIIF_CACHE_DIR, "collection.json");
 // Primary global index location
 const IIIF_CACHE_INDEX = path.join(IIIF_CACHE_DIR, "index.json");
 // Legacy locations kept for backward compatibility (read + optional write)
-const IIIF_CACHE_INDEX_LEGACY = path.join(IIIF_CACHE_DIR, "manifest-index.json");
-const IIIF_CACHE_INDEX_MANIFESTS = path.join(IIIF_CACHE_MANIFESTS_DIR, "manifest-index.json");
+const IIIF_CACHE_INDEX_LEGACY = path.join(
+  IIIF_CACHE_DIR,
+  "manifest-index.json"
+);
+const IIIF_CACHE_INDEX_MANIFESTS = path.join(
+  IIIF_CACHE_MANIFESTS_DIR,
+  "manifest-index.json"
+);
 
 function firstLabelString(label) {
   if (!label) return "Untitled";
@@ -55,12 +61,27 @@ async function readJson(p) {
   return JSON.parse(raw);
 }
 
-async function readJsonFromUri(uri) {
+async function readJsonFromUri(uri, options = { log: false }) {
   try {
     if (/^https?:\/\//i.test(uri)) {
       if (typeof fetch !== "function") return null;
-      const res = await fetch(uri, { headers: { Accept: "application/json" } });
-      if (!res.ok) return null;
+      const res = await fetch(uri, {
+        headers: { Accept: "application/json" },
+      }).catch(() => null);
+      if (options && options.log) {
+        try {
+          if (res && res.ok) {
+            // Bold success line for Collection fetches
+            logLine(`✓ ${String(uri)} ➜ ${res.status}`, "yellow", {
+              bright: true,
+            });
+          } else {
+            const code = res ? res.status : "ERR";
+            logLine(`✗ ${String(uri)} ➜ ${code}`, "red", { bright: true });
+          }
+        } catch (_) {}
+      }
+      if (!res || !res.ok) return null;
       return await res.json();
     }
     const p = uri.startsWith("file://") ? new URL(uri) : { pathname: uri };
@@ -98,36 +119,51 @@ async function loadManifestIndex() {
     // Try primary path first
     if (fs.existsSync(IIIF_CACHE_INDEX)) {
       const idx = await readJson(IIIF_CACHE_INDEX);
-      if (idx && typeof idx === 'object') {
+      if (idx && typeof idx === "object") {
         const byId = Array.isArray(idx.byId)
           ? idx.byId
-          : (idx.byId && typeof idx.byId === 'object')
-            ? Object.keys(idx.byId).map((k) => ({ id: k, type: 'Manifest', slug: String(idx.byId[k] || ''), parent: (idx.parents && idx.parents[k]) || '' }))
-            : [];
+          : idx.byId && typeof idx.byId === "object"
+          ? Object.keys(idx.byId).map((k) => ({
+              id: k,
+              type: "Manifest",
+              slug: String(idx.byId[k] || ""),
+              parent: (idx.parents && idx.parents[k]) || "",
+            }))
+          : [];
         return { byId, collection: idx.collection || null };
       }
     }
     // Fallback: legacy in .cache/iiif
     if (fs.existsSync(IIIF_CACHE_INDEX_LEGACY)) {
       const idx = await readJson(IIIF_CACHE_INDEX_LEGACY);
-      if (idx && typeof idx === 'object') {
+      if (idx && typeof idx === "object") {
         const byId = Array.isArray(idx.byId)
           ? idx.byId
-          : (idx.byId && typeof idx.byId === 'object')
-            ? Object.keys(idx.byId).map((k) => ({ id: k, type: 'Manifest', slug: String(idx.byId[k] || ''), parent: (idx.parents && idx.parents[k]) || '' }))
-            : [];
+          : idx.byId && typeof idx.byId === "object"
+          ? Object.keys(idx.byId).map((k) => ({
+              id: k,
+              type: "Manifest",
+              slug: String(idx.byId[k] || ""),
+              parent: (idx.parents && idx.parents[k]) || "",
+            }))
+          : [];
         return { byId, collection: idx.collection || null };
       }
     }
     // Fallback: legacy in manifests subdir
     if (fs.existsSync(IIIF_CACHE_INDEX_MANIFESTS)) {
       const idx = await readJson(IIIF_CACHE_INDEX_MANIFESTS);
-      if (idx && typeof idx === 'object') {
+      if (idx && typeof idx === "object") {
         const byId = Array.isArray(idx.byId)
           ? idx.byId
-          : (idx.byId && typeof idx.byId === 'object')
-            ? Object.keys(idx.byId).map((k) => ({ id: k, type: 'Manifest', slug: String(idx.byId[k] || ''), parent: (idx.parents && idx.parents[k]) || '' }))
-            : [];
+          : idx.byId && typeof idx.byId === "object"
+          ? Object.keys(idx.byId).map((k) => ({
+              id: k,
+              type: "Manifest",
+              slug: String(idx.byId[k] || ""),
+              parent: (idx.parents && idx.parents[k]) || "",
+            }))
+          : [];
         return { byId, collection: idx.collection || null };
       }
     }
@@ -138,11 +174,18 @@ async function loadManifestIndex() {
 async function saveManifestIndex(index) {
   try {
     ensureDirSync(IIIF_CACHE_DIR);
-    const out = { byId: Array.isArray(index.byId) ? index.byId : [], collection: index.collection || null };
-    await fsp.writeFile(IIIF_CACHE_INDEX, JSON.stringify(out, null, 2), 'utf8');
+    const out = {
+      byId: Array.isArray(index.byId) ? index.byId : [],
+      collection: index.collection || null,
+    };
+    await fsp.writeFile(IIIF_CACHE_INDEX, JSON.stringify(out, null, 2), "utf8");
     // Remove legacy files to avoid confusion
-    try { await fsp.rm(IIIF_CACHE_INDEX_LEGACY, { force: true }); } catch (_) {}
-    try { await fsp.rm(IIIF_CACHE_INDEX_MANIFESTS, { force: true }); } catch (_) {}
+    try {
+      await fsp.rm(IIIF_CACHE_INDEX_LEGACY, { force: true });
+    } catch (_) {}
+    try {
+      await fsp.rm(IIIF_CACHE_INDEX_MANIFESTS, { force: true });
+    } catch (_) {}
   } catch (_) {}
 }
 
@@ -152,7 +195,9 @@ async function loadCachedManifestById(id) {
     const index = await loadManifestIndex();
     let slug = null;
     if (Array.isArray(index.byId)) {
-      const entry = index.byId.find((e) => e && e.id === id && e.type === 'Manifest');
+      const entry = index.byId.find(
+        (e) => e && e.id === id && e.type === "Manifest"
+      );
       slug = entry && entry.slug;
     }
     if (!slug) return null;
@@ -172,7 +217,9 @@ async function saveCachedManifest(manifest, id, parentId) {
       slugify(title || "untitled", { lower: true, strict: true, trim: true }) ||
       "untitled";
     const usedSlugs = new Set(
-      (Array.isArray(index.byId) ? index.byId : []).map((e) => e && e.slug).filter(Boolean)
+      (Array.isArray(index.byId) ? index.byId : [])
+        .map((e) => e && e.slug)
+        .filter(Boolean)
     );
     let slug = baseSlug;
     let i = 1;
@@ -185,9 +232,17 @@ async function saveCachedManifest(manifest, id, parentId) {
     const dest = path.join(IIIF_CACHE_MANIFESTS_DIR, slug + ".json");
     await fsp.writeFile(dest, JSON.stringify(manifest, null, 2), "utf8");
     index.byId = Array.isArray(index.byId) ? index.byId : [];
-    const existingEntryIdx = index.byId.findIndex((e) => e && e.id === id && e.type === 'Manifest');
-    const entry = { id: String(id), type: 'Manifest', slug, parent: parentId ? String(parentId) : '' };
-    if (existingEntryIdx >= 0) index.byId[existingEntryIdx] = entry; else index.byId.push(entry);
+    const existingEntryIdx = index.byId.findIndex(
+      (e) => e && e.id === id && e.type === "Manifest"
+    );
+    const entry = {
+      id: String(id),
+      type: "Manifest",
+      slug,
+      parent: parentId ? String(parentId) : "",
+    };
+    if (existingEntryIdx >= 0) index.byId[existingEntryIdx] = entry;
+    else index.byId.push(entry);
     await saveManifestIndex(index);
   } catch (_) {}
 }
@@ -219,13 +274,18 @@ async function loadConfig() {
           uri: (d.collection && d.collection.uri) || CONFIG.collection.uri,
         },
         iiif: {
-          chunkSize: Number(di.chunkSize || CONFIG.iiif.chunkSize) || CONFIG.iiif.chunkSize,
-          concurrency: Number(di.concurrency || CONFIG.iiif.concurrency) || CONFIG.iiif.concurrency,
+          chunkSize:
+            Number(di.chunkSize || CONFIG.iiif.chunkSize) ||
+            CONFIG.iiif.chunkSize,
+          concurrency:
+            Number(di.concurrency || CONFIG.iiif.concurrency) ||
+            CONFIG.iiif.concurrency,
           thumbnails: {
             unsafe: !!(di.thumbnails && di.thumbnails.unsafe === true),
-            preferredSize: Number(di.thumbnails && di.thumbnails.preferredSize) || 1200,
-          }
-        }
+            preferredSize:
+              Number(di.thumbnails && di.thumbnails.preferredSize) || 1200,
+          },
+        },
       };
       console.log(
         "Loaded config from",
@@ -256,25 +316,28 @@ async function buildIiifCollectionPages(CONFIG) {
     return { searchRecords: [] };
   }
   ensureDirSync(IIIF_CACHE_MANIFESTS_DIR);
+  try {
+    logLine("\nBuilding Canopy from IIIF Collection...\n", "cyan");
+  } catch (_) {}
   const collectionUri =
     (CONFIG && CONFIG.collection && CONFIG.collection.uri) || null;
   let collection = null;
-  if (collectionUri) collection = await readJsonFromUri(collectionUri);
+  if (collectionUri)
+    collection = await readJsonFromUri(collectionUri, { log: true });
   if (!collection) {
     console.warn("IIIF: No collection available; skipping.");
     // Still write/update global index with configured URI, so other steps can rely on it
     try {
       const index = await loadManifestIndex();
-      index.collection = { uri: String(collectionUri || ''), hash: '', updatedAt: new Date().toISOString() };
+      index.collection = {
+        uri: String(collectionUri || ""),
+        hash: "",
+        updatedAt: new Date().toISOString(),
+      };
       await saveManifestIndex(index);
     } catch (_) {}
     return { searchRecords: [] };
   }
-  try {
-    logLine("\n-- Building Canopy from IIIF Collection...\n", "cyan");
-    logLine(String(collectionUri) + "\n", "white");
-    logLine("Creating Manifest listing...\n", "cyan");
-  } catch (_) {}
   collection = await normalizeToV3(collection);
   const index = await loadManifestIndex();
   const currentSig = {
@@ -297,13 +360,23 @@ async function buildIiifCollectionPages(CONFIG) {
   index.collection = { ...currentSig, updatedAt: new Date().toISOString() };
   // Upsert root collection entry in index.byId
   try {
-    const rootId = String(collection.id || collection['@id'] || collectionUri || '');
+    const rootId = String(
+      collection.id || collection["@id"] || collectionUri || ""
+    );
     const title = firstLabelString(collection && collection.label);
-    const slug = slugify(title || 'collection', { lower: true, strict: true, trim: true }) || 'collection';
+    const slug =
+      slugify(title || "collection", {
+        lower: true,
+        strict: true,
+        trim: true,
+      }) || "collection";
     index.byId = Array.isArray(index.byId) ? index.byId : [];
-    const existingIdx = index.byId.findIndex((e) => e && e.id === rootId && e.type === 'Collection');
-    const entry = { id: rootId, type: 'Collection', slug, parent: '' };
-    if (existingIdx >= 0) index.byId[existingIdx] = entry; else index.byId.push(entry);
+    const existingIdx = index.byId.findIndex(
+      (e) => e && e.id === rootId && e.type === "Collection"
+    );
+    const entry = { id: rootId, type: "Collection", slug, parent: "" };
+    if (existingIdx >= 0) index.byId[existingIdx] = entry;
+    else index.byId.push(entry);
   } catch (_) {}
   await saveManifestIndex(index);
 
@@ -312,7 +385,7 @@ async function buildIiifCollectionPages(CONFIG) {
   const tasks = [];
   async function collectTasksFromCollection(colObj, parentUri, visited) {
     if (!colObj) return;
-    const colId = colObj.id || colObj['@id'] || parentUri || '';
+    const colId = colObj.id || colObj["@id"] || parentUri || "";
     visited = visited || new Set();
     if (colId) {
       if (visited.has(colId)) return;
@@ -321,59 +394,124 @@ async function buildIiifCollectionPages(CONFIG) {
     const items = Array.isArray(colObj.items) ? colObj.items : [];
     for (const it of items) {
       if (!it) continue;
-      const t = String(it.type || it['@type'] || '');
-      const id = it.id || it['@id'] || '';
-      if (t.includes('Manifest')) {
-        tasks.push({ id: String(id), parent: String(colId || parentUri || '') });
-      } else if (t.includes('Collection')) {
-        const sub = await readJsonFromUri(String(id));
+      const t = String(it.type || it["@type"] || "");
+      const id = it.id || it["@id"] || "";
+      if (t.includes("Manifest")) {
+        tasks.push({
+          id: String(id),
+          parent: String(colId || parentUri || ""),
+        });
+      } else if (t.includes("Collection")) {
+        const sub = await readJsonFromUri(String(id), { log: true });
         const subNorm = await normalizeToV3(sub);
         try {
           const title = firstLabelString(subNorm && subNorm.label);
-          const slug = slugify(title || 'collection', { lower: true, strict: true, trim: true }) || 'collection';
+          const slug =
+            slugify(title || "collection", {
+              lower: true,
+              strict: true,
+              trim: true,
+            }) || "collection";
           const idx = await loadManifestIndex();
           idx.byId = Array.isArray(idx.byId) ? idx.byId : [];
-          const entry = { id: String(subNorm.id || id), type: 'Collection', slug, parent: String(colId || parentUri || '') };
-          const existing = idx.byId.findIndex((e) => e && e.id === entry.id && e.type === 'Collection');
-          if (existing >= 0) idx.byId[existing] = entry; else idx.byId.push(entry);
+          const entry = {
+            id: String(subNorm.id || id),
+            type: "Collection",
+            slug,
+            parent: String(colId || parentUri || ""),
+          };
+          const existing = idx.byId.findIndex(
+            (e) => e && e.id === entry.id && e.type === "Collection"
+          );
+          if (existing >= 0) idx.byId[existing] = entry;
+          else idx.byId.push(entry);
           await saveManifestIndex(idx);
         } catch (_) {}
         await collectTasksFromCollection(subNorm, String(id), visited);
-      } else if (/^https?:\/\//i.test(String(id || ''))) {
-        const fetched = await readJsonFromUri(String(id));
+      } else if (/^https?:\/\//i.test(String(id || ""))) {
+        const fetched = await readJsonFromUri(String(id), { log: true });
         const norm = await normalizeToV3(fetched);
-        const nt = String((norm && (norm.type || norm['@type'])) || '');
-        if (nt.includes('Collection')) {
+        const nt = String((norm && (norm.type || norm["@type"])) || "");
+        if (nt.includes("Collection")) {
           try {
             const title = firstLabelString(norm && norm.label);
-            const slug = slugify(title || 'collection', { lower: true, strict: true, trim: true }) || 'collection';
+            const slug =
+              slugify(title || "collection", {
+                lower: true,
+                strict: true,
+                trim: true,
+              }) || "collection";
             const idx = await loadManifestIndex();
             idx.byId = Array.isArray(idx.byId) ? idx.byId : [];
-            const entry = { id: String(norm.id || id), type: 'Collection', slug, parent: String(colId || parentUri || '') };
-            const existing = idx.byId.findIndex((e) => e && e.id === entry.id && e.type === 'Collection');
-            if (existing >= 0) idx.byId[existing] = entry; else idx.byId.push(entry);
+            const entry = {
+              id: String(norm.id || id),
+              type: "Collection",
+              slug,
+              parent: String(colId || parentUri || ""),
+            };
+            const existing = idx.byId.findIndex(
+              (e) => e && e.id === entry.id && e.type === "Collection"
+            );
+            if (existing >= 0) idx.byId[existing] = entry;
+            else idx.byId.push(entry);
             await saveManifestIndex(idx);
           } catch (_) {}
           await collectTasksFromCollection(norm, String(id), visited);
-        } else if (nt.includes('Manifest')) {
-          tasks.push({ id: String(id), parent: String(colId || parentUri || '') });
+        } else if (nt.includes("Manifest")) {
+          tasks.push({
+            id: String(id),
+            parent: String(colId || parentUri || ""),
+          });
         }
       }
     }
   }
-  await collectTasksFromCollection(collection, String(collection.id || collection['@id'] || collectionUri || ''), new Set());
-  const chunkSize = Math.max(1, Number(process.env.CANOPY_CHUNK_SIZE || (CONFIG.iiif && CONFIG.iiif.chunkSize) || 10));
+  await collectTasksFromCollection(
+    collection,
+    String(collection.id || collection["@id"] || collectionUri || ""),
+    new Set()
+  );
+  const chunkSize = Math.max(
+    1,
+    Number(
+      process.env.CANOPY_CHUNK_SIZE ||
+        (CONFIG.iiif && CONFIG.iiif.chunkSize) ||
+        10
+    )
+  );
   const chunks = Math.max(1, Math.ceil(tasks.length / chunkSize));
-  try { logLine(`Aggregating ${tasks.length} Manifest(s) in ${chunks} chunk(s)...\n`, 'cyan'); } catch (_) {}
+  try {
+    logLine(
+      `Aggregating ${tasks.length} Manifest(s) in ${chunks} chunk(s)...\n`,
+      "cyan"
+    );
+  } catch (_) {}
   const searchRecords = [];
-  const unsafeThumbs = !!(CONFIG && CONFIG.iiif && CONFIG.iiif.thumbnails && CONFIG.iiif.thumbnails.unsafe === true);
-  const thumbSize = (CONFIG && CONFIG.iiif && CONFIG.iiif.thumbnails && CONFIG.iiif.thumbnails.preferredSize) || 1200;
+  const unsafeThumbs = !!(
+    CONFIG &&
+    CONFIG.iiif &&
+    CONFIG.iiif.thumbnails &&
+    CONFIG.iiif.thumbnails.unsafe === true
+  );
+  const thumbSize =
+    (CONFIG &&
+      CONFIG.iiif &&
+      CONFIG.iiif.thumbnails &&
+      CONFIG.iiif.thumbnails.preferredSize) ||
+    1200;
   for (let ci = 0; ci < chunks; ci++) {
     const chunk = tasks.slice(ci * chunkSize, (ci + 1) * chunkSize);
     try {
       logLine(`\nChunk (${ci + 1}/${chunks})\n`, "magenta");
     } catch (_) {}
-    const concurrency = Math.max(1, Number(process.env.CANOPY_FETCH_CONCURRENCY || (CONFIG.iiif && CONFIG.iiif.concurrency) || 6));
+    const concurrency = Math.max(
+      1,
+      Number(
+        process.env.CANOPY_FETCH_CONCURRENCY ||
+          (CONFIG.iiif && CONFIG.iiif.concurrency) ||
+          6
+      )
+    );
     let next = 0;
     const logs = new Array(chunk.length);
     let nextPrint = 0;
@@ -382,7 +520,9 @@ async function buildIiifCollectionPages(CONFIG) {
         while (nextPrint < logs.length && logs[nextPrint]) {
           const lines = logs[nextPrint];
           for (const [txt, color, opts] of lines) {
-            try { logLine(txt, color, opts); } catch (_) {}
+            try {
+              logLine(txt, color, opts);
+            } catch (_) {}
           }
           logs[nextPrint] = null;
           nextPrint++;
@@ -400,29 +540,36 @@ async function buildIiifCollectionPages(CONFIG) {
         const lns = [];
         // Logging: cached or fetched
         if (manifest) {
-          lns.push([`✓ ${String(id)} ➜ Cached`, 'yellow']);
+          lns.push([`✓ ${String(id)} ➜ Cached`, "yellow"]);
         } else if (/^https?:\/\//i.test(String(id || ""))) {
           try {
             const res = await fetch(String(id), {
               headers: { Accept: "application/json" },
             }).catch(() => null);
             if (res && res.ok) {
-              lns.push([`✓ ${String(id)} ➜ ${res.status}`, 'yellow']);
+              lns.push([`✓ ${String(id)} ➜ ${res.status}`, "yellow"]);
               const remote = await res.json();
               const norm = await normalizeToV3(remote);
               manifest = norm;
-              await saveCachedManifest(manifest, String(id), String(it.parent || ''));
+              await saveCachedManifest(
+                manifest,
+                String(id),
+                String(it.parent || "")
+              );
             } else {
-              lns.push([`✗ ${String(id)} ➜ ${res ? res.status : 'ERR'}`, 'red']);
+              lns.push([
+                `✗ ${String(id)} ➜ ${res ? res.status : "ERR"}`,
+                "red",
+              ]);
               continue;
             }
           } catch (e) {
-            lns.push([`✗ ${String(id)} ➜ ERR`, 'red']);
+            lns.push([`✗ ${String(id)} ➜ ERR`, "red"]);
             continue;
           }
         } else {
           // Non-http id; skip with error log
-          lns.push([`✗ ${String(id)} ➜ SKIP`, 'red']);
+          lns.push([`✗ ${String(id)} ➜ SKIP`, "red"]);
           continue;
         }
         if (!manifest) continue;
@@ -439,12 +586,16 @@ async function buildIiifCollectionPages(CONFIG) {
         try {
           // Provide MDX components mapping so tags like <Viewer/> and <HelloWorld/> resolve
           let components = {};
-          try { components = await import('@canopy-iiif/ui'); } catch (_) { components = {}; }
-          const { withBase } = require('./common');
+          try {
+            components = await import("@canopy-iiif/ui");
+          } catch (_) {
+            components = {};
+          }
+          const { withBase } = require("./common");
           const Anchor = function A(props) {
-            let { href = '', ...rest } = props || {};
+            let { href = "", ...rest } = props || {};
             href = withBase(href);
-            return React.createElement('a', { href, ...rest }, props.children);
+            return React.createElement("a", { href, ...rest }, props.children);
           };
           const compMap = { ...components, a: Anchor };
           // Gracefully handle HelloWorld if not provided anywhere
@@ -464,19 +615,34 @@ async function buildIiifCollectionPages(CONFIG) {
           } catch (_) {
             MDXProvider = null;
           }
-          const { loadAppWrapper } = require('./mdx');
+          const { loadAppWrapper } = require("./mdx");
           const app = await loadAppWrapper();
 
           const mdxContent = React.createElement(WorksLayout, { manifest });
           const siteTree = app && app.App ? mdxContent : mdxContent;
-          const wrappedApp = app && app.App ? React.createElement(app.App, null, siteTree) : siteTree;
+          const wrappedApp =
+            app && app.App
+              ? React.createElement(app.App, null, siteTree)
+              : siteTree;
           const page = MDXProvider
-            ? React.createElement(MDXProvider, { components: compMap }, wrappedApp)
+            ? React.createElement(
+                MDXProvider,
+                { components: compMap },
+                wrappedApp
+              )
             : wrappedApp;
           const body = ReactDOMServer.renderToStaticMarkup(page);
-          const head = app && app.Head ? ReactDOMServer.renderToStaticMarkup(React.createElement(app.Head)) : '';
+          const head =
+            app && app.Head
+              ? ReactDOMServer.renderToStaticMarkup(
+                  React.createElement(app.Head)
+                )
+              : "";
           const cssRel = path
-            .relative(path.dirname(outPath), path.join(OUT_DIR, "styles", "styles.css"))
+            .relative(
+              path.dirname(outPath),
+              path.join(OUT_DIR, "styles", "styles.css")
+            )
             .split(path.sep)
             .join("/");
           const needsHydrate =
@@ -495,16 +661,26 @@ async function buildIiifCollectionPages(CONFIG) {
           let headExtra = head;
           // Ensure React globals are present for hydration if viewer present
           const needsReact =
-            body.includes('data-react-root') ||
-            body.includes('data-canopy-react') ||
-            body.includes('data-canopy-viewer');
+            body.includes("data-react-root") ||
+            body.includes("data-canopy-react") ||
+            body.includes("data-canopy-viewer");
           if (needsReact) {
             try {
-              const { ensureReactGlobals } = require('./mdx');
+              const { ensureReactGlobals } = require("./mdx");
               await ensureReactGlobals();
-              const vendorAbs = path.join(OUT_DIR, 'scripts', 'react-globals.js');
-              let vendorRel = path.relative(path.dirname(outPath), vendorAbs).split(path.sep).join('/');
-              try { const stv = fs.statSync(vendorAbs); vendorRel += `?v=${Math.floor(stv.mtimeMs || Date.now())}`; } catch (_) {}
+              const vendorAbs = path.join(
+                OUT_DIR,
+                "scripts",
+                "react-globals.js"
+              );
+              let vendorRel = path
+                .relative(path.dirname(outPath), vendorAbs)
+                .split(path.sep)
+                .join("/");
+              try {
+                const stv = fs.statSync(vendorAbs);
+                vendorRel += `?v=${Math.floor(stv.mtimeMs || Date.now())}`;
+              } catch (_) {}
               headExtra = `<script src="${vendorRel}"></script>` + headExtra;
             } catch (_) {}
           }
@@ -516,20 +692,37 @@ async function buildIiifCollectionPages(CONFIG) {
             scriptHref: jsRel,
             headExtra,
           });
-          try { html = require('./common').applyBaseToHtml(html); } catch (_) {}
-          await fsp.writeFile(outPath, html, "utf8");
-          lns.push([`✓ Created ${path.relative(process.cwd(), outPath)}`, 'green']);
-          // Resolve thumbnail URL for this manifest (safe by default; expanded "unsafe" if configured)
-          let thumbUrl = '';
           try {
-            const { getThumbnailUrl } = require('./thumbs');
-            const url = await getThumbnailUrl(manifest, thumbSize, unsafeThumbs);
+            html = require("./common").applyBaseToHtml(html);
+          } catch (_) {}
+          await fsp.writeFile(outPath, html, "utf8");
+          lns.push([
+            `✓ Created ${path.relative(process.cwd(), outPath)}`,
+            "green",
+          ]);
+          // Resolve thumbnail URL for this manifest (safe by default; expanded "unsafe" if configured)
+          let thumbUrl = "";
+          try {
+            const { getThumbnailUrl } = require("./thumbs");
+            const url = await getThumbnailUrl(
+              manifest,
+              thumbSize,
+              unsafeThumbs
+            );
             if (url) {
               thumbUrl = String(url);
               const idx = await loadManifestIndex();
               if (Array.isArray(idx.byId)) {
-                const entry = idx.byId.find((e) => e && e.id === String(manifest.id || id) && e.type === 'Manifest');
-                if (entry) { entry.thumbnail = String(url); await saveManifestIndex(idx); }
+                const entry = idx.byId.find(
+                  (e) =>
+                    e &&
+                    e.id === String(manifest.id || id) &&
+                    e.type === "Manifest"
+                );
+                if (entry) {
+                  entry.thumbnail = String(url);
+                  await saveManifestIndex(idx);
+                }
               }
             }
           } catch (_) {}
@@ -538,17 +731,23 @@ async function buildIiifCollectionPages(CONFIG) {
             id: String(manifest.id || id),
             title,
             href: href.split(path.sep).join("/"),
-            type: 'work',
+            type: "work",
             thumbnail: thumbUrl || undefined,
           });
         } catch (e) {
-          lns.push([`IIIF: failed to render for ${id || '<unknown>'} — ${e.message}`, 'red']);
+          lns.push([
+            `IIIF: failed to render for ${id || "<unknown>"} — ${e.message}`,
+            "red",
+          ]);
         }
         logs[idx] = lns;
         tryFlush();
       }
     }
-    const workers = Array.from({ length: Math.min(concurrency, chunk.length) }, () => worker());
+    const workers = Array.from(
+      { length: Math.min(concurrency, chunk.length) },
+      () => worker()
+    );
     await Promise.all(workers);
   }
   return { searchRecords };
