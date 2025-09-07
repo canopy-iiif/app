@@ -1,36 +1,71 @@
 import React from 'react';
+import Masonry from 'react-masonry-css';
+
+// Simple item wrapper to provide consistent spacing between items.
+export function GridItem({ children, className = '', style = {}, ...rest }) {
+  return (
+    <div className={`canopy-grid-item ${className}`.trim()} style={style} {...rest}>
+      {children}
+    </div>
+  );
+}
 
 /**
- * Responsive grid container.
- * - variant="masonry" uses CSS columns; good for uneven card heights.
- * - variant="auto" leaves layout to consumer (pass Tailwind or custom classes).
+ * Grid (Masonry)
  *
- * Exposes CSS variables for easy overrides in site styles:
- * --grid-gap, --cols-base, --cols-md, --cols-lg
+ * Lightweight wrapper around `react-masonry-css` with sensible defaults
+ * and inline styles so it works without a global CSS pipeline.
+ *
+ * Props:
+ * - breakpointCols: number | object — columns per breakpoint (react-masonry-css prop)
+ * - gap: CSS length string — spacing between items/columns (default '1rem')
+ * - paddingY: CSS length string — vertical padding for the grid (default '0')
+ * - className, style — forwarded to container
+ * - columnClassName — forwarded to Masonry (defaults to 'canopy-grid-column')
+ * - children — usually a list of <GridItem> elements
  */
 export default function Grid({
-  id,
+  breakpointCols,
+  gap = '1rem',
+  paddingY = '0',
   className = '',
   style = {},
-  variant = 'masonry', // 'masonry' | 'grid' | 'auto'
-  gap = '1rem',
-  columns = { base: 1, md: 2, lg: 3 },
+  columnClassName = 'canopy-grid-column',
   children,
   ...rest
 }) {
-  const dataAttrs = variant === 'masonry' ? { 'data-grid-variant': 'masonry' } : {};
-  const dataVariant = variant === 'grid' ? { 'data-grid-variant': 'grid' } : dataAttrs;
-  const cssVars = (variant === 'masonry' || variant === 'grid')
-    ? {
-        '--grid-gap': gap,
-        '--cols-base': String(columns?.base ?? 1),
-        '--cols-md': String(columns?.md ?? 2),
-        '--cols-lg': String(columns?.lg ?? 3),
-      }
-    : {};
+  const cols =
+    breakpointCols || {
+      default: 3,
+      1024: 3,
+      768: 2,
+      640: 1,
+    };
+  const vars = { '--grid-gap': gap, '--grid-padding-y': paddingY };
+
   return (
-    <div id={id} className={className} style={{ ...cssVars, ...style }} {...dataVariant} {...rest}>
-      {children}
+    <div className="canopy-grid-wrap">
+      {/* Scoped styles so the component works standalone */}
+      <style
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{
+          __html: `
+            .canopy-grid { display: flex; width: auto; position: relative; padding: var(--grid-padding-y, 0) 0; z-index: 1; }
+            .canopy-grid .${columnClassName} { margin-left: var(--grid-gap, 1rem); }
+            .canopy-grid .${columnClassName}:first-child { margin-left: 0; }
+            .canopy-grid-item { margin-bottom: var(--grid-gap, 1rem); }
+          `,
+        }}
+      />
+      <Masonry
+        breakpointCols={cols}
+        className={`canopy-grid ${className}`.trim()}
+        columnClassName={columnClassName}
+        style={{ ...vars, ...style }}
+        {...rest}
+      >
+        {children}
+      </Masonry>
     </div>
   );
 }

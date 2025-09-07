@@ -1,8 +1,8 @@
 export { Fallback } from "./src/Fallback.jsx";
 export { HelloWorld } from "./src/HelloWorld.jsx";
 export { default as Card } from "./src/layout/Card.jsx";
+export { default as Grid, GridItem } from "./src/layout/Grid.jsx";
 export { Viewer } from "./src/iiif/Viewer.jsx";
-export { TestFile } from "./src/layout/TestFile.jsx";
 // Search UI (React)
 // MDX placeholders (SSR-safe). Runtime mounts real components.
 export { default as SearchForm } from "./src/search/MdxSearchForm.jsx";

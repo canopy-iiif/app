@@ -63,10 +63,11 @@ function FormMount() {
   const { query, setQuery, type, setType, types } = useStore();
   return <SearchFormUI query={query} onQueryChange={setQuery} type={type} onTypeChange={setType} types={types} />;
 }
-function ResultsMount() {
+function ResultsMount(props = {}) {
   const { results, type, loading } = useStore();
   if (loading) return <div className="text-slate-600">Loading…</div>;
-  return <SearchResultsUI results={results} type={type} />;
+  const layout = (props && props.layout) || 'grid';
+  return <SearchResultsUI results={results} type={type} layout={layout} />;
 }
 function SummaryMount() {
   const { query, type, shown, total } = useStore();
@@ -81,12 +82,21 @@ function TotalMount() {
   return <span>{shown}</span>;
 }
 
+function parseProps(el) {
+  try {
+    const s = el.querySelector('script[type="application/json"]');
+    if (s) return JSON.parse(s.textContent || '{}');
+  } catch (_) {}
+  return {};
+}
+
 function mountAt(selector, Comp) {
   const nodes = document.querySelectorAll(selector);
   nodes.forEach((n) => {
     try {
       const root = createRoot(n);
-      root.render(<Comp />);
+      const props = parseProps(n);
+      root.render(<Comp {...props} />);
     } catch (e) {
       // Surface helpful diagnostics in dev
       try { console.error('[Search] mount error at', selector, e && e.message ? e.message : e, e && e.stack ? e.stack : ''); } catch (_) {}

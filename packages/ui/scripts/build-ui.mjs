@@ -19,15 +19,16 @@ async function run() {
   const outdir = path.join(root, 'dist');
   if (!fs.existsSync(outdir)) fs.mkdirSync(outdir, { recursive: true });
 
-  const ctx = await esbuild.build({
+  await esbuild.build({
     entryPoints: [path.join(root, 'index.js')],
-    outfile: path.join(outdir, 'index.js'),
+    outdir,
+    entryNames: '[name]',
     bundle: true,
-    platform: 'node',
+    platform: 'neutral',
     format: 'esm',
     sourcemap: true,
-    target: ['node18'],
-    external: ['react', 'react-dom', 'flexsearch', '@samvera/clover-iiif/*'],
+    target: ['es2018'],
+    external: ['react', 'react-dom', 'react-dom/client', 'react-masonry-css', 'flexsearch', '@samvera/clover-iiif/*'],
     logLevel: 'info',
     metafile: false
   }).then(() => null).catch((e) => {
@@ -35,20 +36,53 @@ async function run() {
     process.exit(1);
   });
 
+  // Build SSR-safe server entry targeting Node
+  await esbuild.build({
+    entryPoints: [path.join(root, 'server.js')],
+    outdir,
+    entryNames: '[name]',
+    bundle: true,
+    platform: 'node',
+    format: 'esm',
+    sourcemap: true,
+    target: ['node18'],
+    external: ['react', 'react-dom', '@samvera/clover-iiif/*'],
+    logLevel: 'info',
+  }).catch((e) => {
+    console.error('[ui] server build failed:', e?.message || e);
+    process.exit(1);
+  });
+
   if (process.env.WATCH) {
     const context = await esbuild.context({
       entryPoints: [path.join(root, 'index.js')],
-      outfile: path.join(outdir, 'index.js'),
+      outdir,
+      entryNames: '[name]',
+      bundle: true,
+      platform: 'neutral',
+      format: 'esm',
+      sourcemap: true,
+      target: ['es2018'],
+      external: ['react', 'react-dom', 'react-dom/client', 'react-masonry-css', 'flexsearch', '@samvera/clover-iiif/*'],
+      logLevel: 'info'
+    });
+    await context.watch();
+    console.log('[ui] watching for changes...');
+
+    // Watch server entry separately
+    const serverCtx = await esbuild.context({
+      entryPoints: [path.join(root, 'server.js')],
+      outdir,
+      entryNames: '[name]',
       bundle: true,
       platform: 'node',
       format: 'esm',
       sourcemap: true,
       target: ['node18'],
-      external: ['react', 'react-dom', 'flexsearch', '@samvera/clover-iiif/*'],
+      external: ['react', 'react-dom', '@samvera/clover-iiif/*'],
       logLevel: 'info'
     });
-    await context.watch();
-    console.log('[ui] watching for changes...');
+    await serverCtx.watch();
   }
 }
 
