@@ -65,6 +65,38 @@ Place static files under `assets/` and they will be copied to the site root, pre
 - Performance: tune with `iiif.chunkSize` and `iiif.concurrency` in `canopy.yml` or via env `CANOPY_CHUNK_SIZE` and `CANOPY_FETCH_CONCURRENCY`.
 - Cache notes: switching `collection.uri` resets the manifest cache; you can also delete `.cache/iiif/` to force a refetch.
 
+### Facet Collections (from IIIF metadata)
+
+Canopy can derive new IIIF Presentation 3 Collections from a single source Collection by faceting on Manifest metadata labels you choose.
+
+- Configure labels in `canopy.yml`:
+  - `metadata: ["Date", "Subject", "Creator"]` (case-sensitive label match).
+- Aggregation: during the build, Canopy scans each Manifest’s `metadata[]` and collects values (across all languages) for the configured labels.
+  - Internal cache: `.cache/iiif/facets.json` (implementation detail; not served).
+- Output (IIIF-only API under `site/api/facet/**`):
+  - `/api/facet/index.json`: top-level IIIF Collection listing all facet labels.
+  - `/api/facet/{label}.json`: IIIF Collection of child value Collections for that label.
+  - `/api/facet/{label}/{value}.json`: IIIF Collection of Manifests that have that label/value.
+  - All `id` fields are absolute URLs (see Base URL notes below).
+- Items included in value Collections:
+  - `id`: Manifest URI (IIIF Presentation URL for the work)
+  - `type`: `Manifest`
+  - `label`: `{ none: [title] }`
+  - `thumbnail`: optional, `{ id, type: 'Image' }`
+  - `homepage`: site page for the work (absolute URL), typed as `Text`
+
+Base URL rules for IIIF ids
+
+- Absolute ids/links use this priority:
+  1) GitHub Actions: auto‑detected in the Pages workflow (`owner.github.io[/repo]`).
+  2) `CANOPY_BASE_URL` env var (e.g., `https://canopy-iiif.github.io/canopy-iiif`).
+  3) `canopy.yml` → `site.baseUrl`.
+  4) Dev default `http://localhost:3000` (or `PORT` env).
+
+Why this is cool
+
+- From a single IIIF Collection, Canopy synthesizes many new IIIF-compliant Collections (one per facet label, plus one per label/value). These can be browsed, linked to, and reused by external tools that speak the IIIF Presentation API.
+
 ### Thumbnails
 
 - Config keys (in `canopy.yml` under `iiif.thumbnails`):
@@ -112,6 +144,23 @@ Notes:
 - The Viewer and Search placeholders render minimal HTML on the server and hydrate in the browser.
 - The search runtime (`site/search.js`) uses FlexSearch and supports filtering by `type` (e.g., `work`, `page`, `docs`). The four subcomponents share a single client store so they stay in sync.
 
+### Search Results Layout (Grid vs List)
+
+- `@canopy-iiif/ui` exposes a Masonry `Grid` used by `SearchResults`.
+- You can control the layout via a prop on the MDX placeholder:
+  - `<SearchResults layout="grid" />` (default)
+  - `<SearchResults layout="list" />`
+- The Grid is implemented with `react-masonry-css` and scoped styles; it renders columns client‑side after hydration.
+
+SSR safety and bundling
+
+- Server render imports UI from `@canopy-iiif/ui/server` — a server‑safe entry that only exports MDX placeholders and other SSR‑compatible components.
+- Browser UI (`@canopy-iiif/ui`) is built as an ESM library with externals for heavy globals:
+  - Externals: `react`, `react-dom`, `react-dom/client`, `react-masonry-css`, `flexsearch`.
+- The search runtime bundles the client UI, and provides shims so those externals resolve to browser globals:
+  - React shims come from `site/scripts/react-globals.js` (injected when needed).
+  - FlexSearch is also shimmed to `window.FlexSearch` in the runtime bundle.
+
 Advanced layout (optional, future):
 
 - If you need full control over the search page layout, we'll expose a composable Search API (slots or render props) so you can place the form, summary, and results anywhere. Until then, `<Search />` renders a sensible default.
@@ -147,3 +196,8 @@ Dot‑notation (future): we may also expose these as `<Search.Form />`, `<Search
 ## Contributing
 
 See `CONTRIBUTING.md` for repository structure, versioning with Changesets, release flow, and the template-branch workflow.
+
+**Troubleshooting**
+- Dynamic require error: if you see “Dynamic require of 'react' is not supported” in the browser, ensure the UI build treats `react`, `react-dom`, `react-dom/client`, `react-masonry-css`, and `flexsearch` as externals. The search runtime supplies React and FlexSearch globals and shims imports to `window.React*`/`window.FlexSearch`.
+- SSR import safety: the server should import UI via `@canopy-iiif/ui/server` to avoid pulling browser‑only code (like the Masonry Grid) during MDX SSR.
+- No columns rendering: if Masonry renders a single row, verify that the DOM includes `.canopy-grid_column` wrappers. If not, the Masonry lib likely failed to load; check the build externals and that `site/scripts/react-globals.js` is injected on the page (it is when interactive components are present).

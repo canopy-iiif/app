@@ -9,6 +9,33 @@ const ASSETS_DIR = path.resolve('assets');
 
 const BASE_PATH = String(process.env.CANOPY_BASE_PATH || '').replace(/\/$/, '');
 
+function readYamlConfigBaseUrl() {
+  try {
+    const y = require('js-yaml');
+    const p = path.resolve(process.env.CANOPY_CONFIG || 'canopy.yml');
+    if (!fs.existsSync(p)) return '';
+    const raw = fs.readFileSync(p, 'utf8');
+    const data = y.load(raw) || {};
+    const site = data && data.site;
+    const url = site && site.baseUrl ? String(site.baseUrl) : '';
+    return url;
+  } catch (_) { return ''; }
+}
+
+// Determine the absolute site origin (scheme + host[:port])
+// Priority:
+// 1) CANOPY_BASE_URL env
+// 2) canopy.yml → site.baseUrl
+// 3) dev server default http://localhost:PORT (PORT env or 3000)
+const BASE_ORIGIN = (() => {
+  const env = String(process.env.CANOPY_BASE_URL || '').trim();
+  if (env) return env.replace(/\/$/, '');
+  const cfg = readYamlConfigBaseUrl();
+  if (cfg) return cfg.replace(/\/$/, '');
+  const port = Number(process.env.PORT || 3000);
+  return `http://localhost:${port}`;
+})();
+
 function ensureDirSync(dir) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 }
@@ -31,6 +58,19 @@ function withBase(href) {
   if (!BASE_PATH) return href;
   if (typeof href === 'string' && href.startsWith('/')) return `${BASE_PATH}${href}`;
   return href;
+}
+
+// Convert a site-relative path (e.g., "/api/foo.json") to an absolute URL
+// using BASE_PATH and BASE_ORIGIN. If already absolute (http/https), returns as-is.
+function absoluteUrl(p) {
+  try {
+    const s = String(p || '');
+    if (/^https?:\/\//i.test(s)) return s;
+    const withB = withBase(s);
+    if (typeof withB === 'string' && withB.startsWith('/')) return `${BASE_ORIGIN}${withB}`;
+    // For relative paths, best-effort join
+    return `${BASE_ORIGIN}/${String(withB).replace(/^\/?/, '')}`;
+  } catch (_) { return p; }
 }
 
 // Apply BASE_PATH to any absolute href/src attributes found in an HTML string.
@@ -60,5 +100,7 @@ module.exports = {
   cleanDir,
   htmlShell,
   withBase,
+  BASE_ORIGIN,
+  absoluteUrl,
   applyBaseToHtml,
 };

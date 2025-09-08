@@ -68,6 +68,25 @@ Available components:
 
 Pages that include these placeholders automatically receive the required scripts.
 
+### UI Build & SSR Split
+
+- UI has two entry points:
+  - `@canopy-iiif/ui` (browser): built as ESM with `platform: neutral`. Externals: `react`, `react-dom`, `react-dom/client`, `react-masonry-css`, `flexsearch`, `@samvera/clover-iiif/*`.
+  - `@canopy-iiif/ui/server` (SSR): built for Node and only exports SSR‑safe components (MDX placeholders, `Viewer`, etc.).
+- The builder (`packages/lib/mdx.js`) imports `@canopy-iiif/ui/server` during MDX SSR to avoid pulling browser‑only code on the server.
+- The search runtime bundles the client UI and injects React/FlexSearch globals shims so externals resolve from `window.*` in the browser.
+
+### Search Results Grid
+
+- `SearchResults` accepts `layout` prop: `'grid'` (default) or `'list'`.
+- `'grid'` uses a new `Grid` component (Masonry) from `@canopy-iiif/ui`, implemented with `react-masonry-css` and scoped CSS.
+- Keep `react-masonry-css` external in the UI build so the search runtime can bundle/transform it alongside the React shims, preventing dynamic `require('react')` at runtime.
+
+**Troubleshooting**
+- Dynamic require error: if the browser console shows “Dynamic require of 'react' is not supported”, ensure the UI browser build marks `react`, `react-dom`, `react-dom/client`, `react-masonry-css`, and `flexsearch` as externals. The search runtime bundles client code and shims these to browser globals.
+- SSR import safety: the server must import `@canopy-iiif/ui/server` (not the browser entry) when rendering MDX to avoid loading browser‑only components during SSR.
+- Masonry not creating columns: confirm the rendered HTML contains Masonry’s column wrappers (e.g., `.canopy-grid_column`). If missing, the Masonry module didn’t load; check externals and that React globals are injected on pages that need hydration.
+
 ## Search Framework (MDX-driven)
 
 Goal: Allow authors to fully compose the search page via MDX, while the builder wires data and behavior.

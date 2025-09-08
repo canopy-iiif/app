@@ -1,5 +1,7 @@
 collection:
   uri: https://api.dc.library.northwestern.edu/api/v2/search?query=%28%22nez+perce%22%29&size=40&as=iiif
+# Metadata labels to facet and index for search and browse
+metadata: ["Date", "Subject"]
 iiif:
   thumbnails:
     # Enable to create thumbnails for Manifests missing `thumbnail` property

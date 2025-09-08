@@ -49,6 +49,16 @@ jobs:
           else
             echo "CANOPY_BASE_PATH=/$REPO_NAME" >> $GITHUB_ENV
           fi
+      - name: Determine absolute base URL for Pages
+        run: |
+          OWNER="${GITHUB_REPOSITORY%/*}"
+          REPO="${GITHUB_REPOSITORY#*/}"
+          if [[ "$REPO" == "$OWNER.github.io" ]]; then
+            BASE_URL="https://${OWNER}.github.io"
+          else
+            BASE_URL="https://${OWNER}.github.io/${REPO}"
+          fi
+          echo "CANOPY_BASE_URL=${BASE_URL}" >> $GITHUB_ENV
 
       - name: Build site
         env:

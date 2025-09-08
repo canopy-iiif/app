@@ -339,6 +339,10 @@ async function dev() {
     process.exit(1);
   }
   console.log('Initial build...');
+  // Expose a base URL for builders to construct absolute ids/links
+  if (!process.env.CANOPY_BASE_URL) {
+    process.env.CANOPY_BASE_URL = `http://localhost:${PORT}`;
+  }
   // In dev, let the Tailwind watcher own CSS generation to avoid duplicate
   // one-off builds that print "Rebuilding..." messages. Skip ensureStyles()
   // within build() by setting an environment flag.

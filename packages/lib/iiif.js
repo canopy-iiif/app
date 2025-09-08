@@ -260,6 +260,7 @@ async function loadConfig() {
       uri: "https://iiif.io/api/cookbook/recipe/0032-collection/collection.json",
     },
     iiif: { chunkSize: 10, concurrency: 6 },
+    metadata: [],
   };
   const overrideConfigPath = process.env.CANOPY_CONFIG;
   const configPath = path.resolve(overrideConfigPath || "canopy.yml");
@@ -286,6 +287,9 @@ async function loadConfig() {
               Number(di.thumbnails && di.thumbnails.preferredSize) || 1200,
           },
         },
+        metadata: Array.isArray(d.metadata)
+          ? d.metadata.map((s) => String(s)).filter(Boolean)
+          : [],
       };
       console.log(
         "Loaded config from",
