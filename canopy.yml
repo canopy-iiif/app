@@ -9,6 +9,6 @@ iiif:
     # Preferred thumbnail size in pixels (width/height)
     preferredSize: 400
   # Max number of manifests to process per chunk
-  chunkSize: 10
+  chunkSize: 20
   # Concurrent fetch/build workers per chunk
-  concurrency: 5
+  concurrency: 3

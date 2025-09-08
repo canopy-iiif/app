@@ -99,7 +99,14 @@ async function prepareUi(mode) {
     return null;
   }
 
-  // Dev mode: start the UI watcher in the background
+  // Dev mode: do a one-off UI build first so its logs/render appear before site build
+  try {
+    log("Prebuilding UI assets (@canopy-iiif/ui)");
+    await runOnce("npm", ["-w", "@canopy-iiif/ui", "run", "build"]);
+  } catch (e) {
+    warn(`UI prebuild skipped: ${e.message || e}`);
+  }
+  // Start the UI watcher in the background
   log("Starting UI watcher (@canopy-iiif/ui)");
   try {
     uiWatcherChild = start("npm", ["-w", "@canopy-iiif/ui", "run", "watch"]);

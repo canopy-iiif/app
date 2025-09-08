@@ -338,6 +338,8 @@ async function dev() {
     console.error('No content directory found at', CONTENT_DIR);
     process.exit(1);
   }
+  // Start server before the initial build so build logs follow server standup
+  startServer();
   console.log('Initial build...');
   // Expose a base URL for builders to construct absolute ids/links
   if (!process.env.CANOPY_BASE_URL) {
@@ -354,11 +356,8 @@ async function dev() {
     runBuild().then(() => process.exit(0)).catch(() => process.exit(1));
     return;
   }
-  // Run the initial build synchronously so we don't start watchers too early
+  // Run the initial build synchronously now that the server is up
   await runBuild();
-
-  // Start server after initial build completes
-  startServer();
 
   // Start Tailwind watcher if config + input exist (after initial build)
   try {
