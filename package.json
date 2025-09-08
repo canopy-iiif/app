@@ -1,6 +1,6 @@
 {
   "name": "@canopy-iiif/app",
-  "version": "0.6.13",
+  "version": "0.6.14",
   "description": "An open-source static site generator designed for fast creation, contextualization, and customization of a discovery-focused digital scholarship and collections website using IIIF APIs.",
   "private": true,
   "main": "app/scripts/canopy-build.mjs",

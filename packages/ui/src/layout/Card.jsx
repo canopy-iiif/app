@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 /**
  * Card
@@ -29,9 +29,9 @@ export default function Card({
 }) {
   const caption = (
     <figcaption style={{ marginTop: 8 }}>
-      {title ? <strong style={{ display: 'block' }}>{title}</strong> : null}
+      {title ? <strong style={{ display: "block" }}>{title}</strong> : null}
       {subtitle ? (
-        <span style={{ display: 'block', color: '#6b7280' }}>{subtitle}</span>
+        <span style={{ display: "block", color: "#6b7280" }}>{subtitle}</span>
       ) : null}
       {children}
     </figcaption>
@@ -43,9 +43,14 @@ export default function Card({
         {src ? (
           <img
             src={src}
-            alt={alt || title || ''}
+            alt={alt || title || ""}
             loading="lazy"
-            style={{ display: 'block', width: '100%', height: 'auto', borderRadius: 4 }}
+            style={{
+              display: "block",
+              width: "100%",
+              height: "auto",
+              borderRadius: 4,
+            }}
           />
         ) : null}
         {caption}
@@ -53,4 +58,3 @@ export default function Card({
     </a>
   );
 }
-

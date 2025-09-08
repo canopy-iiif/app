@@ -38,20 +38,33 @@ function Card({
       src,
       alt: alt || title || "",
       loading: "lazy",
-      style: { display: "block", width: "100%", height: "auto", borderRadius: 4 }
+      style: {
+        display: "block",
+        width: "100%",
+        height: "auto",
+        borderRadius: 4
+      }
     }
   ) : null, caption));
 }
 
 // src/layout/Grid.jsx
-import React4 from "react";
 import Masonry from "react-masonry-css";
+import React4 from "react";
 function GridItem({ children, className = "", style = {}, ...rest }) {
-  return /* @__PURE__ */ React4.createElement("div", { className: `canopy-grid-item ${className}`.trim(), style, ...rest }, children);
+  return /* @__PURE__ */ React4.createElement(
+    "div",
+    {
+      className: `canopy-grid-item ${className}`.trim(),
+      style,
+      ...rest
+    },
+    children
+  );
 }
 function Grid({
   breakpointCols,
-  gap = "1rem",
+  gap = "2rem",
   paddingY = "0",
   className = "",
   style = {},
@@ -60,10 +73,10 @@ function Grid({
   ...rest
 }) {
   const cols = breakpointCols || {
-    default: 3,
-    1024: 3,
-    768: 2,
-    640: 1
+    default: 4,
+    1024: 4,
+    768: 3,
+    640: 2
   };
   const vars = { "--grid-gap": gap, "--grid-padding-y": paddingY };
   return /* @__PURE__ */ React4.createElement("div", { className: "canopy-grid-wrap" }, /* @__PURE__ */ React4.createElement(
@@ -267,28 +280,32 @@ function SearchForm({ query, onQueryChange, type = "all", onTypeChange, types = 
 
 // src/search/SearchResults.jsx
 import React13 from "react";
-function WorkContent({ href, title, thumbnail }) {
-  return /* @__PURE__ */ React13.createElement("a", { href, className: "card" }, /* @__PURE__ */ React13.createElement("figure", { style: { margin: 0 } }, thumbnail ? /* @__PURE__ */ React13.createElement(
-    "img",
-    {
-      src: thumbnail,
-      alt: title || "",
-      loading: "lazy",
-      style: { display: "block", width: "100%", height: "auto", borderRadius: 4 }
-    }
-  ) : null, /* @__PURE__ */ React13.createElement("figcaption", { style: { marginTop: 8 } }, /* @__PURE__ */ React13.createElement("strong", null, title || href))));
-}
-function PageContent({ href, title }) {
-  return /* @__PURE__ */ React13.createElement("a", { href }, title || href);
-}
-function SearchResults({ results = [], type = "all", layout = "grid" }) {
+function SearchResults({
+  results = [],
+  type = "all",
+  layout = "grid"
+}) {
   if (!results.length) {
     return /* @__PURE__ */ React13.createElement("div", { className: "text-slate-600" }, /* @__PURE__ */ React13.createElement("em", null, "No results"));
   }
   if (layout === "list") {
-    return /* @__PURE__ */ React13.createElement("ul", { id: "search-results", className: "space-y-3" }, results.map((r, i) => r.type === "work" ? /* @__PURE__ */ React13.createElement("li", { key: i, className: "search-result work" }, /* @__PURE__ */ React13.createElement(WorkContent, { href: r.href, title: r.title, thumbnail: r.thumbnail })) : /* @__PURE__ */ React13.createElement("li", { key: i, className: "search-result page" }, /* @__PURE__ */ React13.createElement(PageContent, { href: r.href, title: r.title }))));
+    return /* @__PURE__ */ React13.createElement("ul", { id: "search-results", className: "space-y-3" }, results.map((r, i) => /* @__PURE__ */ React13.createElement("li", { key: i, className: `search-result ${r.type}` }, /* @__PURE__ */ React13.createElement(
+      Card,
+      {
+        href: r.href,
+        title: r.title || r.href,
+        src: r.type === "work" ? r.thumbnail : void 0
+      }
+    ))));
   }
-  return /* @__PURE__ */ React13.createElement("div", { id: "search-results" }, /* @__PURE__ */ React13.createElement(Grid, null, results.map((r, i) => /* @__PURE__ */ React13.createElement(GridItem, { key: i, className: `search-result ${r.type}` }, r.type === "work" ? /* @__PURE__ */ React13.createElement(WorkContent, { href: r.href, title: r.title, thumbnail: r.thumbnail }) : /* @__PURE__ */ React13.createElement(PageContent, { href: r.href, title: r.title })))));
+  return /* @__PURE__ */ React13.createElement("div", { id: "search-results", className: "not-prose" }, /* @__PURE__ */ React13.createElement(Grid, null, results.map((r, i) => /* @__PURE__ */ React13.createElement(GridItem, { key: i, className: `search-result ${r.type}` }, /* @__PURE__ */ React13.createElement(
+    Card,
+    {
+      href: r.href,
+      title: r.title || r.href,
+      src: r.type === "work" ? r.thumbnail : void 0
+    }
+  )))));
 }
 
 // src/search/useSearch.js
@@ -369,7 +386,13 @@ function Search(props) {
   } catch (_) {
     json = "{}";
   }
-  return /* @__PURE__ */ React14.createElement("div", { "data-canopy-search": "1" }, /* @__PURE__ */ React14.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
+  return /* @__PURE__ */ React14.createElement("div", { "data-canopy-search": "1", className: "not-prose" }, /* @__PURE__ */ React14.createElement(
+    "script",
+    {
+      type: "application/json",
+      dangerouslySetInnerHTML: { __html: json }
+    }
+  ));
 }
 export {
   Card,

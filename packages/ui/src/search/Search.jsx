@@ -1,18 +1,20 @@
-import React from 'react';
+import React from "react";
 
 // SSR-friendly placeholder for the React Search app.
 // The actual app mounts from site/search.js into this element.
 export default function Search(props) {
-  let json = '{}';
+  let json = "{}";
   try {
     json = JSON.stringify(props || {});
   } catch (_) {
-    json = '{}';
+    json = "{}";
   }
   return (
-    <div data-canopy-search="1">
-      <script type="application/json" dangerouslySetInnerHTML={{ __html: json }} />
+    <div data-canopy-search="1" className="not-prose">
+      <script
+        type="application/json"
+        dangerouslySetInnerHTML={{ __html: json }}
+      />
     </div>
   );
 }
-
