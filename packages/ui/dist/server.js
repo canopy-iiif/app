@@ -100,8 +100,20 @@ var Slider = (props) => {
   return /* @__PURE__ */ React4.createElement(CloverSlider, { ...props });
 };
 
-// src/search/MdxSearchForm.jsx
+// src/iiif/MdxFacetSliders.jsx
 import React5 from "react";
+function MdxFacetSliders(props) {
+  let json = "{}";
+  try {
+    json = JSON.stringify(props || {});
+  } catch (_) {
+    json = "{}";
+  }
+  return /* @__PURE__ */ React5.createElement("div", { "data-canopy-facet-sliders": "1" }, /* @__PURE__ */ React5.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
+}
+
+// src/search/MdxSearchForm.jsx
+import React6 from "react";
 function MdxSearchForm(props) {
   let json = "{}";
   try {
@@ -109,11 +121,11 @@ function MdxSearchForm(props) {
   } catch (_) {
     json = "{}";
   }
-  return /* @__PURE__ */ React5.createElement("div", { "data-canopy-search-form": "1" }, /* @__PURE__ */ React5.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
+  return /* @__PURE__ */ React6.createElement("div", { "data-canopy-search-form": "1" }, /* @__PURE__ */ React6.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
 }
 
 // src/search/MdxSearchResults.jsx
-import React6 from "react";
+import React7 from "react";
 function MdxSearchResults(props) {
   let json = "{}";
   try {
@@ -121,11 +133,11 @@ function MdxSearchResults(props) {
   } catch (_) {
     json = "{}";
   }
-  return /* @__PURE__ */ React6.createElement("div", { "data-canopy-search-results": "1" }, /* @__PURE__ */ React6.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
+  return /* @__PURE__ */ React7.createElement("div", { "data-canopy-search-results": "1" }, /* @__PURE__ */ React7.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
 }
 
 // src/search/SearchSummary.jsx
-import React7 from "react";
+import React8 from "react";
 function SearchSummary(props) {
   let json = "{}";
   try {
@@ -133,11 +145,11 @@ function SearchSummary(props) {
   } catch (_) {
     json = "{}";
   }
-  return /* @__PURE__ */ React7.createElement("div", { "data-canopy-search-summary": "1" }, /* @__PURE__ */ React7.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
+  return /* @__PURE__ */ React8.createElement("div", { "data-canopy-search-summary": "1" }, /* @__PURE__ */ React8.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
 }
 
 // src/search/SearchTotal.jsx
-import React8 from "react";
+import React9 from "react";
 function SearchTotal(props) {
   let json = "{}";
   try {
@@ -145,9 +157,10 @@ function SearchTotal(props) {
   } catch (_) {
     json = "{}";
   }
-  return /* @__PURE__ */ React8.createElement("div", { "data-canopy-search-total": "1" }, /* @__PURE__ */ React8.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
+  return /* @__PURE__ */ React9.createElement("div", { "data-canopy-search-total": "1" }, /* @__PURE__ */ React9.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
 }
 export {
+  MdxFacetSliders as FacetSliders,
   Fallback,
   HelloWorld,
   MdxSearchForm as SearchForm,

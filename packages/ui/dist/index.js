@@ -173,8 +173,20 @@ var Slider = (props) => {
   return /* @__PURE__ */ React6.createElement(CloverSlider, { ...props });
 };
 
-// src/search/MdxSearchForm.jsx
+// src/iiif/MdxFacetSliders.jsx
 import React7 from "react";
+function MdxFacetSliders(props) {
+  let json = "{}";
+  try {
+    json = JSON.stringify(props || {});
+  } catch (_) {
+    json = "{}";
+  }
+  return /* @__PURE__ */ React7.createElement("div", { "data-canopy-facet-sliders": "1" }, /* @__PURE__ */ React7.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
+}
+
+// src/search/MdxSearchForm.jsx
+import React8 from "react";
 function MdxSearchForm(props) {
   let json = "{}";
   try {
@@ -182,11 +194,11 @@ function MdxSearchForm(props) {
   } catch (_) {
     json = "{}";
   }
-  return /* @__PURE__ */ React7.createElement("div", { "data-canopy-search-form": "1" }, /* @__PURE__ */ React7.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
+  return /* @__PURE__ */ React8.createElement("div", { "data-canopy-search-form": "1" }, /* @__PURE__ */ React8.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
 }
 
 // src/search/MdxSearchResults.jsx
-import React8 from "react";
+import React9 from "react";
 function MdxSearchResults(props) {
   let json = "{}";
   try {
@@ -194,11 +206,11 @@ function MdxSearchResults(props) {
   } catch (_) {
     json = "{}";
   }
-  return /* @__PURE__ */ React8.createElement("div", { "data-canopy-search-results": "1" }, /* @__PURE__ */ React8.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
+  return /* @__PURE__ */ React9.createElement("div", { "data-canopy-search-results": "1" }, /* @__PURE__ */ React9.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
 }
 
 // src/search/SearchSummary.jsx
-import React9 from "react";
+import React10 from "react";
 function SearchSummary(props) {
   let json = "{}";
   try {
@@ -206,11 +218,11 @@ function SearchSummary(props) {
   } catch (_) {
     json = "{}";
   }
-  return /* @__PURE__ */ React9.createElement("div", { "data-canopy-search-summary": "1" }, /* @__PURE__ */ React9.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
+  return /* @__PURE__ */ React10.createElement("div", { "data-canopy-search-summary": "1" }, /* @__PURE__ */ React10.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
 }
 
 // src/search/SearchTotal.jsx
-import React10 from "react";
+import React11 from "react";
 function SearchTotal(props) {
   let json = "{}";
   try {
@@ -218,14 +230,14 @@ function SearchTotal(props) {
   } catch (_) {
     json = "{}";
   }
-  return /* @__PURE__ */ React10.createElement("div", { "data-canopy-search-total": "1" }, /* @__PURE__ */ React10.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
+  return /* @__PURE__ */ React11.createElement("div", { "data-canopy-search-total": "1" }, /* @__PURE__ */ React11.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
 }
 
 // src/search/SearchForm.jsx
-import React11 from "react";
+import React12 from "react";
 function SearchForm({ query, onQueryChange, type = "all", onTypeChange, types = [] }) {
   const allTypes = Array.from(/* @__PURE__ */ new Set(["all", ...types]));
-  return /* @__PURE__ */ React11.createElement("form", { onSubmit: (e) => e.preventDefault(), className: "space-y-2" }, /* @__PURE__ */ React11.createElement(
+  return /* @__PURE__ */ React12.createElement("form", { onSubmit: (e) => e.preventDefault(), className: "space-y-2" }, /* @__PURE__ */ React12.createElement(
     "input",
     {
       id: "search-input",
@@ -235,7 +247,7 @@ function SearchForm({ query, onQueryChange, type = "all", onTypeChange, types = 
       onChange: (e) => onQueryChange && onQueryChange(e.target.value),
       className: "w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
     }
-  ), /* @__PURE__ */ React11.createElement("div", { className: "flex items-center gap-3 text-sm text-slate-600" }, /* @__PURE__ */ React11.createElement("label", { htmlFor: "search-type" }, "Type:"), /* @__PURE__ */ React11.createElement(
+  ), /* @__PURE__ */ React12.createElement("div", { className: "flex items-center gap-3 text-sm text-slate-600" }, /* @__PURE__ */ React12.createElement("label", { htmlFor: "search-type" }, "Type:"), /* @__PURE__ */ React12.createElement(
     "select",
     {
       id: "search-type",
@@ -243,14 +255,14 @@ function SearchForm({ query, onQueryChange, type = "all", onTypeChange, types = 
       onChange: (e) => onTypeChange && onTypeChange(e.target.value),
       className: "px-2 py-1 border border-slate-300 rounded-md bg-white"
     },
-    allTypes.map((t) => /* @__PURE__ */ React11.createElement("option", { key: t, value: t }, t.charAt(0).toUpperCase() + t.slice(1)))
+    allTypes.map((t) => /* @__PURE__ */ React12.createElement("option", { key: t, value: t }, t.charAt(0).toUpperCase() + t.slice(1)))
   )));
 }
 
 // src/search/SearchResults.jsx
-import React12 from "react";
+import React13 from "react";
 function WorkContent({ href, title, thumbnail }) {
-  return /* @__PURE__ */ React12.createElement("a", { href, className: "card" }, /* @__PURE__ */ React12.createElement("figure", { style: { margin: 0 } }, thumbnail ? /* @__PURE__ */ React12.createElement(
+  return /* @__PURE__ */ React13.createElement("a", { href, className: "card" }, /* @__PURE__ */ React13.createElement("figure", { style: { margin: 0 } }, thumbnail ? /* @__PURE__ */ React13.createElement(
     "img",
     {
       src: thumbnail,
@@ -258,19 +270,19 @@ function WorkContent({ href, title, thumbnail }) {
       loading: "lazy",
       style: { display: "block", width: "100%", height: "auto", borderRadius: 4 }
     }
-  ) : null, /* @__PURE__ */ React12.createElement("figcaption", { style: { marginTop: 8 } }, /* @__PURE__ */ React12.createElement("strong", null, title || href))));
+  ) : null, /* @__PURE__ */ React13.createElement("figcaption", { style: { marginTop: 8 } }, /* @__PURE__ */ React13.createElement("strong", null, title || href))));
 }
 function PageContent({ href, title }) {
-  return /* @__PURE__ */ React12.createElement("a", { href }, title || href);
+  return /* @__PURE__ */ React13.createElement("a", { href }, title || href);
 }
 function SearchResults({ results = [], type = "all", layout = "grid" }) {
   if (!results.length) {
-    return /* @__PURE__ */ React12.createElement("div", { className: "text-slate-600" }, /* @__PURE__ */ React12.createElement("em", null, "No results"));
+    return /* @__PURE__ */ React13.createElement("div", { className: "text-slate-600" }, /* @__PURE__ */ React13.createElement("em", null, "No results"));
   }
   if (layout === "list") {
-    return /* @__PURE__ */ React12.createElement("ul", { id: "search-results", className: "space-y-3" }, results.map((r, i) => r.type === "work" ? /* @__PURE__ */ React12.createElement("li", { key: i, className: "search-result work" }, /* @__PURE__ */ React12.createElement(WorkContent, { href: r.href, title: r.title, thumbnail: r.thumbnail })) : /* @__PURE__ */ React12.createElement("li", { key: i, className: "search-result page" }, /* @__PURE__ */ React12.createElement(PageContent, { href: r.href, title: r.title }))));
+    return /* @__PURE__ */ React13.createElement("ul", { id: "search-results", className: "space-y-3" }, results.map((r, i) => r.type === "work" ? /* @__PURE__ */ React13.createElement("li", { key: i, className: "search-result work" }, /* @__PURE__ */ React13.createElement(WorkContent, { href: r.href, title: r.title, thumbnail: r.thumbnail })) : /* @__PURE__ */ React13.createElement("li", { key: i, className: "search-result page" }, /* @__PURE__ */ React13.createElement(PageContent, { href: r.href, title: r.title }))));
   }
-  return /* @__PURE__ */ React12.createElement("div", { id: "search-results" }, /* @__PURE__ */ React12.createElement(Grid, null, results.map((r, i) => /* @__PURE__ */ React12.createElement(GridItem, { key: i, className: `search-result ${r.type}` }, r.type === "work" ? /* @__PURE__ */ React12.createElement(WorkContent, { href: r.href, title: r.title, thumbnail: r.thumbnail }) : /* @__PURE__ */ React12.createElement(PageContent, { href: r.href, title: r.title })))));
+  return /* @__PURE__ */ React13.createElement("div", { id: "search-results" }, /* @__PURE__ */ React13.createElement(Grid, null, results.map((r, i) => /* @__PURE__ */ React13.createElement(GridItem, { key: i, className: `search-result ${r.type}` }, r.type === "work" ? /* @__PURE__ */ React13.createElement(WorkContent, { href: r.href, title: r.title, thumbnail: r.thumbnail }) : /* @__PURE__ */ React13.createElement(PageContent, { href: r.href, title: r.title })))));
 }
 
 // src/search/useSearch.js
@@ -343,7 +355,7 @@ function useSearch(query, type) {
 }
 
 // src/search/Search.jsx
-import React13 from "react";
+import React14 from "react";
 function Search(props) {
   let json = "{}";
   try {
@@ -351,10 +363,11 @@ function Search(props) {
   } catch (_) {
     json = "{}";
   }
-  return /* @__PURE__ */ React13.createElement("div", { "data-canopy-search": "1" }, /* @__PURE__ */ React13.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
+  return /* @__PURE__ */ React14.createElement("div", { "data-canopy-search": "1" }, /* @__PURE__ */ React14.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
 }
 export {
   Card,
+  MdxFacetSliders as FacetSliders,
   Fallback,
   Grid,
   GridItem,

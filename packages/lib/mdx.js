@@ -385,6 +385,52 @@ async function ensureClientRuntime() {
   } catch (_) {}
 }
 
+// Facets runtime: fetches /api/search/facets.json, picks a value per label (random from top 3),
+// and renders a Slider for each.
+async function ensureFacetsRuntime() {
+  let esbuild = null;
+  try { esbuild = require("../ui/node_modules/esbuild"); } catch (_) { try { esbuild = require("esbuild"); } catch (_) {} }
+  if (!esbuild) return;
+  ensureDirSync(OUT_DIR);
+  const scriptsDir = path.join(OUT_DIR, 'scripts');
+  ensureDirSync(scriptsDir);
+  const outFile = path.join(scriptsDir, 'canopy-facets.js');
+  const entry = `
+    function ready(fn){ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',fn,{once:true}); else fn(); }
+    function parseProps(el){ try{ const s=el.querySelector('script[type="application/json"]'); if(s) return JSON.parse(s.textContent||'{}'); }catch(_){ } return {}; }
+    function pickRandomTop(values, topN){ const arr=(values||[]).slice().sort((a,b)=> (b.doc_count||0)-(a.doc_count||0) || String(a.value).localeCompare(String(b.value))); const n=Math.min(topN||3, arr.length); if(!n) return null; const i=Math.floor(Math.random()*n); return arr[i]; }
+    function makeSliderPlaceholder(props){ try{ const el=document.createElement('div'); el.setAttribute('data-canopy-slider','1'); const s=document.createElement('script'); s.type='application/json'; s.textContent=JSON.stringify(props||{}); el.appendChild(s); return el; }catch(_){ return null; } }
+    ready(function(){
+      const nodes = document.querySelectorAll('[data-canopy-facet-sliders]');
+      nodes.forEach(async (el) => {
+        try {
+          const props = parseProps(el) || {};
+          const labels = Array.isArray(props.labels) ? props.labels.map(String) : null;
+          const topN = Number(props.top || 3) || 3;
+          const res = await fetch('api/search/facets.json').catch(()=>null);
+          if(!res || !res.ok) return;
+          const json = await res.json().catch(()=>null);
+          if(!Array.isArray(json)) return;
+          const selected = [];
+          json.forEach((f) => { if(!f || !f.label || !Array.isArray(f.values)) return; if(labels && !labels.includes(String(f.label))) return; const pick = pickRandomTop(f.values, topN); if(pick) selected.push({ label: f.label, labelSlug: f.slug, value: pick.value, valueSlug: f.slug && pick.slug ? pick.slug : (pick.value||'').toString().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') }); });
+          selected.forEach((s) => {
+            const wrap = document.createElement('div');
+            wrap.setAttribute('data-facet-label', s.label);
+            const ph = makeSliderPlaceholder({ iiifContent: 'api/facet/' + s.labelSlug + '/' + s.valueSlug + '.json' });
+            if (ph) wrap.appendChild(ph);
+            el.appendChild(wrap);
+          });
+        } catch(_) { }
+      });
+    });
+  `;
+  const shim = { name: 'facets-vanilla', setup(){} };
+  try {
+    await esbuild.build({ stdin: { contents: entry, resolveDir: process.cwd(), sourcefile: 'canopy-facets-entry.js', loader: 'js' }, outfile: outFile, platform: 'browser', format: 'iife', bundle: true, sourcemap: false, target: ['es2018'], logLevel: 'silent', minify: true, plugins: [shim] });
+  } catch(e){ try{ console.error('Facets: bundle error:', e && e.message ? e.message : e); }catch(_){ } return; }
+  try { const { logLine } = require('./log'); let size=0; try{ const st = fs.statSync(outFile); size = st && st.size || 0; }catch(_){} const kb = size ? ` (${(size/1024).toFixed(1)} KB)` : ''; const rel = path.relative(process.cwd(), outFile).split(path.sep).join('/'); logLine(`✓ Wrote ${rel}${kb}`, 'cyan'); } catch(_){}
+}
+
 // Bundle a separate client runtime for the Clover Slider to keep payloads split.
 async function ensureSliderRuntime() {
   let esbuild = null;
@@ -563,6 +609,7 @@ module.exports = {
   loadAppWrapper,
   ensureClientRuntime,
   ensureSliderRuntime,
+  ensureFacetsRuntime,
   ensureReactGlobals,
   resetMdxCaches: function () {
     try {

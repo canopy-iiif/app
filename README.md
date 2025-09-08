@@ -117,6 +117,7 @@ Two interactive areas are available out of the box and render safely in MDX:
   - `<SearchSummary />` — summary text (query/type aware)
   - `<SearchResults />` — results list
   - `<SearchTotal />` — live count of shown results
+  - `<FacetSliders />` — renders a Slider per configured facet label (random pick from top values, client‑side)
 
 How it works:
 
@@ -125,6 +126,7 @@ How it works:
 - On load, the hydration script finds placeholders, reads props (embedded as JSON), and mounts the React component.
   - Viewer runtime: `site/scripts/canopy-viewer.js`
   - Slider runtime: `site/scripts/canopy-slider.js` (loaded only on pages that include `<Slider />`)
+  - Facets runtime: `site/scripts/canopy-facets.js` (loaded only on pages that include `<FacetSliders />`)
 
 Usage examples:
 

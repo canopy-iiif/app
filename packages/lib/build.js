@@ -176,16 +176,25 @@ async function compileMdxFile(filePath, outPath, extraProps = {}) {
     .join("/");
   const needsHydrateViewer = body.includes('data-canopy-viewer');
   const needsHydrateSlider = body.includes('data-canopy-slider');
-  const needsHydrate = body.includes('data-canopy-hydrate') || needsHydrateViewer || needsHydrateSlider;
+  const needsFacets = body.includes('data-canopy-facet-sliders');
+  const needsHydrate = body.includes('data-canopy-hydrate') || needsHydrateViewer || needsHydrateSlider || needsFacets;
   const viewerRel = needsHydrateViewer
     ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-viewer.js')).split(path.sep).join('/')
     : null;
-  const sliderRel = needsHydrateSlider
+  const sliderRel = (needsHydrateSlider || needsFacets)
     ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-slider.js')).split(path.sep).join('/')
     : null;
-  const jsRel = viewerRel || sliderRel || null;
+  const facetsRel = needsFacets
+    ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-facets.js')).split(path.sep).join('/')
+    : null;
+  // Ensure facets runs before slider: make slider the main script so it executes last
+  let jsRel = null;
+  if (needsFacets && sliderRel) jsRel = sliderRel;
+  else if (viewerRel) jsRel = viewerRel;
+  else if (sliderRel) jsRel = sliderRel;
+  else if (facetsRel) jsRel = facetsRel;
   // Detect pages that require client-side React (flagged by components)
-  const needsReact = body.includes('data-react-root') || body.includes('data-canopy-react') || needsHydrateViewer || needsHydrateSlider;
+  const needsReact = body.includes('data-react-root') || body.includes('data-canopy-react') || needsHydrateViewer || needsHydrateSlider || needsFacets;
   let vendorTag = '';
   if (needsReact) {
     try {
@@ -199,6 +208,8 @@ async function compileMdxFile(filePath, outPath, extraProps = {}) {
   // If hydration needed, include hydration script
   let headExtra = head;
   const extraScripts = [];
+  // Load facets before slider so placeholders exist
+  if (facetsRel && jsRel !== facetsRel) extraScripts.push(`<script defer src="${facetsRel}"></script>`);
   if (viewerRel && jsRel !== viewerRel) extraScripts.push(`<script defer src="${viewerRel}"></script>`);
   if (sliderRel && jsRel !== sliderRel) extraScripts.push(`<script defer src="${sliderRel}"></script>`);
   if (extraScripts.length) headExtra = extraScripts.join('') + headExtra;
@@ -323,6 +334,7 @@ async function build(options = {}) {
   // Defer styles until after pages are generated so Tailwind can scan site HTML
   await mdx.ensureClientRuntime();
   try { if (typeof mdx.ensureSliderRuntime === 'function') await mdx.ensureSliderRuntime(); } catch (_) {}
+  try { if (typeof mdx.ensureFacetsRuntime === 'function') await mdx.ensureFacetsRuntime(); } catch (_) {}
   logLine("✓ Prepared client hydration runtimes\n", "cyan", { dim: true });
   // Copy assets from assets/ to site/
   await copyAssets();
@@ -465,6 +477,7 @@ async function build(options = {}) {
       const labels = Array.isArray(cfg && cfg.metadata) ? cfg.metadata : [];
       await buildFacetsForWorks(combined, labels);
       await writeFacetCollections(labels, combined);
+      await writeFacetsSearchApi();
     } catch (_) {}
     try { logLine("• Writing search runtime (final)...", "blue", { bright: true }); } catch (_) {}
     {
@@ -691,4 +704,17 @@ async function writeFacetCollections(labelWhitelist, combined) {
     items: labelIndexItems,
   };
   await fsp.writeFile(path.join(facetRoot, 'index.json'), JSON.stringify(facetIndex, null, 2), 'utf8');
+}
+
+async function writeFacetsSearchApi() {
+  const { fs, fsp, path, OUT_DIR, ensureDirSync } = require('./common');
+  const src = path.resolve('.cache/iiif/facets.json');
+  if (!fs.existsSync(src)) return;
+  let data = null;
+  try { data = JSON.parse(fs.readFileSync(src, 'utf8')); } catch (_) { data = null; }
+  if (!data) return;
+  const destDir = path.join(OUT_DIR, 'api', 'search');
+  ensureDirSync(destDir);
+  const dest = path.join(destDir, 'facets.json');
+  await fsp.writeFile(dest, JSON.stringify(data, null, 2), 'utf8');
 }
