@@ -111,6 +111,7 @@ Why this is cool
 Two interactive areas are available out of the box and render safely in MDX:
 
 - Viewer: `<Viewer iiifContent="…" />` — wraps `@samvera/clover-iiif` and hydrates client‑side.
+- Slider: `<Slider iiifContent="…" />` — wraps Clover’s slider; hydrates client‑side via a separate bundle.
 - Search (composable): place any of these where you want on the page and they hydrate client‑side:
   - `<SearchForm />` — input + type select
   - `<SearchSummary />` — summary text (query/type aware)
@@ -122,6 +123,8 @@ How it works:
 - MDX is rendered on the server. Browser‑only components emit a lightweight placeholder element.
 - The build injects `site/scripts/react-globals.js` and the relevant hydration script(s) into pages that need them.
 - On load, the hydration script finds placeholders, reads props (embedded as JSON), and mounts the React component.
+  - Viewer runtime: `site/scripts/canopy-viewer.js`
+  - Slider runtime: `site/scripts/canopy-slider.js` (loaded only on pages that include `<Slider />`)
 
 Usage examples:
 

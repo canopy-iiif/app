@@ -376,6 +376,140 @@ async function ensureClientRuntime() {
     minify: true,
     plugins: [plugin],
   });
+  try {
+    const { logLine } = require('./log');
+    let size = 0; try { const st = fs.statSync(outFile); size = st && st.size || 0; } catch (_) {}
+    const kb = size ? ` (${(size/1024).toFixed(1)} KB)` : '';
+    const rel = path.relative(process.cwd(), outFile).split(path.sep).join('/');
+    logLine(`✓ Wrote ${rel}${kb}`, 'cyan');
+  } catch (_) {}
+}
+
+// Bundle a separate client runtime for the Clover Slider to keep payloads split.
+async function ensureSliderRuntime() {
+  let esbuild = null;
+  try {
+    esbuild = require("../ui/node_modules/esbuild");
+  } catch (_) {
+    try { esbuild = require("esbuild"); } catch (_) {}
+  }
+  if (!esbuild) return;
+  ensureDirSync(OUT_DIR);
+  const scriptsDir = path.join(OUT_DIR, 'scripts');
+  ensureDirSync(scriptsDir);
+  const outFile = path.join(scriptsDir, "canopy-slider.js");
+  const entry = `
+    import CloverSlider from '@samvera/clover-iiif/slider';
+    import 'swiper/css';
+    import 'swiper/css/navigation';
+    import 'swiper/css/pagination';
+
+    function ready(fn) {
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn, { once: true });
+      else fn();
+    }
+    function parseProps(el) {
+      try {
+        const s = el.querySelector('script[type="application/json"]');
+        if (s) return JSON.parse(s.textContent || '{}');
+        const raw = el.getAttribute('data-props') || '{}';
+        return JSON.parse(raw);
+      } catch (_) { return {}; }
+    }
+    ready(function() {
+      try {
+        const nodes = document.querySelectorAll('[data-canopy-slider]');
+        if (!nodes || !nodes.length) return;
+        for (const el of nodes) {
+          try {
+            const props = parseProps(el);
+            const React = (window && window.React) || null;
+            const ReactDOMClient = (window && window.ReactDOMClient) || null;
+            const createRoot = ReactDOMClient && ReactDOMClient.createRoot;
+            if (!React || !createRoot) continue;
+            const root = createRoot(el);
+            root.render(React.createElement(CloverSlider, props));
+          } catch (_) { /* skip */ }
+        }
+      } catch (_) {}
+    });
+  `;
+  const reactShim = `
+    const React = (typeof window !== 'undefined' && window.React) || {};
+    export default React;
+    export const Children = React.Children;
+    export const Component = React.Component;
+    export const Fragment = React.Fragment;
+    export const createElement = React.createElement;
+    export const cloneElement = React.cloneElement;
+    export const createContext = React.createContext;
+    export const forwardRef = React.forwardRef;
+    export const memo = React.memo;
+    export const startTransition = React.startTransition;
+    export const isValidElement = React.isValidElement;
+    export const useEffect = React.useEffect;
+    export const useLayoutEffect = React.useLayoutEffect;
+    export const useMemo = React.useMemo;
+    export const useState = React.useState;
+    export const useRef = React.useRef;
+    export const useCallback = React.useCallback;
+    export const useContext = React.useContext;
+    export const useReducer = React.useReducer;
+    export const useId = React.useId;
+  `;
+  const rdomClientShim = `
+    const RDC = (typeof window !== 'undefined' && window.ReactDOMClient) || {};
+    export const createRoot = RDC.createRoot;
+    export const hydrateRoot = RDC.hydrateRoot;
+  `;
+  const plugin = {
+    name: 'canopy-react-shims-slider',
+    setup(build) {
+      const ns = 'canopy-shim';
+      build.onResolve({ filter: /^react$/ }, () => ({ path: 'react', namespace: ns }));
+      build.onResolve({ filter: /^react-dom$/ }, () => ({ path: 'react-dom', namespace: ns }));
+      build.onResolve({ filter: /^react-dom\/client$/ }, () => ({ path: 'react-dom-client', namespace: ns }));
+      build.onLoad({ filter: /^react$/, namespace: ns }, () => ({ contents: reactShim, loader: 'js' }));
+      build.onLoad({ filter: /^react-dom$/, namespace: ns }, () => ({ contents: "export default ((typeof window!=='undefined' && window.ReactDOM) || {});", loader: 'js' }));
+      build.onLoad({ filter: /^react-dom-client$/, namespace: ns }, () => ({ contents: rdomClientShim, loader: 'js' }));
+      // Inline imported CSS into a <style> tag at runtime so we don't need a separate CSS file
+      build.onLoad({ filter: /\.css$/ }, (args) => {
+        const fs = require('fs');
+        let css = '';
+        try { css = fs.readFileSync(args.path, 'utf8'); } catch (_) { css = ''; }
+        const js = [
+          `var css = ${JSON.stringify(css)};`,
+          `(function(){ try { var s = document.createElement('style'); s.setAttribute('data-canopy-slider-css',''); s.textContent = css; document.head.appendChild(s); } catch (e) {} })();`,
+          `export default css;`
+        ].join('\n');
+        return { contents: js, loader: 'js' };
+      });
+    }
+  };
+  try {
+    await esbuild.build({
+      stdin: { contents: entry, resolveDir: process.cwd(), sourcefile: 'canopy-slider-entry.js', loader: 'js' },
+      outfile: outFile,
+      platform: 'browser',
+      format: 'iife',
+      bundle: true,
+      sourcemap: false,
+      target: ['es2018'],
+      logLevel: 'silent',
+      minify: true,
+      plugins: [plugin],
+    });
+  } catch (e) {
+    try { console.error('Slider: bundle error:', e && e.message ? e.message : e); } catch (_) {}
+    return;
+  }
+  try {
+    const { logLine } = require('./log');
+    let size = 0; try { const st = fs.statSync(outFile); size = st && st.size || 0; } catch (_) {}
+    const kb = size ? ` (${(size/1024).toFixed(1)} KB)` : '';
+    const rel = path.relative(process.cwd(), outFile).split(path.sep).join('/');
+    logLine(`✓ Wrote ${rel}${kb}`, 'cyan');
+  } catch (_) {}
 }
 
 // Build a small React globals vendor for client-side React pages.
@@ -428,6 +562,7 @@ module.exports = {
   loadCustomLayout,
   loadAppWrapper,
   ensureClientRuntime,
+  ensureSliderRuntime,
   ensureReactGlobals,
   resetMdxCaches: function () {
     try {

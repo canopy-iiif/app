@@ -174,16 +174,18 @@ async function compileMdxFile(filePath, outPath, extraProps = {}) {
     .relative(path.dirname(outPath), path.join(OUT_DIR, "styles", "styles.css"))
     .split(path.sep)
     .join("/");
-  const needsHydrate =
-    body.includes("data-canopy-hydrate") || body.includes("data-canopy-viewer");
-  const jsRel = needsHydrate
-    ? path
-        .relative(path.dirname(outPath), path.join(OUT_DIR, "scripts", "canopy-viewer.js"))
-        .split(path.sep)
-        .join("/")
+  const needsHydrateViewer = body.includes('data-canopy-viewer');
+  const needsHydrateSlider = body.includes('data-canopy-slider');
+  const needsHydrate = body.includes('data-canopy-hydrate') || needsHydrateViewer || needsHydrateSlider;
+  const viewerRel = needsHydrateViewer
+    ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-viewer.js')).split(path.sep).join('/')
     : null;
+  const sliderRel = needsHydrateSlider
+    ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-slider.js')).split(path.sep).join('/')
+    : null;
+  const jsRel = viewerRel || sliderRel || null;
   // Detect pages that require client-side React (flagged by components)
-  const needsReact = body.includes('data-react-root') || body.includes('data-canopy-react') || body.includes('data-canopy-viewer');
+  const needsReact = body.includes('data-react-root') || body.includes('data-canopy-react') || needsHydrateViewer || needsHydrateSlider;
   let vendorTag = '';
   if (needsReact) {
     try {
@@ -196,6 +198,10 @@ async function compileMdxFile(filePath, outPath, extraProps = {}) {
   }
   // If hydration needed, include hydration script
   let headExtra = head;
+  const extraScripts = [];
+  if (viewerRel && jsRel !== viewerRel) extraScripts.push(`<script defer src="${viewerRel}"></script>`);
+  if (sliderRel && jsRel !== sliderRel) extraScripts.push(`<script defer src="${sliderRel}"></script>`);
+  if (extraScripts.length) headExtra = extraScripts.join('') + headExtra;
   const bodyWithScript = body;
   const html = htmlShell({
     title,
@@ -316,7 +322,8 @@ async function build(options = {}) {
   }
   // Defer styles until after pages are generated so Tailwind can scan site HTML
   await mdx.ensureClientRuntime();
-  logLine("✓ Prepared client hydration runtime\n", "cyan", { dim: true });
+  try { if (typeof mdx.ensureSliderRuntime === 'function') await mdx.ensureSliderRuntime(); } catch (_) {}
+  logLine("✓ Prepared client hydration runtimes\n", "cyan", { dim: true });
   // Copy assets from assets/ to site/
   await copyAssets();
   // No-op: global layout removed

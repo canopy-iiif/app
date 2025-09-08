@@ -62,8 +62,46 @@ var Viewer = (props) => {
   return /* @__PURE__ */ React3.createElement(CloverViewer, { options, ...props });
 };
 
+// src/iiif/Slider.jsx
+import React4, { useEffect as useEffect2, useState as useState2 } from "react";
+var Slider = (props) => {
+  const [CloverSlider, setCloverSlider] = useState2(null);
+  useEffect2(() => {
+    let mounted = true;
+    const canUseDom = typeof window !== "undefined" && typeof document !== "undefined";
+    if (canUseDom) {
+      import("@samvera/clover-iiif/slider").then((mod) => {
+        if (!mounted) return;
+        console.log(mod);
+        const Comp = mod && (mod.default || mod.Slider || mod);
+        setCloverSlider(() => Comp);
+      }).catch(() => {
+      });
+    }
+    return () => {
+      mounted = false;
+    };
+  }, []);
+  if (!CloverSlider) {
+    let json = "{}";
+    try {
+      json = JSON.stringify(props || {});
+    } catch (_) {
+      json = "{}";
+    }
+    return /* @__PURE__ */ React4.createElement("div", { "data-canopy-slider": "1" }, /* @__PURE__ */ React4.createElement(
+      "script",
+      {
+        type: "application/json",
+        dangerouslySetInnerHTML: { __html: json }
+      }
+    ));
+  }
+  return /* @__PURE__ */ React4.createElement(CloverSlider, { ...props });
+};
+
 // src/search/MdxSearchForm.jsx
-import React4 from "react";
+import React5 from "react";
 function MdxSearchForm(props) {
   let json = "{}";
   try {
@@ -71,11 +109,11 @@ function MdxSearchForm(props) {
   } catch (_) {
     json = "{}";
   }
-  return /* @__PURE__ */ React4.createElement("div", { "data-canopy-search-form": "1" }, /* @__PURE__ */ React4.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
+  return /* @__PURE__ */ React5.createElement("div", { "data-canopy-search-form": "1" }, /* @__PURE__ */ React5.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
 }
 
 // src/search/MdxSearchResults.jsx
-import React5 from "react";
+import React6 from "react";
 function MdxSearchResults(props) {
   let json = "{}";
   try {
@@ -83,11 +121,11 @@ function MdxSearchResults(props) {
   } catch (_) {
     json = "{}";
   }
-  return /* @__PURE__ */ React5.createElement("div", { "data-canopy-search-results": "1" }, /* @__PURE__ */ React5.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
+  return /* @__PURE__ */ React6.createElement("div", { "data-canopy-search-results": "1" }, /* @__PURE__ */ React6.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
 }
 
 // src/search/SearchSummary.jsx
-import React6 from "react";
+import React7 from "react";
 function SearchSummary(props) {
   let json = "{}";
   try {
@@ -95,11 +133,11 @@ function SearchSummary(props) {
   } catch (_) {
     json = "{}";
   }
-  return /* @__PURE__ */ React6.createElement("div", { "data-canopy-search-summary": "1" }, /* @__PURE__ */ React6.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
+  return /* @__PURE__ */ React7.createElement("div", { "data-canopy-search-summary": "1" }, /* @__PURE__ */ React7.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
 }
 
 // src/search/SearchTotal.jsx
-import React7 from "react";
+import React8 from "react";
 function SearchTotal(props) {
   let json = "{}";
   try {
@@ -107,7 +145,7 @@ function SearchTotal(props) {
   } catch (_) {
     json = "{}";
   }
-  return /* @__PURE__ */ React7.createElement("div", { "data-canopy-search-total": "1" }, /* @__PURE__ */ React7.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
+  return /* @__PURE__ */ React8.createElement("div", { "data-canopy-search-total": "1" }, /* @__PURE__ */ React8.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
 }
 export {
   Fallback,
@@ -116,6 +154,7 @@ export {
   MdxSearchResults as SearchResults,
   SearchSummary,
   SearchTotal,
+  Slider,
   Viewer
 };
 //# sourceMappingURL=server.js.map
