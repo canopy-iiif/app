@@ -35,7 +35,7 @@ export const Slider = (props) => {
       json = "{}";
     }
     return (
-      <div data-canopy-slider="1">
+      <div data-canopy-slider="1" className="not-prose">
         <script
           type="application/json"
           dangerouslySetInnerHTML={{ __html: json }}

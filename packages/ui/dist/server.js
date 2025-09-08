@@ -51,7 +51,7 @@ var Viewer = (props) => {
     } catch (_) {
       json = "{}";
     }
-    return /* @__PURE__ */ React3.createElement("div", { "data-canopy-viewer": "1" }, /* @__PURE__ */ React3.createElement(
+    return /* @__PURE__ */ React3.createElement("div", { "data-canopy-viewer": "1", className: "not-prose" }, /* @__PURE__ */ React3.createElement(
       "script",
       {
         type: "application/json",
@@ -59,7 +59,7 @@ var Viewer = (props) => {
       }
     ));
   }
-  return /* @__PURE__ */ React3.createElement(CloverViewer, { options, ...props });
+  return /* @__PURE__ */ React3.createElement(CloverViewer, { ...props, options });
 };
 
 // src/iiif/Slider.jsx
@@ -89,7 +89,7 @@ var Slider = (props) => {
     } catch (_) {
       json = "{}";
     }
-    return /* @__PURE__ */ React4.createElement("div", { "data-canopy-slider": "1" }, /* @__PURE__ */ React4.createElement(
+    return /* @__PURE__ */ React4.createElement("div", { "data-canopy-slider": "1", className: "not-prose" }, /* @__PURE__ */ React4.createElement(
       "script",
       {
         type: "application/json",
@@ -109,7 +109,13 @@ function MdxFacetSliders(props) {
   } catch (_) {
     json = "{}";
   }
-  return /* @__PURE__ */ React5.createElement("div", { "data-canopy-facet-sliders": "1" }, /* @__PURE__ */ React5.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
+  return /* @__PURE__ */ React5.createElement("div", { "data-canopy-facet-sliders": "1", className: "not-prose" }, /* @__PURE__ */ React5.createElement(
+    "script",
+    {
+      type: "application/json",
+      dangerouslySetInnerHTML: { __html: json }
+    }
+  ));
 }
 
 // src/search/MdxSearchForm.jsx

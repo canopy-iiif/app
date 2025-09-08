@@ -42,7 +42,7 @@ export const Viewer = (props) => {
       json = "{}";
     }
     return (
-      <div data-canopy-viewer="1">
+      <div data-canopy-viewer="1" className="not-prose">
         <script
           type="application/json"
           dangerouslySetInnerHTML={{ __html: json }}
@@ -50,5 +50,5 @@ export const Viewer = (props) => {
       </div>
     );
   }
-  return <CloverViewer options={options} {...props} />;
+  return <CloverViewer {...props} options={options} />;
 };
