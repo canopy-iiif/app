@@ -901,11 +901,22 @@ async function buildIiifCollectionPages(CONFIG) {
         if (!manifest) continue;
         manifest = await normalizeToV3(manifest);
         const title = firstLabelString(manifest.label);
-        const slug = slugify(title || "untitled", {
-          lower: true,
-          strict: true,
-          trim: true,
-        });
+        const baseSlug = slugify(title || "untitled", { lower: true, strict: true, trim: true }) || 'untitled';
+        const nid = normalizeIiifId(String(manifest.id || id));
+        // Use existing mapping if present; otherwise allocate and persist
+        let idxMap = await loadManifestIndex();
+        idxMap.byId = Array.isArray(idxMap.byId) ? idxMap.byId : [];
+        let mEntry = idxMap.byId.find((e) => e && e.type === 'Manifest' && normalizeIiifId(e.id) === nid);
+        let slug = mEntry && mEntry.slug;
+        if (!slug) {
+          // Prefer base-first; if base is free, use it, else suffix
+          slug = computeUniqueSlug(idxMap, baseSlug, nid, 'Manifest');
+          const parentNorm = normalizeIiifId(String(it.parent || ''));
+          const newEntry = { id: nid, type: 'Manifest', slug, parent: parentNorm };
+          const existingIdx = idxMap.byId.findIndex((e) => e && e.type === 'Manifest' && normalizeIiifId(e.id) === nid);
+          if (existingIdx >= 0) idxMap.byId[existingIdx] = newEntry; else idxMap.byId.push(newEntry);
+          await saveManifestIndex(idxMap);
+        }
         const href = path.join("works", slug + ".html");
         const outPath = path.join(OUT_DIR, href);
         ensureDirSync(path.dirname(outPath));
