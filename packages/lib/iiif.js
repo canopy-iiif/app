@@ -1037,17 +1037,17 @@ async function buildIiifCollectionPages(CONFIG) {
             `✓ Created ${path.relative(process.cwd(), outPath)}`,
             "green",
           ]);
-          // Resolve thumbnail URL for this manifest (safe by default; expanded "unsafe" if configured)
+          // Resolve thumbnail URL and dimensions for this manifest (safe by default; expanded "unsafe" if configured)
           let thumbUrl = "";
+          let thumbWidth = undefined;
+          let thumbHeight = undefined;
           try {
-            const { getThumbnailUrl } = require("./thumbs");
-            const url = await getThumbnailUrl(
-              manifest,
-              thumbSize,
-              unsafeThumbs
-            );
-            if (url) {
-              thumbUrl = String(url);
+            const { getThumbnail } = require("./thumbnail");
+            const t = await getThumbnail(manifest, thumbSize, unsafeThumbs);
+            if (t && t.url) {
+              thumbUrl = String(t.url);
+              thumbWidth = typeof t.width === 'number' ? t.width : undefined;
+              thumbHeight = typeof t.height === 'number' ? t.height : undefined;
               const idx = await loadManifestIndex();
               if (Array.isArray(idx.byId)) {
                 const entry = idx.byId.find(
@@ -1057,7 +1057,10 @@ async function buildIiifCollectionPages(CONFIG) {
                     e.type === "Manifest"
                 );
                 if (entry) {
-                  entry.thumbnail = String(url);
+                  entry.thumbnail = String(thumbUrl);
+                  // Persist thumbnail dimensions for aspect ratio calculations when available
+                  if (typeof thumbWidth === 'number') entry.thumbnailWidth = thumbWidth;
+                  if (typeof thumbHeight === 'number') entry.thumbnailHeight = thumbHeight;
                   await saveManifestIndex(idx);
                 }
               }
@@ -1070,6 +1073,8 @@ async function buildIiifCollectionPages(CONFIG) {
             href: href.split(path.sep).join("/"),
             type: "work",
             thumbnail: thumbUrl || undefined,
+            thumbnailWidth: typeof thumbWidth === 'number' ? thumbWidth : undefined,
+            thumbnailHeight: typeof thumbHeight === 'number' ? thumbHeight : undefined,
           });
         } catch (e) {
           lns.push([

@@ -354,6 +354,13 @@ function sanitizeRecord(r) {
   const safeTitle = title.length > 300 ? title.slice(0, 300) + '…' : title;
   const out = { title: safeTitle, href, type };
   if (thumbnail) out.thumbnail = thumbnail;
+  // Preserve optional thumbnail dimensions for aspect ratio calculations in the UI
+  try {
+    const tw = Number(r && r.thumbnailWidth);
+    const th = Number(r && r.thumbnailHeight);
+    if (Number.isFinite(tw) && tw > 0) out.thumbnailWidth = tw;
+    if (Number.isFinite(th) && th > 0) out.thumbnailHeight = th;
+  } catch (_) {}
   return out;
 }
 

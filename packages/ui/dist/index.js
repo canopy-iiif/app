@@ -26,26 +26,73 @@ function Card({
   alt,
   title,
   subtitle,
+  // Optional intrinsic dimensions or aspect ratio to compute a responsive height
+  imgWidth,
+  imgHeight,
+  aspectRatio,
   className,
   style,
   children,
   ...rest
 }) {
+  const w = Number(imgWidth);
+  const h = Number(imgHeight);
+  const ratio = Number.isFinite(Number(aspectRatio)) && Number(aspectRatio) > 0 ? Number(aspectRatio) : Number.isFinite(w) && w > 0 && Number.isFinite(h) && h > 0 ? w / h : void 0;
+  const paddingPercent = ratio ? 100 / ratio : void 0;
   const caption = /* @__PURE__ */ React3.createElement("figcaption", { style: { marginTop: 8 } }, title ? /* @__PURE__ */ React3.createElement("strong", { style: { display: "block" } }, title) : null, subtitle ? /* @__PURE__ */ React3.createElement("span", { style: { display: "block", color: "#6b7280" } }, subtitle) : null, children);
-  return /* @__PURE__ */ React3.createElement("a", { href, className, style, ...rest }, /* @__PURE__ */ React3.createElement("figure", { style: { margin: 0 } }, src ? /* @__PURE__ */ React3.createElement(
-    "img",
+  return /* @__PURE__ */ React3.createElement(
+    "a",
     {
-      src,
-      alt: alt || title || "",
-      loading: "lazy",
-      style: {
-        display: "block",
-        width: "100%",
-        height: "auto",
-        borderRadius: 4
+      href,
+      className,
+      style,
+      "data-aspect-ratio": ratio,
+      "data-padding-bottom": typeof paddingPercent === "number" ? paddingPercent : void 0,
+      ...rest
+    },
+    /* @__PURE__ */ React3.createElement("figure", { style: { margin: 0 } }, src ? ratio ? /* @__PURE__ */ React3.createElement(
+      "div",
+      {
+        className: "canopy-card-media",
+        style: {
+          position: "relative",
+          width: "100%",
+          paddingBottom: `${paddingPercent}%`,
+          borderRadius: 4,
+          overflow: "hidden"
+        }
+      },
+      /* @__PURE__ */ React3.createElement(
+        "img",
+        {
+          src,
+          alt: alt || title || "",
+          loading: "lazy",
+          style: {
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: "block"
+          }
+        }
+      )
+    ) : /* @__PURE__ */ React3.createElement(
+      "img",
+      {
+        src,
+        alt: alt || title || "",
+        loading: "lazy",
+        style: {
+          display: "block",
+          width: "100%",
+          height: "auto",
+          borderRadius: 4
+        }
       }
-    }
-  ) : null, caption));
+    ) : null, caption)
+  );
 }
 
 // src/layout/Grid.jsx
@@ -289,23 +336,45 @@ function SearchResults({
     return /* @__PURE__ */ React13.createElement("div", { className: "text-slate-600" }, /* @__PURE__ */ React13.createElement("em", null, "No results"));
   }
   if (layout === "list") {
-    return /* @__PURE__ */ React13.createElement("ul", { id: "search-results", className: "space-y-3" }, results.map((r, i) => /* @__PURE__ */ React13.createElement("li", { key: i, className: `search-result ${r.type}` }, /* @__PURE__ */ React13.createElement(
+    return /* @__PURE__ */ React13.createElement("ul", { id: "search-results", className: "space-y-3" }, results.map((r, i) => {
+      const hasDims = Number.isFinite(Number(r.thumbnailWidth)) && Number(r.thumbnailWidth) > 0 && Number.isFinite(Number(r.thumbnailHeight)) && Number(r.thumbnailHeight) > 0;
+      const aspect = hasDims ? Number(r.thumbnailWidth) / Number(r.thumbnailHeight) : void 0;
+      return /* @__PURE__ */ React13.createElement(
+        "li",
+        {
+          key: i,
+          className: `search-result ${r.type}`,
+          "data-thumbnail-aspect-ratio": aspect
+        },
+        /* @__PURE__ */ React13.createElement(
+          Card,
+          {
+            href: r.href,
+            title: r.title || r.href,
+            src: r.type === "work" ? r.thumbnail : void 0,
+            imgWidth: r.thumbnailWidth,
+            imgHeight: r.thumbnailHeight,
+            aspectRatio: aspect
+          }
+        )
+      );
+    }));
+  }
+  return /* @__PURE__ */ React13.createElement("div", { id: "search-results", className: "not-prose" }, /* @__PURE__ */ React13.createElement(Grid, null, results.map((r, i) => {
+    const hasDims = Number.isFinite(Number(r.thumbnailWidth)) && Number(r.thumbnailWidth) > 0 && Number.isFinite(Number(r.thumbnailHeight)) && Number(r.thumbnailHeight) > 0;
+    const aspect = hasDims ? Number(r.thumbnailWidth) / Number(r.thumbnailHeight) : void 0;
+    return /* @__PURE__ */ React13.createElement(GridItem, { key: i, className: `search-result ${r.type}`, "data-thumbnail-aspect-ratio": aspect }, /* @__PURE__ */ React13.createElement(
       Card,
       {
         href: r.href,
         title: r.title || r.href,
-        src: r.type === "work" ? r.thumbnail : void 0
+        src: r.type === "work" ? r.thumbnail : void 0,
+        imgWidth: r.thumbnailWidth,
+        imgHeight: r.thumbnailHeight,
+        aspectRatio: aspect
       }
-    ))));
-  }
-  return /* @__PURE__ */ React13.createElement("div", { id: "search-results", className: "not-prose" }, /* @__PURE__ */ React13.createElement(Grid, null, results.map((r, i) => /* @__PURE__ */ React13.createElement(GridItem, { key: i, className: `search-result ${r.type}` }, /* @__PURE__ */ React13.createElement(
-    Card,
-    {
-      href: r.href,
-      title: r.title || r.href,
-      src: r.type === "work" ? r.thumbnail : void 0
-    }
-  )))));
+    ));
+  })));
 }
 
 // src/search/useSearch.js
