@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 /**
  * Card
@@ -31,6 +31,22 @@ export default function Card({
   children,
   ...rest
 }) {
+  const containerRef = useRef(null);
+  const [inView, setInView] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  useEffect(() => {
+    if (!containerRef.current) return;
+    // If IntersectionObserver is unavailable, load immediately
+    if (typeof IntersectionObserver !== "function") { setInView(true); return; }
+    const el = containerRef.current;
+    const obs = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) { setInView(true); try { obs.unobserve(el); } catch (_) {} break; }
+      }
+    }, { root: null, rootMargin: '100px', threshold: 0.1 });
+    try { obs.observe(el); } catch (_) {}
+    return () => { try { obs.disconnect(); } catch (_) {} };
+  }, []);
   // Compute aspect ratio and padding-bottom percentage for responsive height
   const w = Number(imgWidth);
   const h = Number(imgHeight);
@@ -53,8 +69,11 @@ export default function Card({
       href={href}
       className={className}
       style={style}
+      ref={containerRef}
       data-aspect-ratio={ratio}
       data-padding-bottom={typeof paddingPercent === 'number' ? paddingPercent : undefined}
+      data-in-view={inView ? 'true' : 'false'}
+      data-image-loaded={imageLoaded ? 'true' : 'false'}
       {...rest}
     >
       <figure style={{ margin: 0 }}>
@@ -66,34 +85,45 @@ export default function Card({
                 position: "relative",
                 width: "100%",
                 paddingBottom: `${paddingPercent}%`,
+                backgroundColor: "#e5e7eb",
                 borderRadius: 4,
                 overflow: "hidden",
               }}
             >
-              <img
-                src={src}
-                alt={alt || title || ""}
-                loading="lazy"
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  display: "block",
-                }}
-              />
+              {inView ? (
+                <img
+                  src={src}
+                  alt={alt || title || ""}
+                  loading="lazy"
+                  onLoad={() => setImageLoaded(true)}
+                  onError={() => setImageLoaded(true)}
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    display: "block",
+                    opacity: imageLoaded ? 1 : 0,
+                    transition: "opacity 600ms ease",
+                  }}
+                />
+              ) : null}
             </div>
           ) : (
             <img
               src={src}
               alt={alt || title || ""}
               loading="lazy"
+              onLoad={() => setImageLoaded(true)}
+              onError={() => setImageLoaded(true)}
               style={{
                 display: "block",
                 width: "100%",
                 height: "auto",
                 borderRadius: 4,
+                opacity: inView ? (imageLoaded ? 1 : 0) : 0,
+                transition: "opacity 600ms ease",
               }}
             />
           )

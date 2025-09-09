@@ -19,7 +19,7 @@ var HelloWorld = () => {
 };
 
 // src/layout/Card.jsx
-import React3 from "react";
+import React3, { useEffect, useRef, useState } from "react";
 function Card({
   href,
   src,
@@ -35,6 +35,39 @@ function Card({
   children,
   ...rest
 }) {
+  const containerRef = useRef(null);
+  const [inView, setInView] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  useEffect(() => {
+    if (!containerRef.current) return;
+    if (typeof IntersectionObserver !== "function") {
+      setInView(true);
+      return;
+    }
+    const el = containerRef.current;
+    const obs = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          setInView(true);
+          try {
+            obs.unobserve(el);
+          } catch (_) {
+          }
+          break;
+        }
+      }
+    }, { root: null, rootMargin: "100px", threshold: 0.1 });
+    try {
+      obs.observe(el);
+    } catch (_) {
+    }
+    return () => {
+      try {
+        obs.disconnect();
+      } catch (_) {
+      }
+    };
+  }, []);
   const w = Number(imgWidth);
   const h = Number(imgHeight);
   const ratio = Number.isFinite(Number(aspectRatio)) && Number(aspectRatio) > 0 ? Number(aspectRatio) : Number.isFinite(w) && w > 0 && Number.isFinite(h) && h > 0 ? w / h : void 0;
@@ -46,8 +79,11 @@ function Card({
       href,
       className,
       style,
+      ref: containerRef,
       "data-aspect-ratio": ratio,
       "data-padding-bottom": typeof paddingPercent === "number" ? paddingPercent : void 0,
+      "data-in-view": inView ? "true" : "false",
+      "data-image-loaded": imageLoaded ? "true" : "false",
       ...rest
     },
     /* @__PURE__ */ React3.createElement("figure", { style: { margin: 0 } }, src ? ratio ? /* @__PURE__ */ React3.createElement(
@@ -58,37 +94,46 @@ function Card({
           position: "relative",
           width: "100%",
           paddingBottom: `${paddingPercent}%`,
+          backgroundColor: "#e5e7eb",
           borderRadius: 4,
           overflow: "hidden"
         }
       },
-      /* @__PURE__ */ React3.createElement(
+      inView ? /* @__PURE__ */ React3.createElement(
         "img",
         {
           src,
           alt: alt || title || "",
           loading: "lazy",
+          onLoad: () => setImageLoaded(true),
+          onError: () => setImageLoaded(true),
           style: {
             position: "absolute",
             inset: 0,
             width: "100%",
             height: "100%",
             objectFit: "cover",
-            display: "block"
+            display: "block",
+            opacity: imageLoaded ? 1 : 0,
+            transition: "opacity 600ms ease"
           }
         }
-      )
+      ) : null
     ) : /* @__PURE__ */ React3.createElement(
       "img",
       {
         src,
         alt: alt || title || "",
         loading: "lazy",
+        onLoad: () => setImageLoaded(true),
+        onError: () => setImageLoaded(true),
         style: {
           display: "block",
           width: "100%",
           height: "auto",
-          borderRadius: 4
+          borderRadius: 4,
+          opacity: inView ? imageLoaded ? 1 : 0 : 0,
+          transition: "opacity 600ms ease"
         }
       }
     ) : null, caption)
@@ -152,16 +197,16 @@ function Grid({
 }
 
 // src/iiif/Viewer.jsx
-import React5, { useEffect, useState } from "react";
+import React5, { useEffect as useEffect2, useState as useState2 } from "react";
 var Viewer = (props) => {
-  const [CloverViewer, setCloverViewer] = useState(null);
+  const [CloverViewer, setCloverViewer] = useState2(null);
   const options = {
     informationPanel: {
       open: false,
       renderAbout: false
     }
   };
-  useEffect(() => {
+  useEffect2(() => {
     let mounted = true;
     const canUseDom = typeof window !== "undefined" && typeof document !== "undefined";
     if (canUseDom) {
@@ -196,10 +241,10 @@ var Viewer = (props) => {
 };
 
 // src/iiif/Slider.jsx
-import React6, { useEffect as useEffect2, useState as useState2 } from "react";
+import React6, { useEffect as useEffect3, useState as useState3 } from "react";
 var Slider = (props) => {
-  const [CloverSlider, setCloverSlider] = useState2(null);
-  useEffect2(() => {
+  const [CloverSlider, setCloverSlider] = useState3(null);
+  useEffect3(() => {
     let mounted = true;
     const canUseDom = typeof window !== "undefined" && typeof document !== "undefined";
     if (canUseDom) {
@@ -378,14 +423,14 @@ function SearchResults({
 }
 
 // src/search/useSearch.js
-import { useEffect as useEffect3, useMemo, useRef, useState as useState3 } from "react";
+import { useEffect as useEffect4, useMemo, useRef as useRef2, useState as useState4 } from "react";
 function useSearch(query, type) {
-  const [records, setRecords] = useState3([]);
-  const [loading, setLoading] = useState3(true);
-  const indexRef = useRef(null);
-  const idToRecRef = useRef([]);
-  const [types, setTypes] = useState3([]);
-  useEffect3(() => {
+  const [records, setRecords] = useState4([]);
+  const [loading, setLoading] = useState4(true);
+  const indexRef = useRef2(null);
+  const idToRecRef = useRef2([]);
+  const [types, setTypes] = useState4([]);
+  useEffect4(() => {
     let cancelled = false;
     setLoading(true);
     import("flexsearch").then((mod) => {
