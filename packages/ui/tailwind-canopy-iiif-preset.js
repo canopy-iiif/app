@@ -4,6 +4,8 @@
  * A Tailwind preset bundling Canopy UI design tokens and the
  * Canopy IIIF plugin for semantic component styles.
  */
+const plugin = require("tailwindcss/plugin");
+
 module.exports = {
   theme: {
     container: { center: true, padding: "1rem" },
@@ -61,5 +63,40 @@ module.exports = {
       maxWidth: { content: "1200px", wide: "1440px" },
     },
   },
-  plugins: [],
+  plugins: [
+    // Define CSS variables, scoped to `.canopy-theme` only.
+    // Use the components layer and !important to reliably override other libs.
+    plugin(function ({ addComponents, theme }) {
+      const accent = theme("colors.brand.600");
+      const brandDark = theme("colors.brand.DEFAULT");
+      const slate50 = theme("colors.slate.50");
+      const slate900 = theme("colors.slate.900");
+
+      const important = (v) => `${v} !important`;
+      addComponents({
+        html: {
+          "--colors-accent": important(accent),
+          "--colors-accentAlt": important(accent),
+          "--colors-accentMuted": important(accent),
+          "--colors-primary": important(slate900),
+          "--colors-primaryAlt": important(slate900),
+          "--colors-primaryMuted": important(slate900),
+          "--colors-secondary": "#ffffff",
+          "--colors-secondaryAlt": important(slate50),
+          "--colors-secondaryMuted": important(slate50),
+        },
+        '.canopy-theme.dark, .canopy-theme[data-theme="dark"]': {
+          "--colors-accent": important(brandDark),
+          "--colors-accentAlt": important(brandDark),
+          "--colors-accentMuted": important(brandDark),
+          "--colors-primary": important(slate50),
+          "--colors-primaryAlt": important(slate50),
+          "--colors-primaryMuted": important(slate50),
+          "--colors-secondary": important(slate900),
+          "--colors-secondaryAlt": important(slate900),
+          "--colors-secondaryMuted": important(slate900),
+        },
+      });
+    }),
+  ],
 };
