@@ -53,6 +53,38 @@ Place static files under `assets/` and they will be copied to the site root, pre
 - Editing MDX under `content/` triggers a site rebuild and automatic browser reload.
 - Editing files under `assets/` copies only the changed files into `site/` (no full rebuild) and reloads the browser.
 
+## Tailwind (Canopy IIIF UI)
+
+Canopy ships a small Tailwind preset and plugin so you can opt into sensible defaults with semantic CSS, or disable them entirely.
+
+- Preset (tokens + plugin): `@canopy-iiif/ui/canopy-iiif-preset`
+- Plugin (component CSS only): `@canopy-iiif/ui/canopy-iiif-plugin`
+
+Defaults (recommended) — enabled in `app/styles/tailwind.config.js`:
+
+```js
+// app/styles/tailwind.config.js
+module.exports = {
+  presets: [require('@canopy-iiif/ui/canopy-iiif-preset')],
+  content: [
+    './content/**/*.{mdx,html}',
+    './site/**/*.html',
+    './packages/ui/**/*.{js,jsx,ts,tsx}',
+    './packages/lib/components/**/*.{js,jsx}',
+  ],
+  theme: { extend: {} },
+  // You can also include the plugin explicitly (already included by the preset)
+  plugins: [require('@canopy-iiif/ui/canopy-iiif-plugin')],
+};
+```
+
+Notes
+
+- Disable Canopy’s component styles by removing the plugin line.
+- Replace the preset if you want to define your own tokens (colors/fonts/sizing) and keep only the plugin.
+- The UI components use clear, semantic selectors (e.g., `.canopy-card`). You can override these in your own Tailwind layers if desired.
+- In dev, CSS changes hot‑swap without a full page reload (Tailwind, `app/styles/**`, and the Canopy UI plugin/preset).
+
 ## IIIF Build
 
 - Layout: add `content/works/_layout.mdx` to enable IIIF work page generation. The layout receives `props.manifest` (normalized to Presentation 3).

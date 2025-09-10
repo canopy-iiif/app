@@ -532,7 +532,7 @@ async function dev() {
         const cliOnce = resolveTailwindCli();
         if (cliOnce) {
           const { spawnSync } = require('child_process');
-          const argsOnce = ['-i', inputCss, '-o', outputCss, '-c', configPath];
+          const argsOnce = ['-i', inputCss, '-o', outputCss, '-c', configPath, '--minify'];
           const res = spawnSync(cliOnce.cmd, [...cliOnce.args, ...argsOnce], { stdio: ['ignore','pipe','pipe'], env: { ...process.env, BROWSERSLIST_IGNORE_OLD_DATA: '1' } });
           if (res && res.status === 0) {
             console.log(`[tailwind] initial build ok (${fileSizeKb(outputCss)} KB) →`, prettyPath(outputCss));
@@ -549,7 +549,7 @@ async function dev() {
       // Prefer direct CLI spawn so we can mute initial rebuild logs
       const cli = resolveTailwindCli();
       if (cli) {
-        const args = ['-i', inputCss, '-o', outputCss, '--watch', '-c', configPath];
+        const args = ['-i', inputCss, '-o', outputCss, '--watch', '-c', configPath, '--minify'];
         let unmuted = false;
         let cssWatcherAttached = false;
         function attachCssWatcherOnce() {
@@ -568,7 +568,7 @@ async function dev() {
         function compileTailwindOnce() {
           try {
             const { spawnSync } = require('child_process');
-            const res = spawnSync(cli.cmd, [...cli.args, '-i', inputCss, '-o', outputCss, '-c', configPath], { stdio: ['ignore','pipe','pipe'], env: { ...process.env, BROWSERSLIST_IGNORE_OLD_DATA: '1' } });
+            const res = spawnSync(cli.cmd, [...cli.args, '-i', inputCss, '-o', outputCss, '-c', configPath, '--minify'], { stdio: ['ignore','pipe','pipe'], env: { ...process.env, BROWSERSLIST_IGNORE_OLD_DATA: '1' } });
             if (res && res.status === 0) {
               console.log(`[tailwind] compiled (${fileSizeKb(outputCss)} KB) →`, prettyPath(outputCss));
               try { onCssChange(); } catch (_) {}
