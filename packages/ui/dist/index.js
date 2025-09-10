@@ -177,21 +177,43 @@ function Grid({
 
 // src/iiif/Viewer.jsx
 import React5, { useEffect as useEffect2, useState as useState2 } from "react";
+var DEFAULT_VIEWER_OPTIONS = {
+  showDownload: false,
+  showIIIFBadge: false,
+  showTitle: false,
+  informationPanel: {
+    open: false,
+    renderAbout: false,
+    renderToggle: false
+  }
+};
+function isPlainObject(val) {
+  return val && typeof val === "object" && !Array.isArray(val);
+}
+function deepMerge(base, override) {
+  if (!isPlainObject(base)) return override;
+  const out = { ...base };
+  if (!isPlainObject(override)) return out;
+  for (const key of Object.keys(override)) {
+    const a = base[key];
+    const b = override[key];
+    if (isPlainObject(a) && isPlainObject(b)) out[key] = deepMerge(a, b);
+    else out[key] = b;
+  }
+  return out;
+}
 var Viewer = (props) => {
   const [CloverViewer, setCloverViewer] = useState2(null);
-  const options = {
-    informationPanel: {
-      open: false,
-      renderAbout: false
-    }
-  };
+  const mergedOptions = deepMerge(
+    DEFAULT_VIEWER_OPTIONS,
+    props && props.options
+  );
   useEffect2(() => {
     let mounted = true;
     const canUseDom = typeof window !== "undefined" && typeof document !== "undefined";
     if (canUseDom) {
       import("@samvera/clover-iiif/viewer").then((mod) => {
         if (!mounted) return;
-        console.log(mod);
         const Comp = mod && (mod.default || mod.Viewer || mod);
         setCloverViewer(() => Comp);
       }).catch(() => {
@@ -204,7 +226,9 @@ var Viewer = (props) => {
   if (!CloverViewer) {
     let json = "{}";
     try {
-      json = JSON.stringify(props || {});
+      const p = { ...props || {} };
+      if (mergedOptions) p.options = mergedOptions;
+      json = JSON.stringify(p);
     } catch (_) {
       json = "{}";
     }
@@ -216,7 +240,7 @@ var Viewer = (props) => {
       }
     ));
   }
-  return /* @__PURE__ */ React5.createElement(CloverViewer, { ...props, options });
+  return /* @__PURE__ */ React5.createElement(CloverViewer, { ...props, options: mergedOptions });
 };
 
 // src/iiif/Slider.jsx
