@@ -6,6 +6,21 @@ import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const root = path.resolve(__dirname, '..');
+const stylesDir = path.join(root, 'styles');
+const indexScss = path.join(stylesDir, 'index.scss');
+const indexCss = path.join(stylesDir, 'index.css');
+
+function compileStylesOnce() {
+  try {
+    const sass = require('sass');
+    const out = sass.compile(indexScss, { style: 'expanded' });
+    fs.mkdirSync(path.dirname(indexCss), { recursive: true });
+    fs.writeFileSync(indexCss, out.css || '', 'utf8');
+    console.log('[ui] wrote', path.relative(root, indexCss));
+  } catch (e) {
+    console.warn('[ui] styles compile failed:', e && e.message ? e.message : e);
+  }
+}
 
 async function run() {
   let esbuild;
@@ -53,6 +68,9 @@ async function run() {
     process.exit(1);
   });
 
+  // Build styles CSS once
+  if (fs.existsSync(indexScss)) compileStylesOnce();
+
   if (process.env.WATCH) {
     const context = await esbuild.context({
       entryPoints: [path.join(root, 'index.js')],
@@ -83,6 +101,15 @@ async function run() {
       logLevel: 'info'
     });
     await serverCtx.watch();
+
+    // Watch styles for changes and recompile styles/index.css
+    try {
+      if (fs.existsSync(indexScss)) {
+        fs.watch(path.dirname(indexScss), { recursive: true }, (evt, fn) => {
+          try { compileStylesOnce(); } catch (_) {}
+        });
+      }
+    } catch (_) {}
   }
 }
 

@@ -11,22 +11,24 @@ module.exports = {
   ],
   theme: {
     extend: {
-      colors: {
-        brand: {
-          DEFAULT: "#3a5bc7",
-          50: "#f7f9ff",
-          100: "#edf2fe",
-          200: "#d2deff",
-          300: "#abbdf9",
-          400: "#8da4ef",
-          500: "#3e63dd",
-          600: "#3358d4",
-          700: "#3a5bc7",
-          800: "#1f2d5c",
-          900: "#1a2140",
-        },
-        muted: "#60646C",
-      },
+      // Using @canopy-iiif/ui preset brand (CSS variables).
+      // Uncomment below to override with a custom palette.
+      // colors: {
+      //   brand: {
+      //     DEFAULT: '#3b82f6',
+      //     50:  '#eff6ff',
+      //     100: '#dbeafe',
+      //     200: '#bfdbfe',
+      //     300: '#93c5fd',
+      //     400: '#60a5fa',
+      //     500: '#3b82f6',
+      //     600: '#2563eb',
+      //     700: '#1d4ed8',
+      //     800: '#1e40af',
+      //     900: '#1e3a8a',
+      //   },
+      //   muted: '#64748b', // slate-500
+      // },
     },
   },
   corePlugins: {

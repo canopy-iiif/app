@@ -22,19 +22,14 @@ function compileScss(filePath) {
 }
 
 module.exports = plugin(function ({ addComponents, postcss }) {
-  // Load component styles from SCSS partials stored alongside this plugin
-  const stylesDir = path.join(__dirname, "styles", "components");
-  let css = "";
   try {
-    const files = fs.readdirSync(stylesDir).filter((f) => /\.scss$/i.test(f));
-    for (const f of files) {
-      const full = path.join(stylesDir, f);
-      css += compileScss(full) + "\n";
+    const entry = path.join(__dirname, 'styles', 'components', 'index.scss');
+    const css = compileScss(entry);
+    if (css && css.trim()) {
+      const root = postcss && postcss.parse ? postcss.parse(css) : null;
+      if (root) addComponents(root);
     }
   } catch (_) {
-    css = "";
-  }
-  if (css && postcss && postcss.parse) {
-    addComponents(postcss.parse(css));
+    // no-op on failure
   }
 });

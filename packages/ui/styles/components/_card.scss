@@ -51,7 +51,6 @@
 
   figcaption {
     padding: 1rem;
-    font-size: 0.875rem;
 
     > span:first-child {
       display: block;
@@ -64,7 +63,7 @@
 
   &:hover,
   &:focus {
-    color: var(--canopy-brand);
+    color: var(--color-brand-default);
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.07), 0 1px 2px 0 rgba(0, 0, 0, 0.07);
   }
 }

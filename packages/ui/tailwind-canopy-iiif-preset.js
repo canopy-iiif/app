@@ -1,10 +1,24 @@
 /**
  * canopy-iiif-preset
  *
- * A Tailwind preset bundling Canopy UI design tokens and the
- * Canopy IIIF plugin for semantic component styles.
+ * A Tailwind preset that sources design tokens (colors, fonts, sizes, etc.)
+ * from Sass under packages/ui/styles, injects them as CSS variables, and maps
+ * Tailwind theme.extend values to those variables for easy use in utilities.
  */
 const plugin = require("tailwindcss/plugin");
+const fs = require("fs");
+const path = require("path");
+
+function compileVarsCss() {
+  try {
+    const sass = require("sass");
+    const entry = path.join(__dirname, "styles", "variables.emit.scss");
+    const out = sass.compile(entry, { style: "expanded" });
+    return out && out.css ? out.css : "";
+  } catch (_) {
+    return "";
+  }
+}
 
 module.exports = {
   theme: {
@@ -12,92 +26,80 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          DEFAULT: "#3a5bc7",
-          50: "#f7f9ff",
-          100: "#edf2fe",
-          200: "#d2deff",
-          300: "#abbdf9",
-          400: "#8da4ef",
-          500: "#3e63dd",
-          600: "#3358d4",
-          700: "#3a5bc7",
-          800: "#1f2d5c",
-          900: "#1a2140",
+          DEFAULT: "var(--color-brand-default)",
+          50: "var(--color-brand-50)",
+          100: "var(--color-brand-100)",
+          200: "var(--color-brand-200)",
+          300: "var(--color-brand-300)",
+          400: "var(--color-brand-400)",
+          500: "var(--color-brand-500)",
+          600: "var(--color-brand-600)",
+          700: "var(--color-brand-700)",
+          800: "var(--color-brand-800)",
+          900: "var(--color-brand-900)",
         },
-        muted: "#60646C",
+        gray: {
+          DEFAULT: "var(--color-gray-default)",
+          50: "var(--color-gray-50)",
+          100: "var(--color-gray-100)",
+          200: "var(--color-gray-200)",
+          300: "var(--color-gray-300)",
+          400: "var(--color-gray-400)",
+          500: "var(--color-gray-500)",
+          600: "var(--color-gray-600)",
+          700: "var(--color-gray-700)",
+          800: "var(--color-gray-800)",
+          900: "var(--color-gray-900)",
+        },
+        muted: "var(--color-gray-muted)",
       },
       fontFamily: {
-        sans: [
-          "system-ui",
-          "-apple-system",
-          "Segoe UI",
-          "Roboto",
-          "Ubuntu",
-          "Helvetica",
-          "Arial",
-          "sans-serif",
-        ],
-        mono: [
-          "ui-monospace",
-          "SFMono-Regular",
-          "Menlo",
-          "Monaco",
-          "Consolas",
-          "monospace",
-        ],
+        sans: ["var(--font-sans)"],
+        mono: ["var(--font-mono)"],
       },
       fontSize: {
-        xs: ["0.75rem", { lineHeight: "1rem" }],
-        sm: ["0.875rem", { lineHeight: "1.25rem" }],
-        base: ["1rem", { lineHeight: "1.5rem" }],
-        lg: ["1.125rem", { lineHeight: "1.75rem" }],
-        xl: ["1.25rem", { lineHeight: "1.75rem" }],
-        "2xl": ["1.5rem", { lineHeight: "2rem" }],
-        "3xl": ["1.875rem", { lineHeight: "2.25rem" }],
+        xs: ["var(--font-size-xs)", { lineHeight: "var(--line-height-xs)" }],
+        sm: ["var(--font-size-sm)", { lineHeight: "var(--line-height-sm)" }],
+        base: [
+          "var(--font-size-base)",
+          { lineHeight: "var(--line-height-base)" },
+        ],
+        lg: ["var(--font-size-lg)", { lineHeight: "var(--line-height-lg)" }],
+        xl: ["var(--font-size-xl)", { lineHeight: "var(--line-height-xl)" }],
+        "2xl": [
+          "var(--font-size-2xl)",
+          { lineHeight: "var(--line-height-2xl)" },
+        ],
+        "3xl": [
+          "var(--font-size-3xl)",
+          { lineHeight: "var(--line-height-3xl)" },
+        ],
       },
       borderRadius: {
-        sm: "0.125rem",
-        DEFAULT: "0.25rem",
-        md: "0.375rem",
+        sm: "var(--radius-sm)",
+        DEFAULT: "var(--radius-default)",
+        md: "var(--radius-md)",
       },
-      maxWidth: { content: "1200px", wide: "1440px" },
+      maxWidth: { content: "var(--max-w-content)", wide: "var(--max-w-wide)" },
+      boxShadow: {
+        sm: "var(--shadow-sm)",
+        DEFAULT: "var(--shadow)",
+        md: "var(--shadow-md)",
+        lg: "var(--shadow-lg)",
+      },
+      transitionDuration: {
+        canopyFast: "var(--duration-fast)",
+      },
+      transitionTimingFunction: {
+        canopy: "var(--easing-standard)",
+      },
     },
   },
   plugins: [
-    // Define CSS variables, scoped to `.canopy-theme` only.
-    // Use the components layer and !important to reliably override other libs.
-    plugin(function ({ addComponents, theme }) {
-      const accent = theme("colors.brand.600");
-      const brandDark = theme("colors.brand.DEFAULT");
-      const slate50 = theme("colors.slate.50");
-      const slate900 = theme("colors.slate.900");
-
-      const important = (v) => `${v} !important`;
-      addComponents({
-        html: {
-          "--canopy-brand": important(theme("colors.brand.DEFAULT")),
-          "--colors-accent": important(accent),
-          "--colors-accentAlt": important(accent),
-          "--colors-accentMuted": important(accent),
-          "--colors-primary": important(slate900),
-          "--colors-primaryAlt": important(slate900),
-          "--colors-primaryMuted": important(slate900),
-          "--colors-secondary": "#ffffff",
-          "--colors-secondaryAlt": important(slate50),
-          "--colors-secondaryMuted": important(slate50),
-        },
-        '.canopy-theme.dark, .canopy-theme[data-theme="dark"]': {
-          "--colors-accent": important(brandDark),
-          "--colors-accentAlt": important(brandDark),
-          "--colors-accentMuted": important(brandDark),
-          "--colors-primary": important(slate50),
-          "--colors-primaryAlt": important(slate50),
-          "--colors-primaryMuted": important(slate50),
-          "--colors-secondary": important(slate900),
-          "--colors-secondaryAlt": important(slate900),
-          "--colors-secondaryMuted": important(slate900),
-        },
-      });
+    // Inject CSS variables (tokens) derived from Sass variables
+    plugin(function ({ addBase, postcss }) {
+      const css = compileVarsCss();
+      if (css && postcss && postcss.parse) addBase(postcss.parse(css));
     }),
   ],
 };
