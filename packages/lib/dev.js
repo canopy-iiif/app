@@ -611,6 +611,7 @@ async function dev() {
         try {
           const uiPlugin = path.join(__dirname, '../ui', 'tailwind-canopy-iiif-plugin.js');
           const uiPreset = path.join(__dirname, '../ui', 'tailwind-canopy-iiif-preset.js');
+          const uiStylesDir = path.join(__dirname, '../ui', 'styles');
           const files = [uiPlugin, uiPreset].filter((p) => {
             try { return fs.existsSync(p); } catch (_) { return false; }
           });
@@ -630,6 +631,35 @@ async function dev() {
           for (const f of files) {
             try { fs.watch(f, { persistent: false }, restart); } catch (_) {}
           }
+          // Watch UI styles directory (Sass partials used by the plugin); restart Tailwind on changes
+          try {
+            if (fs.existsSync(uiStylesDir)) {
+              try {
+                fs.watch(uiStylesDir, { persistent: false, recursive: true }, () => restart());
+              } catch (_) {
+                // Fallback: per-dir watch without recursion
+                const watchers = new Map();
+                const watchDir = (dir) => {
+                  if (watchers.has(dir)) return;
+                  try {
+                    const w = fs.watch(dir, { persistent: false }, () => restart());
+                    watchers.set(dir, w);
+                  } catch (_) {}
+                };
+                const scan = (dir) => {
+                  try {
+                    const entries = fs.readdirSync(dir, { withFileTypes: true });
+                    for (const e of entries) {
+                      const p = path.join(dir, e.name);
+                      if (e.isDirectory()) { watchDir(p); scan(p); }
+                    }
+                  } catch (_) {}
+                };
+                watchDir(uiStylesDir);
+                scan(uiStylesDir);
+              }
+            }
+          } catch (_) {}
           // Also watch the app Tailwind config; restart Tailwind when it changes
           try { if (configPath && fs.existsSync(configPath)) fs.watch(configPath, { persistent: false }, () => {
             console.log('[tailwind] tailwind.config change — restarting Tailwind');

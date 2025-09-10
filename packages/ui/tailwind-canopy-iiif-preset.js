@@ -75,6 +75,7 @@ module.exports = {
       const important = (v) => `${v} !important`;
       addComponents({
         html: {
+          "--canopy-brand": important(theme("colors.brand.DEFAULT")),
           "--colors-accent": important(accent),
           "--colors-accentAlt": important(accent),
           "--colors-accentMuted": important(accent),
