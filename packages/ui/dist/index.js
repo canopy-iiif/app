@@ -45,18 +45,21 @@ function Card({
       return;
     }
     const el = containerRef.current;
-    const obs = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) {
-          setInView(true);
-          try {
-            obs.unobserve(el);
-          } catch (_) {
+    const obs = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setInView(true);
+            try {
+              obs.unobserve(el);
+            } catch (_) {
+            }
+            break;
           }
-          break;
         }
-      }
-    }, { root: null, rootMargin: "100px", threshold: 0.1 });
+      },
+      { root: null, rootMargin: "100px", threshold: 0.1 }
+    );
     try {
       obs.observe(el);
     } catch (_) {
@@ -71,33 +74,25 @@ function Card({
   const w = Number(imgWidth);
   const h = Number(imgHeight);
   const ratio = Number.isFinite(Number(aspectRatio)) && Number(aspectRatio) > 0 ? Number(aspectRatio) : Number.isFinite(w) && w > 0 && Number.isFinite(h) && h > 0 ? w / h : void 0;
-  const paddingPercent = ratio ? 100 / ratio : void 0;
-  const caption = /* @__PURE__ */ React3.createElement("figcaption", { style: { marginTop: 8 } }, title ? /* @__PURE__ */ React3.createElement("strong", { style: { display: "block" } }, title) : null, subtitle ? /* @__PURE__ */ React3.createElement("span", { style: { display: "block", color: "#6b7280" } }, subtitle) : null, children);
+  const paddingPercent = ratio ? 100 / ratio : 100;
+  const caption = /* @__PURE__ */ React3.createElement("figcaption", null, title && /* @__PURE__ */ React3.createElement("span", null, title), subtitle && /* @__PURE__ */ React3.createElement("span", null, subtitle), children);
   return /* @__PURE__ */ React3.createElement(
     "a",
     {
       href,
-      className,
+      className: ["canopy-card", className].filter(Boolean).join(" "),
       style,
       ref: containerRef,
       "data-aspect-ratio": ratio,
-      "data-padding-bottom": typeof paddingPercent === "number" ? paddingPercent : void 0,
       "data-in-view": inView ? "true" : "false",
       "data-image-loaded": imageLoaded ? "true" : "false",
       ...rest
     },
-    /* @__PURE__ */ React3.createElement("figure", { style: { margin: 0 } }, src ? ratio ? /* @__PURE__ */ React3.createElement(
+    /* @__PURE__ */ React3.createElement("figure", null, src ? ratio ? /* @__PURE__ */ React3.createElement(
       "div",
       {
         className: "canopy-card-media",
-        style: {
-          position: "relative",
-          width: "100%",
-          paddingBottom: `${paddingPercent}%`,
-          backgroundColor: "#e5e7eb",
-          borderRadius: 4,
-          overflow: "hidden"
-        }
+        style: { "--canopy-card-padding": `${paddingPercent}%` }
       },
       inView ? /* @__PURE__ */ React3.createElement(
         "img",
@@ -106,17 +101,7 @@ function Card({
           alt: alt || title || "",
           loading: "lazy",
           onLoad: () => setImageLoaded(true),
-          onError: () => setImageLoaded(true),
-          style: {
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            display: "block",
-            opacity: imageLoaded ? 1 : 0,
-            transition: "opacity 600ms ease"
-          }
+          onError: () => setImageLoaded(true)
         }
       ) : null
     ) : /* @__PURE__ */ React3.createElement(
@@ -127,14 +112,7 @@ function Card({
         loading: "lazy",
         onLoad: () => setImageLoaded(true),
         onError: () => setImageLoaded(true),
-        style: {
-          display: "block",
-          width: "100%",
-          height: "auto",
-          borderRadius: 4,
-          opacity: inView ? imageLoaded ? 1 : 0 : 0,
-          transition: "opacity 600ms ease"
-        }
+        className: "canopy-card-image"
       }
     ) : null, caption)
   );
@@ -165,7 +143,8 @@ function Grid({
   ...rest
 }) {
   const cols = breakpointCols || {
-    default: 4,
+    default: 6,
+    1280: 5,
     1024: 4,
     768: 3,
     640: 2
@@ -405,20 +384,28 @@ function SearchResults({
       );
     }));
   }
-  return /* @__PURE__ */ React13.createElement("div", { id: "search-results", className: "not-prose" }, /* @__PURE__ */ React13.createElement(Grid, null, results.map((r, i) => {
+  return /* @__PURE__ */ React13.createElement("div", { id: "search-results" }, /* @__PURE__ */ React13.createElement(Grid, null, results.map((r, i) => {
     const hasDims = Number.isFinite(Number(r.thumbnailWidth)) && Number(r.thumbnailWidth) > 0 && Number.isFinite(Number(r.thumbnailHeight)) && Number(r.thumbnailHeight) > 0;
     const aspect = hasDims ? Number(r.thumbnailWidth) / Number(r.thumbnailHeight) : void 0;
-    return /* @__PURE__ */ React13.createElement(GridItem, { key: i, className: `search-result ${r.type}`, "data-thumbnail-aspect-ratio": aspect }, /* @__PURE__ */ React13.createElement(
-      Card,
+    return /* @__PURE__ */ React13.createElement(
+      GridItem,
       {
-        href: r.href,
-        title: r.title || r.href,
-        src: r.type === "work" ? r.thumbnail : void 0,
-        imgWidth: r.thumbnailWidth,
-        imgHeight: r.thumbnailHeight,
-        aspectRatio: aspect
-      }
-    ));
+        key: i,
+        className: `search-result ${r.type}`,
+        "data-thumbnail-aspect-ratio": aspect
+      },
+      /* @__PURE__ */ React13.createElement(
+        Card,
+        {
+          href: r.href,
+          title: r.title || r.href,
+          src: r.type === "work" ? r.thumbnail : void 0,
+          imgWidth: r.thumbnailWidth,
+          imgHeight: r.thumbnailHeight,
+          aspectRatio: aspect
+        }
+      )
+    );
   })));
 }
 

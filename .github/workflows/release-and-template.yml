@@ -95,8 +95,8 @@ jobs:
           const tp = path.join(stylesDir,'tailwind.config.js');
           const cssp = path.join(stylesDir,'index.css');
           fs.mkdirSync(stylesDir,{recursive:true});
-          fs.writeFileSync(tp, `// Default Canopy presets enabled. Remove lines below to disable.\nmodule.exports = {
-            presets: [require('@canopy-iiif/ui/tailwind-preset'), require('@canopy-iiif/ui/tailwind-typography')],
+          fs.writeFileSync(tp, `// Default Canopy UI enabled. Remove lines below to disable.\nmodule.exports = {
+            presets: [require('@canopy-iiif/ui/canopy-iiif-preset')],
             content: [
               './content/**/*.{mdx,html}',
               './site/**/*.html',
@@ -108,10 +108,7 @@ jobs:
             corePlugins: {
               // preflight: false, // uncomment to disable base reset
             },
-            plugins: [
-              require('@tailwindcss/typography'), // disable if you don't want prose styles
-              // Opt-in: require('@tailwindcss/forms'),
-            ],
+            plugins: [require('@canopy-iiif/ui/canopy-iiif-plugin')],
             safelist: [
               // Add dynamic classes here if needed
             ],

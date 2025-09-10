@@ -10,13 +10,13 @@
   "exports": {
     ".": "./dist/index.js",
     "./server": "./dist/server.js",
-    "./tailwind-preset": "./tailwind-preset.js",
-    "./tailwind-typography": "./tailwind-typography.js"
+    "./canopy-iiif-plugin": "./tailwind-canopy-iiif-plugin.js",
+    "./canopy-iiif-preset": "./tailwind-canopy-iiif-preset.js"
   },
   "files": [
     "dist/**",
-    "tailwind-preset.js",
-    "tailwind-typography.js"
+    "tailwind-canopy-iiif-plugin.js",
+    "tailwind-canopy-iiif-preset.js"
   ],
   "publishConfig": {
     "access": "public"

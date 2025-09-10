@@ -39,7 +39,8 @@ export default function Grid({
   ...rest
 }) {
   const cols = breakpointCols || {
-    default: 4,
+    default: 6,
+    1280: 5,
     1024: 4,
     768: 3,
     640: 2,

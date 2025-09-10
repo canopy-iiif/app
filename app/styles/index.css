@@ -4,40 +4,4 @@
 
 /* Example component layer overrides */
 @layer components {
-  .brand-link { @apply text-brand-600 hover:underline font-semibold; }
-  .search-grid { @apply grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6; }
-  .search-result a { @apply no-underline hover:underline; }
-  /* Tabs */
-  .tabs { @apply flex gap-2 border-b border-slate-200; }
-  .tab { @apply px-3 py-1.5 text-sm rounded-t-md text-slate-700 hover:text-slate-900; }
-  .tab-active { @apply bg-white border border-slate-200 border-b-0; }
-  /* JS Masonry positioning */
-  .masonry-js { position: relative; }
-  .masonry-js > * { position: absolute; }
-  /* Masonry layout for works */
-  .masonry { column-gap: var(--grid-gap, 1rem); column-count: var(--cols-base, 1); }
-  @media (min-width: 768px) { .masonry { column-count: var(--cols-md, 2); } }
-  @media (min-width: 1024px) { .masonry { column-count: var(--cols-lg, 3); } }
-  .masonry > * { break-inside: avoid; margin-bottom: var(--grid-gap, 1rem); display: block; }
-  /* Attribute-driven Grid component styles */
-  [data-grid-variant="masonry"] { column-gap: var(--grid-gap, 1rem); column-count: var(--cols-base, 1); }
-  @media (min-width: 768px) { [data-grid-variant="masonry"] { column-count: var(--cols-md, 2); } }
-  @media (min-width: 1024px) { [data-grid-variant="masonry"] { column-count: var(--cols-lg, 3); } }
-  [data-grid-variant="masonry"] > * { break-inside: avoid; margin-bottom: var(--grid-gap, 1rem); display: block; }
-  /* CSS grid variant: equal-width columns that fill container */
-  [data-grid-variant="grid"] {
-    display: grid;
-    grid-template-columns: repeat(var(--cols-base, 1), minmax(0, 1fr));
-    gap: var(--grid-gap, 1rem);
-  }
-  @media (min-width: 768px) {
-    [data-grid-variant="grid"] {
-      grid-template-columns: repeat(var(--cols-md, 2), minmax(0, 1fr));
-    }
-  }
-  @media (min-width: 1024px) {
-    [data-grid-variant="grid"] {
-      grid-template-columns: repeat(var(--cols-lg, 3), minmax(0, 1fr));
-    }
-  }
 }

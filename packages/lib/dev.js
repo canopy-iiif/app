@@ -21,7 +21,9 @@ function resolveTailwindCli() {
 const PORT = Number(process.env.PORT || 3000);
 let onBuildSuccess = () => {};
 let onBuildStart = () => {};
+let onCssChange = () => {};
 let nextBuildSkipIiif = false; // hint set by watchers
+const UI_DIST_DIR = path.resolve(path.join(__dirname, '../ui/dist'));
 
 function prettyPath(p) {
   try {
@@ -180,6 +182,74 @@ function watchAssetsPerDir() {
   };
 }
 
+// Watch @canopy-iiif/ui dist output to enable live reload for UI edits during dev.
+// When UI dist changes, rebuild the search runtime bundle and trigger a browser reload.
+async function rebuildSearchBundle() {
+  try {
+    const search = require('./search');
+    if (search && typeof search.ensureSearchRuntime === 'function') {
+      await search.ensureSearchRuntime();
+    }
+  } catch (_) {}
+  try { onBuildSuccess(); } catch (_) {}
+}
+
+function tryRecursiveWatchUiDist() {
+  try {
+    if (!fs.existsSync(UI_DIST_DIR)) return null;
+    const watcher = fs.watch(UI_DIST_DIR, { recursive: true }, (eventType, filename) => {
+      if (!filename) return;
+      try { console.log(`[ui] ${eventType}: ${prettyPath(path.join(UI_DIST_DIR, filename))}`); } catch (_) {}
+      // Lightweight path: rebuild only the search runtime bundle
+      rebuildSearchBundle();
+      // If the server-side UI bundle changed, trigger a site rebuild (skip IIIF)
+      try {
+        if (/server\.(js|mjs)$/.test(filename)) {
+          nextBuildSkipIiif = true;
+          try { onBuildStart(); } catch (_) {}
+          debounceBuild();
+        }
+      } catch (_) {}
+    });
+    return watcher;
+  } catch (_) {
+    return null;
+  }
+}
+
+function watchUiDistPerDir() {
+  if (!fs.existsSync(UI_DIST_DIR)) return () => {};
+  const watchers = new Map();
+  function watchDir(dir) {
+    if (watchers.has(dir)) return;
+    try {
+      const w = fs.watch(dir, (eventType, filename) => {
+        try { console.log(`[ui] ${eventType}: ${prettyPath(path.join(dir, filename || ''))}`); } catch (_) {}
+        scan(dir);
+        rebuildSearchBundle();
+        try {
+          if (/server\.(js|mjs)$/.test(filename || '')) {
+            nextBuildSkipIiif = true;
+            try { onBuildStart(); } catch (_) {}
+            debounceBuild();
+          }
+        } catch (_) {}
+      });
+      watchers.set(dir, w);
+    } catch (_) {}
+  }
+  function scan(dir) {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const e of entries) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) watchDir(p);
+    }
+  }
+  watchDir(UI_DIST_DIR);
+  scan(UI_DIST_DIR);
+  return () => { for (const w of watchers.values()) w.close(); };
+}
+
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -202,6 +272,7 @@ function startServer() {
   }
   onBuildStart = () => broadcast('building');
   onBuildSuccess = () => broadcast('reload');
+  onCssChange = () => broadcast('css');
 
   const server = http.createServer((req, res) => {
     const parsed = url.parse(req.url || '/');
@@ -311,10 +382,57 @@ function startServer() {
     const ext = path.extname(resolved).toLowerCase();
     res.statusCode = 200;
     res.setHeader('Content-Type', MIME[ext] || 'application/octet-stream');
+    // Dev: always disable caching so reloads fetch fresh assets
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     if (ext === '.html') {
       try {
         let html = fs.readFileSync(resolved, 'utf8');
-        const snippet = "\n<link rel=\"stylesheet\" href=\"/__livereload.css\">\n<script>(function(){var t,cfg={buildingText:'Rebuilding…',reloadedText:'Reloaded',fadeMs:800,reloadDelayMs:200};fetch('/__livereload-config').then(function(r){return r.json()}).then(function(j){cfg=j}).catch(function(){});function toast(m){var el=document.getElementById('__lr_toast');if(!el){el=document.createElement('div');el.id='__lr_toast';document.body.appendChild(el);}el.textContent=m;el.style.opacity='1';clearTimeout(t);t=setTimeout(function(){el.style.opacity='0'},cfg.fadeMs);}var es=new EventSource('/__livereload');es.onmessage=function(e){if(e.data==='building'){toast(cfg.buildingText);}else if(e.data==='reload'){toast(cfg.reloadedText);setTimeout(function(){location.reload()},cfg.reloadDelayMs);}};window.addEventListener('beforeunload',function(){try{es.close();}catch(e){}});})();</script>";
+        const snippet = `
+<link rel="stylesheet" href="/__livereload.css">
+<script>(function(){
+  var t, cfg = { buildingText: 'Rebuilding…', reloadedText: 'Reloaded', fadeMs: 800, reloadDelayMs: 200 };
+  fetch('/__livereload-config').then(function(r){ return r.json(); }).then(function(j){ cfg = j; }).catch(function(){});
+  function toast(m){ var el = document.getElementById('__lr_toast'); if(!el){ el=document.createElement('div'); el.id='__lr_toast'; document.body.appendChild(el); } el.textContent=m; el.style.opacity='1'; clearTimeout(t); t=setTimeout(function(){ el.style.opacity='0'; }, cfg.fadeMs); }
+  (function(){
+    var lastCssSwap = 0;
+    function swapLink(l){
+      try{
+        var href = l.getAttribute('href') || '';
+        var base = href.split('?')[0];
+        var next = l.cloneNode();
+        next.setAttribute('href', base + '?v=' + Date.now());
+        // Load new stylesheet off-screen, then atomically switch to avoid FOUC
+        next.media = 'print';
+        next.onload = function(){ try { next.media = 'all'; l.remove(); } catch(_){} };
+        l.parentNode.insertBefore(next, l.nextSibling);
+      }catch(_){ }
+    }
+    window.__canopyReloadCss = function(){
+      var now = Date.now();
+      if (now - lastCssSwap < 200) return; // throttle spammy events
+      lastCssSwap = now;
+      try {
+        var links = document.querySelectorAll('link[rel="stylesheet"]');
+        links.forEach(function(l){
+          try {
+            var href = l.getAttribute('href') || '';
+            var base = href.split('?')[0];
+            if (base.indexOf('styles/styles.css') !== -1) swapLink(l);
+          } catch(_) {}
+        });
+      } catch(_) {}
+    };
+  })();
+  var es = new EventSource('/__livereload');
+  es.onmessage = function(e){
+    if (e.data === 'building') { /* no toast for css-only builds to reduce blinking */ }
+    else if (e.data === 'css') { if (window.__canopyReloadCss) window.__canopyReloadCss(); }
+    else if (e.data === 'reload') { toast(cfg.reloadedText); setTimeout(function(){ location.reload(); }, cfg.reloadDelayMs); }
+  };
+  window.addEventListener('beforeunload', function(){ try { es.close(); } catch(e) {} });
+})();</script>`;
         html = html.includes('</body>') ? html.replace('</body>', snippet + '</body>') : html + snippet;
         res.end(html);
       } catch (e) {
@@ -377,7 +495,7 @@ async function dev() {
         const genDir = path.join(CACHE_DIR, 'tailwind');
         ensureDirSync(genDir);
         const genCfg = path.join(genDir, 'tailwind.config.js');
-        const cfg = `module.exports = {\n  presets: [require('@canopy-iiif/ui/tailwind-preset')],\n  content: [\n    './content/**/*.{mdx,html}',\n    './site/**/*.html',\n    './site/**/*.js',\n    './packages/ui/**/*.{js,jsx,ts,tsx}',\n    './packages/lib/components/**/*.{js,jsx}',\n  ],\n  theme: { extend: {} },\n};\n`;
+        const cfg = `module.exports = {\n  presets: [require('@canopy-iiif/ui/canopy-iiif-preset')],\n  content: [\n    './content/**/*.{mdx,html}',\n    './site/**/*.html',\n    './site/**/*.js',\n    './packages/ui/**/*.{js,jsx,ts,tsx}',\n    './packages/lib/components/**/*.{js,jsx}',\n  ],\n  theme: { extend: {} },\n  plugins: [require('@canopy-iiif/ui/canopy-iiif-plugin')],\n};\n`;
         fs.writeFileSync(genCfg, cfg, 'utf8');
         configPath = genCfg;
       } catch (_) { configPath = null; }
@@ -432,45 +550,114 @@ async function dev() {
       const cli = resolveTailwindCli();
       if (cli) {
         const args = ['-i', inputCss, '-o', outputCss, '--watch', '-c', configPath];
-        child = spawn(cli.cmd, [...cli.args, ...args], { stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, BROWSERSLIST_IGNORE_OLD_DATA: '1' } });
         let unmuted = false;
-        // Unmute Tailwind logs after the first successful CSS write
-        try {
-          fs.watch(outputCss, { persistent: false }, () => {
-            if (!unmuted) {
-              unmuted = true;
-              console.log(`[tailwind] watching ${prettyPath(inputCss)} — compiled (${fileSizeKb(outputCss)} KB)`);
+        let cssWatcherAttached = false;
+        function attachCssWatcherOnce() {
+          if (cssWatcherAttached) return;
+          cssWatcherAttached = true;
+          try {
+            fs.watch(outputCss, { persistent: false }, () => {
+              if (!unmuted) {
+                unmuted = true;
+                console.log(`[tailwind] watching ${prettyPath(inputCss)} — compiled (${fileSizeKb(outputCss)} KB)`);
+              }
+              try { onCssChange(); } catch (_) {}
+            });
+          } catch (_) {}
+        }
+        function compileTailwindOnce() {
+          try {
+            const { spawnSync } = require('child_process');
+            const res = spawnSync(cli.cmd, [...cli.args, '-i', inputCss, '-o', outputCss, '-c', configPath], { stdio: ['ignore','pipe','pipe'], env: { ...process.env, BROWSERSLIST_IGNORE_OLD_DATA: '1' } });
+            if (res && res.status === 0) {
+              console.log(`[tailwind] compiled (${fileSizeKb(outputCss)} KB) →`, prettyPath(outputCss));
+              try { onCssChange(); } catch (_) {}
+            } else {
+              console.warn('[tailwind] on-demand compile failed');
+              try { if (res && res.stderr) process.stderr.write(res.stderr); } catch (_) {}
             }
-            try { onBuildSuccess(); } catch (_) {}
+          } catch (_) {}
+        }
+        function startTailwindWatcher() {
+          unmuted = false;
+          const proc = spawn(cli.cmd, [...cli.args, ...args], { stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, BROWSERSLIST_IGNORE_OLD_DATA: '1' } });
+          if (proc.stdout) proc.stdout.on('data', (d) => {
+            const s = d ? String(d) : '';
+            if (!unmuted) {
+              if (/error/i.test(s)) { try { process.stdout.write('[tailwind] ' + s); } catch (_) {} }
+            } else {
+              try { process.stdout.write(s); } catch (_) {}
+            }
           });
+          if (proc.stderr) proc.stderr.on('data', (d) => {
+            const s = d ? String(d) : '';
+            if (!unmuted) {
+              if (s.trim()) { try { process.stderr.write('[tailwind] ' + s); } catch (_) {} }
+            } else {
+              try { process.stderr.write(s); } catch (_) {}
+            }
+          });
+          proc.on('exit', (code) => {
+            if (code !== 0) {
+              console.error('[tailwind] watcher exited with code', code);
+            }
+          });
+          attachCssWatcherOnce();
+          return proc;
+        }
+        child = startTailwindWatcher();
+        // Unmute Tailwind logs after the first successful CSS write
+        // Watch UI Tailwind plugin/preset files and restart Tailwind to pick up code changes
+        try {
+          const uiPlugin = path.join(__dirname, '../ui', 'tailwind-canopy-iiif-plugin.js');
+          const uiPreset = path.join(__dirname, '../ui', 'tailwind-canopy-iiif-preset.js');
+          const files = [uiPlugin, uiPreset].filter((p) => {
+            try { return fs.existsSync(p); } catch (_) { return false; }
+          });
+          let restartTimer = null;
+          const restart = () => {
+            clearTimeout(restartTimer);
+            restartTimer = setTimeout(() => {
+              console.log('[tailwind] detected UI plugin/preset change — restarting Tailwind');
+              try { if (child && !child.killed) child.kill(); } catch (_) {}
+              // Force a compile immediately so new CSS lands before reload
+              compileTailwindOnce();
+              child = startTailwindWatcher();
+              // Notify clients that a rebuild is in progress; CSS watcher will trigger reload on write
+              try { onBuildStart(); } catch (_) {}
+            }, 50);
+          };
+          for (const f of files) {
+            try { fs.watch(f, { persistent: false }, restart); } catch (_) {}
+          }
+          // Also watch the app Tailwind config; restart Tailwind when it changes
+          try { if (configPath && fs.existsSync(configPath)) fs.watch(configPath, { persistent: false }, () => {
+            console.log('[tailwind] tailwind.config change — restarting Tailwind');
+            restart();
+          }); } catch (_) {}
+          // If the input CSS lives under app/styles, watch the directory for direct edits to CSS/partials
+          try {
+            const stylesDir = path.dirname(inputCss || '');
+            if (stylesDir && stylesDir.includes(path.join('app','styles'))) {
+              let cssDebounce = null;
+              fs.watch(stylesDir, { persistent: false }, (evt, fn) => {
+                clearTimeout(cssDebounce);
+                cssDebounce = setTimeout(() => {
+                  try { onBuildStart(); } catch (_) {}
+                  // Force a compile so changes in index.css or partials are reflected immediately
+                  try { compileTailwindOnce(); } catch (_) {}
+                  try { onCssChange(); } catch (_) {}
+                }, 50);
+              });
+            }
+          } catch (_) {}
         } catch (_) {}
-        if (child.stdout) child.stdout.on('data', (d) => {
-          const s = d ? String(d) : '';
-          if (!unmuted) {
-            if (/error/i.test(s)) { try { process.stdout.write('[tailwind] ' + s); } catch (_) {} }
-          } else {
-            try { process.stdout.write(s); } catch (_) {}
-          }
-        });
-        if (child.stderr) child.stderr.on('data', (d) => {
-          const s = d ? String(d) : '';
-          if (!unmuted) {
-            if (s.trim()) { try { process.stderr.write('[tailwind] ' + s); } catch (_) {} }
-          } else {
-            try { process.stderr.write(s); } catch (_) {}
-          }
-        });
-        child.on('exit', (code) => {
-          if (code !== 0) {
-            console.error('[tailwind] watcher exited with code', code);
-          }
-        });
       } else if (twHelper && typeof twHelper.watchTailwind === 'function') {
         // Fallback to helper (cannot mute its initial logs)
         child = twHelper.watchTailwind({ input: inputCss, output: outputCss, config: configPath, minify: false });
         if (child) {
           console.log('[tailwind] watching', prettyPath(inputCss));
-          try { fs.watch(outputCss, { persistent: false }, () => { try { onBuildSuccess(); } catch (_) {} }); } catch (_) {}
+          try { fs.watch(outputCss, { persistent: false }, () => { try { onCssChange(); } catch (_) {} }); } catch (_) {}
         }
       }
     }
@@ -483,6 +670,12 @@ async function dev() {
     console.log('[Watching]', prettyPath(ASSETS_DIR), '(assets live-reload)');
     const arw = tryRecursiveWatchAssets();
     if (!arw) watchAssetsPerDir();
+  }
+  // Watch UI dist for live-reload and targeted search runtime rebuilds
+  if (fs.existsSync(UI_DIST_DIR)) {
+    console.log('[Watching]', prettyPath(UI_DIST_DIR), '(@canopy-iiif/ui dist)');
+    const urw = tryRecursiveWatchUiDist();
+    if (!urw) watchUiDistPerDir();
   }
 }
 
