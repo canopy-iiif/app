@@ -993,21 +993,8 @@ async function buildIiifCollectionPages(CONFIG) {
           const needsRelated = body.includes("data-canopy-related-items");
           const needsHydrate = body.includes("data-canopy-hydrate") || needsHydrateViewer || needsRelated;
 
-          // Ensure required client runtimes exist before computing paths
-          try {
-            const mdxLib = require('./mdx');
-            if (needsHydrateViewer && typeof mdxLib.ensureClientRuntime === 'function') {
-              await mdxLib.ensureClientRuntime();
-            }
-            if (needsRelated) {
-              if (typeof mdxLib.ensureSliderRuntime === 'function') {
-                await mdxLib.ensureSliderRuntime();
-              }
-              if (typeof mdxLib.ensureFacetsRuntime === 'function') {
-                await mdxLib.ensureFacetsRuntime();
-              }
-            }
-          } catch (_) { /* no-op */ }
+          // Client runtimes (viewer/slider/facets) are prepared once up-front by the
+          // top-level build orchestrator. Avoid rebundling in per-manifest workers.
 
           // Compute script paths relative to the output HTML
           const viewerRel = needsHydrateViewer
@@ -1036,21 +1023,9 @@ async function buildIiifCollectionPages(CONFIG) {
           let vendorTag = '';
           if (needsReact) {
             try {
-              const { ensureReactGlobals } = require("./mdx");
-              await ensureReactGlobals();
-              const vendorAbs = path.join(
-                OUT_DIR,
-                "scripts",
-                "react-globals.js"
-              );
-              let vendorRel = path
-                .relative(path.dirname(outPath), vendorAbs)
-                .split(path.sep)
-                .join("/");
-              try {
-                const stv = fs.statSync(vendorAbs);
-                vendorRel += `?v=${Math.floor(stv.mtimeMs || Date.now())}`;
-              } catch (_) {}
+              const vendorAbs = path.join(OUT_DIR, 'scripts', 'react-globals.js');
+              let vendorRel = path.relative(path.dirname(outPath), vendorAbs).split(path.sep).join('/');
+              try { const stv = fs.statSync(vendorAbs); vendorRel += `?v=${Math.floor(stv.mtimeMs || Date.now())}`; } catch (_) {}
               vendorTag = `<script src="${vendorRel}"></script>`;
             } catch (_) {}
           }

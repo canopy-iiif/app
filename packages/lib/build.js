@@ -341,6 +341,7 @@ async function build(options = {}) {
   await mdx.ensureClientRuntime();
   try { if (typeof mdx.ensureSliderRuntime === 'function') await mdx.ensureSliderRuntime(); } catch (_) {}
   try { if (typeof mdx.ensureFacetsRuntime === 'function') await mdx.ensureFacetsRuntime(); } catch (_) {}
+  try { if (typeof mdx.ensureReactGlobals === 'function') await mdx.ensureReactGlobals(); } catch (_) {}
   logLine("✓ Prepared client hydration runtimes\n", "cyan", { dim: true });
   // Copy assets from assets/ to site/
   await copyAssets();
