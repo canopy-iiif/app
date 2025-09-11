@@ -60,17 +60,35 @@ function withBase(href) {
   return href;
 }
 
-// Convert a site-relative path (e.g., "/api/foo.json") to an absolute URL
-// using BASE_PATH and BASE_ORIGIN. If already absolute (http/https), returns as-is.
+// Convert a site-relative path (e.g., "/api/foo.json") to an absolute URL.
+// Handles either:
+// - BASE_ORIGIN that may already include a path prefix (e.g., https://host/org/repo)
+// - BASE_PATH (path prefix) when BASE_ORIGIN has no path
+// If input is already absolute (http/https), returns as-is.
 function absoluteUrl(p) {
   try {
-    const s = String(p || '');
-    if (/^https?:\/\//i.test(s)) return s;
-    const withB = withBase(s);
-    if (typeof withB === 'string' && withB.startsWith('/')) return `${BASE_ORIGIN}${withB}`;
-    // For relative paths, best-effort join
-    return `${BASE_ORIGIN}/${String(withB).replace(/^\/?/, '')}`;
-  } catch (_) { return p; }
+    const raw = String(p || '');
+    if (/^https?:\/\//i.test(raw)) return raw;
+    const rel = raw.startsWith('/') ? raw : '/' + raw.replace(/^\/?/, '');
+    // Parse BASE_ORIGIN; it may include a path (e.g., GH Pages repo path)
+    let originBase = '';
+    let originPath = '';
+    try {
+      const u = new URL(BASE_ORIGIN);
+      originBase = u.origin.replace(/\/$/, '');
+      originPath = (u.pathname || '').replace(/\/$/, '');
+    } catch (_) {
+      originBase = String(BASE_ORIGIN || '').replace(/\/$/, '');
+      originPath = '';
+    }
+    // Prefer path from BASE_ORIGIN; if absent, fall back to BASE_PATH
+    let prefixPath = originPath || String(BASE_PATH || '');
+    prefixPath = prefixPath.replace(/\/$/, '');
+    const fullPath = (prefixPath ? prefixPath : '') + rel; // rel already has leading '/'
+    return originBase + fullPath;
+  } catch (_) {
+    return p;
+  }
 }
 
 // Apply BASE_PATH to any absolute href/src attributes found in an HTML string.

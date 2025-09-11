@@ -1,5 +1,11 @@
 # @canopy-iiif/lib
 
+## 0.6.23
+
+### Patch Changes
+
+- chore: version bump (patch) via helper script.
+
 ## 0.6.22
 
 ### Patch Changes
