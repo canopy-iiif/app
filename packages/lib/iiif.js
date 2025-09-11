@@ -628,7 +628,7 @@ async function buildIiifCollectionPages(CONFIG) {
     } catch (_) {}
     return { searchRecords: [] };
   }
-  // Keep raw collection for traversal so structure remains available; normalize only for hash
+  // Normalize to Presentation 3 to ensure a consistent structure (items array, types)
   const collectionForHash = await normalizeToV3(collection);
   const currentSig = {
     uri: String(collectionUri || ""),
@@ -666,22 +666,26 @@ async function buildIiifCollectionPages(CONFIG) {
         logLine(`✓ ${String(id)} ➜ Cached`, "yellow");
       } catch (_) {}
       if (lns) lns.push([`✓ ${String(id)} ➜ Cached`, "yellow"]);
-      return c; // keep raw to preserve structure
+      // Always normalize to Presentation 3 for consistent traversal
+      return await normalizeToV3(c);
     }
     if (!fetchAllowed) return null;
     const fetched = await readJsonFromUri(String(id), { log: true });
+    const normalized = await normalizeToV3(fetched);
     try {
       await saveCachedCollection(
-        fetched,
-        String((fetched && (fetched.id || fetched["@id"])) || id),
+        normalized || fetched,
+        String(((normalized || fetched) && ((normalized || fetched).id || (normalized || fetched)["@id"])) || id),
         ""
       );
     } catch (_) {}
-    return fetched;
+    return normalized || fetched;
   }
   async function collectTasksFromCollection(colObj, parentUri, visited) {
     if (!colObj) return;
-    const colId = colObj.id || colObj["@id"] || parentUri || "";
+    // Prefer the URI we traversed from (parentUri) to work around sources
+    // that report the same id for multiple pages (e.g., Internet Archive).
+    const colId = String(parentUri || colObj.id || colObj["@id"] || "");
     visited = visited || new Set();
     if (colId) {
       if (visited.has(colId)) return;
@@ -703,7 +707,7 @@ async function buildIiifCollectionPages(CONFIG) {
         try {
           await saveCachedCollection(
             subRaw,
-            String(subRaw.id || id),
+            String(id),
             String(colId || parentUri || "")
           );
         } catch (_) {}
@@ -712,7 +716,7 @@ async function buildIiifCollectionPages(CONFIG) {
           const baseSlug = slugify(title || "collection", { lower: true, strict: true, trim: true }) || "collection";
           const idx = await loadManifestIndex();
           idx.byId = Array.isArray(idx.byId) ? idx.byId : [];
-          const subIdNorm = normalizeIiifId(String(subRaw.id || id));
+          const subIdNorm = normalizeIiifId(String(id));
           const slug = computeUniqueSlug(idx, baseSlug, subIdNorm, 'Collection');
           const entry = {
             id: subIdNorm,
@@ -740,7 +744,7 @@ async function buildIiifCollectionPages(CONFIG) {
             const baseSlug = slugify(title || "collection", { lower: true, strict: true, trim: true }) || "collection";
             const idx = await loadManifestIndex();
             idx.byId = Array.isArray(idx.byId) ? idx.byId : [];
-            const normId = normalizeIiifId(String(norm.id || id));
+            const normId = normalizeIiifId(String(id));
             const slug = computeUniqueSlug(idx, baseSlug, normId, 'Collection');
             const entry = {
               id: normId,
@@ -758,7 +762,7 @@ async function buildIiifCollectionPages(CONFIG) {
           try {
             await saveCachedCollection(
               norm,
-              String(norm.id || id),
+              String(id),
               String(colId || parentUri || "")
             );
           } catch (_) {}
@@ -772,9 +776,11 @@ async function buildIiifCollectionPages(CONFIG) {
       }
     }
   }
+  // Use normalized root collection for traversal to guarantee v3 shape
+  const collectionV3 = await normalizeToV3(collection);
   await collectTasksFromCollection(
-    collection,
-    String(collection.id || collection["@id"] || collectionUri || ""),
+    collectionV3,
+    String((collectionV3 && (collectionV3.id || collectionV3["@id"])) || collectionUri || ""),
     new Set()
   );
   const chunkSize = Math.max(

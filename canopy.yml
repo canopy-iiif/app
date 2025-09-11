@@ -11,4 +11,4 @@ iiif:
   # Max number of manifests to process per chunk
   chunkSize: 20
   # Concurrent fetch/build workers per chunk
-  concurrency: 3
+  concurrency: 5
