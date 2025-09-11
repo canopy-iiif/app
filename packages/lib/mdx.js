@@ -462,23 +462,40 @@ async function ensureSliderRuntime() {
         return JSON.parse(raw);
       } catch (_) { return {}; }
     }
-    ready(function() {
-      try {
-        const nodes = document.querySelectorAll('[data-canopy-slider]');
-        if (!nodes || !nodes.length) return;
-        for (const el of nodes) {
-          try {
-            const props = parseProps(el);
-            const React = (window && window.React) || null;
-            const ReactDOMClient = (window && window.ReactDOMClient) || null;
-            const createRoot = ReactDOMClient && ReactDOMClient.createRoot;
-            if (!React || !createRoot) continue;
-            const root = createRoot(el);
-            root.render(React.createElement(CloverSlider, props));
-          } catch (_) { /* skip */ }
-        }
-      } catch (_) {}
-    });
+    function mount(el){
+      try{
+        if (!el || el.getAttribute('data-canopy-slider-mounted')==='1') return;
+        const React = (window && window.React) || null;
+        const ReactDOMClient = (window && window.ReactDOMClient) || null;
+        const createRoot = ReactDOMClient && ReactDOMClient.createRoot;
+        if (!React || !createRoot) return;
+        const props = parseProps(el);
+        const root = createRoot(el);
+        root.render(React.createElement(CloverSlider, props));
+        el.setAttribute('data-canopy-slider-mounted','1');
+      } catch(_){}
+    }
+    function scan(){
+      try{ document.querySelectorAll('[data-canopy-slider]:not([data-canopy-slider-mounted="1"])').forEach(mount); }catch(_){ }
+    }
+    function observe(){
+      try{
+        const obs = new MutationObserver((muts)=>{
+          const toMount = [];
+          for (const m of muts){
+            m.addedNodes && m.addedNodes.forEach((n)=>{
+              if (!(n instanceof Element)) return;
+              if (n.matches && n.matches('[data-canopy-slider]')) toMount.push(n);
+              const inner = n.querySelectorAll ? n.querySelectorAll('[data-canopy-slider]') : [];
+              inner && inner.forEach && inner.forEach((x)=> toMount.push(x));
+            });
+          }
+          if (toMount.length) Promise.resolve().then(()=> toMount.forEach(mount));
+        });
+        obs.observe(document.documentElement || document.body, { childList: true, subtree: true });
+      }catch(_){ }
+    }
+    ready(function(){ scan(); observe(); });
   `;
   const reactShim = `
     const React = (typeof window !== 'undefined' && window.React) || {};
