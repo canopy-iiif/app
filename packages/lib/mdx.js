@@ -410,6 +410,14 @@ async function ensureFacetsRuntime() {
     function firstI18nString(x){ if(!x) return ''; if(typeof x==='string') return x; try{ const keys=Object.keys(x||{}); if(!keys.length) return ''; const arr=x[keys[0]]; if(Array.isArray(arr)&&arr.length) return String(arr[0]); }catch(_){ } return ''; }
     async function fetchManifestValues(iiif){ try{ const res = await fetch(iiif, { headers: { 'Accept': 'application/json' } }).catch(()=>null); if(!res||!res.ok) return null; const m = await res.json().catch(()=>null); if(!m) return null; const meta = Array.isArray(m.metadata)? m.metadata : []; const out = []; for (const entry of meta){ if(!entry) continue; const label = firstI18nString(entry.label); if(!label) continue; const vals = []; try { if (typeof entry.value === 'string') vals.push(entry.value); else { const obj = entry.value || {}; for (const k of Object.keys(obj)) { const arr = Array.isArray(obj[k]) ? obj[k] : []; for (const v of arr) if (v) vals.push(String(v)); } } } catch(_){} if (vals.length) out.push({ label, values: vals.map((v)=>({ value: v, valueSlug: slugify(v) })) }); }
       return out; } catch(_){ return null; } }
+    async function getApiVersion(){
+      try {
+        const u = rootBase() + '/api/index.json';
+        const res = await fetch(u).catch(()=>null);
+        const j = res && res.ok ? await res.json().catch(()=>null) : null;
+        return (j && typeof j.version === 'string') ? j.version : '';
+      } catch(_) { return ''; }
+    }
     ready(function(){
       const nodes = document.querySelectorAll('[data-canopy-related-items]');
       nodes.forEach(async (el) => {
@@ -417,7 +425,9 @@ async function ensureFacetsRuntime() {
           const props = parseProps(el) || {};
           const labelsFilter = Array.isArray(props.labels) ? props.labels.map(String) : null;
           const topN = Number(props.top || 3) || 3;
-          const res = await fetch(rootBase() + '/api/search/facets.json').catch(()=>null);
+          const ver = await getApiVersion();
+          const verQ = ver ? ('?v=' + encodeURIComponent(ver)) : '';
+          const res = await fetch(rootBase() + '/api/search/facets.json' + verQ).catch(()=>null);
           if(!res || !res.ok) return;
           const json = await res.json().catch(()=>null);
           if(!Array.isArray(json)) return;
@@ -438,7 +448,7 @@ async function ensureFacetsRuntime() {
               const pick = candidates[Math.floor(Math.random() * candidates.length)];
               const wrap = document.createElement('div');
               wrap.setAttribute('data-facet-label', entry.label);
-              const ph = makeSliderPlaceholder({ iiifContent: rootBase() + '/api/facet/' + (allow.slug) + '/' + pick.valueSlug + '.json' });
+              const ph = makeSliderPlaceholder({ iiifContent: rootBase() + '/api/facet/' + (allow.slug) + '/' + pick.valueSlug + '.json' + verQ });
               if (ph) wrap.appendChild(ph);
               el.appendChild(wrap);
             });
@@ -451,7 +461,7 @@ async function ensureFacetsRuntime() {
           selected.forEach((s) => {
             const wrap = document.createElement('div');
             wrap.setAttribute('data-facet-label', s.label);
-            const ph = makeSliderPlaceholder({ iiifContent: rootBase() + '/api/facet/' + s.labelSlug + '/' + s.valueSlug + '.json' });
+            const ph = makeSliderPlaceholder({ iiifContent: rootBase() + '/api/facet/' + s.labelSlug + '/' + s.valueSlug + '.json' + verQ });
             if (ph) wrap.appendChild(ph);
             el.appendChild(wrap);
           });
