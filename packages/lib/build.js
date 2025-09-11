@@ -176,7 +176,8 @@ async function compileMdxFile(filePath, outPath, extraProps = {}) {
     .join("/");
   const needsHydrateViewer = body.includes('data-canopy-viewer');
   const needsHydrateSlider = body.includes('data-canopy-slider');
-  const needsFacets = body.includes('data-canopy-facet-sliders');
+  // Detect both legacy and new placeholders
+  const needsFacets = body.includes('data-canopy-related-items');
   const needsHydrate = body.includes('data-canopy-hydrate') || needsHydrateViewer || needsHydrateSlider || needsFacets;
   const viewerRel = needsHydrateViewer
     ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-viewer.js')).split(path.sep).join('/')
@@ -185,7 +186,7 @@ async function compileMdxFile(filePath, outPath, extraProps = {}) {
     ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-slider.js')).split(path.sep).join('/')
     : null;
   const facetsRel = needsFacets
-    ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-facets.js')).split(path.sep).join('/')
+    ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-related-items.js')).split(path.sep).join('/')
     : null;
   // Ensure facets runs before slider: make slider the main script so it executes last
   let jsRel = null;
@@ -205,6 +206,11 @@ async function compileMdxFile(filePath, outPath, extraProps = {}) {
       vendorTag = `<script src="${vendorRel}"></script>`;
     } catch (_) {}
   }
+  // Expose CANOPY_BASE_PATH to the browser for runtime fetch/link building
+  try {
+    const { BASE_PATH } = require('./common');
+    if (BASE_PATH) vendorTag = `<script>window.CANOPY_BASE_PATH=${JSON.stringify(BASE_PATH)}</script>` + vendorTag;
+  } catch (_) {}
   // If hydration needed, include hydration script
   let headExtra = head;
   const extraScripts = [];

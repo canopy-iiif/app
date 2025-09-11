@@ -281,22 +281,16 @@ var Slider = (props) => {
   return /* @__PURE__ */ React6.createElement(CloverSlider, { ...props });
 };
 
-// src/iiif/MdxFacetSliders.jsx
+// src/iiif/MdxRelatedItems.jsx
 import React7 from "react";
-function MdxFacetSliders(props) {
+function MdxRelatedItems(props) {
   let json = "{}";
   try {
     json = JSON.stringify(props || {});
   } catch (_) {
     json = "{}";
   }
-  return /* @__PURE__ */ React7.createElement("div", { "data-canopy-facet-sliders": "1", className: "not-prose" }, /* @__PURE__ */ React7.createElement(
-    "script",
-    {
-      type: "application/json",
-      dangerouslySetInnerHTML: { __html: json }
-    }
-  ));
+  return /* @__PURE__ */ React7.createElement("div", { "data-canopy-related-items": "1", className: "not-prose" }, /* @__PURE__ */ React7.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
 }
 
 // src/search/MdxSearchForm.jsx
@@ -521,11 +515,11 @@ function Search(props) {
 }
 export {
   Card,
-  MdxFacetSliders as FacetSliders,
   Fallback,
   Grid,
   GridItem,
   HelloWorld,
+  MdxRelatedItems as RelatedItems,
   Search,
   MdxSearchForm as SearchForm,
   SearchForm as SearchFormUI,

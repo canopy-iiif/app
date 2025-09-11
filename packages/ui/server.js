@@ -2,7 +2,8 @@ export { Fallback } from "./src/Fallback.jsx";
 export { HelloWorld } from "./src/HelloWorld.jsx";
 export { Viewer } from "./src/iiif/Viewer.jsx";
 export { Slider } from "./src/iiif/Slider.jsx";
-export { default as FacetSliders } from "./src/iiif/MdxFacetSliders.jsx";
+// New: RelatedItems placeholder (SSR-safe)
+export { default as RelatedItems } from "./src/iiif/MdxRelatedItems.jsx";
 
 // SSR-safe MDX placeholders (do not import browser-only UI here)
 export { default as SearchForm } from "./src/search/MdxSearchForm.jsx";

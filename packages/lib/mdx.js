@@ -390,33 +390,68 @@ async function ensureClientRuntime() {
 async function ensureFacetsRuntime() {
   let esbuild = null;
   try { esbuild = require("../ui/node_modules/esbuild"); } catch (_) { try { esbuild = require("esbuild"); } catch (_) {} }
-  if (!esbuild) return;
   ensureDirSync(OUT_DIR);
   const scriptsDir = path.join(OUT_DIR, 'scripts');
   ensureDirSync(scriptsDir);
-  const outFile = path.join(scriptsDir, 'canopy-facets.js');
+  const outFile = path.join(scriptsDir, 'canopy-related-items.js');
   const entry = `
     function ready(fn){ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',fn,{once:true}); else fn(); }
     function parseProps(el){ try{ const s=el.querySelector('script[type="application/json"]'); if(s) return JSON.parse(s.textContent||'{}'); }catch(_){ } return {}; }
+    function rootBase(){
+      try {
+        var bp = (window && window.CANOPY_BASE_PATH) ? String(window.CANOPY_BASE_PATH) : '';
+        if (bp && bp.charAt(bp.length - 1) === '/') return bp.slice(0, -1);
+        return bp;
+      } catch(_){ return ''; }
+    }
     function pickRandomTop(values, topN){ const arr=(values||[]).slice().sort((a,b)=> (b.doc_count||0)-(a.doc_count||0) || String(a.value).localeCompare(String(b.value))); const n=Math.min(topN||3, arr.length); if(!n) return null; const i=Math.floor(Math.random()*n); return arr[i]; }
     function makeSliderPlaceholder(props){ try{ const el=document.createElement('div'); el.setAttribute('data-canopy-slider','1'); const s=document.createElement('script'); s.type='application/json'; s.textContent=JSON.stringify(props||{}); el.appendChild(s); return el; }catch(_){ return null; } }
+    function slugify(s){ try{ return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }catch(_){ return ''; } }
+    function firstI18nString(x){ if(!x) return ''; if(typeof x==='string') return x; try{ const keys=Object.keys(x||{}); if(!keys.length) return ''; const arr=x[keys[0]]; if(Array.isArray(arr)&&arr.length) return String(arr[0]); }catch(_){ } return ''; }
+    async function fetchManifestValues(iiif){ try{ const res = await fetch(iiif, { headers: { 'Accept': 'application/json' } }).catch(()=>null); if(!res||!res.ok) return null; const m = await res.json().catch(()=>null); if(!m) return null; const meta = Array.isArray(m.metadata)? m.metadata : []; const out = []; for (const entry of meta){ if(!entry) continue; const label = firstI18nString(entry.label); if(!label) continue; const vals = []; try { if (typeof entry.value === 'string') vals.push(entry.value); else { const obj = entry.value || {}; for (const k of Object.keys(obj)) { const arr = Array.isArray(obj[k]) ? obj[k] : []; for (const v of arr) if (v) vals.push(String(v)); } } } catch(_){} if (vals.length) out.push({ label, values: vals.map((v)=>({ value: v, valueSlug: slugify(v) })) }); }
+      return out; } catch(_){ return null; } }
     ready(function(){
-      const nodes = document.querySelectorAll('[data-canopy-facet-sliders]');
+      const nodes = document.querySelectorAll('[data-canopy-related-items]');
       nodes.forEach(async (el) => {
         try {
           const props = parseProps(el) || {};
-          const labels = Array.isArray(props.labels) ? props.labels.map(String) : null;
+          const labelsFilter = Array.isArray(props.labels) ? props.labels.map(String) : null;
           const topN = Number(props.top || 3) || 3;
-          const res = await fetch('api/search/facets.json').catch(()=>null);
+          const res = await fetch(rootBase() + '/api/search/facets.json').catch(()=>null);
           if(!res || !res.ok) return;
           const json = await res.json().catch(()=>null);
           if(!Array.isArray(json)) return;
+          // Build lookup for allowed labels and value slugs
+          const allowedLabels = new Map(); // label -> { slug, values: Set(valueSlug) }
+          json.forEach((f)=>{ if(!f||!f.label||!Array.isArray(f.values)) return; if(labelsFilter && !labelsFilter.includes(String(f.label))) return; const vs = new Set((f.values||[]).map((v)=> String((v && v.slug) || slugify(v && v.value)))); allowedLabels.set(String(f.label), { slug: f.slug || slugify(f.label), values: vs }); });
+
+          const manifestIiif = props.iiifContent && String(props.iiifContent);
+          if (manifestIiif) {
+            const mv = await fetchManifestValues(manifestIiif);
+            if (!mv || !mv.length) return;
+            // For each label present on the manifest, choose ONE value at random (from values also present in the index)
+            mv.forEach((entry) => {
+              const allow = allowedLabels.get(String(entry.label));
+              if (!allow) return; // skip labels not indexed
+              const candidates = (entry.values || []).filter((vv) => allow.values.has(vv.valueSlug));
+              if (!candidates.length) return;
+              const pick = candidates[Math.floor(Math.random() * candidates.length)];
+              const wrap = document.createElement('div');
+              wrap.setAttribute('data-facet-label', entry.label);
+              const ph = makeSliderPlaceholder({ iiifContent: rootBase() + '/api/facet/' + (allow.slug) + '/' + pick.valueSlug + '.json' });
+              if (ph) wrap.appendChild(ph);
+              el.appendChild(wrap);
+            });
+            return;
+          }
+
+          // Homepage/default mode: pick a random top value per allowed label
           const selected = [];
-          json.forEach((f) => { if(!f || !f.label || !Array.isArray(f.values)) return; if(labels && !labels.includes(String(f.label))) return; const pick = pickRandomTop(f.values, topN); if(pick) selected.push({ label: f.label, labelSlug: f.slug, value: pick.value, valueSlug: f.slug && pick.slug ? pick.slug : (pick.value||'').toString().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') }); });
+          json.forEach((f) => { if(!f || !f.label || !Array.isArray(f.values)) return; if(labelsFilter && !labelsFilter.includes(String(f.label))) return; const pick = pickRandomTop(f.values, topN); if(pick) selected.push({ label: f.label, labelSlug: f.slug || slugify(f.label), value: pick.value, valueSlug: (pick.slug) || slugify(pick.value) }); });
           selected.forEach((s) => {
             const wrap = document.createElement('div');
             wrap.setAttribute('data-facet-label', s.label);
-            const ph = makeSliderPlaceholder({ iiifContent: 'api/facet/' + s.labelSlug + '/' + s.valueSlug + '.json' });
+            const ph = makeSliderPlaceholder({ iiifContent: rootBase() + '/api/facet/' + s.labelSlug + '/' + s.valueSlug + '.json' });
             if (ph) wrap.appendChild(ph);
             el.appendChild(wrap);
           });
@@ -425,10 +460,18 @@ async function ensureFacetsRuntime() {
     });
   `;
   const shim = { name: 'facets-vanilla', setup(){} };
-  try {
-    await esbuild.build({ stdin: { contents: entry, resolveDir: process.cwd(), sourcefile: 'canopy-facets-entry.js', loader: 'js' }, outfile: outFile, platform: 'browser', format: 'iife', bundle: true, sourcemap: false, target: ['es2018'], logLevel: 'silent', minify: true, plugins: [shim] });
-  } catch(e){ try{ console.error('Facets: bundle error:', e && e.message ? e.message : e); }catch(_){ } return; }
-  try { const { logLine } = require('./log'); let size=0; try{ const st = fs.statSync(outFile); size = st && st.size || 0; }catch(_){} const kb = size ? ` (${(size/1024).toFixed(1)} KB)` : ''; const rel = path.relative(process.cwd(), outFile).split(path.sep).join('/'); logLine(`✓ Wrote ${rel}${kb}`, 'cyan'); } catch(_){}
+  if (esbuild) {
+    try {
+      await esbuild.build({ stdin: { contents: entry, resolveDir: process.cwd(), sourcefile: 'canopy-facets-entry.js', loader: 'js' }, outfile: outFile, platform: 'browser', format: 'iife', bundle: true, sourcemap: false, target: ['es2018'], logLevel: 'silent', minify: true, plugins: [shim] });
+    } catch(e){ try{ console.error('RelatedItems: bundle error:', e && e.message ? e.message : e); }catch(_){ }
+      // Fallback: write the entry script directly so the file exists
+      try { fs.writeFileSync(outFile, entry, 'utf8'); } catch(_){}
+      return; }
+    try { const { logLine } = require('./log'); let size=0; try{ const st = fs.statSync(outFile); size = st && st.size || 0; }catch(_){} const kb = size ? ` (${(size/1024).toFixed(1)} KB)` : ''; const rel = path.relative(process.cwd(), outFile).split(path.sep).join('/'); logLine(`✓ Wrote ${rel}${kb}`, 'cyan'); } catch(_){}
+  } else {
+    // No esbuild: write a non-bundled version (no imports used)
+    try { fs.writeFileSync(outFile, entry, 'utf8'); } catch(_){}
+  }
 }
 
 // Bundle a separate client runtime for the Clover Slider to keep payloads split.

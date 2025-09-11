@@ -988,25 +988,52 @@ async function buildIiifCollectionPages(CONFIG) {
             )
             .split(path.sep)
             .join("/");
-          const needsHydrate =
-            body.includes("data-canopy-hydrate") ||
-            body.includes("data-canopy-viewer");
-          const jsRel = needsHydrate
-            ? path
-                .relative(
-                  path.dirname(outPath),
-                  path.join(OUT_DIR, "scripts", "canopy-viewer.js")
-                )
-                .split(path.sep)
-                .join("/")
+          // Detect placeholders to decide which runtimes to inject
+          const needsHydrateViewer = body.includes("data-canopy-viewer");
+          const needsRelated = body.includes("data-canopy-related-items");
+          const needsHydrate = body.includes("data-canopy-hydrate") || needsHydrateViewer || needsRelated;
+
+          // Ensure required client runtimes exist before computing paths
+          try {
+            const mdxLib = require('./mdx');
+            if (needsHydrateViewer && typeof mdxLib.ensureClientRuntime === 'function') {
+              await mdxLib.ensureClientRuntime();
+            }
+            if (needsRelated) {
+              if (typeof mdxLib.ensureSliderRuntime === 'function') {
+                await mdxLib.ensureSliderRuntime();
+              }
+              if (typeof mdxLib.ensureFacetsRuntime === 'function') {
+                await mdxLib.ensureFacetsRuntime();
+              }
+            }
+          } catch (_) { /* no-op */ }
+
+          // Compute script paths relative to the output HTML
+          const viewerRel = needsHydrateViewer
+            ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-viewer.js')).split(path.sep).join('/')
             : null;
-          // Include hydration script via htmlShell
+          const sliderRel = needsRelated
+            ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-slider.js')).split(path.sep).join('/')
+            : null;
+          const relatedRel = needsRelated
+            ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-related-items.js')).split(path.sep).join('/')
+            : null;
+
+          // Choose a main script so execution order is preserved (builder before slider)
+          let jsRel = null;
+          if (needsRelated && sliderRel) jsRel = sliderRel;
+          else if (viewerRel) jsRel = viewerRel;
+
+          // Include hydration scripts via htmlShell
           let headExtra = head;
-          // Ensure React globals are present for hydration if viewer present
+          // Ensure React globals are present when any client React is needed
           const needsReact =
             body.includes("data-react-root") ||
             body.includes("data-canopy-react") ||
-            body.includes("data-canopy-viewer");
+            needsHydrateViewer ||
+            needsRelated;
+          let vendorTag = '';
           if (needsReact) {
             try {
               const { ensureReactGlobals } = require("./mdx");
@@ -1024,16 +1051,27 @@ async function buildIiifCollectionPages(CONFIG) {
                 const stv = fs.statSync(vendorAbs);
                 vendorRel += `?v=${Math.floor(stv.mtimeMs || Date.now())}`;
               } catch (_) {}
-              headExtra = `<script src="${vendorRel}"></script>` + headExtra;
+              vendorTag = `<script src="${vendorRel}"></script>`;
             } catch (_) {}
           }
+          // Prepend additional scripts so the selected jsRel runs last
+          const extraScripts = [];
+          if (relatedRel && jsRel !== relatedRel) extraScripts.push(`<script defer src="${relatedRel}"></script>`);
+          if (viewerRel && jsRel !== viewerRel) extraScripts.push(`<script defer src="${viewerRel}"></script>`);
+          if (sliderRel && jsRel !== sliderRel) extraScripts.push(`<script defer src="${sliderRel}"></script>`);
+          if (extraScripts.length) headExtra = extraScripts.join('') + headExtra;
+          // Expose base path to browser for runtime code to build URLs
+          try {
+            const { BASE_PATH } = require('./common');
+            if (BASE_PATH) vendorTag = `<script>window.CANOPY_BASE_PATH=${JSON.stringify(BASE_PATH)}</script>` + vendorTag;
+          } catch (_) {}
           let pageBody = body;
           let html = htmlShell({
             title,
             body: pageBody,
             cssHref: cssRel || "styles/styles.css",
             scriptHref: jsRel,
-            headExtra,
+            headExtra: vendorTag + headExtra,
           });
           try {
             html = require("./common").applyBaseToHtml(html);

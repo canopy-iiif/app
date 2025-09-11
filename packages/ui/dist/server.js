@@ -124,22 +124,16 @@ var Slider = (props) => {
   return /* @__PURE__ */ React4.createElement(CloverSlider, { ...props });
 };
 
-// src/iiif/MdxFacetSliders.jsx
+// src/iiif/MdxRelatedItems.jsx
 import React5 from "react";
-function MdxFacetSliders(props) {
+function MdxRelatedItems(props) {
   let json = "{}";
   try {
     json = JSON.stringify(props || {});
   } catch (_) {
     json = "{}";
   }
-  return /* @__PURE__ */ React5.createElement("div", { "data-canopy-facet-sliders": "1", className: "not-prose" }, /* @__PURE__ */ React5.createElement(
-    "script",
-    {
-      type: "application/json",
-      dangerouslySetInnerHTML: { __html: json }
-    }
-  ));
+  return /* @__PURE__ */ React5.createElement("div", { "data-canopy-related-items": "1", className: "not-prose" }, /* @__PURE__ */ React5.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
 }
 
 // src/search/MdxSearchForm.jsx
@@ -190,9 +184,9 @@ function SearchTotal(props) {
   return /* @__PURE__ */ React9.createElement("div", { "data-canopy-search-total": "1" }, /* @__PURE__ */ React9.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
 }
 export {
-  MdxFacetSliders as FacetSliders,
   Fallback,
   HelloWorld,
+  MdxRelatedItems as RelatedItems,
   MdxSearchForm as SearchForm,
   MdxSearchResults as SearchResults,
   SearchSummary,

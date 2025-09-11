@@ -149,7 +149,9 @@ Two interactive areas are available out of the box and render safely in MDX:
   - `<SearchSummary />` — summary text (query/type aware)
   - `<SearchResults />` — results list
   - `<SearchTotal />` — live count of shown results
-  - `<FacetSliders />` — renders a Slider per configured facet label (random pick from top values, client‑side)
+  - `<RelatedItems top={3} iiifContent?="…" />` — related item sliders (facet‑driven)
+    - Without `iiifContent` (e.g., homepage): picks one top value per indexed facet label and renders one slider per label.
+    - With `iiifContent` (work pages): reads the Manifest’s metadata, intersects with indexed facets, then picks one of the Manifest’s values at random for each label and renders exactly one slider per label. Facets not present on the Manifest are skipped.
 
 How it works:
 
@@ -158,7 +160,7 @@ How it works:
 - On load, the hydration script finds placeholders, reads props (embedded as JSON), and mounts the React component.
   - Viewer runtime: `site/scripts/canopy-viewer.js`
   - Slider runtime: `site/scripts/canopy-slider.js` (loaded only on pages that include `<Slider />`)
-  - Facets runtime: `site/scripts/canopy-facets.js` (loaded only on pages that include `<FacetSliders />`)
+  - Related items runtime: `site/scripts/canopy-related-items.js` (loaded only on pages that include `<RelatedItems />`)
 
 Usage examples:
 
