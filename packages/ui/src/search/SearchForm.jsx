@@ -1,9 +1,10 @@
 import React from 'react';
 
-export default function SearchForm({ query, onQueryChange, type = 'all', onTypeChange, types = [] }) {
-  const allTypes = Array.from(new Set(['all', ...types]));
+export default function SearchForm({ query, onQueryChange, type = 'all', onTypeChange, types = [], counts = {} }) {
+  const orderedTypes = Array.isArray(types) ? types : [];
+  const toLabel = (t) => (t && t.length ? t.charAt(0).toUpperCase() + t.slice(1) : '');
   return (
-    <form onSubmit={(e) => e.preventDefault()} className="space-y-2">
+    <form onSubmit={(e) => e.preventDefault()} className="space-y-3">
       <input
         id="search-input"
         type="search"
@@ -12,22 +13,30 @@ export default function SearchForm({ query, onQueryChange, type = 'all', onTypeC
         onChange={(e) => onQueryChange && onQueryChange(e.target.value)}
         className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
       />
-      <div className="flex items-center gap-3 text-sm text-slate-600">
-        <label htmlFor="search-type">Type:</label>
-        <select
-          id="search-type"
-          value={type}
-          onChange={(e) => onTypeChange && onTypeChange(e.target.value)}
-          className="px-2 py-1 border border-slate-300 rounded-md bg-white"
-        >
-          {allTypes.map((t) => (
-            <option key={t} value={t}>
-              {t.charAt(0).toUpperCase() + t.slice(1)}
-            </option>
-          ))}
-        </select>
+      <div role="tablist" aria-label="Search types" className="flex items-center gap-2 border-b border-slate-200">
+        {orderedTypes.map((t) => {
+          const active = String(type).toLowerCase() === String(t).toLowerCase();
+          const cRaw = (counts && Object.prototype.hasOwnProperty.call(counts, t)) ? counts[t] : undefined;
+          const c = Number.isFinite(Number(cRaw)) ? Number(cRaw) : 0;
+          return (
+            <button
+              key={t}
+              role="tab"
+              aria-selected={active}
+              type="button"
+              onClick={() => onTypeChange && onTypeChange(t)}
+              className={
+                'px-3 py-1.5 text-sm rounded-t-md border-b-2 -mb-px transition-colors ' +
+                (active
+                  ? 'border-brand-600 text-brand-700'
+                  : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300')
+              }
+            >
+              {toLabel(t)} ({c})
+            </button>
+          );
+        })}
       </div>
     </form>
   );
 }
-

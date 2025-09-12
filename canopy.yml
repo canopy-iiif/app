@@ -12,3 +12,6 @@ iiif:
   chunkSize: 20
   # Concurrent fetch/build workers per chunk
   concurrency: 5
+search:
+  tabs:
+    order: ["work", "docs", "page"]

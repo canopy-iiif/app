@@ -598,7 +598,8 @@ async function dev() {
             }
           });
           proc.on('exit', (code) => {
-            if (code !== 0) {
+            // Ignore null exits (expected when we intentionally restart the watcher)
+            if (code !== 0 && code !== null) {
               console.error('[tailwind] watcher exited with code', code);
             }
           });
@@ -631,18 +632,24 @@ async function dev() {
           for (const f of files) {
             try { fs.watch(f, { persistent: false }, restart); } catch (_) {}
           }
-          // Watch UI styles directory (Sass partials used by the plugin); restart Tailwind on changes
+          // Watch UI styles directory (Sass partials used by the plugin); restart Tailwind on Sass changes
           try {
             if (fs.existsSync(uiStylesDir)) {
               try {
-                fs.watch(uiStylesDir, { persistent: false, recursive: true }, () => restart());
+                fs.watch(uiStylesDir, { persistent: false, recursive: true }, (evt, fn) => {
+                  try {
+                    if (fn && /\.s[ac]ss$/i.test(String(fn))) restart();
+                  } catch (_) {}
+                });
               } catch (_) {
                 // Fallback: per-dir watch without recursion
                 const watchers = new Map();
                 const watchDir = (dir) => {
                   if (watchers.has(dir)) return;
                   try {
-                    const w = fs.watch(dir, { persistent: false }, () => restart());
+                    const w = fs.watch(dir, { persistent: false }, (evt, fn) => {
+                      try { if (fn && /\.s[ac]ss$/i.test(String(fn))) restart(); } catch (_) {}
+                    });
                     watchers.set(dir, w);
                   } catch (_) {}
                 };

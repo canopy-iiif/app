@@ -343,9 +343,10 @@ function SearchTotal(props) {
 
 // src/search/SearchForm.jsx
 import React12 from "react";
-function SearchForm({ query, onQueryChange, type = "all", onTypeChange, types = [] }) {
-  const allTypes = Array.from(/* @__PURE__ */ new Set(["all", ...types]));
-  return /* @__PURE__ */ React12.createElement("form", { onSubmit: (e) => e.preventDefault(), className: "space-y-2" }, /* @__PURE__ */ React12.createElement(
+function SearchForm({ query, onQueryChange, type = "all", onTypeChange, types = [], counts = {} }) {
+  const orderedTypes = Array.isArray(types) ? types : [];
+  const toLabel = (t) => t && t.length ? t.charAt(0).toUpperCase() + t.slice(1) : "";
+  return /* @__PURE__ */ React12.createElement("form", { onSubmit: (e) => e.preventDefault(), className: "space-y-3" }, /* @__PURE__ */ React12.createElement(
     "input",
     {
       id: "search-input",
@@ -355,16 +356,26 @@ function SearchForm({ query, onQueryChange, type = "all", onTypeChange, types = 
       onChange: (e) => onQueryChange && onQueryChange(e.target.value),
       className: "w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
     }
-  ), /* @__PURE__ */ React12.createElement("div", { className: "flex items-center gap-3 text-sm text-slate-600" }, /* @__PURE__ */ React12.createElement("label", { htmlFor: "search-type" }, "Type:"), /* @__PURE__ */ React12.createElement(
-    "select",
-    {
-      id: "search-type",
-      value: type,
-      onChange: (e) => onTypeChange && onTypeChange(e.target.value),
-      className: "px-2 py-1 border border-slate-300 rounded-md bg-white"
-    },
-    allTypes.map((t) => /* @__PURE__ */ React12.createElement("option", { key: t, value: t }, t.charAt(0).toUpperCase() + t.slice(1)))
-  )));
+  ), /* @__PURE__ */ React12.createElement("div", { role: "tablist", "aria-label": "Search types", className: "flex items-center gap-2 border-b border-slate-200" }, orderedTypes.map((t) => {
+    const active = String(type).toLowerCase() === String(t).toLowerCase();
+    const cRaw = counts && Object.prototype.hasOwnProperty.call(counts, t) ? counts[t] : void 0;
+    const c = Number.isFinite(Number(cRaw)) ? Number(cRaw) : 0;
+    return /* @__PURE__ */ React12.createElement(
+      "button",
+      {
+        key: t,
+        role: "tab",
+        "aria-selected": active,
+        type: "button",
+        onClick: () => onTypeChange && onTypeChange(t),
+        className: "px-3 py-1.5 text-sm rounded-t-md border-b-2 -mb-px transition-colors " + (active ? "border-brand-600 text-brand-700" : "border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300")
+      },
+      toLabel(t),
+      " (",
+      c,
+      ")"
+    );
+  })));
 }
 
 // src/search/SearchResults.jsx

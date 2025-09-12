@@ -9,3 +9,6 @@ site/
 
 # ignore pnpm local store (we standardize on npm)
 .pnpm-store/
+
+# Do not commit compiled UI stylesheet; built in dev/publish
+packages/ui/styles/index.css

@@ -2,6 +2,7 @@
 import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs';
+import * as sass from 'sass';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,9 +11,8 @@ const stylesDir = path.join(root, 'styles');
 const indexScss = path.join(stylesDir, 'index.scss');
 const indexCss = path.join(stylesDir, 'index.css');
 
-function compileStylesOnce() {
+async function compileStylesOnce() {
   try {
-    const sass = require('sass');
     const out = sass.compile(indexScss, { style: 'expanded' });
     fs.mkdirSync(path.dirname(indexCss), { recursive: true });
     fs.writeFileSync(indexCss, out.css || '', 'utf8');
@@ -69,7 +69,7 @@ async function run() {
   });
 
   // Build styles CSS once
-  if (fs.existsSync(indexScss)) compileStylesOnce();
+  if (fs.existsSync(indexScss)) await compileStylesOnce();
 
   if (process.env.WATCH) {
     const context = await esbuild.context({
@@ -105,8 +105,16 @@ async function run() {
     // Watch styles for changes and recompile styles/index.css
     try {
       if (fs.existsSync(indexScss)) {
-        fs.watch(path.dirname(indexScss), { recursive: true }, (evt, fn) => {
-          try { compileStylesOnce(); } catch (_) {}
+        const srcDir = path.dirname(indexScss);
+        fs.watch(srcDir, { recursive: true }, (evt, fn) => {
+          try {
+            // Only react to Sass source changes; ignore writes to generated index.css
+            if (!fn) return;
+            const changed = path.join(srcDir, fn);
+            if (/\.s[ac]ss$/i.test(changed)) {
+              compileStylesOnce();
+            }
+          } catch (_) {}
         });
       }
     } catch (_) {}

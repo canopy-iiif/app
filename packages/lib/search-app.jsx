@@ -85,6 +85,7 @@ function createSearchStore() {
     records: [],
     types: [],
     index: null,
+    counts: {},
   };
   const listeners = new Set();
   function notify() { listeners.forEach((fn) => { try { fn(); } catch (_) {} }); }
@@ -92,16 +93,32 @@ function createSearchStore() {
   let snapshot = null;
   function recomputeSnapshot() {
     const { index, records, query, type } = state;
+    let base = [];
     let results = [];
+    let totalForType = Array.isArray(records) ? records.length : 0;
+    let counts = {};
     if (records && records.length) {
       if (!query) {
-        results = records.filter((r) => type === 'all' ? true : String(r.type).toLowerCase() === String(type).toLowerCase());
+        base = records;
       } else {
-        try { const ids = index && index.search(query, { limit: 200 }) || []; results = ids.map((i) => records[i]).filter(Boolean); } catch (_) { results = []; }
-        if (type !== 'all') results = results.filter((r) => String(r.type).toLowerCase() === String(type).toLowerCase());
+        try { const ids = index && index.search(query, { limit: 200 }) || []; base = ids.map((i) => records[i]).filter(Boolean); } catch (_) { base = []; }
+      }
+      // Build per-type counts from base (query-filtered or all)
+      try {
+        counts = base.reduce((acc, r) => {
+          const t = String((r && r.type) || 'page').toLowerCase();
+          acc[t] = (acc[t] || 0) + 1;
+          return acc;
+        }, {});
+      } catch (_) { counts = {}; }
+      // Derive results for current tab
+      results = type === 'all' ? base : base.filter((r) => String(r.type).toLowerCase() === String(type).toLowerCase());
+      // Compute total relative to active tab (unfiltered by query)
+      if (type !== 'all') {
+        try { totalForType = records.filter((r) => String(r.type).toLowerCase() === String(type).toLowerCase()).length; } catch (_) {}
       }
     }
-    snapshot = { ...state, results, total: records.length || 0, shown: results.length };
+    snapshot = { ...state, results, total: totalForType, shown: results.length, counts };
   }
   function set(partial) { state = { ...state, ...partial }; recomputeSnapshot(); notify(); }
   function subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); }
@@ -200,8 +217,8 @@ function useStore() {
 }
 
 function FormMount() {
-  const { query, setQuery, type, setType, types } = useStore();
-  return <SearchFormUI query={query} onQueryChange={setQuery} type={type} onTypeChange={setType} types={types} />;
+  const { query, setQuery, type, setType, types, counts } = useStore();
+  return <SearchFormUI query={query} onQueryChange={setQuery} type={type} onTypeChange={setType} types={types} counts={counts} />;
 }
 function ResultsMount(props = {}) {
   const { results, type, loading } = useStore();
@@ -213,7 +230,7 @@ function SummaryMount() {
   const { query, type, shown, total } = useStore();
   const text = useMemo(() => {
     if (!query) return `Showing ${shown} of ${total} items`;
-    return `Found ${shown} in ${type === 'all' ? 'all types' : type} for "${query}"`;
+    return `Found ${shown} of ${total} in ${type === 'all' ? 'all types' : type} for "${query}"`;
   }, [query, type, shown, total]);
   return <div className="text-sm text-slate-600">{text}</div>;
 }

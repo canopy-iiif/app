@@ -23,6 +23,7 @@ function createSearchStore() {
     records: [],
     types: [],
     index: null,
+    counts: {},
   };
   const listeners = new Set();
   function notify() { listeners.forEach((fn) => { try { fn(); } catch (_) {} }); }
@@ -30,16 +31,25 @@ function createSearchStore() {
   let snapshot = null;
   function recomputeSnapshot() {
     const { index, records, query, type } = state;
+    let base = [];
     let results = [];
+    let totalForType = Array.isArray(records) ? records.length : 0;
+    let counts = {};
     if (records && records.length) {
       if (!query) {
-        results = records.filter((r) => type === 'all' ? true : String(r.type).toLowerCase() === String(type).toLowerCase());
+        base = records;
       } else {
-        try { const ids = index && index.search(query, { limit: 200 }) || []; results = ids.map((i) => records[i]).filter(Boolean); } catch (_) { results = []; }
-        if (type !== 'all') results = results.filter((r) => String(r.type).toLowerCase() === String(type).toLowerCase());
+        try { const ids = index && index.search(query, { limit: 200 }) || []; base = ids.map((i) => records[i]).filter(Boolean); } catch (_) { base = []; }
+      }
+      try {
+        counts = base.reduce((acc, r) => { const t = String((r && r.type) || 'page').toLowerCase(); acc[t] = (acc[t] || 0) + 1; return acc; }, {});
+      } catch (_) { counts = {}; }
+      results = type === 'all' ? base : base.filter((r) => String(r.type).toLowerCase() === String(type).toLowerCase());
+      if (type !== 'all') {
+        try { totalForType = records.filter((r) => String(r.type).toLowerCase() === String(type).toLowerCase()).length; } catch (_) {}
       }
     }
-    snapshot = { ...state, results, total: records.length || 0, shown: results.length };
+    snapshot = { ...state, results, total: totalForType, shown: results.length, counts };
   }
   function set(partial) { state = { ...state, ...partial }; recomputeSnapshot(); notify(); }
   function subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); }
@@ -53,9 +63,15 @@ function createSearchStore() {
       const Flex = (window && window.FlexSearch) || (await import('flexsearch')).default;
       // Broadcast new index installs to other tabs
       let bc = null; try { if (typeof BroadcastChannel !== 'undefined') bc = new BroadcastChannel('canopy-search'); } catch (_) {}
-      // Try to get a meta version from ./api/index.json for cache-busting
+      // Try to get a meta version and search config from ./api/index.json for cache-busting and tabs
       let version = '';
-      try { const meta = await fetch('./api/index.json').then((r)=>r&&r.ok?r.json():null).catch(()=>null); if (meta && typeof meta.version === 'string') version = meta.version; } catch (_) {}
+      let tabsOrder = [];
+      try {
+        const meta = await fetch('./api/index.json').then((r)=>r&&r.ok?r.json():null).catch(()=>null);
+        if (meta && typeof meta.version === 'string') version = meta.version;
+        const ord = meta && meta.search && meta.search.tabs && Array.isArray(meta.search.tabs.order) ? meta.search.tabs.order : [];
+        tabsOrder = ord.map((s)=>String(s)).filter(Boolean);
+      } catch (_) {}
       const res = await fetch('./api/search-index.json' + (version ? ('?v=' + encodeURIComponent(version)) : ''));
       const text = await res.text();
       const parsed = (() => { try { return JSON.parse(text); } catch { return []; } })();
@@ -102,8 +118,25 @@ function createSearchStore() {
       try { if (bc && DEBUG) { bc.onmessage = (ev) => { try { const msg = ev && ev.data; if (msg && msg.type === 'search-index-installed' && msg.version && msg.version !== version) console.info('[Search] Another tab installed version ' + String(msg.version).slice(0,8)); } catch (_) {} }; } } catch (_) {}
 
       const ts = Array.from(new Set(data.map((r) => String((r && r.type) || 'page'))));
-      const order = ['work', 'docs', 'page'];
+      const order = Array.isArray(tabsOrder) && tabsOrder.length ? tabsOrder : ['work', 'docs', 'page'];
+      // Sort types using configured order; unknown types appended alphabetically
       ts.sort((a, b) => { const ia = order.indexOf(a); const ib = order.indexOf(b); return (ia<0?99:ia)-(ib<0?99:ib) || a.localeCompare(b); });
+      // Determine default type from config when no explicit type is present in URL
+      let defaultType = (Array.isArray(order) && order.length ? order[0] : 'all');
+      try {
+        const p = new URLSearchParams(location.search);
+        const hasTypeParam = p.has('type');
+        if (!hasTypeParam) {
+          // If default type is not present in available types, fall back to first available
+          if (!ts.includes(defaultType)) defaultType = ts[0] || 'all';
+          if (defaultType && defaultType !== 'all') {
+            p.set('type', defaultType);
+            // Avoid nested template literals inside fallback string; use concatenation
+            history.replaceState(null, '', (location.pathname + '?' + p.toString()));
+          }
+          set({ type: defaultType });
+        }
+      } catch (_) {}
       set({ index: idx, records: data, types: ts, loading: false });
     } catch (_) { set({ loading: false }); }
   })();
@@ -121,8 +154,8 @@ function useStore() {
 }
 
 function FormMount() {
-  const { query, setQuery, type, setType, types } = useStore();
-  return <SearchFormUI query={query} onQueryChange={setQuery} type={type} onTypeChange={setType} types={types} />;
+  const { query, setQuery, type, setType, types, counts } = useStore();
+  return <SearchFormUI query={query} onQueryChange={setQuery} type={type} onTypeChange={setType} types={types} counts={counts} />;
 }
 function ResultsMount() {
   const { results, type, loading } = useStore();
@@ -133,7 +166,7 @@ function SummaryMount() {
   const { query, type, shown, total } = useStore();
   const text = useMemo(() => {
     if (!query) return \`Showing \${shown} of \${total} items\`;
-    return \`Found \${shown} in \${type === 'all' ? 'all types' : type} for \"\${query}\"\`;
+    return \`Found \${shown} of \${total} in \${type === 'all' ? 'all types' : type} for \"\${query}\"\`;
   }, [query, type, shown, total]);
   return <div className=\"text-sm text-slate-600\">{text}</div>;
 }
@@ -379,7 +412,28 @@ async function writeSearchIndex(records) {
   // Also write a small metadata file with a stable version hash for cache-busting and IDB keying
   try {
     const version = crypto.createHash('sha256').update(json).digest('hex');
-    const meta = { version, records: safe.length, bytes: approxBytes, updatedAt: new Date().toISOString() };
+    // Read optional search tabs order from canopy.yml
+    let tabsOrder = [];
+    try {
+      const yaml = require('js-yaml');
+      const cfgPath = require('./common').path.resolve(process.env.CANOPY_CONFIG || 'canopy.yml');
+      if (require('./common').fs.existsSync(cfgPath)) {
+        const raw = require('./common').fs.readFileSync(cfgPath, 'utf8');
+        const data = yaml.load(raw) || {};
+        const searchCfg = data && data.search ? data.search : {};
+        const tabs = searchCfg && searchCfg.tabs ? searchCfg.tabs : {};
+        const order = Array.isArray(tabs && tabs.order) ? tabs.order : [];
+        tabsOrder = order.map((s) => String(s)).filter(Boolean);
+      }
+    } catch (_) {}
+    const meta = {
+      version,
+      records: safe.length,
+      bytes: approxBytes,
+      updatedAt: new Date().toISOString(),
+      // Expose optional search config to the client runtime
+      search: { tabs: { order: tabsOrder } },
+    };
     const metaPath = path.join(apiDir, 'index.json');
     await fsp.writeFile(metaPath, JSON.stringify(meta, null, 2), 'utf8');
     try {
