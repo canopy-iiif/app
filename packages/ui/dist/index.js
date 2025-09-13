@@ -524,8 +524,155 @@ function Search(props) {
     }
   ));
 }
+
+// src/command/MdxCommandPalette.jsx
+import React15 from "react";
+function MdxCommandPalette(props = {}) {
+  const {
+    placeholder = "Search\u2026",
+    hotkey = "mod+k",
+    maxResults = 8,
+    groupOrder = ["work", "page"],
+    button = true,
+    buttonLabel = "Search"
+  } = props || {};
+  const data = { placeholder, hotkey, maxResults, groupOrder };
+  return /* @__PURE__ */ React15.createElement("div", { "data-canopy-command": true }, button && /* @__PURE__ */ React15.createElement(
+    "button",
+    {
+      type: "button",
+      "data-canopy-command-trigger": true,
+      className: "inline-flex items-center gap-1 px-2 py-1 rounded border border-slate-300 text-slate-700 hover:bg-slate-50",
+      "aria-label": "Open search"
+    },
+    /* @__PURE__ */ React15.createElement("span", { "aria-hidden": true }, "\u2318K"),
+    /* @__PURE__ */ React15.createElement("span", { className: "sr-only" }, buttonLabel)
+  ), /* @__PURE__ */ React15.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: JSON.stringify(data) } }));
+}
+
+// src/command/CommandApp.jsx
+import React16, { useEffect as useEffect5, useMemo as useMemo2, useState as useState5 } from "react";
+import { Command } from "cmdk";
+function normalize(s) {
+  try {
+    return String(s || "").toLowerCase();
+  } catch (e) {
+    return "";
+  }
+}
+function groupLabel(t) {
+  const type = String(t || "").toLowerCase();
+  if (type === "work") return "Works";
+  if (type === "page") return "Pages";
+  return type.charAt(0).toUpperCase() + type.slice(1);
+}
+function CommandPaletteApp(props) {
+  const {
+    records = [],
+    loading = false,
+    open: controlledOpen,
+    onOpenChange,
+    onSelect = () => {
+    },
+    config = {}
+  } = props || {};
+  const {
+    placeholder = "Search\u2026",
+    hotkey = "mod+k",
+    maxResults = 8,
+    groupOrder = ["work", "page"],
+    button = true,
+    buttonLabel = "Search"
+  } = config || {};
+  const [open, setOpen] = useState5(!!controlledOpen);
+  useEffect5(() => {
+    if (typeof controlledOpen === "boolean") setOpen(controlledOpen);
+  }, [controlledOpen]);
+  const setOpenBoth = (v) => {
+    setOpen(!!v);
+    if (onOpenChange) onOpenChange(!!v);
+  };
+  const [q, setQ] = useState5("");
+  useEffect5(() => {
+    function handler(e) {
+      try {
+        const hk = String(hotkey || "mod+k").toLowerCase();
+        const isMod = hk.includes("mod+");
+        const key = hk.split("+").pop();
+        if ((isMod ? e.metaKey || e.ctrlKey : true) && e.key.toLowerCase() === String(key || "k")) {
+          e.preventDefault();
+          setOpenBoth(true);
+        }
+      } catch (e2) {
+      }
+    }
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [hotkey]);
+  useEffect5(() => {
+    function onKey(e) {
+      if (e.key === "Escape") setOpenBoth(false);
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+  const results = useMemo2(() => {
+    if (!q) return [];
+    const qq = normalize(q);
+    const out = [];
+    for (const r of records || []) {
+      const title = String(r && r.title || "");
+      if (!title) continue;
+      if (normalize(title).includes(qq)) out.push(r);
+      if (out.length >= Math.max(1, Number(maxResults) || 8)) break;
+    }
+    return out;
+  }, [q, records, maxResults]);
+  const grouped = useMemo2(() => {
+    const map = /* @__PURE__ */ new Map();
+    for (const r of results) {
+      const t = String(r && r.type || "page");
+      if (!map.has(t)) map.set(t, []);
+      map.get(t).push(r);
+    }
+    return map;
+  }, [results]);
+  const onOverlayMouseDown = (e) => {
+    if (e.target === e.currentTarget) setOpenBoth(false);
+  };
+  const onItemSelect = (href) => {
+    try {
+      onSelect(String(href || ""));
+      setOpenBoth(false);
+    } catch (e) {
+    }
+  };
+  return /* @__PURE__ */ React16.createElement("div", { className: "canopy-cmdk" }, button && /* @__PURE__ */ React16.createElement(
+    "button",
+    {
+      type: "button",
+      className: "canopy-cmdk__trigger",
+      onClick: () => setOpenBoth(true),
+      "aria-label": "Open search",
+      "data-canopy-command-trigger": true
+    },
+    /* @__PURE__ */ React16.createElement("span", { "aria-hidden": true }, "\u2318K"),
+    /* @__PURE__ */ React16.createElement("span", { className: "sr-only" }, buttonLabel)
+  ), /* @__PURE__ */ React16.createElement(
+    "div",
+    {
+      className: "canopy-cmdk__overlay",
+      "data-open": open ? "1" : "0",
+      onMouseDown: onOverlayMouseDown,
+      style: { display: open ? "flex" : "none" }
+    },
+    /* @__PURE__ */ React16.createElement("div", { className: "canopy-cmdk__panel" }, /* @__PURE__ */ React16.createElement("button", { className: "canopy-cmdk__close", "aria-label": "Close", onClick: () => setOpenBoth(false) }, "\xD7"), /* @__PURE__ */ React16.createElement("div", { className: "canopy-cmdk__inputWrap" }, /* @__PURE__ */ React16.createElement(Command, null, /* @__PURE__ */ React16.createElement(Command.Input, { autoFocus: true, value: q, onValueChange: setQ, placeholder, className: "canopy-cmdk__input" }), /* @__PURE__ */ React16.createElement(Command.List, { className: "canopy-cmdk__list" }, loading && /* @__PURE__ */ React16.createElement(Command.Loading, null, "Hang on\u2026"), /* @__PURE__ */ React16.createElement(Command.Empty, null, "No results found."), (Array.isArray(groupOrder) ? groupOrder : []).map((t) => grouped.has(t) ? /* @__PURE__ */ React16.createElement(Command.Group, { key: t, heading: groupLabel(t) }, grouped.get(t).map((r, i) => /* @__PURE__ */ React16.createElement(Command.Item, { key: t + "-" + i, onSelect: () => onItemSelect(r.href) }, /* @__PURE__ */ React16.createElement("div", { className: "canopy-cmdk__item" }, String(r.type || "") === "work" && r.thumbnail ? /* @__PURE__ */ React16.createElement("img", { className: "canopy-cmdk__thumb", src: r.thumbnail, alt: "" }) : null, /* @__PURE__ */ React16.createElement("span", { className: "canopy-cmdk__title" }, r.title))))) : null), Array.from(grouped.keys()).filter((t) => !(groupOrder || []).includes(t)).map((t) => /* @__PURE__ */ React16.createElement(Command.Group, { key: t, heading: groupLabel(t) }, grouped.get(t).map((r, i) => /* @__PURE__ */ React16.createElement(Command.Item, { key: t + "-x-" + i, onSelect: () => onItemSelect(r.href) }, /* @__PURE__ */ React16.createElement("div", { className: "canopy-cmdk__item" }, String(r.type || "") === "work" && r.thumbnail ? /* @__PURE__ */ React16.createElement("img", { className: "canopy-cmdk__thumb", src: r.thumbnail, alt: "" }) : null, /* @__PURE__ */ React16.createElement("span", { className: "canopy-cmdk__title" }, r.title))))))))))
+  ));
+}
 export {
   Card,
+  MdxCommandPalette as CommandPalette,
+  CommandPaletteApp,
   Fallback,
   Grid,
   GridItem,

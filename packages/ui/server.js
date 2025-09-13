@@ -10,3 +10,8 @@ export { default as SearchForm } from "./src/search/MdxSearchForm.jsx";
 export { default as SearchResults } from "./src/search/MdxSearchResults.jsx";
 export { default as SearchSummary } from "./src/search/SearchSummary.jsx";
 export { default as SearchTotal } from "./src/search/SearchTotal.jsx";
+
+// Command palette (SSR-safe placeholder)
+export { default as CommandPalette } from "./src/command/MdxCommandPalette.jsx";
+// Expose client app to runtime bundler
+export { default as CommandPaletteApp } from "./src/command/CommandApp.jsx";

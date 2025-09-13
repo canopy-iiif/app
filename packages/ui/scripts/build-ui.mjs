@@ -43,7 +43,7 @@ async function run() {
     format: 'esm',
     sourcemap: true,
     target: ['es2018'],
-    external: ['react', 'react-dom', 'react-dom/client', 'react-masonry-css', 'flexsearch', '@samvera/clover-iiif/*'],
+    external: ['react', 'react-dom', 'react-dom/client', 'react-masonry-css', 'flexsearch', 'cmdk', '@samvera/clover-iiif/*'],
     logLevel: 'info',
     metafile: false
   }).then(() => null).catch((e) => {
@@ -51,17 +51,28 @@ async function run() {
     process.exit(1);
   });
 
-  // Build SSR-safe server entry targeting Node
+  // Build SSR-safe server entry targeting Node as ESM bundle, preferring ESM deps and keeping React external.
   await esbuild.build({
     entryPoints: [path.join(root, 'server.js')],
     outdir,
     entryNames: '[name]',
     bundle: true,
-    platform: 'node',
+    platform: 'neutral',
     format: 'esm',
     sourcemap: true,
-    target: ['node18'],
-    external: ['react', 'react-dom', '@samvera/clover-iiif/*'],
+    target: ['es2018'],
+    external: [
+      'react',
+      'react/jsx-runtime',
+      'react-dom',
+      'react-dom/client',
+      'react-masonry-css',
+      'flexsearch',
+      'cmdk',
+      '@samvera/clover-iiif/*',
+    ],
+    mainFields: ['module', 'main'],
+    conditions: ['module'],
     logLevel: 'info',
   }).catch((e) => {
     console.error('[ui] server build failed:', e?.message || e);
@@ -81,7 +92,7 @@ async function run() {
       format: 'esm',
       sourcemap: true,
       target: ['es2018'],
-      external: ['react', 'react-dom', 'react-dom/client', 'react-masonry-css', 'flexsearch', '@samvera/clover-iiif/*'],
+      external: ['react', 'react-dom', 'react-dom/client', 'react-masonry-css', 'flexsearch', 'cmdk', '@samvera/clover-iiif/*'],
       logLevel: 'info'
     });
     await context.watch();
@@ -93,11 +104,22 @@ async function run() {
       outdir,
       entryNames: '[name]',
       bundle: true,
-      platform: 'node',
+      platform: 'neutral',
       format: 'esm',
       sourcemap: true,
-      target: ['node18'],
-      external: ['react', 'react-dom', '@samvera/clover-iiif/*'],
+      target: ['es2018'],
+      external: [
+        'react',
+        'react/jsx-runtime',
+        'react-dom',
+        'react-dom/client',
+        'react-masonry-css',
+        'flexsearch',
+        'cmdk',
+        '@samvera/clover-iiif/*',
+      ],
+      mainFields: ['module', 'main'],
+      conditions: ['module'],
       logLevel: 'info'
     });
     await serverCtx.watch();

@@ -13,6 +13,8 @@ export default function App({ children }) {
           <nav className="flex items-center gap-4">
             <a href="/search" className="hover:underline">Search</a>
             <a href="/getting-started" className="hover:underline">Getting Started</a>
+            {/* Global command palette trigger + placeholder (hydrated client-side) */}
+            <CommandPalette hotkey="mod+k" placeholder="Search…" />
           </nav>
         </div>
       </header>

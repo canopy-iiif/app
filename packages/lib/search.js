@@ -256,13 +256,27 @@ async function ensureSearchRuntime() {
         contents: [
           "const R = (typeof window!=='undefined' && window.React) || {};\n",
           "export default R;\n",
-          "export const useState = R.useState;\n",
-          "export const useMemo = R.useMemo;\n",
-          "export const useEffect = R.useEffect;\n",
-          "export const useRef = R.useRef;\n",
-          "export const useSyncExternalStore = R.useSyncExternalStore;\n",
+          // Common hooks and APIs used by deps
+          "export const Children = R.Children;\n",
+          "export const Component = R.Component;\n",
           "export const Fragment = R.Fragment;\n",
           "export const createElement = R.createElement;\n",
+          "export const cloneElement = R.cloneElement;\n",
+          "export const createContext = R.createContext;\n",
+          "export const forwardRef = R.forwardRef;\n",
+          "export const memo = R.memo;\n",
+          "export const startTransition = R.startTransition;\n",
+          "export const isValidElement = R.isValidElement;\n",
+          "export const useEffect = R.useEffect;\n",
+          "export const useLayoutEffect = R.useLayoutEffect;\n",
+          "export const useMemo = R.useMemo;\n",
+          "export const useState = R.useState;\n",
+          "export const useRef = R.useRef;\n",
+          "export const useCallback = R.useCallback;\n",
+          "export const useContext = R.useContext;\n",
+          "export const useReducer = R.useReducer;\n",
+          "export const useId = R.useId;\n",
+          "export const useSyncExternalStore = R.useSyncExternalStore;\n",
         ].join(''),
         loader: 'js',
       }));
@@ -363,12 +377,13 @@ async function buildSearchPage() {
     // Include react-globals vendor shim before search.js to provide window.React globals
     const vendorReactAbs = path.join(OUT_DIR, 'scripts', 'react-globals.js');
     const vendorFlexAbs = path.join(OUT_DIR, 'scripts', 'flexsearch-globals.js');
+    const vendorCommandAbs = path.join(OUT_DIR, 'scripts', 'canopy-command.js');
     function verRel(abs) {
       let rel = path.relative(path.dirname(outPath), abs).split(path.sep).join('/');
       try { const st = require('fs').statSync(abs); rel += `?v=${Math.floor(st.mtimeMs || Date.now())}`; } catch (_) {}
       return rel;
     }
-    const vendorTags = `<script src="${verRel(vendorReactAbs)}"></script><script src="${verRel(vendorFlexAbs)}"></script>`;
+    const vendorTags = `<script src="${verRel(vendorReactAbs)}"></script><script src="${verRel(vendorFlexAbs)}"></script><script src="${verRel(vendorCommandAbs)}"></script>`;
     let html = htmlShell({ title: 'Search', body, cssHref: cssRel || 'styles.css', scriptHref: jsRel, headExtra: vendorTags + head + importMap });
     try { html = require('./common').applyBaseToHtml(html); } catch (_) {}
     await fsp.writeFile(outPath, html, 'utf8');

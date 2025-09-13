@@ -991,7 +991,8 @@ async function buildIiifCollectionPages(CONFIG) {
           // Detect placeholders to decide which runtimes to inject
           const needsHydrateViewer = body.includes("data-canopy-viewer");
           const needsRelated = body.includes("data-canopy-related-items");
-          const needsHydrate = body.includes("data-canopy-hydrate") || needsHydrateViewer || needsRelated;
+          const needsCommand = body.includes('data-canopy-command');
+          const needsHydrate = body.includes("data-canopy-hydrate") || needsHydrateViewer || needsRelated || needsCommand;
 
           // Client runtimes (viewer/slider/facets) are prepared once up-front by the
           // top-level build orchestrator. Avoid rebundling in per-manifest workers.
@@ -1006,6 +1007,9 @@ async function buildIiifCollectionPages(CONFIG) {
           const relatedRel = needsRelated
             ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-related-items.js')).split(path.sep).join('/')
             : null;
+          const commandRel = needsCommand
+            ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-command.js')).split(path.sep).join('/')
+            : null;
 
           // Choose a main script so execution order is preserved (builder before slider)
           let jsRel = null;
@@ -1014,12 +1018,8 @@ async function buildIiifCollectionPages(CONFIG) {
 
           // Include hydration scripts via htmlShell
           let headExtra = head;
-          // Ensure React globals are present when any client React is needed
-          const needsReact =
-            body.includes("data-react-root") ||
-            body.includes("data-canopy-react") ||
-            needsHydrateViewer ||
-            needsRelated;
+          // Ensure React globals are present only when client React is needed
+          const needsReact = !!(needsHydrateViewer || needsRelated);
           let vendorTag = '';
           if (needsReact) {
             try {
@@ -1034,6 +1034,8 @@ async function buildIiifCollectionPages(CONFIG) {
           if (relatedRel && jsRel !== relatedRel) extraScripts.push(`<script defer src="${relatedRel}"></script>`);
           if (viewerRel && jsRel !== viewerRel) extraScripts.push(`<script defer src="${viewerRel}"></script>`);
           if (sliderRel && jsRel !== sliderRel) extraScripts.push(`<script defer src="${sliderRel}"></script>`);
+          // Include command runtime once
+          if (commandRel && jsRel !== commandRel) extraScripts.push(`<script defer src="${commandRel}"></script>`);
           if (extraScripts.length) headExtra = extraScripts.join('') + headExtra;
           // Expose base path to browser for runtime code to build URLs
           try {

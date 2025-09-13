@@ -176,9 +176,11 @@ async function compileMdxFile(filePath, outPath, extraProps = {}) {
     .join("/");
   const needsHydrateViewer = body.includes('data-canopy-viewer');
   const needsHydrateSlider = body.includes('data-canopy-slider');
+  // Command palette is globally available in the App; include its runtime unconditionally
+  const needsCommand = true;
   // Detect both legacy and new placeholders
   const needsFacets = body.includes('data-canopy-related-items');
-  const needsHydrate = body.includes('data-canopy-hydrate') || needsHydrateViewer || needsHydrateSlider || needsFacets;
+  const needsHydrate = body.includes('data-canopy-hydrate') || needsHydrateViewer || needsHydrateSlider || needsFacets || needsCommand;
   const viewerRel = needsHydrateViewer
     ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-viewer.js')).split(path.sep).join('/')
     : null;
@@ -188,14 +190,17 @@ async function compileMdxFile(filePath, outPath, extraProps = {}) {
   const facetsRel = needsFacets
     ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-related-items.js')).split(path.sep).join('/')
     : null;
+  const commandRel = needsCommand
+    ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-command.js')).split(path.sep).join('/')
+    : null;
   // Ensure facets runs before slider: make slider the main script so it executes last
   let jsRel = null;
   if (needsFacets && sliderRel) jsRel = sliderRel;
   else if (viewerRel) jsRel = viewerRel;
   else if (sliderRel) jsRel = sliderRel;
   else if (facetsRel) jsRel = facetsRel;
-  // Detect pages that require client-side React (flagged by components)
-  const needsReact = body.includes('data-react-root') || body.includes('data-canopy-react') || needsHydrateViewer || needsHydrateSlider || needsFacets;
+  // Detect pages that require client-side React (viewer/slider/related items)
+  const needsReact = !!(needsHydrateViewer || needsHydrateSlider || needsFacets);
   let vendorTag = '';
   if (needsReact) {
     try {
@@ -218,6 +223,7 @@ async function compileMdxFile(filePath, outPath, extraProps = {}) {
   if (facetsRel && jsRel !== facetsRel) extraScripts.push(`<script defer src="${facetsRel}"></script>`);
   if (viewerRel && jsRel !== viewerRel) extraScripts.push(`<script defer src="${viewerRel}"></script>`);
   if (sliderRel && jsRel !== sliderRel) extraScripts.push(`<script defer src="${sliderRel}"></script>`);
+  if (commandRel && jsRel !== commandRel) extraScripts.push(`<script defer src="${commandRel}"></script>`);
   if (extraScripts.length) headExtra = extraScripts.join('') + headExtra;
   const bodyWithScript = body;
   const html = htmlShell({
@@ -341,7 +347,36 @@ async function build(options = {}) {
   await mdx.ensureClientRuntime();
   try { if (typeof mdx.ensureSliderRuntime === 'function') await mdx.ensureSliderRuntime(); } catch (_) {}
   try { if (typeof mdx.ensureFacetsRuntime === 'function') await mdx.ensureFacetsRuntime(); } catch (_) {}
+  try { if (typeof mdx.ensureCommandRuntime === 'function') await mdx.ensureCommandRuntime(); } catch (_) {}
   try { if (typeof mdx.ensureReactGlobals === 'function') await mdx.ensureReactGlobals(); } catch (_) {}
+  // Always use lightweight command runtime to keep payload small
+  try {
+    const cmdOut = path.join(OUT_DIR, 'scripts', 'canopy-command.js');
+    ensureDirSync(path.dirname(cmdOut));
+    {
+      const fallback = `
+      (function(){
+        function ready(fn){ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', fn, { once: true }); else fn(); }
+        function parseProps(el){ try{ const s = el.querySelector('script[type="application/json"]'); if(s) return JSON.parse(s.textContent||'{}'); }catch(_){ } return {}; }
+        function norm(s){ try{ return String(s||'').toLowerCase(); }catch(_){ return ''; } }
+        function withBase(href){ try{ var bp = (window && window.CANOPY_BASE_PATH) ? String(window.CANOPY_BASE_PATH) : ''; if(!bp) return href; if(/^https?:/i.test(href)) return href; var clean = href.replace(/^\\/+/, ''); return (bp.endsWith('/') ? bp.slice(0,-1) : bp) + '/' + clean; } catch(_){ return href; } }
+        function rootBase(){ try { var bp = (window && window.CANOPY_BASE_PATH) ? String(window.CANOPY_BASE_PATH) : ''; return bp && bp.endsWith('/') ? bp.slice(0,-1) : bp; } catch(_) { return ''; } }
+        function createUI(){ var root=document.createElement('div'); root.setAttribute('data-canopy-command-fallback',''); root.style.cssText='position:fixed;inset:0;display:none;align-items:flex-start;justify-content:center;background:rgba(0,0,0,0.3);z-index:9999;padding-top:10vh;'; root.innerHTML='<div style="position:relative;background:#fff;min-width:320px;max-width:720px;width:90%;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,0.2);overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif"><button id="cpclose" aria-label="Close" style="position:absolute;top:8px;right:8px;border:1px solid #e5e7eb;background:#fff;border-radius:6px;padding:2px 6px;cursor:pointer">&times;</button><div style="padding:10px 12px;border-bottom:1px solid #e5e7eb"><input id="cpq" type="text" placeholder="Search…" style="width:100%;padding:8px 10px;border:1px solid #e5e7eb;border-radius:6px;outline:none"/></div><div id="cplist" style="max-height:50vh;overflow:auto;padding:6px 0"></div></div>'; document.body.appendChild(root); return root; }
+        async function loadRecords(){ try{ var v=''; try{ var m = await fetch(rootBase() + '/api/index.json').then(function(r){return r&&r.ok?r.json():null;}).catch(function(){return null;}); v=(m&&m.version)||''; }catch(_){} var res = await fetch(rootBase() + '/api/search-index.json' + (v?('?v='+encodeURIComponent(v)):'')).catch(function(){return null;}); var j = res && res.ok ? await res.json().catch(function(){return[];}) : []; return Array.isArray(j) ? j : (j && j.records) || []; } catch(_){ return []; } }
+        ready(async function(){ var host=document.querySelector('[data-canopy-command]'); if(!host) return; var cfg=parseProps(host)||{}; var maxResults = Number(cfg.maxResults||8)||8; var groupOrder = Array.isArray(cfg.groupOrder)?cfg.groupOrder:['work','page']; var overlay=createUI(); var input=overlay.querySelector('#cpq'); var list=overlay.querySelector('#cplist'); var btnClose=overlay.querySelector('#cpclose'); var records = await loadRecords(); function render(items){ list.innerHTML=''; if(!items.length){ list.innerHTML='<div style="padding:10px 12px;color:#6b7280">No results found.</div>'; return; } var groups=new Map(); items.forEach(function(r){ var t=String(r.type||'page'); if(!groups.has(t)) groups.set(t, []); groups.get(t).push(r); }); function gl(t){ if(t==='work') return 'Works'; if(t==='page') return 'Pages'; return t.charAt(0).toUpperCase()+t.slice(1);} var ordered=[].concat(groupOrder.filter(function(t){return groups.has(t);})).concat(Array.from(groups.keys()).filter(function(t){return groupOrder.indexOf(t)===-1;})); ordered.forEach(function(t){ var hdr=document.createElement('div'); hdr.textContent=gl(t); hdr.style.cssText='padding:6px 12px;font-weight:600;color:#374151'; list.appendChild(hdr); groups.get(t).forEach(function(r){ var it=document.createElement('div'); it.tabIndex=0; it.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer'; var thumb=(String(r.type||'')==='work' && r.thumbnail)?r.thumbnail:''; if(thumb){ var img=document.createElement('img'); img.src=thumb; img.alt=''; img.style.cssText='width:40px;height:40px;object-fit:cover;border-radius:4px'; it.appendChild(img);} var span=document.createElement('span'); span.textContent=r.title||r.href; it.appendChild(span); it.onmouseenter=function(){ it.style.background=\"#f3f4f6\"; }; it.onmouseleave=function(){ it.style.background=\"#fff\"; }; it.onclick=function(){ window.location.href = withBase(String(r.href||'')); }; list.appendChild(it); }); }); }
+          function filterAndShow(q){ var qq=norm(q); if(!qq){ list.innerHTML='<div style="padding:10px 12px;color:#6b7280">Type to search…</div>'; return; } var out=[]; for(var i=0;i<records.length;i++){ var r=records[i]; var t=String(r.title||''); if(t && norm(t).includes(qq)) out.push(r); if(out.length>=maxResults) break; } render(out); }
+          document.addEventListener('keydown', function(e){ var hk=String(cfg.hotkey||'mod+k').toLowerCase(); var isMod=hk.indexOf('mod+')!==-1; var key=hk.split('+').pop(); if ((isMod ? (e.metaKey||e.ctrlKey) : true) && e.key.toLowerCase()===String(key||'k')){ e.preventDefault(); overlay.style.display='flex'; input.focus(); filterAndShow(input.value||''); } if(e.key==='Escape' && overlay.style.display!=='none'){ e.preventDefault(); overlay.style.display='none'; }});
+          overlay.addEventListener('click', function(e){ if(e.target===overlay){ overlay.style.display='none'; }});
+          input.addEventListener('input', function(){ filterAndShow(input.value||''); });
+          if (btnClose) { btnClose.addEventListener('click', function(){ overlay.style.display='none'; }); }
+          var btn = document.querySelector('[data-canopy-command-trigger]'); if(btn){ btn.addEventListener('click', function(){ overlay.style.display='flex'; input.focus(); filterAndShow(input.value||''); }); }
+        });
+      })();
+      `;
+      await fsp.writeFile(cmdOut, fallback, 'utf8');
+      try { logLine(`✓ Wrote ${path.relative(process.cwd(), cmdOut)} (fallback)`, 'cyan'); } catch (_) {}
+    }
+  } catch (_) {}
   logLine("✓ Prepared client hydration runtimes\n", "cyan", { dim: true });
   // Copy assets from assets/ to site/
   await copyAssets();
