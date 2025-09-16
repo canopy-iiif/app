@@ -18,7 +18,7 @@ function fail(msg) {
   // 1) Root must be private
   if (!root.private) fail('Root package must be private to avoid publishing the app. Set "private": true.');
 
-  // 2) Only @canopy-iiif/lib and @canopy-iiif/ui should be publishable
+  // 2) Only @canopy-iiif/app should be publishable
   const pkgDir = path.resolve('packages');
   if (!fs.existsSync(pkgDir)) {
     console.log('[guard-publish] No packages/ directory; nothing to validate.');
@@ -32,7 +32,7 @@ function fail(msg) {
     const pkg = readJson(pkgPath);
     const name = pkg.name || '(unnamed)';
     const isPrivate = !!pkg.private;
-    const allowedPublic = new Set(['@canopy-iiif/lib', '@canopy-iiif/ui']);
+    const allowedPublic = new Set(['@canopy-iiif/app']);
     if (allowedPublic.has(name)) {
       if (isPrivate) fail(`${name} is marked private; unset "private" to allow publishing.`);
       continue;
@@ -40,6 +40,5 @@ function fail(msg) {
     // All other workspace packages must be private
     if (!isPrivate) fail(`Workspace ${name} must be private or removed before release.`);
   }
-  console.log('[guard-publish] OK: only @canopy-iiif/lib and @canopy-iiif/ui are publishable; root app is private.');
+  console.log('[guard-publish] OK: only @canopy-iiif/app is publishable; root app is private.');
 })();
-

@@ -1,11 +1,10 @@
 # Contributing Guide
 
-Thank you for contributing to Canopy. This repository is a monorepo with a private app and a publishable library package.
+Thank you for contributing to Canopy. This repository is a monorepo with a private root app and a single publishable workspace package that contains both the library and the UI.
 
 ## Repository Layout
 - `@canopy-iiif/app` (root): private app, workspace orchestrator, dev entry (`npm run dev`).
-- `packages/lib` → `@canopy-iiif/lib`: publishable library exposing `build()` and `dev()`.
-- `packages/ui` → `@canopy-iiif/ui`: React UI components (ESM), bundled for server import and client hydration.
+- `packages/app` → `@canopy-iiif/app`: publishable package exposing the library (`lib/`) and the UI (`ui/`).
 - `content/`: MDX pages and per-folder layouts (e.g., `content/_layout.mdx`, `content/works/_layout.mdx`).
 - `.cache/iiif/`: cached IIIF collection and manifests.
 
@@ -16,14 +15,14 @@ Thank you for contributing to Canopy. This repository is a monorepo with a priva
 
 Entrypoint
 - Both commands call `node app/scripts/canopy-build.mjs`.
-- In dev, it starts the UI watcher (`@canopy-iiif/ui`) and the library dev server.
+- In dev, it starts the UI watcher (`@canopy-iiif/app` → `ui:watch`) and the library dev server.
 - In build, it builds UI assets once and then builds the site with the library.
 
 ## Interactive Components: SSR-Safe Pattern
 
 Browser-only UI (e.g., components that touch `document` or depend on non-SSR libraries) must be SSR-safe:
 
-1) UI component (in `packages/ui`):
+1) UI component (in `packages/app/ui`):
    - Dynamically import the browser-only dependency inside `useEffect`.
    - On the server, render a placeholder `<div data-canopy-*>` containing a JSON `<script type="application/json">` with props.
 
@@ -46,14 +45,14 @@ Browser-only UI (e.g., components that touch `document` or depend on non-SSR lib
    }
    ```
 
-2) Hydration runtime (in `packages/lib`):
+2) Hydration runtime (in `packages/app/lib`):
    - Bundle a small browser script with esbuild that finds placeholders and mounts the component.
    - Use React globals injected by `site/scripts/react-globals.js` (do not bundle React into the runtime).
    - Mark heavy libs not needed by that runtime as `external` to keep bundles slim (e.g., `@samvera/clover-iiif/*` for search).
 
 Existing examples:
- - Viewer: placeholder from `@canopy-iiif/ui/iiif/Viewer`, hydration in `packages/lib/mdx.js` → `site/canopy-viewer.js`.
- - Search: MDX placeholders (`SearchForm`, `SearchSummary`, `SearchResults`, `SearchTotal`) from `@canopy-iiif/ui/search/*`, runtime in `packages/lib/search.js` (shared client store) → `site/search.js`.
+ - Viewer: placeholder from `@canopy-iiif/app/ui/iiif/Viewer`, hydration in `packages/app/lib/mdx.js` → `site/canopy-viewer.js`.
+ - Search: MDX placeholders (`SearchForm`, `SearchSummary`, `SearchResults`, `SearchTotal`) from `@canopy-iiif/app/ui/search/*`, runtime in `packages/app/lib/search.js` (shared client store) → `site/search.js`.
 
 Tips:
  - Add a detection to inject React globals when a page contains your placeholder.
@@ -66,7 +65,7 @@ Tips:
   - Minor: `npm run version:packages -- --minor`
   - Patch: `npm run version:packages`
   - Major: `npm run version:packages -- --major`
-- Scope: `@canopy-iiif/lib` and `@canopy-iiif/ui` version together; the root app stays private and auto‑syncs its version.
+- Scope: `@canopy-iiif/app` versions independently; the root app stays private and auto‑syncs its version.
 - Don’t hand‑edit versions or changelogs; the script and Changesets handle it.
 
 ## Release Flow
@@ -75,7 +74,7 @@ Tips:
 - Run the version bump command and commit:
   - Commit updated `package.json` and `CHANGELOG.md` files.
 - Merge to `main`. The Release workflow:
-  - Publishes `@canopy-iiif/lib` and `@canopy-iiif/ui` to npm.
+  - Publishes `@canopy-iiif/app` to npm.
   - Keeps the root app private (guarded by a pre‑publish check).
   - If a publish happened, prepares and pushes a cleaned template repository.
 

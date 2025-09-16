@@ -1,4 +1,4 @@
-// src/Fallback.jsx
+// ui/src/Fallback.jsx
 import React from "react";
 function Fallback({ name, ...props }) {
   const style = {
@@ -12,13 +12,13 @@ function Fallback({ name, ...props }) {
   return /* @__PURE__ */ React.createElement("div", { style, "data-fallback-component": name || "Unknown" }, /* @__PURE__ */ React.createElement("strong", null, name || "Unknown component"), " not available in UI.");
 }
 
-// src/HelloWorld.jsx
+// ui/src/HelloWorld.jsx
 import React2 from "react";
 var HelloWorld = () => {
   return /* @__PURE__ */ React2.createElement("div", null, "Hello, World!");
 };
 
-// src/layout/Card.jsx
+// ui/src/layout/Card.jsx
 import React3, { useEffect, useRef, useState } from "react";
 function Card({
   href,
@@ -118,7 +118,7 @@ function Card({
   );
 }
 
-// src/layout/Grid.jsx
+// ui/src/layout/Grid.jsx
 import Masonry from "react-masonry-css";
 import React4 from "react";
 function GridItem({ children, className = "", style = {}, ...rest }) {
@@ -175,7 +175,7 @@ function Grid({
   ));
 }
 
-// src/iiif/Viewer.jsx
+// ui/src/iiif/Viewer.jsx
 import React5, { useEffect as useEffect2, useState as useState2 } from "react";
 var DEFAULT_VIEWER_OPTIONS = {
   showDownload: false,
@@ -243,7 +243,7 @@ var Viewer = (props) => {
   return /* @__PURE__ */ React5.createElement(CloverViewer, { ...props, options: mergedOptions });
 };
 
-// src/iiif/Slider.jsx
+// ui/src/iiif/Slider.jsx
 import React6, { useEffect as useEffect3, useState as useState3 } from "react";
 var Slider = (props) => {
   const [CloverSlider, setCloverSlider] = useState3(null);
@@ -281,7 +281,7 @@ var Slider = (props) => {
   return /* @__PURE__ */ React6.createElement(CloverSlider, { ...props });
 };
 
-// src/iiif/MdxRelatedItems.jsx
+// ui/src/iiif/MdxRelatedItems.jsx
 import React7 from "react";
 function MdxRelatedItems(props) {
   let json = "{}";
@@ -293,7 +293,7 @@ function MdxRelatedItems(props) {
   return /* @__PURE__ */ React7.createElement("div", { "data-canopy-related-items": "1", className: "not-prose" }, /* @__PURE__ */ React7.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
 }
 
-// src/search/MdxSearchForm.jsx
+// ui/src/search/MdxSearchForm.jsx
 import React8 from "react";
 function MdxSearchForm(props) {
   let json = "{}";
@@ -305,7 +305,7 @@ function MdxSearchForm(props) {
   return /* @__PURE__ */ React8.createElement("div", { "data-canopy-search-form": "1" }, /* @__PURE__ */ React8.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
 }
 
-// src/search/MdxSearchResults.jsx
+// ui/src/search/MdxSearchResults.jsx
 import React9 from "react";
 function MdxSearchResults(props) {
   let json = "{}";
@@ -317,7 +317,7 @@ function MdxSearchResults(props) {
   return /* @__PURE__ */ React9.createElement("div", { "data-canopy-search-results": "1" }, /* @__PURE__ */ React9.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
 }
 
-// src/search/SearchSummary.jsx
+// ui/src/search/SearchSummary.jsx
 import React10 from "react";
 function SearchSummary(props) {
   let json = "{}";
@@ -329,7 +329,7 @@ function SearchSummary(props) {
   return /* @__PURE__ */ React10.createElement("div", { "data-canopy-search-summary": "1" }, /* @__PURE__ */ React10.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
 }
 
-// src/search/SearchTotal.jsx
+// ui/src/search/SearchTotal.jsx
 import React11 from "react";
 function SearchTotal(props) {
   let json = "{}";
@@ -341,7 +341,7 @@ function SearchTotal(props) {
   return /* @__PURE__ */ React11.createElement("div", { "data-canopy-search-total": "1" }, /* @__PURE__ */ React11.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: json } }));
 }
 
-// src/search/SearchForm.jsx
+// ui/src/search/SearchForm.jsx
 import React12 from "react";
 function SearchForm({ query, onQueryChange, type = "all", onTypeChange, types = [], counts = {} }) {
   const orderedTypes = Array.isArray(types) ? types : [];
@@ -378,7 +378,7 @@ function SearchForm({ query, onQueryChange, type = "all", onTypeChange, types = 
   })));
 }
 
-// src/search/SearchResults.jsx
+// ui/src/search/SearchResults.jsx
 import React13 from "react";
 function SearchResults({
   results = [],
@@ -438,7 +438,7 @@ function SearchResults({
   })));
 }
 
-// src/search/useSearch.js
+// ui/src/search/useSearch.js
 import { useEffect as useEffect4, useMemo, useRef as useRef2, useState as useState4 } from "react";
 function useSearch(query, type) {
   const [records, setRecords] = useState4([]);
@@ -507,7 +507,7 @@ function useSearch(query, type) {
   return { results, total: records.length || 0, loading, types };
 }
 
-// src/search/Search.jsx
+// ui/src/search/Search.jsx
 import React14 from "react";
 function Search(props) {
   let json = "{}";
@@ -525,7 +525,7 @@ function Search(props) {
   ));
 }
 
-// src/command/MdxCommandPalette.jsx
+// ui/src/command/MdxCommandPalette.jsx
 import React15 from "react";
 function MdxCommandPalette(props = {}) {
   const {
@@ -550,7 +550,7 @@ function MdxCommandPalette(props = {}) {
   ), /* @__PURE__ */ React15.createElement("script", { type: "application/json", dangerouslySetInnerHTML: { __html: JSON.stringify(data) } }));
 }
 
-// src/command/CommandApp.jsx
+// ui/src/command/CommandApp.jsx
 import React16, { useEffect as useEffect5, useMemo as useMemo2, useState as useState5 } from "react";
 import { Command } from "cmdk";
 function normalize(s) {
@@ -689,4 +689,4 @@ export {
   Viewer,
   useSearch
 };
-//# sourceMappingURL=index.js.map
+//# sourceMappingURL=index.mjs.map

@@ -49,7 +49,7 @@ async function loadUiComponents() {
   if (UI_COMPONENTS) return UI_COMPONENTS;
   try {
     // Use server-safe UI subset to avoid importing browser-only components
-    const mod = await import("@canopy-iiif/ui/server");
+    const mod = await import("@canopy-iiif/app/ui/server");
     UI_COMPONENTS = mod || {};
   } catch (_) {
     UI_COMPONENTS = {};

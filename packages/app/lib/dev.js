@@ -182,7 +182,7 @@ function watchAssetsPerDir() {
   };
 }
 
-// Watch @canopy-iiif/ui dist output to enable live reload for UI edits during dev.
+// Watch @canopy-iiif/app/ui dist output to enable live reload for UI edits during dev.
 // When UI dist changes, rebuild the search runtime bundle and trigger a browser reload.
 async function rebuildSearchBundle() {
   try {
@@ -495,7 +495,7 @@ async function dev() {
         const genDir = path.join(CACHE_DIR, 'tailwind');
         ensureDirSync(genDir);
         const genCfg = path.join(genDir, 'tailwind.config.js');
-        const cfg = `module.exports = {\n  presets: [require('@canopy-iiif/ui/canopy-iiif-preset')],\n  content: [\n    './content/**/*.{mdx,html}',\n    './site/**/*.html',\n    './site/**/*.js',\n    './packages/ui/**/*.{js,jsx,ts,tsx}',\n    './packages/lib/components/**/*.{js,jsx}',\n  ],\n  theme: { extend: {} },\n  plugins: [require('@canopy-iiif/ui/canopy-iiif-plugin')],\n};\n`;
+        const cfg = `module.exports = {\n  presets: [require('@canopy-iiif/app/ui/canopy-iiif-preset')],\n  content: [\n    './content/**/*.{mdx,html}',\n    './site/**/*.html',\n    './site/**/*.js',\n    './packages/app/ui/**/*.{js,jsx,ts,tsx}',\n    './packages/app/lib/components/**/*.{js,jsx}',\n  ],\n  theme: { extend: {} },\n  plugins: [require('@canopy-iiif/app/ui/canopy-iiif-plugin')],\n};\n`;
         fs.writeFileSync(genCfg, cfg, 'utf8');
         configPath = genCfg;
       } catch (_) { configPath = null; }
@@ -710,7 +710,7 @@ async function dev() {
   }
   // Watch UI dist for live-reload and targeted search runtime rebuilds
   if (fs.existsSync(UI_DIST_DIR)) {
-    console.log('[Watching]', prettyPath(UI_DIST_DIR), '(@canopy-iiif/ui dist)');
+    console.log('[Watching]', prettyPath(UI_DIST_DIR), '(@canopy-iiif/app/ui dist)');
     const urw = tryRecursiveWatchUiDist();
     if (!urw) watchUiDistPerDir();
   }

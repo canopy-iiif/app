@@ -2,12 +2,12 @@
 // To disable component styles, remove the plugin line.
 // To disable Canopy tokens entirely, remove the preset line.
 module.exports = {
-  presets: [require("@canopy-iiif/ui/canopy-iiif-preset")],
+  presets: [require("@canopy-iiif/app/ui/canopy-iiif-preset")],
   content: [
     "./content/**/*.{mdx,html}",
     "./site/**/*.html",
-    "./packages/ui/**/*.{js,jsx,ts,tsx}",
-    "./packages/lib/components/**/*.{js,jsx}",
+    "./packages/app/ui/**/*.{js,jsx,ts,tsx}",
+    "./packages/app/lib/components/**/*.{js,jsx}",
   ],
   theme: {
     extend: {
@@ -34,7 +34,7 @@ module.exports = {
   corePlugins: {
     // preflight: false, // uncomment to disable base reset
   },
-  plugins: [require("@canopy-iiif/ui/canopy-iiif-plugin")],
+  plugins: [require("@canopy-iiif/app/ui/canopy-iiif-plugin")],
   safelist: [
     // Add dynamic classes here if needed
   ],

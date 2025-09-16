@@ -19,8 +19,7 @@ function writeChangeset(bump) {
   const file = path.join(dir, name);
   const header = [
     '---',
-    "'@canopy-iiif/lib': " + bump,
-    "'@canopy-iiif/ui': " + bump,
+    "'@canopy-iiif/app': " + bump,
     '---',
     '',
     `chore: version bump (${bump}) via helper script.`,
@@ -45,16 +44,11 @@ function run(cmd, args, opts) {
 
   // Keep root app version in sync with fixed workspace packages
   try {
-    const libPkgPath = path.resolve('packages/lib/package.json');
-    const uiPkgPath = path.resolve('packages/ui/package.json');
-    const libVersion = fs.existsSync(libPkgPath)
-      ? JSON.parse(fs.readFileSync(libPkgPath, 'utf8')).version
+    const appPkgPath = path.resolve('packages/app/package.json');
+    const newVersion = fs.existsSync(appPkgPath)
+      ? JSON.parse(fs.readFileSync(appPkgPath, 'utf8')).version
       : null;
-    const uiVersion = fs.existsSync(uiPkgPath)
-      ? JSON.parse(fs.readFileSync(uiPkgPath, 'utf8')).version
-      : null;
-    const newVersion = libVersion || uiVersion;
-    if (!newVersion) throw new Error('Could not determine new version from lib/ui');
+    if (!newVersion) throw new Error('Could not determine new version from app');
 
     const rootPkgPath = path.resolve('package.json');
     const rootPkg = JSON.parse(fs.readFileSync(rootPkgPath, 'utf8'));

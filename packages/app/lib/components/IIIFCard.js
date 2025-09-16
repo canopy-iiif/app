@@ -67,7 +67,7 @@ function IIIFCard(props) {
   let Card = null;
   try {
     // Load the UI Card component for consistent markup/styles
-    const ui = require('@canopy-iiif/ui');
+    const ui = require('@canopy-iiif/app/ui');
     Card = ui && (ui.Card || ui.default && ui.default.Card) ? (ui.Card || ui.default.Card) : null;
   } catch (_) { Card = null; }
 
@@ -100,4 +100,3 @@ function IIIFCard(props) {
 }
 
 module.exports = IIIFCard;
-

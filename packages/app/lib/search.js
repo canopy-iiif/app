@@ -6,7 +6,7 @@ const { ensureDirSync, OUT_DIR, htmlShell, fsp } = require('./common');
 
 const FALLBACK_SEARCH_APP = `import React, { useEffect, useMemo, useSyncExternalStore, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { SearchFormUI, SearchResultsUI } from '@canopy-iiif/ui';
+import { SearchFormUI, SearchResultsUI } from '@canopy-iiif/app/ui';
 
 function hasIDB(){ try { return typeof indexedDB !== 'undefined'; } catch (_) { return false; } }
 function idbOpen(){ return new Promise((resolve)=>{ if(!hasIDB()) return resolve(null); try{ const req = indexedDB.open('canopy-search',1); req.onupgradeneeded=()=>{ const db=req.result; if(!db.objectStoreNames.contains('indexes')) db.createObjectStore('indexes',{keyPath:'version'}); }; req.onsuccess=()=>resolve(req.result); req.onerror=()=>resolve(null);}catch(_){ resolve(null);} }); }

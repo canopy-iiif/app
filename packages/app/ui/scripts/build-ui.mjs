@@ -27,7 +27,7 @@ async function run() {
   try {
     esbuild = await import('esbuild');
   } catch (e) {
-    console.error('[ui] esbuild is not installed. Run `npm i -w @canopy-iiif/ui`');
+    console.error('[ui] esbuild is not installed. Run `npm i -w @canopy-iiif/app`');
     process.exit(1);
   }
 
@@ -45,6 +45,7 @@ async function run() {
     target: ['es2018'],
     external: ['react', 'react-dom', 'react-dom/client', 'react-masonry-css', 'flexsearch', 'cmdk', '@samvera/clover-iiif/*'],
     logLevel: 'info',
+    outExtension: { '.js': '.mjs' },
     metafile: false
   }).then(() => null).catch((e) => {
     console.error('[ui] build failed:', e?.message || e);
@@ -74,6 +75,7 @@ async function run() {
     mainFields: ['module', 'main'],
     conditions: ['module'],
     logLevel: 'info',
+    outExtension: { '.js': '.mjs' },
   }).catch((e) => {
     console.error('[ui] server build failed:', e?.message || e);
     process.exit(1);
@@ -93,7 +95,8 @@ async function run() {
       sourcemap: true,
       target: ['es2018'],
       external: ['react', 'react-dom', 'react-dom/client', 'react-masonry-css', 'flexsearch', 'cmdk', '@samvera/clover-iiif/*'],
-      logLevel: 'info'
+      logLevel: 'info',
+      outExtension: { '.js': '.mjs' }
     });
     await context.watch();
     console.log('[ui] watching for changes...');
@@ -120,7 +123,8 @@ async function run() {
       ],
       mainFields: ['module', 'main'],
       conditions: ['module'],
-      logLevel: 'info'
+      logLevel: 'info',
+      outExtension: { '.js': '.mjs' }
     });
     await serverCtx.watch();
 

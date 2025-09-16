@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { CommandPaletteApp } from '@canopy-iiif/ui';
+import { CommandPaletteApp } from '@canopy-iiif/app/ui';
 
 function ready(fn) {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn, { once: true });
@@ -42,4 +42,3 @@ ready(async function () {
   const onSelect = (href) => { try { window.location.href = withBase(String(href || '')); } catch {} };
   root.render(React.createElement(CommandPaletteApp, { records, loading, config: cfg, onSelect }));
 });
-

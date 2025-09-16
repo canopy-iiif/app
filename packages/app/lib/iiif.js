@@ -930,7 +930,7 @@ async function buildIiifCollectionPages(CONFIG) {
           // Provide MDX components mapping so tags like <Viewer/> and <HelloWorld/> resolve
           let components = {};
           try {
-            components = await import("@canopy-iiif/ui");
+            components = await import("@canopy-iiif/app/ui");
           } catch (_) {
             components = {};
           }

@@ -9,9 +9,8 @@ This repository is a minimal Node.js project. Use this guide to add code and gro
 - `content/`: MDX pages and section layouts
 - `assets/`: static files copied into `site/`
 - `packages/`: workspaces
-  - `packages/lib` (`@canopy-iiif/lib`): builder (CommonJS) exposing `build()` and `dev()`
-  - `packages/ui` (`@canopy-iiif/ui`): UI runtime assets (bundled by esbuild)
-  - `packages/helpers`: maintenance scripts
+  - `packages/app` (`@canopy-iiif/app`): combined public package exposing the builder (CommonJS `lib/` with `build()` and `dev()`) and the UI runtime assets (`ui/` bundled by esbuild)
+  - `packages/helpers`: private maintenance scripts (release guards, build checks)
 - Root: `package.json`, `.gitignore`, `.github/workflows/*`, docs
 
 ## Build, Test, and Development Commands
@@ -58,8 +57,8 @@ Recommended scripts in `package.json`:
 
 ## Interactive Components (SSR + Hydration)
 
-- Components that depend on the browser must be SSR-safe. In `@canopy-iiif/ui`, render a placeholder in MDX on the server and dynamically import the real implementation in the browser. Example: `Viewer` uses a `data-canopy-viewer` placeholder.
-- In `@canopy-iiif/lib`, bundle small hydration runtimes that find placeholders and mount React components using React globals (`site/scripts/react-globals.js`). Avoid bundling React into these runtimes.
+- Components that depend on the browser must be SSR-safe. In `@canopy-iiif/app/ui`, render a placeholder in MDX on the server and dynamically import the real implementation in the browser. Example: `Viewer` uses a `data-canopy-viewer` placeholder.
+- In `@canopy-iiif/app` (lib), bundle small hydration runtimes that find placeholders and mount React components using React globals (`site/scripts/react-globals.js`). Avoid bundling React into these runtimes.
 - Shims: When bundling with esbuild, map `react`, `react-dom`, and `react-dom/client` to shims that read from `window.React` and `window.ReactDOMClient`. Mark heavy libs as `external` where they’re not needed (e.g., exclude `@samvera/clover-iiif/*` from the search runtime).
 
 Available components:
@@ -74,21 +73,21 @@ Pages that include these placeholders automatically receive the required scripts
 
 ### UI Build & SSR Split
 
-- UI has two entry points:
-  - `@canopy-iiif/ui` (browser): built as ESM with `platform: neutral`. Externals: `react`, `react-dom`, `react-dom/client`, `react-masonry-css`, `flexsearch`, `@samvera/clover-iiif/*`.
-  - `@canopy-iiif/ui/server` (SSR): built for Node and only exports SSR‑safe components (MDX placeholders, `Viewer`, etc.).
-- The builder (`packages/lib/mdx.js`) imports `@canopy-iiif/ui/server` during MDX SSR to avoid pulling browser‑only code on the server.
+- UI has two entry points (exported from the app package):
+  - `@canopy-iiif/app/ui` (browser): built as ESM with `platform: neutral`. Externals: `react`, `react-dom`, `react-dom/client`, `react-masonry-css`, `flexsearch`, `@samvera/clover-iiif/*`.
+  - `@canopy-iiif/app/ui/server` (SSR): built for Node and only exports SSR‑safe components (MDX placeholders, `Viewer`, etc.).
+- The builder (`packages/app/lib/mdx.js`) imports `@canopy-iiif/app/ui/server` during MDX SSR to avoid pulling browser‑only code on the server.
 - The search runtime bundles the client UI and injects React/FlexSearch globals shims so externals resolve from `window.*` in the browser.
 
 ### Search Results Grid
 
 - `SearchResults` accepts `layout` prop: `'grid'` (default) or `'list'`.
-- `'grid'` uses a new `Grid` component (Masonry) from `@canopy-iiif/ui`, implemented with `react-masonry-css` and scoped CSS.
+- `'grid'` uses a new `Grid` component (Masonry) from `@canopy-iiif/app/ui`, implemented with `react-masonry-css` and scoped CSS.
 - Keep `react-masonry-css` external in the UI build so the search runtime can bundle/transform it alongside the React shims, preventing dynamic `require('react')` at runtime.
 
 **Troubleshooting**
 - Dynamic require error: if the browser console shows “Dynamic require of 'react' is not supported”, ensure the UI browser build marks `react`, `react-dom`, `react-dom/client`, `react-masonry-css`, and `flexsearch` as externals. The search runtime bundles client code and shims these to browser globals.
-- SSR import safety: the server must import `@canopy-iiif/ui/server` (not the browser entry) when rendering MDX to avoid loading browser‑only components during SSR.
+- SSR import safety: the server must import `@canopy-iiif/app/ui/server` (not the browser entry) when rendering MDX to avoid loading browser‑only components during SSR.
 - Masonry not creating columns: confirm the rendered HTML contains Masonry’s column wrappers (e.g., `.canopy-grid_column`). If missing, the Masonry module didn’t load; check externals and that React globals are injected on pages that need hydration.
 
 ## Search Framework (MDX-driven)
@@ -104,7 +103,7 @@ Goal: Allow authors to fully compose the search page via MDX, while the builder 
 - Composition: Authors place these placeholders anywhere in their MDX; the builder does not impose layout. If no layout exists, a minimal fallback page is generated.
 
 - Build steps:
-  - `writeSearchIndex(records)`: writes `site/search-index.json`. Currently fed by IIIF build (`packages/lib/iiif.js`) and contains items `{ id, title, href }` for each Manifest page.
+  - `writeSearchIndex(records)`: writes `site/search-index.json`. Currently fed by IIIF build (`packages/app/lib/iiif.js`) and contains items `{ id, title, href }` for each Manifest page.
 - `ensureSearchRuntime()`: bundles `site/search.js` (React app) with FlexSearch; it loads the JSON, indexes titles, and renders the UI. It mounts into `[data-canopy-search]` (from `<Search />`) or `#search-root` if present.
   - `buildSearchPage()`: renders `content/search/_layout.mdx` (if present) with the `search` prop and wraps it with the App (`content/_app.mdx`) and MDXProvider.
 

@@ -11,4 +11,4 @@ site/
 .pnpm-store/
 
 # Do not commit compiled UI stylesheet; built in dev/publish
-packages/ui/styles/index.css
+packages/app/ui/styles/index.css

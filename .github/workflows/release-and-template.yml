@@ -57,16 +57,14 @@ jobs:
           node-version: 20
           registry-url: https://registry.npmjs.org
 
-      - name: Resolve published versions
+      - name: Resolve published version
         id: ver
         run: |
-          echo "LIB=$(npm view @canopy-iiif/lib version || echo '')" >> $GITHUB_OUTPUT
-          echo "UI=$(npm view @canopy-iiif/ui version || echo '')" >> $GITHUB_OUTPUT
+          echo "APP=$(npm view @canopy-iiif/app version || echo '')" >> $GITHUB_OUTPUT
 
       - name: Prepare clean template
         env:
-          LIB_VERSION: ${{ steps.ver.outputs.LIB }}
-          UI_VERSION: ${{ steps.ver.outputs.UI }}
+          APP_VERSION: ${{ steps.ver.outputs.APP }}
         run: |
           rm -rf dist-template
           mkdir -p dist-template
@@ -82,7 +80,7 @@ jobs:
             --exclude ".github/workflows/release-and-template.yml" \
             ./ dist-template/
 
-          node -e "const fs=require('fs');const p='dist-template/package.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));const vLib=process.env.LIB_VERSION||'';const vUi=process.env.UI_VERSION||'';if(j.dependencies){if(j.dependencies['@canopy-iiif/lib']) j.dependencies['@canopy-iiif/lib']=vLib?('^'+vLib):'*'; if(j.dependencies['@canopy-iiif/ui']) j.dependencies['@canopy-iiif/ui']=vUi?('^'+vUi):'*'; for(const k of Object.keys(j.dependencies)){ if(j.dependencies[k]==='workspace:*') j.dependencies[k]='*'; }} if(j.workspaces) delete j.workspaces; j.scripts={ build:'node app/scripts/canopy-build.mjs', dev:'node app/scripts/canopy-build.mjs' }; j.devDependencies=j.devDependencies||{}; delete j.devDependencies['@changesets/cli']; j.devDependencies.esbuild=j.devDependencies.esbuild||'^0.21.4'; j.devDependencies.tailwindcss=j.devDependencies.tailwindcss||'^3.4.10'; j.devDependencies['@tailwindcss/typography']=j.devDependencies['@tailwindcss/typography']||'^0.5.16'; fs.writeFileSync(p, JSON.stringify(j,null,2));"
+          node -e "const fs=require('fs');const p='dist-template/package.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));const vApp=process.env.APP_VERSION||'';if(j.dependencies){if(j.dependencies['@canopy-iiif/app']) j.dependencies['@canopy-iiif/app']=vApp?('^'+vApp):'*'; for(const k of Object.keys(j.dependencies)){ if(j.dependencies[k]==='workspace:*') j.dependencies[k]='*'; }} if(j.workspaces) delete j.workspaces; j.scripts={ build:'node app/scripts/canopy-build.mjs', dev:'node app/scripts/canopy-build.mjs' }; j.devDependencies=j.devDependencies||{}; delete j.devDependencies['@changesets/cli']; j.devDependencies.esbuild=j.devDependencies.esbuild||'^0.21.4'; j.devDependencies.tailwindcss=j.devDependencies.tailwindcss||'^3.4.10'; j.devDependencies['@tailwindcss/typography']=j.devDependencies['@tailwindcss/typography']||'^0.5.16'; fs.writeFileSync(p, JSON.stringify(j,null,2));"
 
           # Update Pages workflow verify step to use app entry verification
           node -e "const fs=require('fs'),p='dist-template/.github/workflows/deploy-pages.yml'; if(fs.existsSync(p)){ let y=fs.readFileSync(p,'utf8'); y=y.replace(/node packages\\/helpers\\/verify-build\\.js/g,'node app/scripts/canopy-build.mjs --verify'); fs.writeFileSync(p,y); }"
@@ -96,19 +94,19 @@ jobs:
           const cssp = path.join(stylesDir,'index.css');
           fs.mkdirSync(stylesDir,{recursive:true});
           fs.writeFileSync(tp, `// Default Canopy UI enabled. Remove lines below to disable.\nmodule.exports = {
-            presets: [require('@canopy-iiif/ui/canopy-iiif-preset')],
+            presets: [require('@canopy-iiif/app/ui/canopy-iiif-preset')],
             content: [
               './content/**/*.{mdx,html}',
               './site/**/*.html',
               './site/**/*.js',
-              './packages/ui/**/*.{js,jsx,ts,tsx}',
-              './packages/lib/components/**/*.{js,jsx}',
+              './packages/app/ui/**/*.{js,jsx,ts,tsx}',
+              './packages/app/lib/components/**/*.{js,jsx}',
             ],
             theme: { extend: {} },
             corePlugins: {
               // preflight: false, // uncomment to disable base reset
             },
-            plugins: [require('@canopy-iiif/ui/canopy-iiif-plugin')],
+            plugins: [require('@canopy-iiif/app/ui/canopy-iiif-plugin')],
             safelist: [
               // Add dynamic classes here if needed
             ],

@@ -3,8 +3,8 @@
  *
  * Responsibilities
  * - Provide a single, stable command for both local development and production builds.
- * - Orchestrate the UI package (@canopy-iiif/ui) to build or watch assets.
- * - Delegate site building and dev server to the library (@canopy-iiif/lib).
+ * - Orchestrate the UI build in the combined package (@canopy-iiif/app) to build or watch assets.
+ * - Delegate site building and dev server to the library in (@canopy-iiif/app).
  * - Handle errors and shutdown cleanly so contributors have a smooth experience.
  *
  * Usage
@@ -17,7 +17,7 @@
  *
  * Note: This file is intended to be long-lived and stable. No changes should be made
  * without careful consideration. This especially includes references to
- * the core library (@canopy-iiif/lib) and UI components (@canopy-iiif/ui).
+ * the combined package (@canopy-iiif/app) providing both the library and UI.
  */
 
 import { createRequire } from "node:module";
@@ -89,9 +89,9 @@ function start(cmd, args, opts = {}) {
  */
 async function prepareUi(mode) {
   if (mode === "build") {
-    log("Building UI assets (@canopy-iiif/ui)");
+    log("Building UI assets (@canopy-iiif/app/ui)");
     try {
-      await runOnce("npm", ["-w", "@canopy-iiif/ui", "run", "build"]);
+      await runOnce("npm", ["-w", "@canopy-iiif/app", "run", "ui:build"]);
       log("UI assets built");
     } catch (e) {
       warn(`UI build skipped: ${e.message || e}`);
@@ -101,15 +101,15 @@ async function prepareUi(mode) {
 
   // Dev mode: do a one-off UI build first so its logs/render appear before site build
   try {
-    log("Prebuilding UI assets (@canopy-iiif/ui)");
-    await runOnce("npm", ["-w", "@canopy-iiif/ui", "run", "build"]);
+    log("Prebuilding UI assets (@canopy-iiif/app/ui)");
+    await runOnce("npm", ["-w", "@canopy-iiif/app", "run", "ui:build"]);
   } catch (e) {
     warn(`UI prebuild skipped: ${e.message || e}`);
   }
   // Start the UI watcher in the background
-  log("Starting UI watcher (@canopy-iiif/ui)");
+  log("Starting UI watcher (@canopy-iiif/app/ui)");
   try {
-    uiWatcherChild = start("npm", ["-w", "@canopy-iiif/ui", "run", "watch"]);
+    uiWatcherChild = start("npm", ["-w", "@canopy-iiif/app", "run", "ui:watch"]);
   } catch (e) {
     warn(`UI watch skipped: ${e.message || e}`);
     uiWatcherChild = null;
@@ -124,15 +124,15 @@ function loadLibraryApi() {
   const requireCjs = createRequire(import.meta.url);
   let lib;
   try {
-    lib = requireCjs("@canopy-iiif/lib");
+    lib = requireCjs("@canopy-iiif/app");
   } catch (e) {
     // Fallback: load local workspace directly (dev convenience)
     try {
-      const localPath = new URL('../../packages/lib/index.js', import.meta.url).pathname;
+      const localPath = new URL('../../packages/app/lib/index.js', import.meta.url).pathname;
       lib = requireCjs(localPath);
     } catch (e2) {
       const hint = [
-        "Unable to load @canopy-iiif/lib.",
+        "Unable to load @canopy-iiif/app.",
         "Ensure dependencies are installed (npm install)",
         "and that peer deps like 'react' are present.",
       ].join(" ");
@@ -151,7 +151,7 @@ function loadLibraryApi() {
     (typeof api.build !== "function" && typeof api.dev !== "function")
   ) {
     throw new TypeError(
-      "Invalid @canopy-iiif/lib export: expected functions build() and/or dev()."
+      "Invalid @canopy-iiif/app export: expected functions build() and/or dev()."
     );
   }
   return api;

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useSyncExternalStore, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { SearchFormUI, SearchResultsUI } from '@canopy-iiif/ui';
+import { SearchFormUI, SearchResultsUI } from '@canopy-iiif/app/ui';
 
 // Lightweight IndexedDB utilities (no deps) with graceful fallback
 function hasIDB() {
