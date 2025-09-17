@@ -1,8 +1,10 @@
 name: Deploy to GitHub Pages
 
 on:
-  push:
-    branches: [main]
+  # Deploy only after Tests workflow passes on main; allow manual dispatch
+  workflow_run:
+    workflows: ["Tests"]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -16,10 +18,16 @@ concurrency:
 
 jobs:
   build:
+    # If triggered by workflow_run, require success on main; always allow manual dispatch
+    if: >-
+      ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # When triggered by workflow_run, check out the tested commit
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
