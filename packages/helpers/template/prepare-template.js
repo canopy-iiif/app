@@ -51,7 +51,7 @@ function rewritePackageJson(appVersion) {
   delete j.devDependencies.husky;
   j.devDependencies.esbuild = j.devDependencies.esbuild || '^0.21.4';
   j.devDependencies.tailwindcss = j.devDependencies.tailwindcss || '^3.4.10';
-  j.devDependencies['@tailwindcss/typography'] = j.devDependencies['@tailwindcss/typography'] || '^0.5.16';
+  // No longer include @tailwindcss/typography by default
   fs.writeFileSync(p, JSON.stringify(j, null, 2));
 }
 
@@ -106,4 +106,3 @@ function main() {
 if (require.main === module) {
   try { main(); } catch (e) { console.error(e); process.exit(1); }
 }
-
