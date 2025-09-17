@@ -25,7 +25,7 @@ let iiifRecordsCache = [];
 let pageRecords = [];
 
 async function build(options = {}) {
-  const skipIiif = !!options?.skipIiif;
+  const skipIiif = !!(options?.skipIiif || process.env.CANOPY_SKIP_IIIF === '1' || process.env.CANOPY_SKIP_IIIF === 'true');
   if (!fs.existsSync(CONTENT_DIR)) {
     console.error("No content directory found at", CONTENT_DIR);
     process.exit(1);

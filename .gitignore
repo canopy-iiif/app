@@ -12,3 +12,8 @@ site/
 
 # Do not commit compiled UI stylesheet; built in dev/publish
 packages/app/ui/styles/index.css
+
+# Test outputs
+coverage/
+playwright-report/
+test-results/
