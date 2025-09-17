@@ -72,15 +72,18 @@ jobs:
             --exclude ".git" \
             --exclude "node_modules" \
             --exclude "AGENTS.md" \
+            --exclude "tests" \
+            --exclude ".husky" \
             --exclude "packages" \
             --exclude ".cache" \
             --exclude ".changeset" \
             --exclude ".github/workflows/template.yml" \
             --exclude ".github/workflows/retarget-pr-base.yml" \
             --exclude ".github/workflows/release-and-template.yml" \
+            --exclude ".github/workflows/test.yml" \
             ./ dist-template/
 
-          node -e "const fs=require('fs');const p='dist-template/package.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));const vApp=process.env.APP_VERSION||'';if(j.dependencies){if(j.dependencies['@canopy-iiif/app']) j.dependencies['@canopy-iiif/app']=vApp?('^'+vApp):'*'; for(const k of Object.keys(j.dependencies)){ if(j.dependencies[k]==='workspace:*') j.dependencies[k]='*'; }} if(j.workspaces) delete j.workspaces; j.scripts={ build:'node app/scripts/canopy-build.mjs', dev:'node app/scripts/canopy-build.mjs' }; j.devDependencies=j.devDependencies||{}; delete j.devDependencies['@changesets/cli']; j.devDependencies.esbuild=j.devDependencies.esbuild||'^0.21.4'; j.devDependencies.tailwindcss=j.devDependencies.tailwindcss||'^3.4.10'; j.devDependencies['@tailwindcss/typography']=j.devDependencies['@tailwindcss/typography']||'^0.5.16'; fs.writeFileSync(p, JSON.stringify(j,null,2));"
+          node -e "const fs=require('fs');const p='dist-template/package.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));const vApp=process.env.APP_VERSION||'';if(j.dependencies){if(j.dependencies['@canopy-iiif/app']) j.dependencies['@canopy-iiif/app']=vApp?('^'+vApp):'*'; for(const k of Object.keys(j.dependencies)){ if(j.dependencies[k]==='workspace:*') j.dependencies[k]='*'; }} if(j.workspaces) delete j.workspaces; j.scripts={ build:'node app/scripts/canopy-build.mjs', dev:'node app/scripts/canopy-build.mjs' }; j.devDependencies=j.devDependencies||{}; delete j.devDependencies['@changesets/cli']; delete j.devDependencies.jest; delete j.devDependencies['@playwright/test']; delete j.devDependencies.husky; j.devDependencies.esbuild=j.devDependencies.esbuild||'^0.21.4'; j.devDependencies.tailwindcss=j.devDependencies.tailwindcss||'^3.4.10'; j.devDependencies['@tailwindcss/typography']=j.devDependencies['@tailwindcss/typography']||'^0.5.16'; fs.writeFileSync(p, JSON.stringify(j,null,2));"
 
           # Update Pages workflow verify step to use app entry verification
           node -e "const fs=require('fs'),p='dist-template/.github/workflows/deploy-pages.yml'; if(fs.existsSync(p)){ let y=fs.readFileSync(p,'utf8'); y=y.replace(/node packages\\/helpers\\/verify-build\\.js/g,'node app/scripts/canopy-build.mjs --verify'); fs.writeFileSync(p,y); }"
