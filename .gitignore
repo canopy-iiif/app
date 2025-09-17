@@ -14,6 +14,6 @@ site/
 packages/app/ui/styles/index.css
 
 # Test outputs
-coverage/
+tests/coverage/
 playwright-report/
 test-results/
