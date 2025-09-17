@@ -76,81 +76,10 @@ jobs:
       - name: Prepare clean template
         env:
           APP_VERSION: ${{ steps.ver.outputs.APP }}
-        run: |
-          rm -rf dist-template
-          mkdir -p dist-template
-          rsync -a --delete \
-            --exclude ".git" \
-            --exclude "node_modules" \
-            --exclude "AGENTS.md" \
-            --exclude "tests" \
-            --exclude ".husky" \
-            --exclude "packages" \
-            --exclude ".cache" \
-            --exclude ".changeset" \
-            --exclude ".github/workflows/template.yml" \
-            --exclude ".github/workflows/retarget-pr-base.yml" \
-            --exclude ".github/workflows/release-and-template.yml" \
-            --exclude ".github/workflows/test.yml" \
-            ./ dist-template/
-
-          node -e "const fs=require('fs');const p='dist-template/package.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));const vApp=process.env.APP_VERSION||'';if(j.dependencies){if(j.dependencies['@canopy-iiif/app']) j.dependencies['@canopy-iiif/app']=vApp?('^'+vApp):'*'; for(const k of Object.keys(j.dependencies)){ if(j.dependencies[k]==='workspace:*') j.dependencies[k]='*'; }} if(j.workspaces) delete j.workspaces; j.scripts={ build:'node app/scripts/canopy-build.mjs', dev:'node app/scripts/canopy-build.mjs' }; j.devDependencies=j.devDependencies||{}; delete j.devDependencies['@changesets/cli']; delete j.devDependencies.jest; delete j.devDependencies['@playwright/test']; delete j.devDependencies.husky; j.devDependencies.esbuild=j.devDependencies.esbuild||'^0.21.4'; j.devDependencies.tailwindcss=j.devDependencies.tailwindcss||'^3.4.10'; j.devDependencies['@tailwindcss/typography']=j.devDependencies['@tailwindcss/typography']||'^0.5.16'; fs.writeFileSync(p, JSON.stringify(j,null,2));"
-
-          # Write a clean Pages workflow in the template (push/dispatch triggers)
-          node packages/helpers/write-template-deploy.js
-
-          # Inject Tailwind config and styles into the template under app/styles (opt-in preset, full layers)
-          node <<'NODE'
-          const fs = require('fs');
-          const path = require('path');
-          const stylesDir = path.join('dist-template','app','styles');
-          const tp = path.join(stylesDir,'tailwind.config.js');
-          const cssp = path.join(stylesDir,'index.css');
-          fs.mkdirSync(stylesDir,{recursive:true});
-          fs.writeFileSync(tp, `// Default Canopy UI enabled. Remove lines below to disable.\nmodule.exports = {
-            presets: [require('@canopy-iiif/app/ui/canopy-iiif-preset')],
-            content: [
-              './content/**/*.{mdx,html}',
-              './site/**/*.html',
-              './site/**/*.js',
-              './packages/app/ui/**/*.{js,jsx,ts,tsx}',
-              './packages/app/lib/iiif/components/**/*.{js,jsx}',
-            ],
-            theme: { extend: {} },
-            corePlugins: {
-              // preflight: false, // uncomment to disable base reset
-            },
-            plugins: [require('@canopy-iiif/app/ui/canopy-iiif-plugin')],
-            safelist: [
-              // Add dynamic classes here if needed
-            ],
-          };
-          `,'utf8');
-          fs.writeFileSync(cssp, `@tailwind base;
-          @tailwind components;
-          @tailwind utilities;
-
-          /* Example component layer overrides */
-          @layer components {
-            .brand-link { @apply text-brand-600 hover:underline font-semibold; }
-          }
-          `,'utf8');
-          NODE
+        run: node packages/helpers/template/prepare-template.js
 
       - name: Push to template repository (main)
         env:
           TEMPLATE_PUSH_TOKEN: ${{ secrets.TEMPLATE_PUSH_TOKEN }}
           TARGET_REPO: ${{ github.repository_owner }}/template
-        run: |
-          if [ -z "$TEMPLATE_PUSH_TOKEN" ]; then
-            echo "Missing TEMPLATE_PUSH_TOKEN secret with repo write access to $TARGET_REPO" >&2
-            exit 1
-          fi
-          cd dist-template
-          git init -b main
-          git config user.name "Mat Jordan"
-          git config user.email "mat@northwestern.edu"
-          git add .
-          git commit -m "Update template from app/main"
-          git remote add origin "https://x-access-token:${TEMPLATE_PUSH_TOKEN}@github.com/${TARGET_REPO}.git"
-          git push --force origin main
+        run: node packages/helpers/template/push-template.js
