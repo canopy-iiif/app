@@ -1,7 +1,11 @@
 const charm = require("charm")();
 charm.pipe(process.stdout);
 
-function log(string, color = "blue", options = { bright: false, dim: false, underscore: false }) {
+function log(
+  string,
+  color = "blue",
+  options = { bright: false, dim: false, underscore: false }
+) {
   if (options?.bright) charm.display("bright");
   if (options?.dim) charm.display("dim");
   if (options?.underscore) charm.display("underscore");
@@ -14,13 +18,13 @@ function logLine(string, color = "blue", options) {
 
 function logResponse(string, response, success = true) {
   if (success) {
-    log("✓ ", "yellow", { dim: true });
+    log("↓ ", "yellow", { dim: true });
     log(String(string), "yellow");
-    log(` ➜ ${response?.status ?? ""}\n`, "yellow", { dim: true });
+    log(` → ${response?.status ?? ""}\n`, "yellow", { dim: true });
   } else {
-    log("✗ ", "red", { dim: true });
+    log("⊘ ", "red", { dim: true });
     log(String(string), "red");
-    log(` ➜ ${response?.status ?? ""}\n`, "red", { dim: true });
+    log(` → ${response?.status ?? ""}\n`, "red", { dim: true });
   }
 }
 

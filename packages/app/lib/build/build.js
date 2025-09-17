@@ -34,15 +34,17 @@ async function build(options = {}) {
   /**
    * Clean and prepare output directory
    */
-  logLine("\n[1/6] Clean and prepare directories", "magenta", {
+  logLine("\nClean and prepare directories", "magenta", {
     bright: true,
+    underscore: true,
   });
+  logLine("• Reset MDX cache", "blue", { dim: true });
   mdx?.resetMdxCaches();
   if (!skipIiif) {
     await cleanDir(OUT_DIR);
-    logLine("✓ Cleaned output directory\n", "cyan");
+    logLine(`• Cleaned output directory`, "blue", { dim: true });
   } else {
-    logLine("• Incremental rebuild\n", "blue");
+    logLine("• Retaining cache (skipping IIIF rebuild)", "blue", { dim: true });
   }
 
   /**
@@ -50,8 +52,9 @@ async function build(options = {}) {
    * This includes building IIIF manifests for works and collections,
    * as well as collecting search records for works.
    */
-  logLine("\n[2/6] Build IIIF Collection content", "magenta", {
+  logLine("\nBuild IIIF Collection content", "magenta", {
     bright: true,
+    underscore: true,
   });
   let iiifRecords = [];
   if (!skipIiif) {
@@ -65,8 +68,9 @@ async function build(options = {}) {
    * This includes collecting page metadata for sitemap and search index,
    * as well as building all MDX pages to HTML.
    */
-  logLine("\n[3/6] Build contextual content from Markdown pages", "magenta", {
+  logLine("\nBuild contextual content from Markdown pages", "magenta", {
     bright: true,
+    underscore: true,
   });
   pageRecords = await searchBuild.collectMdxPageRecords();
   await pages.buildContentTree(CONTENT_DIR, pageRecords);
@@ -77,7 +81,10 @@ async function build(options = {}) {
    * the search.html page and search runtime bundle.
    * This is done after all content is built so that the index is comprehensive.
    */
-  logLine("\n[4/6] Create search indices", "magenta", { bright: true });
+  logLine("\nCreate search indices", "magenta", {
+    bright: true,
+    underscore: true,
+  });
   try {
     await ensureSearchInitialized();
     const combined = await buildSearchIndex(iiifRecords, pageRecords);
@@ -91,8 +98,9 @@ async function build(options = {}) {
    * Prepare client runtimes (e.g. search) by bundling with esbuild.
    * This is done early so that MDX content can reference runtime assets if needed.
    */
-  logLine("\n[5/6] Prepare client runtimes and stylesheets", "magenta", {
+  logLine("\nPrepare client runtimes and stylesheets", "magenta", {
     bright: true,
+    underscore: true,
   });
   if (!process.env.CANOPY_SKIP_STYLES) {
     await ensureStyles();
@@ -103,7 +111,10 @@ async function build(options = {}) {
   /**
    * Copy static assets from the assets directory to the output directory.
    */
-  logLine("\n[6/6] Copy static assets", "magenta", { bright: true });
+  logLine("\nCopy static assets", "magenta", {
+    bright: true,
+    underscore: true,
+  });
   await copyAssets();
 }
 

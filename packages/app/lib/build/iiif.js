@@ -88,12 +88,12 @@ async function readJsonFromUri(uri, options = { log: false }) {
       if (options && options.log) {
         try {
           if (res && res.ok) {
-            logLine(`✓ ${String(uri)} ➜ ${res.status}`, "yellow", {
+            logLine(`↓ ${String(uri)} → ${res.status}`, "yellow", {
               bright: true,
             });
           } else {
             const code = res ? res.status : "ERR";
-            logLine(`✗ ${String(uri)} ➜ ${code}`, "red", { bright: true });
+            logLine(`⊘ ${String(uri)} → ${code}`, "red", { bright: true });
           }
         } catch (_) {}
       }
@@ -459,7 +459,7 @@ async function saveCachedCollection(collection, id, parentId) {
     try {
       if (process.env.CANOPY_IIIF_DEBUG === "1") {
         const { logLine } = require("./log");
-        logLine(`IIIF: saved collection ➜ ${slug}.json`, "cyan", { dim: true });
+        logLine(`IIIF: saved collection → ${slug}.json`, "cyan", { dim: true });
       }
     } catch (_) {}
     index.byId = Array.isArray(index.byId) ? index.byId : [];
@@ -502,7 +502,7 @@ async function buildIiifCollectionPages(CONFIG) {
   if (!collectionUri) return { searchRecords: [] };
 
   // Fetch top-level collection
-  logLine("IIIF: Fetching collection...", "blue", { bright: true });
+  logLine("• Traversing IIIF Collection(s)", "blue", { dim: true });
   const root = await readJsonFromUri(collectionUri, { log: true });
   if (!root) {
     logLine("IIIF: Failed to fetch collection", "red");
@@ -573,6 +573,15 @@ async function buildIiifCollectionPages(CONFIG) {
     )
   );
   const chunks = Math.ceil(tasks.length / chunkSize);
+  // Summary before processing chunks
+  try {
+    const collectionsCount = visitedCollections.size || 0;
+    logLine(
+      `• Fetching ${tasks.length} Manifest(s) in ${chunks} chunk(s) across ${collectionsCount} Collection(s)`,
+      "blue",
+      { dim: true }
+    );
+  } catch (_) {}
   const iiifRecords = [];
   const unsafeThumbs = !!(
     cfg &&
@@ -619,7 +628,7 @@ async function buildIiifCollectionPages(CONFIG) {
 
   for (let ci = 0; ci < chunks; ci++) {
     const chunk = tasks.slice(ci * chunkSize, (ci + 1) * chunkSize);
-    logLine(`\nChunk (${ci + 1}/${chunks})`, "white", { dim: true });
+    logLine(`• Chunk ${ci + 1}/${chunks}`, "blue", { dim: true });
 
     const concurrency = Math.max(
       1,
@@ -655,14 +664,14 @@ async function buildIiifCollectionPages(CONFIG) {
         let manifest = await loadCachedManifestById(id);
         const lns = [];
         if (manifest) {
-          lns.push([`✓ ${String(id)} ➜ Cached`, "yellow"]);
+          lns.push([`↓ ${String(id)} → Cached`, "yellow"]);
         } else if (/^https?:\/\//i.test(String(id || ""))) {
           try {
             const res = await fetch(String(id), {
               headers: { Accept: "application/json" },
             }).catch(() => null);
             if (res && res.ok) {
-              lns.push([`✓ ${String(id)} ➜ ${res.status}`, "yellow"]);
+              lns.push([`↓ ${String(id)} → ${res.status}`, "yellow"]);
               const remote = await res.json();
               const norm = await normalizeToV3(remote);
               manifest = norm;
@@ -673,20 +682,20 @@ async function buildIiifCollectionPages(CONFIG) {
               );
             } else {
               lns.push([
-                `✗ ${String(id)} ➜ ${res ? res.status : "ERR"}`,
+                `⊘ ${String(id)} → ${res ? res.status : "ERR"}`,
                 "red",
               ]);
               continue;
             }
           } catch (e) {
-            lns.push([`✗ ${String(id)} ➜ ERR`, "red"]);
+            lns.push([`⊘ ${String(id)} → ERR`, "red"]);
             continue;
           }
         } else if (/^file:\/\//i.test(String(id || ""))) {
           try {
             const local = await readJsonFromUri(String(id), { log: false });
             if (!local) {
-              lns.push([`✗ ${String(id)} ➜ ERR`, "red"]);
+              lns.push([`⊘ ${String(id)} → ERR`, "red"]);
               continue;
             }
             const norm = await normalizeToV3(local);
@@ -696,13 +705,13 @@ async function buildIiifCollectionPages(CONFIG) {
               String(id),
               String(it.parent || "")
             );
-            lns.push([`✓ ${String(id)} ➜ Cached`, "yellow"]);
+            lns.push([`↓ ${String(id)} → Cached`, "yellow"]);
           } catch (_) {
-            lns.push([`✗ ${String(id)} ➜ ERR`, "red"]);
+            lns.push([`⊘ ${String(id)} → ERR`, "red"]);
             continue;
           }
         } else {
-          lns.push([`✗ ${String(id)} ➜ SKIP`, "red"]);
+          lns.push([`⊘ ${String(id)} → SKIP`, "red"]);
           continue;
         }
         if (!manifest) continue;
@@ -903,7 +912,7 @@ async function buildIiifCollectionPages(CONFIG) {
           } catch (_) {}
           await fsp.writeFile(outPath, html, "utf8");
           lns.push([
-            `✓ Created ${path.relative(process.cwd(), outPath)}`,
+            `✔ Created ${path.relative(process.cwd(), outPath)}`,
             "green",
           ]);
           let thumbUrl = "";
