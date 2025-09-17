@@ -1,0 +1,90 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  precommit:
+    name: Precommit Test Suite (unit + e2e)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm config set fund false
+          npm config set audit false
+          npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run precommit tests (unit + e2e)
+        env:
+          CANOPY_MOCK_SEARCH: '1'
+          CANOPY_CHUNK_SIZE: '10'
+          CANOPY_FETCH_CONCURRENCY: '6'
+        run: npm run precommit:tests
+  unit:
+    name: Unit Tests (Jest)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm config set fund false
+          npm config set audit false
+          npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+  e2e:
+    name: E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm config set fund false
+          npm config set audit false
+          npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run e2e tests
+        env:
+          # Trim down IIIF build in CI if desired
+          CANOPY_CHUNK_SIZE: '10'
+          CANOPY_FETCH_CONCURRENCY: '6'
+        run: npm run test:e2e

@@ -1,0 +1,8 @@
+#!/bin/sh
+# Pre-commit hook: run unit and e2e tests before committing
+set -e
+
+export NODE_OPTIONS="--experimental-vm-modules"
+
+echo "[husky] Running precommit test suite (unit + e2e)..."
+npm run precommit:tests

@@ -1,0 +1,24 @@
+// @ts-check
+const path = require("node:path");
+const { defineConfig } = require("@playwright/test");
+
+module.exports = defineConfig({
+  testDir: path.join(__dirname, "e2e"),
+  timeout: 30_000,
+  retries: process.env.CI ? 2 : 0,
+  use: {
+    baseURL: "http://localhost:3000",
+    headless: true,
+  },
+  webServer: {
+    command: "bash -lc 'cd .. && node app/scripts/canopy-build.mjs --dev'",
+    url: "http://localhost:3000",
+    reuseExistingServer: !process.env.CI,
+    timeout: 120_000,
+    env: {
+      CANOPY_MOCK_SEARCH: "1",
+      CANOPY_CHUNK_SIZE: "10",
+      CANOPY_FETCH_CONCURRENCY: "6",
+    },
+  },
+});

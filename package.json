@@ -10,7 +10,12 @@
   "scripts": {
     "build": "node app/scripts/canopy-build.mjs",
     "dev": "node app/scripts/canopy-build.mjs",
-    "test": "echo \"No tests yet\" && exit 0",
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand --config tests/jest.config.cjs",
+    "test:e2e": "playwright test -c tests/playwright.config.js",
+    "playwright:install": "playwright install --with-deps",
+    "precommit:tests": "npm run test:unit && npm run test:e2e",
+    "prepare": "husky install",
     "changeset": "node packages/helpers/run-changeset.js",
     "version:packages": "node packages/helpers/version-bump.js",
     "release": "node packages/helpers/guard-publish.js && node packages/helpers/run-changeset.js publish"
@@ -21,6 +26,9 @@
     "swiper": "^11.2.10"
   },
   "devDependencies": {
+    "@playwright/test": "^1.47.2",
+    "husky": "^9.0.11",
+    "jest": "^29.7.0",
     "@mdx-js/react": "^3.0.1",
     "@tailwindcss/typography": "^0.5.16",
     "react": "^19.0.0",
