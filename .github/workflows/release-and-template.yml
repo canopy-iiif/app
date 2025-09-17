@@ -1,8 +1,11 @@
 name: Release and Template
 
 on:
-  push:
-    branches: [main]
+  # Run automatically only after the Tests workflow succeeds on main
+  workflow_run:
+    workflows: ["Tests"]
+    types: [completed]
+  # Allow manual runs if needed
   workflow_dispatch:
 
 permissions:
@@ -10,6 +13,9 @@ permissions:
 
 jobs:
   release:
+    # If triggered by workflow_run, require success on main; always allow manual dispatch
+    if: >-
+      ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
     runs-on: ubuntu-latest
     outputs:
       published: ${{ steps.changesets.outputs.published }}
@@ -17,6 +23,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # When triggered by workflow_run, check out the tested commit
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -50,6 +59,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
