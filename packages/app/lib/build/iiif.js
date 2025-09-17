@@ -573,7 +573,7 @@ async function buildIiifCollectionPages(CONFIG) {
     )
   );
   const chunks = Math.ceil(tasks.length / chunkSize);
-  const searchRecords = [];
+  const iiifRecords = [];
   const unsafeThumbs = !!(
     cfg &&
     cfg.iiif &&
@@ -935,7 +935,7 @@ async function buildIiifCollectionPages(CONFIG) {
               }
             }
           } catch (_) {}
-          searchRecords.push({
+          iiifRecords.push({
             id: String(manifest.id || id),
             title,
             href: href.split(path.sep).join("/"),
@@ -962,7 +962,7 @@ async function buildIiifCollectionPages(CONFIG) {
     );
     await Promise.all(workers);
   }
-  return { searchRecords };
+  return { iiifRecords };
 }
 
 module.exports = {
