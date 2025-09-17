@@ -13,6 +13,9 @@ site/
 # Do not commit compiled UI stylesheet; built in dev/publish
 packages/app/ui/styles/index.css
 
+# Ignore built UI bundle; built on demand and at publish
+packages/app/ui/dist/
+
 # Test outputs
 tests/coverage/
 playwright-report/

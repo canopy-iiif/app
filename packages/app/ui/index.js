@@ -18,7 +18,5 @@ export { default as SearchFormUI } from "./src/search/SearchForm.jsx";
 export { default as SearchResultsUI } from "./src/search/SearchResults.jsx";
 export { useSearch } from "./src/search/useSearch.js";
 export { default as Search } from "./src/search/Search.jsx";
-// Command palette placeholder (SSR-safe in both entries)
+// Command palette placeholder (SSR-safe). Client runtime uses a lightweight fallback.
 export { default as CommandPalette } from "./src/command/MdxCommandPalette.jsx";
-// Command palette client app (for runtime bundling)
-export { default as CommandPaletteApp } from "./src/command/CommandApp.jsx";
