@@ -7,7 +7,7 @@ module.exports = {
     "./content/**/*.{mdx,html}",
     "./site/**/*.html",
     "./packages/app/ui/**/*.{js,jsx,ts,tsx}",
-    "./packages/app/lib/components/**/*.{js,jsx}",
+    "./packages/app/lib/iiif/components/**/*.{js,jsx}",
   ],
   theme: {
     extend: {

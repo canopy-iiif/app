@@ -1,5 +1,4 @@
 module.exports = {
-  build: require('./build').build,
-  dev: require('./dev').dev
+  build: require('./build/build').build,
+  dev: require('./build/dev').dev
 };
-

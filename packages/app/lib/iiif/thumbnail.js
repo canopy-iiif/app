@@ -84,4 +84,3 @@ async function getThumbnailUrl(resource, preferredSize = 1200, unsafe = false) {
 }
 
 module.exports = { getRepresentativeImage, getThumbnail, getThumbnailUrl };
-

@@ -10,7 +10,7 @@ const {
   CACHE_DIR,
   ensureDirSync,
   withBase,
-} = require("./common");
+} = require("../common");
 const yaml = require("js-yaml");
 
 function parseFrontmatter(src) {
@@ -135,11 +135,14 @@ async function loadAppWrapper() {
   // Prefer a component that renders its children, but do not hard-fail if probe fails.
   let ok = false;
   try {
-    const probe = React.createElement(
-      App || (() => null),
-      null,
-      React.createElement("span", { "data-canopy-probe": "1" })
-    );
+    // Try to render the probe inside an MDXProvider with UI server components
+    const components = await loadUiComponents();
+    const MDXProvider = await getMdxProvider();
+    const probeChild = React.createElement("span", { "data-canopy-probe": "1" });
+    const probeTree = React.createElement(App || (() => null), null, probeChild);
+    const probe = MDXProvider
+      ? React.createElement(MDXProvider, { components }, probeTree)
+      : probeTree;
     const out = ReactDOMServer.renderToStaticMarkup(probe);
     ok = !!(out && out.indexOf("data-canopy-probe") !== -1);
   } catch (_) {
@@ -265,7 +268,7 @@ async function ensureClientRuntime() {
   // like the Clover Viewer when placeholders are present in the HTML.
   let esbuild = null;
   try {
-    esbuild = require("../ui/node_modules/esbuild");
+    esbuild = require("../../ui/node_modules/esbuild");
   } catch (_) {
     try {
       esbuild = require("esbuild");
@@ -389,7 +392,7 @@ async function ensureClientRuntime() {
 // and renders a Slider for each.
 async function ensureFacetsRuntime() {
   let esbuild = null;
-  try { esbuild = require("../ui/node_modules/esbuild"); } catch (_) { try { esbuild = require("esbuild"); } catch (_) {} }
+  try { esbuild = require("../../ui/node_modules/esbuild"); } catch (_) { try { esbuild = require("esbuild"); } catch (_) {} }
   ensureDirSync(OUT_DIR);
   const scriptsDir = path.join(OUT_DIR, 'scripts');
   ensureDirSync(scriptsDir);
@@ -632,14 +635,14 @@ async function ensureSliderRuntime() {
 async function ensureReactGlobals() {
   let esbuild = null;
   try {
-    esbuild = require("../ui/node_modules/esbuild");
+    esbuild = require("../../ui/node_modules/esbuild");
   } catch (_) {
     try {
       esbuild = require("esbuild");
     } catch (_) {}
   }
   if (!esbuild) return;
-  const { path } = require("./common");
+  const { path } = require("../common");
   ensureDirSync(OUT_DIR);
   const scriptsDir = path.join(OUT_DIR, "scripts");
   ensureDirSync(scriptsDir);

@@ -11,7 +11,7 @@ const {
   CONTENT_DIR,
   ensureDirSync,
   htmlShell,
-} = require("./common");
+} = require("../common");
 const mdx = require("./mdx");
 const { log, logLine, logResponse } = require("./log");
 
@@ -88,7 +88,6 @@ async function readJsonFromUri(uri, options = { log: false }) {
       if (options && options.log) {
         try {
           if (res && res.ok) {
-            // Bold success line for Collection fetches
             logLine(`✓ ${String(uri)} ➜ ${res.status}`, "yellow", {
               bright: true,
             });
@@ -247,13 +246,18 @@ function computeUniqueSlug(index, baseSlug, id, type) {
 function ensureBaseSlugFor(index, baseSlug, id, type) {
   try {
     const byId = Array.isArray(index && index.byId) ? index.byId : [];
-    const normId = normalizeIiifId(String(id || ''));
+    const normId = normalizeIiifId(String(id || ""));
     const existingWithBase = byId.find(
       (e) => e && e.type === type && String(e.slug) === String(baseSlug)
     );
     if (existingWithBase && normalizeIiifId(existingWithBase.id) !== normId) {
       // Reassign the existing entry to the next available suffix to free the base
-      const newSlug = computeUniqueSlug(index, baseSlug, existingWithBase.id, type);
+      const newSlug = computeUniqueSlug(
+        index,
+        baseSlug,
+        existingWithBase.id,
+        type
+      );
       if (newSlug && newSlug !== baseSlug) existingWithBase.slug = newSlug;
     }
   } catch (_) {}
@@ -476,351 +480,152 @@ async function saveCachedCollection(collection, id, parentId) {
 }
 
 async function loadConfig() {
-  let CONFIG = {
-    collection: {
-      uri: "https://iiif.io/api/cookbook/recipe/0032-collection/collection.json",
-    },
-    iiif: { chunkSize: 10, concurrency: 6 },
-    metadata: [],
-  };
-  const overrideConfigPath = process.env.CANOPY_CONFIG;
-  const configPath = path.resolve(overrideConfigPath || "canopy.yml");
-  if (fs.existsSync(configPath)) {
-    try {
-      const raw = await fsp.readFile(configPath, "utf8");
-      const data = yaml.load(raw) || {};
-      const d = data || {};
-      const di = d.iiif || {};
-      CONFIG = {
-        collection: {
-          uri: (d.collection && d.collection.uri) || CONFIG.collection.uri,
-        },
-        iiif: {
-          chunkSize:
-            Number(di.chunkSize || CONFIG.iiif.chunkSize) ||
-            CONFIG.iiif.chunkSize,
-          concurrency:
-            Number(di.concurrency || CONFIG.iiif.concurrency) ||
-            CONFIG.iiif.concurrency,
-          thumbnails: {
-            unsafe: !!(di.thumbnails && di.thumbnails.unsafe === true),
-            preferredSize:
-              Number(di.thumbnails && di.thumbnails.preferredSize) || 1200,
-          },
-        },
-        metadata: Array.isArray(d.metadata)
-          ? d.metadata.map((s) => String(s)).filter(Boolean)
-          : [],
-      };
-      const src = overrideConfigPath ? overrideConfigPath : "canopy.yml";
-      logLine(`[canopy] Loaded config from ${src}...`, "white");
-    } catch (e) {
-      console.warn(
-        "[canopy] Failed to read",
-        overrideConfigPath ? overrideConfigPath : "canopy.yml",
-        e.message
-      );
-    }
+  const cfgPath = path.resolve("canopy.yml");
+  if (!fs.existsSync(cfgPath)) return {};
+  const raw = await fsp.readFile(cfgPath, "utf8");
+  let cfg = {};
+  try {
+    cfg = yaml.load(raw) || {};
+  } catch (_) {
+    cfg = {};
   }
-  if (process.env.CANOPY_COLLECTION_URI) {
-    CONFIG.collection.uri = String(process.env.CANOPY_COLLECTION_URI);
-    console.log("Using collection URI from CANOPY_COLLECTION_URI");
-  }
-  return CONFIG;
+  return cfg || {};
 }
 
+// Traverse IIIF collection, cache manifests/collections, and render pages
 async function buildIiifCollectionPages(CONFIG) {
-  const worksDir = path.join(CONTENT_DIR, "works");
-  const worksLayoutPath = path.join(worksDir, "_layout.mdx");
-  if (!fs.existsSync(worksLayoutPath)) {
-    console.log(
-      "IIIF: No content/works/_layout.mdx found; skipping IIIF page build."
-    );
-    return { searchRecords: [] };
-  }
-  ensureDirSync(IIIF_CACHE_MANIFESTS_DIR);
-  ensureDirSync(IIIF_CACHE_COLLECTIONS_DIR);
-  // Debug: list current collections cache contents
-  try {
-    if (process.env.CANOPY_IIIF_DEBUG === "1") {
-      const { logLine } = require("./log");
-      try {
-        const files = fs.existsSync(IIIF_CACHE_COLLECTIONS_DIR)
-          ? fs
-              .readdirSync(IIIF_CACHE_COLLECTIONS_DIR)
-              .filter((n) => /\.json$/i.test(n))
-          : [];
-        const head = files.slice(0, 8).join(", ");
-        logLine(
-          `IIIF: cache/collections (start): ${files.length} file(s)` +
-            (head ? ` [${head}${files.length > 8 ? ", …" : ""}]` : ""),
-          "blue",
-          { dim: true }
-        );
-      } catch (_) {}
-    }
-  } catch (_) {}
+  const cfg = CONFIG || (await loadConfig());
   const collectionUri =
-    (CONFIG && CONFIG.collection && CONFIG.collection.uri) || null;
-  try {
-    try {
-      if (collectionUri) {
-        logLine(`${collectionUri}`, "white", {
-          dim: true,
-        });
-      }
-    } catch (_) {}
-    console.log("");
-  } catch (_) {}
-  // Decide cache policy/log before any fetch
-  let index = await loadManifestIndex();
-  const prevUri = (index && index.collection && index.collection.uri) || "";
-  const uriChanged = !!(collectionUri && prevUri && prevUri !== collectionUri);
-  if (uriChanged) {
-    try {
-      const { logLine } = require("./log");
-      logLine("IIIF Collection changed. Resetting cache.\n", "cyan");
-    } catch (_) {}
-    await flushManifestCache();
-    index.byId = [];
-  } else {
-    try {
-      const { logLine } = require("./log");
-      logLine(
-        "IIIF Collection unchanged. Preserving cache. Detecting cached resources...\n",
-        "cyan"
-      );
-    } catch (_) {}
-  }
-  let collection = null;
-  if (collectionUri) {
-    // Try cached root collection first
-    collection = await loadCachedCollectionById(collectionUri);
-    if (collection) {
-      try {
-        const { logLine } = require("./log");
-        logLine(`✓ ${String(collectionUri)} ➜ Cached`, "yellow");
-      } catch (_) {}
-    } else {
-      collection = await readJsonFromUri(collectionUri, { log: true });
-      if (collection) {
-        try {
-          await saveCachedCollection(
-            collection,
-            String(collection.id || collection["@id"] || collectionUri),
-            ""
-          );
-        } catch (_) {}
-      }
-    }
-  }
-  if (!collection) {
-    console.warn("IIIF: No collection available; skipping.");
-    // Still write/update global index with configured URI, so other steps can rely on it
-    try {
-      const index = await loadManifestIndex();
-      index.collection = {
-        uri: String(collectionUri || ""),
-        hash: "",
-        updatedAt: new Date().toISOString(),
-      };
-      await saveManifestIndex(index);
-    } catch (_) {}
+    (cfg && cfg.collection && cfg.collection.uri) ||
+    process.env.CANOPY_COLLECTION_URI ||
+    "";
+  if (!collectionUri) return { searchRecords: [] };
+
+  // Fetch top-level collection
+  logLine("IIIF: Fetching collection...", "blue", { bright: true });
+  const root = await readJsonFromUri(collectionUri, { log: true });
+  if (!root) {
+    logLine("IIIF: Failed to fetch collection", "red");
     return { searchRecords: [] };
   }
-  // Normalize to Presentation 3 to ensure a consistent structure (items array, types)
-  const collectionForHash = await normalizeToV3(collection);
-  const currentSig = {
-    uri: String(collectionUri || ""),
-    hash: computeHash(collectionForHash),
-  };
-  index.collection = { ...currentSig, updatedAt: new Date().toISOString() };
-  // Upsert root collection entry in index.byId
+  const normalizedRoot = await normalizeToV3(root);
+  // Save collection cache
   try {
-    const rootId = normalizeIiifId(
-      String(collection.id || collection["@id"] || collectionUri || "")
+    await saveCachedCollection(
+      normalizedRoot,
+      normalizedRoot.id || collectionUri,
+      ""
     );
-    const title = firstLabelString(collection && collection.label);
-    const baseSlug = slugify(title || "collection", { lower: true, strict: true, trim: true }) || "collection";
-    index.byId = Array.isArray(index.byId) ? index.byId : [];
-    const slug = ensureBaseSlugFor(index, baseSlug, rootId, 'Collection');
-    const existingIdx = index.byId.findIndex(
-      (e) => e && normalizeIiifId(e.id) === rootId && e.type === "Collection"
-    );
-    const entry = { id: rootId, type: "Collection", slug, parent: "" };
-    if (existingIdx >= 0) index.byId[existingIdx] = entry;
-    else index.byId.push(entry);
-    try { (RESERVED_SLUGS && RESERVED_SLUGS.Collection || new Set()).add(slug); } catch (_) {}
   } catch (_) {}
-  await saveManifestIndex(index);
 
-  const WorksLayout = await mdx.compileMdxToComponent(worksLayoutPath);
-  // Recursively collect manifests across subcollections
+  // Recursively traverse Collections and gather all Manifest tasks
   const tasks = [];
-  async function loadOrFetchCollectionById(id, lns, fetchAllowed = true) {
-    let c = await loadCachedCollectionById(String(id));
-    if (c) {
-      try {
-        // Emit a standard Cached line so it mirrors network logs
-        const { logLine } = require("./log");
-        logLine(`✓ ${String(id)} ➜ Cached`, "yellow");
-      } catch (_) {}
-      if (lns) lns.push([`✓ ${String(id)} ➜ Cached`, "yellow"]);
-      // Always normalize to Presentation 3 for consistent traversal
-      return await normalizeToV3(c);
-    }
-    if (!fetchAllowed) return null;
-    const fetched = await readJsonFromUri(String(id), { log: true });
-    const normalized = await normalizeToV3(fetched);
+  const visitedCollections = new Set(); // normalized ids
+  const norm = (x) => {
     try {
-      await saveCachedCollection(
-        normalized || fetched,
-        String(((normalized || fetched) && ((normalized || fetched).id || (normalized || fetched)["@id"])) || id),
-        ""
-      );
-    } catch (_) {}
-    return normalized || fetched;
-  }
-  async function collectTasksFromCollection(colObj, parentUri, visited) {
-    if (!colObj) return;
-    // Prefer the URI we traversed from (parentUri) to work around sources
-    // that report the same id for multiple pages (e.g., Internet Archive).
-    const colId = String(parentUri || colObj.id || colObj["@id"] || "");
-    visited = visited || new Set();
-    if (colId) {
-      if (visited.has(colId)) return;
-      visited.add(colId);
+      return normalizeIiifId(String(x || ""));
+    } catch (_) {
+      return String(x || "");
     }
-    // Traverse explicit sub-collections under items only (no paging semantics)
-    const items = Array.isArray(colObj && colObj.items) ? colObj.items : [];
-    for (const it of items) {
-      if (!it) continue;
-      const t = String(it.type || it["@type"] || "");
-      const id = it.id || it["@id"] || "";
-      if (t.includes("Manifest")) {
-        tasks.push({
-          id: String(id),
-          parent: String(colId || parentUri || ""),
-        });
-      } else if (t.includes("Collection")) {
-        let subRaw = await loadOrFetchCollectionById(String(id));
-        try {
-          await saveCachedCollection(
-            subRaw,
-            String(id),
-            String(colId || parentUri || "")
-          );
-        } catch (_) {}
-        try {
-          const title = firstLabelString(subRaw && subRaw.label);
-          const baseSlug = slugify(title || "collection", { lower: true, strict: true, trim: true }) || "collection";
-          const idx = await loadManifestIndex();
-          idx.byId = Array.isArray(idx.byId) ? idx.byId : [];
-          const subIdNorm = normalizeIiifId(String(id));
-          const slug = computeUniqueSlug(idx, baseSlug, subIdNorm, 'Collection');
-          const entry = {
-            id: subIdNorm,
-            type: "Collection",
-            slug,
-            parent: normalizeIiifId(String(colId || parentUri || "")),
-          };
-          const existing = idx.byId.findIndex(
-            (e) =>
-              e &&
-              normalizeIiifId(e.id) === subIdNorm &&
-              e.type === "Collection"
-          );
-          if (existing >= 0) idx.byId[existing] = entry;
-          else idx.byId.push(entry);
-          await saveManifestIndex(idx);
-        } catch (_) {}
-        await collectTasksFromCollection(subRaw, String(id), visited);
-      } else if (/^https?:\/\//i.test(String(id || ""))) {
-        let norm = await loadOrFetchCollectionById(String(id));
-        const nt = String((norm && (norm.type || norm["@type"])) || "");
-        if (nt.includes("Collection")) {
-          try {
-            const title = firstLabelString(norm && norm.label);
-            const baseSlug = slugify(title || "collection", { lower: true, strict: true, trim: true }) || "collection";
-            const idx = await loadManifestIndex();
-            idx.byId = Array.isArray(idx.byId) ? idx.byId : [];
-            const normId = normalizeIiifId(String(id));
-            const slug = computeUniqueSlug(idx, baseSlug, normId, 'Collection');
-            const entry = {
-              id: normId,
-              type: "Collection",
-              slug,
-              parent: normalizeIiifId(String(colId || parentUri || "")),
-            };
-            const existing = idx.byId.findIndex(
-              (e) => e && normalizeIiifId(e.id) === normId && e.type === "Collection"
-            );
-            if (existing >= 0) idx.byId[existing] = entry;
-            else idx.byId.push(entry);
-            await saveManifestIndex(idx);
-          } catch (_) {}
-          try {
-            await saveCachedCollection(
-              norm,
-              String(id),
-              String(colId || parentUri || "")
-            );
-          } catch (_) {}
-          await collectTasksFromCollection(norm, String(id), visited);
-        } else if (nt.includes("Manifest")) {
-          tasks.push({
-            id: String(id),
-            parent: String(colId || parentUri || ""),
-          });
+  };
+  async function gatherFromCollection(colLike, parentId) {
+    try {
+      // Resolve uri/id
+      const uri =
+        typeof colLike === "string"
+          ? colLike
+          : (colLike && (colLike.id || colLike["@id"])) || "";
+      const col =
+        typeof colLike === "object" && colLike && colLike.items
+          ? colLike
+          : await readJsonFromUri(uri, { log: true });
+      if (!col) return;
+      const ncol = await normalizeToV3(col);
+      const colId = String((ncol && (ncol.id || uri)) || uri);
+      const nid = norm(colId);
+      if (visitedCollections.has(nid)) return; // avoid cycles
+      visitedCollections.add(nid);
+      try {
+        await saveCachedCollection(ncol, colId, parentId || "");
+      } catch (_) {}
+      const itemsArr = Array.isArray(ncol.items) ? ncol.items : [];
+      for (const entry of itemsArr) {
+        if (!entry) continue;
+        const t = String(entry.type || entry["@type"] || "").toLowerCase();
+        const entryId = entry.id || entry["@id"] || "";
+        if (t === "manifest") {
+          tasks.push({ id: entryId, parent: colId });
+        } else if (t === "collection") {
+          await gatherFromCollection(entryId, colId);
         }
       }
-    }
+      // Traverse strictly by parent/child hierarchy (Presentation 3): items → Manifest or Collection
+    } catch (_) {}
   }
-  // Use normalized root collection for traversal to guarantee v3 shape
-  const collectionV3 = await normalizeToV3(collection);
-  await collectTasksFromCollection(
-    collectionV3,
-    String((collectionV3 && (collectionV3.id || collectionV3["@id"])) || collectionUri || ""),
-    new Set()
-  );
+  await gatherFromCollection(normalizedRoot, "");
+  if (!tasks.length) return { searchRecords: [] };
+
+  // Split into chunks and process with limited concurrency
   const chunkSize = Math.max(
     1,
     Number(
-      process.env.CANOPY_CHUNK_SIZE ||
-        (CONFIG.iiif && CONFIG.iiif.chunkSize) ||
-        10
+      process.env.CANOPY_CHUNK_SIZE || (cfg.iiif && cfg.iiif.chunkSize) || 20
     )
   );
-  const chunks = Math.max(1, Math.ceil(tasks.length / chunkSize));
-  try {
-    logLine(
-      `\nAggregating ${tasks.length} Manifest(s) in ${chunks} chunk(s)...`,
-      "cyan"
-    );
-  } catch (_) {}
+  const chunks = Math.ceil(tasks.length / chunkSize);
   const searchRecords = [];
   const unsafeThumbs = !!(
-    CONFIG &&
-    CONFIG.iiif &&
-    CONFIG.iiif.thumbnails &&
-    CONFIG.iiif.thumbnails.unsafe === true
+    cfg &&
+    cfg.iiif &&
+    cfg.iiif.thumbnails &&
+    cfg.iiif.thumbnails.unsafe === true
   );
   const thumbSize =
-    (CONFIG &&
-      CONFIG.iiif &&
-      CONFIG.iiif.thumbnails &&
-      CONFIG.iiif.thumbnails.preferredSize) ||
+    (cfg &&
+      cfg.iiif &&
+      cfg.iiif.thumbnails &&
+      cfg.iiif.thumbnails.preferredSize) ||
     1200;
+
+  // Compile the works layout component once per run
+  let WorksLayoutComp = null;
+  try {
+    const worksLayoutPath = path.join(CONTENT_DIR, "works", "_layout.mdx");
+    WorksLayoutComp = await mdx.compileMdxToComponent(worksLayoutPath);
+  } catch (_) {
+    // Minimal fallback layout if missing or fails to compile
+    WorksLayoutComp = function FallbackWorksLayout({ manifest }) {
+      const title = firstLabelString(manifest && manifest.label);
+      return React.createElement(
+        "div",
+        { className: "content" },
+        React.createElement("h1", null, title || "Untitled"),
+        // Render viewer placeholder for hydration
+        React.createElement(
+          "div",
+          { "data-canopy-viewer": "1" },
+          React.createElement("script", {
+            type: "application/json",
+            dangerouslySetInnerHTML: {
+              __html: JSON.stringify({
+                iiifContent: manifest && (manifest.id || ""),
+              }),
+            },
+          })
+        )
+      );
+    };
+  }
+
   for (let ci = 0; ci < chunks; ci++) {
     const chunk = tasks.slice(ci * chunkSize, (ci + 1) * chunkSize);
-    try {
-      logLine(`\nChunk (${ci + 1}/${chunks})\n`, "magenta");
-    } catch (_) {}
+    logLine(`\nChunk (${ci + 1}/${chunks})`, "white", { dim: true });
+
     const concurrency = Math.max(
       1,
       Number(
         process.env.CANOPY_FETCH_CONCURRENCY ||
-          (CONFIG.iiif && CONFIG.iiif.concurrency) ||
+          (cfg.iiif && cfg.iiif.concurrency) ||
           6
       )
     );
@@ -848,9 +653,7 @@ async function buildIiifCollectionPages(CONFIG) {
         const idx = next - 1;
         const id = it.id || it["@id"] || "";
         let manifest = await loadCachedManifestById(id);
-        // Buffer logs for ordered output
         const lns = [];
-        // Logging: cached or fetched
         if (manifest) {
           lns.push([`✓ ${String(id)} ➜ Cached`, "yellow"]);
         } else if (/^https?:\/\//i.test(String(id || ""))) {
@@ -880,7 +683,6 @@ async function buildIiifCollectionPages(CONFIG) {
             continue;
           }
         } else if (/^file:\/\//i.test(String(id || ""))) {
-          // Support local manifests via file:// in dev
           try {
             const local = await readJsonFromUri(String(id), { log: false });
             if (!local) {
@@ -900,48 +702,58 @@ async function buildIiifCollectionPages(CONFIG) {
             continue;
           }
         } else {
-          // Unsupported scheme; skip
           lns.push([`✗ ${String(id)} ➜ SKIP`, "red"]);
           continue;
         }
         if (!manifest) continue;
         manifest = await normalizeToV3(manifest);
         const title = firstLabelString(manifest.label);
-        const baseSlug = slugify(title || "untitled", { lower: true, strict: true, trim: true }) || 'untitled';
+        const baseSlug =
+          slugify(title || "untitled", {
+            lower: true,
+            strict: true,
+            trim: true,
+          }) || "untitled";
         const nid = normalizeIiifId(String(manifest.id || id));
-        // Use existing mapping if present; otherwise allocate and persist
         let idxMap = await loadManifestIndex();
         idxMap.byId = Array.isArray(idxMap.byId) ? idxMap.byId : [];
-        let mEntry = idxMap.byId.find((e) => e && e.type === 'Manifest' && normalizeIiifId(e.id) === nid);
+        let mEntry = idxMap.byId.find(
+          (e) => e && e.type === "Manifest" && normalizeIiifId(e.id) === nid
+        );
         let slug = mEntry && mEntry.slug;
         if (!slug) {
-          // Prefer base-first; if base is free, use it, else suffix
-          slug = computeUniqueSlug(idxMap, baseSlug, nid, 'Manifest');
-          const parentNorm = normalizeIiifId(String(it.parent || ''));
-          const newEntry = { id: nid, type: 'Manifest', slug, parent: parentNorm };
-          const existingIdx = idxMap.byId.findIndex((e) => e && e.type === 'Manifest' && normalizeIiifId(e.id) === nid);
-          if (existingIdx >= 0) idxMap.byId[existingIdx] = newEntry; else idxMap.byId.push(newEntry);
+          slug = computeUniqueSlug(idxMap, baseSlug, nid, "Manifest");
+          const parentNorm = normalizeIiifId(String(it.parent || ""));
+          const newEntry = {
+            id: nid,
+            type: "Manifest",
+            slug,
+            parent: parentNorm,
+          };
+          const existingIdx = idxMap.byId.findIndex(
+            (e) => e && e.type === "Manifest" && normalizeIiifId(e.id) === nid
+          );
+          if (existingIdx >= 0) idxMap.byId[existingIdx] = newEntry;
+          else idxMap.byId.push(newEntry);
           await saveManifestIndex(idxMap);
         }
         const href = path.join("works", slug + ".html");
         const outPath = path.join(OUT_DIR, href);
         ensureDirSync(path.dirname(outPath));
         try {
-          // Provide MDX components mapping so tags like <Viewer/> and <HelloWorld/> resolve
           let components = {};
           try {
             components = await import("@canopy-iiif/app/ui");
           } catch (_) {
             components = {};
           }
-          const { withBase } = require("./common");
+          const { withBase } = require("../common");
           const Anchor = function A(props) {
             let { href = "", ...rest } = props || {};
             href = withBase(href);
             return React.createElement("a", { href, ...rest }, props.children);
           };
           const compMap = { ...components, a: Anchor };
-          // Gracefully handle HelloWorld if not provided anywhere
           if (!components.HelloWorld) {
             components.HelloWorld = components.Fallback
               ? (props) =>
@@ -961,7 +773,7 @@ async function buildIiifCollectionPages(CONFIG) {
           const { loadAppWrapper } = require("./mdx");
           const app = await loadAppWrapper();
 
-          const mdxContent = React.createElement(WorksLayout, { manifest });
+          const mdxContent = React.createElement(WorksLayoutComp, { manifest });
           const siteTree = app && app.App ? mdxContent : mdxContent;
           const wrappedApp =
             app && app.App
@@ -988,59 +800,95 @@ async function buildIiifCollectionPages(CONFIG) {
             )
             .split(path.sep)
             .join("/");
-          // Detect placeholders to decide which runtimes to inject
           const needsHydrateViewer = body.includes("data-canopy-viewer");
           const needsRelated = body.includes("data-canopy-related-items");
-          const needsCommand = body.includes('data-canopy-command');
-          const needsHydrate = body.includes("data-canopy-hydrate") || needsHydrateViewer || needsRelated || needsCommand;
+          const needsCommand = body.includes("data-canopy-command");
+          const needsHydrate =
+            body.includes("data-canopy-hydrate") ||
+            needsHydrateViewer ||
+            needsRelated ||
+            needsCommand;
 
-          // Client runtimes (viewer/slider/facets) are prepared once up-front by the
-          // top-level build orchestrator. Avoid rebundling in per-manifest workers.
-
-          // Compute script paths relative to the output HTML
           const viewerRel = needsHydrateViewer
-            ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-viewer.js')).split(path.sep).join('/')
+            ? path
+                .relative(
+                  path.dirname(outPath),
+                  path.join(OUT_DIR, "scripts", "canopy-viewer.js")
+                )
+                .split(path.sep)
+                .join("/")
             : null;
           const sliderRel = needsRelated
-            ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-slider.js')).split(path.sep).join('/')
+            ? path
+                .relative(
+                  path.dirname(outPath),
+                  path.join(OUT_DIR, "scripts", "canopy-slider.js")
+                )
+                .split(path.sep)
+                .join("/")
             : null;
           const relatedRel = needsRelated
-            ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-related-items.js')).split(path.sep).join('/')
+            ? path
+                .relative(
+                  path.dirname(outPath),
+                  path.join(OUT_DIR, "scripts", "canopy-related-items.js")
+                )
+                .split(path.sep)
+                .join("/")
             : null;
           const commandRel = needsCommand
-            ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-command.js')).split(path.sep).join('/')
+            ? path
+                .relative(
+                  path.dirname(outPath),
+                  path.join(OUT_DIR, "scripts", "canopy-command.js")
+                )
+                .split(path.sep)
+                .join("/")
             : null;
 
-          // Choose a main script so execution order is preserved (builder before slider)
           let jsRel = null;
           if (needsRelated && sliderRel) jsRel = sliderRel;
           else if (viewerRel) jsRel = viewerRel;
 
-          // Include hydration scripts via htmlShell
           let headExtra = head;
-          // Ensure React globals are present only when client React is needed
           const needsReact = !!(needsHydrateViewer || needsRelated);
-          let vendorTag = '';
+          let vendorTag = "";
           if (needsReact) {
             try {
-              const vendorAbs = path.join(OUT_DIR, 'scripts', 'react-globals.js');
-              let vendorRel = path.relative(path.dirname(outPath), vendorAbs).split(path.sep).join('/');
-              try { const stv = fs.statSync(vendorAbs); vendorRel += `?v=${Math.floor(stv.mtimeMs || Date.now())}`; } catch (_) {}
+              const vendorAbs = path.join(
+                OUT_DIR,
+                "scripts",
+                "react-globals.js"
+              );
+              let vendorRel = path
+                .relative(path.dirname(outPath), vendorAbs)
+                .split(path.sep)
+                .join("/");
+              try {
+                const stv = fs.statSync(vendorAbs);
+                vendorRel += `?v=${Math.floor(stv.mtimeMs || Date.now())}`;
+              } catch (_) {}
               vendorTag = `<script src="${vendorRel}"></script>`;
             } catch (_) {}
           }
-          // Prepend additional scripts so the selected jsRel runs last
           const extraScripts = [];
-          if (relatedRel && jsRel !== relatedRel) extraScripts.push(`<script defer src="${relatedRel}"></script>`);
-          if (viewerRel && jsRel !== viewerRel) extraScripts.push(`<script defer src="${viewerRel}"></script>`);
-          if (sliderRel && jsRel !== sliderRel) extraScripts.push(`<script defer src="${sliderRel}"></script>`);
-          // Include command runtime once
-          if (commandRel && jsRel !== commandRel) extraScripts.push(`<script defer src="${commandRel}"></script>`);
-          if (extraScripts.length) headExtra = extraScripts.join('') + headExtra;
-          // Expose base path to browser for runtime code to build URLs
+          if (relatedRel && jsRel !== relatedRel)
+            extraScripts.push(`<script defer src="${relatedRel}"></script>`);
+          if (viewerRel && jsRel !== viewerRel)
+            extraScripts.push(`<script defer src="${viewerRel}"></script>`);
+          if (sliderRel && jsRel !== sliderRel)
+            extraScripts.push(`<script defer src="${sliderRel}"></script>`);
+          if (commandRel && jsRel !== commandRel)
+            extraScripts.push(`<script defer src="${commandRel}"></script>`);
+          if (extraScripts.length)
+            headExtra = extraScripts.join("") + headExtra;
           try {
-            const { BASE_PATH } = require('./common');
-            if (BASE_PATH) vendorTag = `<script>window.CANOPY_BASE_PATH=${JSON.stringify(BASE_PATH)}</script>` + vendorTag;
+            const { BASE_PATH } = require("../common");
+            if (BASE_PATH)
+              vendorTag =
+                `<script>window.CANOPY_BASE_PATH=${JSON.stringify(
+                  BASE_PATH
+                )}</script>` + vendorTag;
           } catch (_) {}
           let pageBody = body;
           let html = htmlShell({
@@ -1051,24 +899,23 @@ async function buildIiifCollectionPages(CONFIG) {
             headExtra: vendorTag + headExtra,
           });
           try {
-            html = require("./common").applyBaseToHtml(html);
+            html = require("../common").applyBaseToHtml(html);
           } catch (_) {}
           await fsp.writeFile(outPath, html, "utf8");
           lns.push([
             `✓ Created ${path.relative(process.cwd(), outPath)}`,
             "green",
           ]);
-          // Resolve thumbnail URL and dimensions for this manifest (safe by default; expanded "unsafe" if configured)
           let thumbUrl = "";
           let thumbWidth = undefined;
           let thumbHeight = undefined;
           try {
-            const { getThumbnail } = require("./thumbnail");
+            const { getThumbnail } = require("../iiif/thumbnail");
             const t = await getThumbnail(manifest, thumbSize, unsafeThumbs);
             if (t && t.url) {
               thumbUrl = String(t.url);
-              thumbWidth = typeof t.width === 'number' ? t.width : undefined;
-              thumbHeight = typeof t.height === 'number' ? t.height : undefined;
+              thumbWidth = typeof t.width === "number" ? t.width : undefined;
+              thumbHeight = typeof t.height === "number" ? t.height : undefined;
               const idx = await loadManifestIndex();
               if (Array.isArray(idx.byId)) {
                 const entry = idx.byId.find(
@@ -1079,23 +926,25 @@ async function buildIiifCollectionPages(CONFIG) {
                 );
                 if (entry) {
                   entry.thumbnail = String(thumbUrl);
-                  // Persist thumbnail dimensions for aspect ratio calculations when available
-                  if (typeof thumbWidth === 'number') entry.thumbnailWidth = thumbWidth;
-                  if (typeof thumbHeight === 'number') entry.thumbnailHeight = thumbHeight;
+                  if (typeof thumbWidth === "number")
+                    entry.thumbnailWidth = thumbWidth;
+                  if (typeof thumbHeight === "number")
+                    entry.thumbnailHeight = thumbHeight;
                   await saveManifestIndex(idx);
                 }
               }
             }
           } catch (_) {}
-          // Push search record including thumbnail (if available)
           searchRecords.push({
             id: String(manifest.id || id),
             title,
             href: href.split(path.sep).join("/"),
             type: "work",
             thumbnail: thumbUrl || undefined,
-            thumbnailWidth: typeof thumbWidth === 'number' ? thumbWidth : undefined,
-            thumbnailHeight: typeof thumbHeight === 'number' ? thumbHeight : undefined,
+            thumbnailWidth:
+              typeof thumbWidth === "number" ? thumbWidth : undefined,
+            thumbnailHeight:
+              typeof thumbHeight === "number" ? thumbHeight : undefined,
           });
         } catch (e) {
           lns.push([
@@ -1119,10 +968,10 @@ async function buildIiifCollectionPages(CONFIG) {
 module.exports = {
   buildIiifCollectionPages,
   loadConfig,
-  // Expose for other build steps that need to annotate cache metadata
   loadManifestIndex,
   saveManifestIndex,
 };
+
 // Debug: list collections cache after traversal
 try {
   if (process.env.CANOPY_IIIF_DEBUG === "1") {

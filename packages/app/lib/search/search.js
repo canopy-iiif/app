@@ -1,8 +1,8 @@
 const React = require('react');
 const ReactDOMServer = require('react-dom/server');
 const crypto = require('crypto');
-const { path, withBase } = require('./common');
-const { ensureDirSync, OUT_DIR, htmlShell, fsp } = require('./common');
+const { path, withBase } = require('../common');
+const { ensureDirSync, OUT_DIR, htmlShell, fsp } = require('../common');
 
 const FALLBACK_SEARCH_APP = `import React, { useEffect, useMemo, useSyncExternalStore, useState } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -200,10 +200,10 @@ if (typeof document !== 'undefined') {
 `;
 
 async function ensureSearchRuntime() {
-  const { fs, path } = require('./common');
+  const { fs, path } = require('../common');
   ensureDirSync(OUT_DIR);
   let esbuild = null;
-  try { esbuild = require('../ui/node_modules/esbuild'); } catch (_) { try { esbuild = require('esbuild'); } catch (_) {} }
+  try { esbuild = require('../../ui/node_modules/esbuild'); } catch (_) { try { esbuild = require('esbuild'); } catch (_) {} }
   if (!esbuild) { console.warn('Search: skipped bundling (no esbuild)'); return; }
   const entry = path.join(__dirname, 'search-app.jsx');
   const scriptsDir = path.join(OUT_DIR, 'scripts');
@@ -327,7 +327,7 @@ async function ensureSearchRuntime() {
     return;
   }
   try {
-    const { logLine } = require('./log');
+    const { logLine } = require('../build/log');
     let size = 0; try { const st = fs.statSync(outFile); size = st.size || 0; } catch (_) {}
     const kb = size ? ` (${(size/1024).toFixed(1)} KB)` : '';
     const rel = path.relative(process.cwd(), outFile).split(path.sep).join('/');
@@ -343,9 +343,9 @@ async function buildSearchPage() {
     const searchLayoutPath = path.join(path.resolve('content'), 'search', '_layout.mdx');
     let body = '';
     let head = '';
-    if (require('./common').fs.existsSync(searchLayoutPath)) {
+    if (require('../common').fs.existsSync(searchLayoutPath)) {
       try {
-        const mdx = require('./mdx');
+        const mdx = require('../build/mdx');
         const rendered = await mdx.compileMdxFile(searchLayoutPath, outPath, {});
         body = rendered && rendered.body ? rendered.body : '';
         head = rendered && rendered.head ? rendered.head : '';
@@ -361,7 +361,7 @@ async function buildSearchPage() {
         React.createElement('h1', null, 'Search'),
         React.createElement('div', { id: 'search-root' })
       );
-      const { loadAppWrapper } = require('./mdx');
+      const { loadAppWrapper } = require('../build/mdx');
       const app = await loadAppWrapper();
       const wrappedApp = app && app.App ? React.createElement(app.App, null, content) : content;
       body = ReactDOMServer.renderToStaticMarkup(wrappedApp);

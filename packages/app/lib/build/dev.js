@@ -2,11 +2,11 @@ const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
 const { spawn } = require('child_process');
-const { build } = require('./build');
+const { build } = require('../build/build');
 const http = require('http');
 const url = require('url');
-const { CONTENT_DIR, OUT_DIR, ASSETS_DIR, ensureDirSync } = require('./common');
-const twHelper = (() => { try { return require('../helpers/build-tailwind'); } catch (_) { return null; } })();
+const { CONTENT_DIR, OUT_DIR, ASSETS_DIR, ensureDirSync } = require('../common');
+const twHelper = (() => { try { return require('../../helpers/build-tailwind'); } catch (_) { return null; } })();
 function resolveTailwindCli() {
   try {
     const cliJs = require.resolve('tailwindcss/lib/cli.js');
@@ -23,7 +23,7 @@ let onBuildSuccess = () => {};
 let onBuildStart = () => {};
 let onCssChange = () => {};
 let nextBuildSkipIiif = false; // hint set by watchers
-const UI_DIST_DIR = path.resolve(path.join(__dirname, '../ui/dist'));
+const UI_DIST_DIR = path.resolve(path.join(__dirname, '../../ui/dist'));
 
 function prettyPath(p) {
   try {
@@ -495,7 +495,7 @@ async function dev() {
         const genDir = path.join(CACHE_DIR, 'tailwind');
         ensureDirSync(genDir);
         const genCfg = path.join(genDir, 'tailwind.config.js');
-        const cfg = `module.exports = {\n  presets: [require('@canopy-iiif/app/ui/canopy-iiif-preset')],\n  content: [\n    './content/**/*.{mdx,html}',\n    './site/**/*.html',\n    './site/**/*.js',\n    './packages/app/ui/**/*.{js,jsx,ts,tsx}',\n    './packages/app/lib/components/**/*.{js,jsx}',\n  ],\n  theme: { extend: {} },\n  plugins: [require('@canopy-iiif/app/ui/canopy-iiif-plugin')],\n};\n`;
+        const cfg = `module.exports = {\n  presets: [require('@canopy-iiif/app/ui/canopy-iiif-preset')],\n  content: [\n    './content/**/*.{mdx,html}',\n    './site/**/*.html',\n    './site/**/*.js',\n    './packages/app/ui/**/*.{js,jsx,ts,tsx}',\n    './packages/app/lib/iiif/components/**/*.{js,jsx}',\n  ],\n  theme: { extend: {} },\n  plugins: [require('@canopy-iiif/app/ui/canopy-iiif-plugin')],\n};\n`;
         fs.writeFileSync(genCfg, cfg, 'utf8');
         configPath = genCfg;
       } catch (_) { configPath = null; }
