@@ -6,6 +6,7 @@ export { Viewer } from "./src/iiif/Viewer.jsx";
 export { Slider } from "./src/iiif/Slider.jsx";
 // New: RelatedItems placeholder (new data attribute)
 export { default as RelatedItems } from "./src/iiif/MdxRelatedItems.jsx";
+// Note: Hero is SSR-only; exported from ./server.js, not the browser build.
 // Search UI (React)
 // MDX placeholders (SSR-safe). Runtime mounts real components.
 export { default as SearchForm } from "./src/search/MdxSearchForm.jsx";

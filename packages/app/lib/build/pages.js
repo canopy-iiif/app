@@ -62,9 +62,13 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}) {
   const facetsRel = needsFacets
     ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-related-items.js')).split(path.sep).join('/')
     : null;
-  const commandRel = needsCommand
-    ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-command.js')).split(path.sep).join('/')
-    : null;
+  let commandRel = null;
+  if (needsCommand) {
+    const cmdAbs = path.join(OUT_DIR, 'scripts', 'canopy-command.js');
+    let rel = path.relative(path.dirname(outPath), cmdAbs).split(path.sep).join('/');
+    try { const st = fs.statSync(cmdAbs); rel += `?v=${Math.floor(st.mtimeMs || Date.now())}`; } catch (_) {}
+    commandRel = rel;
+  }
   let jsRel = null;
   if (needsFacets && sliderRel) jsRel = sliderRel;
   else if (viewerRel) jsRel = viewerRel;

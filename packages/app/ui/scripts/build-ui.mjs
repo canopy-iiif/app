@@ -52,13 +52,13 @@ async function run() {
     process.exit(1);
   });
 
-  // Build SSR-safe server entry targeting Node as ESM bundle, preferring ESM deps and keeping React external.
+  // Build SSR-safe server entry targeting Node (ESM bundle), keeping React and heavy browser libs external.
   await esbuild.build({
     entryPoints: [path.join(root, 'server.js')],
     outdir,
     entryNames: '[name]',
     bundle: true,
-    platform: 'neutral',
+    platform: 'node',
     format: 'esm',
     sourcemap: true,
     target: ['es2018'],

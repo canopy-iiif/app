@@ -4,6 +4,8 @@ export { Viewer } from "./src/iiif/Viewer.jsx";
 export { Slider } from "./src/iiif/Slider.jsx";
 // New: RelatedItems placeholder (SSR-safe)
 export { default as RelatedItems } from "./src/iiif/MdxRelatedItems.jsx";
+// SSR-only Hero (includes featured selection via helpers)
+export { default as Hero } from "./src/iiif/Hero.jsx";
 
 // SSR-safe MDX placeholders (do not import browser-only UI here)
 export { default as SearchForm } from "./src/search/MdxSearchForm.jsx";

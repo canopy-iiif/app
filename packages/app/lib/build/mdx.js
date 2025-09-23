@@ -44,15 +44,197 @@ async function getMdxProvider() {
 }
 
 // Lazily load UI components from the workspace package and cache them.
+// Re-import when the built UI server bundle changes on disk.
 let UI_COMPONENTS = null;
+let UI_COMPONENTS_PATH = '';
+let UI_COMPONENTS_MTIME = 0;
+const DEBUG = process.env.CANOPY_DEBUG === '1' || process.env.CANOPY_DEBUG === 'true';
 async function loadUiComponents() {
-  if (UI_COMPONENTS) return UI_COMPONENTS;
+  // Do not rely on a cached mapping; re-import each time to avoid transient races.
+  const fallbackCommand = function CommandPalette(props = {}) {
+    const {
+      placeholder = 'Search…',
+      hotkey = 'mod+k',
+      maxResults = 8,
+      groupOrder = ['work', 'page'],
+      button = true,
+      buttonLabel = 'Search',
+    } = props || {};
+    let json = "{}";
+    try { json = JSON.stringify({ placeholder, hotkey, maxResults, groupOrder }); } catch (_) { json = "{}"; }
+    return React.createElement(
+      'div',
+      { 'data-canopy-command': true },
+      // Default trigger button so users have a visible control even if the UI bundle isn't available
+      button ? React.createElement(
+        'button',
+        {
+          type: 'button',
+          'data-canopy-command-trigger': true,
+          className: 'inline-flex items-center gap-1 px-2 py-1 rounded border border-slate-300 text-slate-700 hover:bg-slate-50',
+          'aria-label': 'Open search',
+        },
+        React.createElement('span', { 'aria-hidden': true }, '⌘K'),
+        React.createElement('span', { className: 'sr-only' }, buttonLabel)
+      ) : null,
+      React.createElement('script', { type: 'application/json', dangerouslySetInnerHTML: { __html: json } })
+    );
+  };
   try {
-    // Use server-safe UI subset to avoid importing browser-only components
-    const mod = await import("@canopy-iiif/app/ui/server");
-    UI_COMPONENTS = mod || {};
+    // Prefer resolving the actual dist file and busting cache via mtime to pick up new exports during dev
+    let resolved = null;
+    // Prefer explicit dist path to avoid export-map issues
+    try { resolved = require.resolve("@canopy-iiif/app/ui/dist/server.mjs"); } catch (_) {
+      try { resolved = require.resolve("@canopy-iiif/app/ui/server"); } catch (_) { resolved = null; }
+    }
+    // Determine current mtime for change detection
+    let currentPath = resolved || '';
+    let currentMtime = 0;
+    if (currentPath) {
+      try { const st = fs.statSync(currentPath); currentMtime = Math.floor(st.mtimeMs || 0); } catch (_) { currentMtime = 0; }
+    }
+    // If we have a cached module and the path/mtime have not changed, return cached
+    if (UI_COMPONENTS && UI_COMPONENTS_PATH === currentPath && UI_COMPONENTS_MTIME === currentMtime) {
+      if (DEBUG) {
+        try { console.log('[canopy][mdx] UI components cache hit:', { path: UI_COMPONENTS_PATH, mtime: UI_COMPONENTS_MTIME }); } catch(_){}
+      }
+      return UI_COMPONENTS;
+    }
+    let mod = null;
+    if (resolved) {
+      const { pathToFileURL } = require("url");
+      let bust = currentMtime ? `?v=${currentMtime}` : `?v=${Date.now()}`;
+      mod = await import(pathToFileURL(resolved).href + bust).catch((e) => {
+        if (DEBUG) { try { console.warn('[canopy][mdx] ESM import failed for', resolved, '\n', e && (e.stack || e.message || String(e))); } catch(_){} }
+        return null;
+      });
+      if (DEBUG) {
+        try { console.log('[canopy][mdx] UI components resolved', { path: resolved, mtime: currentMtime, loaded: !!mod }); } catch(_){}
+      }
+    }
+    if (!mod) {
+      mod = await import("@canopy-iiif/app/ui/server").catch((e) => {
+        if (DEBUG) { try { console.warn('[canopy][mdx] Export-map import failed for @canopy-iiif/app/ui/server', '\n', e && (e.stack || e.message || String(e))); } catch(_){} }
+        return null;
+      });
+      if (DEBUG) {
+        try { console.log('[canopy][mdx] UI components fallback import via export map', { ok: !!mod }); } catch(_){}
+      }
+    }
+    let comp = (mod && typeof mod === 'object') ? mod : {};
+    // Fallback: import workspace source directly if key exports missing
+    const needFallback = !(comp && (comp.CommandPalette || comp.FeaturedHero || comp.Viewer));
+    if (needFallback) {
+      try {
+        const ws = path.join(process.cwd(), 'packages', 'app', 'ui', 'server.js');
+        if (fs.existsSync(ws)) {
+          const { pathToFileURL } = require('url');
+          // Use workspace server.js mtime for busting
+          let bustWs = `?v=${Date.now()}`;
+          try { const st = fs.statSync(ws); currentPath = ws; currentMtime = Math.floor(st.mtimeMs || 0); bustWs = `?v=${currentMtime}`; } catch (_) {}
+          const wsMod = await import(pathToFileURL(ws).href + bustWs).catch(() => null);
+          if (wsMod && typeof wsMod === 'object') {
+            comp = { ...wsMod, ...comp };
+          }
+          if (DEBUG) {
+            try { console.log('[canopy][mdx] UI components augmented from workspace source', { ws, ok: !!wsMod }); } catch(_){}
+          }
+        }
+      } catch (_) {}
+    }
+    // Ensure core placeholders exist to avoid MDX compile failures
+    if (!comp.CommandPalette) comp.CommandPalette = fallbackCommand;
+    if (DEBUG) {
+      try { console.log('[canopy][mdx] UI component sources', {
+        path: currentPath,
+        mtime: currentMtime,
+        hasServerExport: !!mod,
+        hasWorkspace: typeof comp !== 'undefined',
+        CommandPalette: !!comp.CommandPalette,
+        Viewer: !!comp.Viewer,
+        Slider: !!comp.Slider,
+      }); } catch(_){}
+    }
+    const mkJson = (props) => {
+      try { return JSON.stringify(props || {}); } catch (_) { return '{}'; }
+    };
+    if (!comp.Viewer) comp.Viewer = function Viewer(props){
+      return React.createElement('div', { 'data-canopy-viewer': '1', className: 'not-prose' },
+        React.createElement('script', { type: 'application/json', dangerouslySetInnerHTML: { __html: mkJson(props) } })
+      );
+    };
+    if (!comp.Slider) comp.Slider = function Slider(props){
+      return React.createElement('div', { 'data-canopy-slider': '1', className: 'not-prose' },
+        React.createElement('script', { type: 'application/json', dangerouslySetInnerHTML: { __html: mkJson(props) } })
+      );
+    };
+    if (!comp.RelatedItems) comp.RelatedItems = function RelatedItems(props){
+      return React.createElement('div', { 'data-canopy-related-items': '1', className: 'not-prose' },
+        React.createElement('script', { type: 'application/json', dangerouslySetInnerHTML: { __html: mkJson(props) } })
+      );
+    };
+    if (!comp.SearchForm) comp.SearchForm = function SearchForm(props){
+      return React.createElement('div', { 'data-canopy-search-form': '1' },
+        React.createElement('script', { type: 'application/json', dangerouslySetInnerHTML: { __html: mkJson(props) } })
+      );
+    };
+    if (!comp.SearchResults) comp.SearchResults = function SearchResults(props){
+      return React.createElement('div', { 'data-canopy-search-results': '1' },
+        React.createElement('script', { type: 'application/json', dangerouslySetInnerHTML: { __html: mkJson(props) } })
+      );
+    };
+    if (!comp.SearchSummary) comp.SearchSummary = function SearchSummary(props){
+      return React.createElement('div', { 'data-canopy-search-summary': '1' },
+        React.createElement('script', { type: 'application/json', dangerouslySetInnerHTML: { __html: mkJson(props) } })
+      );
+    };
+    if (!comp.SearchTotal) comp.SearchTotal = function SearchTotal(props){
+      return React.createElement('div', { 'data-canopy-search-total': '1' },
+        React.createElement('script', { type: 'application/json', dangerouslySetInnerHTML: { __html: mkJson(props) } })
+      );
+    };
+    // Ensure a minimal SSR Hero exists
+    if (!comp.Hero) {
+      comp.Hero = function SimpleHero({ height = 360, item, className = '', style = {}, ...rest }){
+        const h = typeof height === 'number' ? `${height}px` : String(height || '').trim() || '360px';
+        const base = { position: 'relative', width: '100%', height: h, overflow: 'hidden', backgroundColor: 'var(--color-gray-muted)', ...style };
+        const title = (item && item.title) || '';
+        const href = (item && item.href) || '#';
+        const thumbnail = (item && item.thumbnail) || '';
+        return React.createElement('div', { className: ['canopy-hero', className].filter(Boolean).join(' '), style: base, ...rest },
+          thumbnail ? React.createElement('img', { src: thumbnail, alt: '', 'aria-hidden': 'true', style: { position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', objectPosition:'center', filter:'none' } }) : null,
+          React.createElement('div', { className:'canopy-hero-overlay', style: { position:'absolute', left:0, right:0, bottom:0, padding:'1rem', background:'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.35) 55%, rgba(0,0,0,0.65) 100%)', color:'white' } },
+            React.createElement('h3', { style: { margin:0, fontSize:'1.5rem', fontWeight:600, lineHeight:1.2, textShadow:'0 1px 3px rgba(0,0,0,0.6)' } },
+              React.createElement('a', { href, style:{ color:'inherit', textDecoration:'none' }, className:'canopy-hero-link' }, title)
+            )
+          )
+        );
+      };
+    }
+    // Provide a minimal SSR FeaturedHero fallback if missing
+    if (!comp.FeaturedHero) {
+      try {
+        const helpers = require('../components/featured');
+        comp.FeaturedHero = function FeaturedHero(props) {
+          try {
+            const list = helpers && helpers.readFeaturedFromCacheSync ? helpers.readFeaturedFromCacheSync() : [];
+            if (!Array.isArray(list) || list.length === 0) return null;
+            const index = (props && typeof props.index === 'number') ? Math.max(0, Math.min(list.length - 1, Math.floor(props.index))) : null;
+            const pick = (index != null) ? index : ((props && (props.random === true || props.random === 'true')) ? Math.floor(Math.random() * list.length) : 0);
+            const item = list[pick] || list[0];
+            return React.createElement(comp.Hero, { ...props, item });
+          } catch (_) { return null; }
+        };
+      } catch (_) { /* ignore */ }
+    }
+    UI_COMPONENTS = comp;
+    UI_COMPONENTS_PATH = currentPath;
+    UI_COMPONENTS_MTIME = currentMtime;
   } catch (_) {
-    UI_COMPONENTS = {};
+    // As a last resort, supply minimal stubs so pages still compile
+    UI_COMPONENTS = { CommandPalette: fallbackCommand };
+    UI_COMPONENTS_PATH = '';
+    UI_COMPONENTS_MTIME = 0;
   }
   return UI_COMPONENTS;
 }
@@ -672,6 +854,79 @@ async function ensureReactGlobals() {
   });
 }
 
+// Bundle a small runtime to hydrate <Hero /> placeholders from featured items
+async function ensureHeroRuntime() {
+  let esbuild = null;
+  try { esbuild = require("../../ui/node_modules/esbuild"); } catch (_) { try { esbuild = require("esbuild"); } catch (_) {} }
+  if (!esbuild) return;
+  const { path } = require("../common");
+  ensureDirSync(OUT_DIR);
+  const scriptsDir = path.join(OUT_DIR, 'scripts');
+  ensureDirSync(scriptsDir);
+  const outFile = path.join(scriptsDir, 'canopy-hero.js');
+  const entry = `
+    import { Hero } from '@canopy-iiif/app/ui';
+    function ready(fn){ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', fn, { once: true }); else fn(); }
+    function parseProps(el){ try{ const s=el.querySelector('script[type="application/json"]'); if(s) return JSON.parse(s.textContent||'{}'); }catch(_){ } return {}; }
+    function rootBase(){ try { var bp=(window&&window.CANOPY_BASE_PATH)?String(window.CANOPY_BASE_PATH):''; return bp && bp.endsWith('/') ? bp.slice(0,-1) : bp; } catch(_){ return ''; } }
+    async function getApiVersion(){ try{ const u=rootBase() + '/api/index.json'; const res=await fetch(u).catch(()=>null); const j=res&&res.ok?await res.json().catch(()=>null):null; return (j && j.version) || ''; }catch(_){ return ''; } }
+    async function loadFeatured(){ try { const v = await getApiVersion(); const q = v ? ('?v='+encodeURIComponent(v)) : ''; const res = await fetch(rootBase() + '/api/featured.json' + q).catch(()=>null); const j = res && res.ok ? await res.json().catch(()=>[]) : []; return Array.isArray(j) ? j : (j && j.items) || []; } catch(_){ return []; } }
+    function mount(el, rec){ try{ const React=(window&&window.React)||null; const RDC=(window&&window.ReactDOMClient)||null; const createRoot = RDC && RDC.createRoot; if(!React||!createRoot) return; const props = parseProps(el) || {}; const height = props.height || 360; const node = React.createElement(Hero, { height, item: rec }); const root=createRoot(el); root.render(node); } catch(_){} }
+    ready(async function(){ const hosts = Array.from(document.querySelectorAll('[data-canopy-hero]')); if(!hosts.length) return; const featured = await loadFeatured(); if(!featured.length) return; hosts.forEach((el, i) => { try { const p = parseProps(el) || {}; let idx = 0; if (p && typeof p.index === 'number') idx = Math.max(0, Math.min(featured.length-1, Math.floor(p.index))); else if (p && (p.random===true || p.random==='true')) idx = Math.floor(Math.random() * featured.length); const rec = featured[idx] || featured[0]; if (rec) mount(el, rec); } catch(_){} }); });
+  `;
+  const reactShim = `
+    const React = (typeof window !== 'undefined' && window.React) || {};
+    export default React;
+    export const Children = React.Children;
+    export const Component = React.Component;
+    export const Fragment = React.Fragment;
+    export const createElement = React.createElement;
+    export const cloneElement = React.cloneElement;
+    export const createContext = React.createContext;
+    export const forwardRef = React.forwardRef;
+    export const memo = React.memo;
+    export const startTransition = React.startTransition;
+    export const isValidElement = React.isValidElement;
+    export const useEffect = React.useEffect;
+    export const useLayoutEffect = React.useLayoutEffect;
+    export const useMemo = React.useMemo;
+    export const useState = React.useState;
+    export const useRef = React.useRef;
+    export const useCallback = React.useCallback;
+    export const useContext = React.useContext;
+    export const useReducer = React.useReducer;
+    export const useId = React.useId;
+  `;
+  const rdomClientShim = `
+    const RDC = (typeof window !== 'undefined' && window.ReactDOMClient) || {};
+    export default RDC;
+    export const createRoot = RDC.createRoot;
+    export const hydrateRoot = RDC.hydrateRoot;
+  `;
+  const plugin = {
+    name: 'canopy-react-shims-hero',
+    setup(build) {
+      const ns = 'canopy-shim';
+      build.onResolve({ filter: /^react$/ }, () => ({ path: 'react', namespace: ns }));
+      build.onResolve({ filter: /^react-dom\/client$/ }, () => ({ path: 'react-dom-client', namespace: ns }));
+      build.onLoad({ filter: /^react$/, namespace: ns }, () => ({ contents: reactShim, loader: 'js' }));
+      build.onLoad({ filter: /^react-dom-client$/, namespace: ns }, () => ({ contents: rdomClientShim, loader: 'js' }));
+    }
+  };
+  await esbuild.build({
+    stdin: { contents: entry, resolveDir: process.cwd(), sourcefile: 'canopy-hero-entry.js', loader: 'js' },
+    outfile: outFile,
+    platform: 'browser',
+    format: 'iife',
+    bundle: true,
+    sourcemap: false,
+    target: ['es2018'],
+    logLevel: 'silent',
+    minify: true,
+    plugins: [plugin],
+  });
+}
+
 module.exports = {
   extractTitle,
   isReservedFile,
@@ -682,6 +937,7 @@ module.exports = {
   loadAppWrapper,
   ensureClientRuntime,
   ensureSliderRuntime,
+  ensureHeroRuntime,
   ensureFacetsRuntime,
   ensureReactGlobals,
   resetMdxCaches: function () {
@@ -689,5 +945,6 @@ module.exports = {
       DIR_LAYOUTS.clear();
     } catch (_) {}
     APP_WRAPPER = null;
+    UI_COMPONENTS = null;
   },
 };

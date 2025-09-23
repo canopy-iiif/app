@@ -9,6 +9,8 @@
   ],
   "scripts": {
     "build": "node app/scripts/canopy-build.mjs",
+    "verify": "node packages/helpers/verify-build.js",
+    "build:verify": "npm run build && npm run verify",
     "dev": "node app/scripts/canopy-build.mjs",
     "test": "npm run test:unit && npm run test:e2e",
     "test:unit": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand --config tests/jest.config.cjs",

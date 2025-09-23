@@ -811,6 +811,7 @@ async function buildIiifCollectionPages(CONFIG) {
             .join("/");
           const needsHydrateViewer = body.includes("data-canopy-viewer");
           const needsRelated = body.includes("data-canopy-related-items");
+          const needsHero = body.includes("data-canopy-hero");
           const needsCommand = body.includes("data-canopy-command");
           const needsHydrate =
             body.includes("data-canopy-hydrate") ||
@@ -836,6 +837,15 @@ async function buildIiifCollectionPages(CONFIG) {
                 .split(path.sep)
                 .join("/")
             : null;
+          const heroRel = needsHero
+            ? path
+                .relative(
+                  path.dirname(outPath),
+                  path.join(OUT_DIR, "scripts", "canopy-hero.js")
+                )
+                .split(path.sep)
+                .join("/")
+            : null;
           const relatedRel = needsRelated
             ? path
                 .relative(
@@ -856,11 +866,12 @@ async function buildIiifCollectionPages(CONFIG) {
             : null;
 
           let jsRel = null;
-          if (needsRelated && sliderRel) jsRel = sliderRel;
+          if (needsHero && heroRel) jsRel = heroRel;
+          else if (needsRelated && sliderRel) jsRel = sliderRel;
           else if (viewerRel) jsRel = viewerRel;
 
           let headExtra = head;
-          const needsReact = !!(needsHydrateViewer || needsRelated);
+          const needsReact = !!(needsHydrateViewer || needsRelated || needsHero);
           let vendorTag = "";
           if (needsReact) {
             try {
@@ -881,6 +892,8 @@ async function buildIiifCollectionPages(CONFIG) {
             } catch (_) {}
           }
           const extraScripts = [];
+          if (heroRel && jsRel !== heroRel)
+            extraScripts.push(`<script defer src="${heroRel}"></script>`);
           if (relatedRel && jsRel !== relatedRel)
             extraScripts.push(`<script defer src="${relatedRel}"></script>`);
           if (viewerRel && jsRel !== viewerRel)

@@ -19,6 +19,7 @@ const {
 const { ensureStyles } = require("./styles");
 const { copyAssets } = require("./assets");
 const { logLine } = require("./log");
+const { verifyBuildOutput } = require("./verify");
 
 // hold records between builds if skipping IIIF
 let iiifRecordsCache = [];
@@ -72,6 +73,7 @@ async function build(options = {}) {
     bright: true,
     underscore: true,
   });
+  // FeaturedHero now reads directly from the local IIIF cache; no API file needed
   pageRecords = await searchBuild.collectMdxPageRecords();
   await pages.buildContentTree(CONTENT_DIR, pageRecords);
   logLine("✓ MDX pages built", "green");
@@ -93,6 +95,8 @@ async function build(options = {}) {
     logLine("✗ Search index creation failed", "red", { bright: true });
     logLine("  " + String(e), "red");
   }
+
+  // No-op: Featured API file no longer written (SSR reads from cache directly)
 
   /**
    * Prepare client runtimes (e.g. search) by bundling with esbuild.
@@ -116,6 +120,17 @@ async function build(options = {}) {
     underscore: true,
   });
   await copyAssets();
+
+  /**
+   * Final verification (checklist)
+   */
+  try {
+    verifyBuildOutput({ outDir: OUT_DIR });
+  } catch (e) {
+    logLine("✗ Build verification failed", "red", { bright: true });
+    logLine(String(e && e.message ? e.message : e), "red");
+    process.exit(1);
+  }
 }
 
 module.exports = { build };
