@@ -1,3 +1,4 @@
+import { MagnifyingGlassIcon } from "../Icons";
 import React from "react";
 
 export default function SearchPanelForm(props = {}) {
@@ -16,22 +17,11 @@ export default function SearchPanelForm(props = {}) {
       action={searchPath}
       method="get"
       role="search"
+      autoComplete="off"
+      spellCheck="false"
       className="group flex items-center gap-2 px-2 py-1.5 rounded-lg border border-slate-300 bg-white/95 backdrop-blur text-slate-700 shadow-sm hover:shadow transition w-full focus-within:ring-2 focus-within:ring-brand-500"
     >
-      <svg
-        aria-hidden
-        viewBox="0 0 20 20"
-        fill="none"
-        className="w-4 h-4 text-slate-500"
-      >
-        <path
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="m19 19-4-4m-2.5-6.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0Z"
-        />
-      </svg>
+      <MagnifyingGlassIcon className="w-5 h-5 text-slate-400 group-focus-within:text-brand-500" />
       <input
         type="search"
         name="q"

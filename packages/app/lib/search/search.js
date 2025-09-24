@@ -333,43 +333,18 @@ async function buildSearchPage() {
   try {
     const outPath = path.join(OUT_DIR, 'search.html');
     ensureDirSync(path.dirname(outPath));
-    // If the author provided content/search/_layout.mdx, render it via MDX; otherwise fall back.
+    // Require author-provided content/search/_layout.mdx; do not fall back to a generated page.
     const searchLayoutPath = path.join(path.resolve('content'), 'search', '_layout.mdx');
     let body = '';
     let head = '';
-    if (require('../common').fs.existsSync(searchLayoutPath)) {
-      try {
-        const mdx = require('../build/mdx');
-        const rendered = await mdx.compileMdxFile(searchLayoutPath, outPath, {});
-        body = rendered && rendered.body ? rendered.body : '';
-        head = rendered && rendered.head ? rendered.head : '';
-      } catch (e) {
-        console.warn('Search: Failed to render content/search/_layout.mdx, falling back:', e && e.message ? e.message : e);
-      }
+    if (!require('../common').fs.existsSync(searchLayoutPath)) {
+      throw new Error('Missing required file: content/search/_layout.mdx');
     }
-    if (!body) {
-      // Minimal mount container; React SearchApp mounts into #search-root
-      let content = React.createElement(
-        'div',
-        null,
-        React.createElement('h1', null, 'Search'),
-        React.createElement('div', { id: 'search-root' })
-      );
-      const { loadAppWrapper, getMdxProvider, loadUiComponents } = require('../build/mdx');
-      const app = await loadAppWrapper();
-      const wrappedApp = app && app.App ? React.createElement(app.App, null, content) : content;
-      // Ensure MDX components like <SearchPanel /> resolve when rendering App wrapper
-      let page = wrappedApp;
-      try {
-        const MDXProvider = await getMdxProvider();
-        const components = await loadUiComponents();
-        if (MDXProvider && components) {
-          page = React.createElement(MDXProvider, { components }, wrappedApp);
-        }
-      } catch (_) { /* render without provider on failure */ }
-      body = ReactDOMServer.renderToStaticMarkup(page);
-      head = app && app.Head ? ReactDOMServer.renderToStaticMarkup(React.createElement(app.Head)) : '';
-    }
+    const mdx = require('../build/mdx');
+    const rendered = await mdx.compileMdxFile(searchLayoutPath, outPath, {});
+    body = rendered && rendered.body ? rendered.body : '';
+    head = rendered && rendered.head ? rendered.head : '';
+    if (!body) throw new Error('Search: content/search/_layout.mdx produced empty output');
     const importMap = '';
     const cssRel = path.relative(path.dirname(outPath), path.join(OUT_DIR, 'styles', 'styles.css')).split(path.sep).join('/');
     const jsAbs = path.join(OUT_DIR, 'scripts', 'search.js');
@@ -392,7 +367,8 @@ async function buildSearchPage() {
     await fsp.writeFile(outPath, html, 'utf8');
     console.log('Search: Built', path.relative(process.cwd(), outPath));
   } catch (e) {
-    console.warn('Search: Failed to build page', e.message);
+    console.warn('Search: Failed to build page', e && (e.message || e));
+    throw e;
   }
 }
 

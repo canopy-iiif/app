@@ -12,7 +12,12 @@ export default function SearchForm({
   const toLabel = (t) =>
     t && t.length ? t.charAt(0).toUpperCase() + t.slice(1) : "";
   return (
-    <form onSubmit={(e) => e.preventDefault()} className="space-y-3">
+    <form
+      onSubmit={(e) => e.preventDefault()}
+      className="space-y-3"
+      autoComplete="off"
+      spellCheck="false"
+    >
       <input
         id="search-input"
         type="search"
