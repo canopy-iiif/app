@@ -19,8 +19,7 @@ export { default as SearchTabs } from "./src/search/MdxSearchTabs.jsx";
 export { default as SearchFormUI } from "./src/search/SearchForm.jsx";
 export { default as SearchResultsUI } from "./src/search/SearchResults.jsx";
 export { default as SearchTabsUI } from "./src/search/SearchTabs.jsx";
-export { useSearch } from "./src/search/useSearch.js";
-export { default as Search } from "./src/search/Search.jsx";
+// Removed deprecated exports: useSearch, Search placeholder
 // Command palette placeholder (SSR-safe). Client runtime uses a lightweight fallback.
 export { default as CommandPalette } from "./src/command/MdxCommandPalette.jsx";
 // Search panel (SSR-safe) and its parts

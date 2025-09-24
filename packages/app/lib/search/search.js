@@ -314,14 +314,8 @@ async function ensureSearchRuntime() {
       plugins: [shimReactPlugin],
       external: ['@samvera/clover-iiif/*'],
     };
-    if (entryExists) {
-      await esbuild.build({ entryPoints: [entry], ...commonBuild });
-    } else {
-      await esbuild.build({
-        stdin: { contents: FALLBACK_SEARCH_APP, resolveDir: process.cwd(), loader: 'jsx', sourcefile: 'fallback-search-app.jsx' },
-        ...commonBuild,
-      });
-    }
+    if (!entryExists) throw new Error('Search runtime entry missing: ' + entry);
+    await esbuild.build({ entryPoints: [entry], ...commonBuild });
   } catch (e) {
     console.error('Search: bundle error:', e && e.message ? e.message : e);
     return;

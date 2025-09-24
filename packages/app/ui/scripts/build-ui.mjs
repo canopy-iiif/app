@@ -76,6 +76,19 @@ async function run() {
     conditions: ['module'],
     logLevel: 'info',
     outExtension: { '.js': '.mjs' },
+    plugins: [{
+      name: 'externalize-workspace-lib-components',
+      setup(build) {
+        build.onResolve({ filter: /\/lib\/components\// }, (args) => {
+          try {
+            const abs = path.resolve(path.dirname(args.importer), args.path);
+            return { path: abs, external: true };
+          } catch (e) {
+            return { path: args.path, external: true };
+          }
+        });
+      }
+    }],
   }).catch((e) => {
     console.error('[ui] server build failed:', e?.message || e);
     process.exit(1);
@@ -107,7 +120,7 @@ async function run() {
       outdir,
       entryNames: '[name]',
       bundle: true,
-      platform: 'neutral',
+      platform: 'node',
       format: 'esm',
       sourcemap: true,
       target: ['es2018'],
@@ -124,7 +137,20 @@ async function run() {
       mainFields: ['module', 'main'],
       conditions: ['module'],
       logLevel: 'info',
-      outExtension: { '.js': '.mjs' }
+      outExtension: { '.js': '.mjs' },
+      plugins: [{
+        name: 'externalize-workspace-lib-components',
+        setup(build) {
+          build.onResolve({ filter: /\/lib\/components\// }, (args) => {
+            try {
+              const abs = path.resolve(path.dirname(args.importer), args.path);
+              return { path: abs, external: true };
+            } catch (e) {
+              return { path: args.path, external: true };
+            }
+          });
+        }
+      }],
     });
     await serverCtx.watch();
 

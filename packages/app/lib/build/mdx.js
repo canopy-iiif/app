@@ -51,48 +51,18 @@ let UI_COMPONENTS_MTIME = 0;
 const DEBUG = process.env.CANOPY_DEBUG === '1' || process.env.CANOPY_DEBUG === 'true';
 async function loadUiComponents() {
   // Do not rely on a cached mapping; re-import each time to avoid transient races.
-  const fallbackCommand = function CommandPalette(props = {}) {
-    const {
-      placeholder = 'Search…',
-      hotkey = 'mod+k',
-      maxResults = 8,
-      groupOrder = ['work', 'page'],
-      button = true,
-      buttonLabel = 'Search',
-      label,
-      searchPath = '/search',
-    } = props || {};
-    const text = (typeof label === 'string' && label.trim()) ? label.trim() : buttonLabel;
-    let json = "{}";
-    try { json = JSON.stringify({ placeholder, hotkey, maxResults, groupOrder, label: text, searchPath }); } catch (_) { json = "{}"; }
-    return React.createElement(
-      'div',
-      { 'data-canopy-command': true, className: 'flex-1 min-w-0' },
-      // Teaser form fallback
-      React.createElement('div', { className: 'relative w-full' },
-        React.createElement('style', { dangerouslySetInnerHTML: { __html: ".relative[data-canopy-panel-auto='1']:focus-within [data-canopy-command-panel]{display:block}" } }),
-        React.createElement('form', { action: searchPath, method: 'get', role: 'search', className: 'group flex items-center gap-2 px-2 py-1.5 rounded-lg border border-slate-300 bg-white/95 backdrop-blur text-slate-700 shadow-sm hover:shadow transition w-full focus-within:ring-2 focus-within:ring-brand-500' },
-          // Left icon
-          React.createElement('span', { 'aria-hidden': true, className: 'text-slate-500' }, '🔎'),
-          // Input teaser
-          React.createElement('input', { type: 'search', name: 'q', 'data-canopy-command-input': true, placeholder, 'aria-label': 'Search', className: 'flex-1 bg-transparent outline-none placeholder:text-slate-400 py-0.5 min-w-0' }),
-          // Right submit (navigates)
-          React.createElement('button', { type: 'submit', 'data-canopy-command-link': true, className: 'inline-flex items-center gap-1 px-2 py-1 rounded-md border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700' }, text)
-        ),
-        // SSR placeholder panel; runtime will reuse and control visibility
-        React.createElement('div', { 'data-canopy-command-panel': true, style: { display: 'none', position: 'absolute', left: 0, right: 0, top: 'calc(100% + 4px)', background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.12)', zIndex: 1000, overflow: 'auto', maxHeight: '60vh' } },
-          React.createElement('div', { id: 'cplist' })
-        )
-      ),
-      React.createElement('script', { type: 'application/json', dangerouslySetInnerHTML: { __html: json } })
-    );
-  };
   try {
-    // Prefer resolving the actual dist file and busting cache via mtime to pick up new exports during dev
+    // Prefer the workspace dist path during dev to avoid export-map resolution issues
     let resolved = null;
+    try {
+      const wsDist = path.join(process.cwd(), 'packages', 'app', 'ui', 'dist', 'server.mjs');
+      if (fs.existsSync(wsDist)) resolved = wsDist;
+    } catch (_) {}
     // Prefer explicit dist path to avoid export-map issues
-    try { resolved = require.resolve("@canopy-iiif/app/ui/dist/server.mjs"); } catch (_) {
-      try { resolved = require.resolve("@canopy-iiif/app/ui/server"); } catch (_) { resolved = null; }
+    if (!resolved) {
+      try { resolved = require.resolve("@canopy-iiif/app/ui/dist/server.mjs"); } catch (_) {
+        try { resolved = require.resolve("@canopy-iiif/app/ui/server"); } catch (_) { resolved = null; }
+      }
     }
     // Determine current mtime for change detection
     let currentPath = resolved || '';
@@ -108,50 +78,45 @@ async function loadUiComponents() {
       return UI_COMPONENTS;
     }
     let mod = null;
+    let importErr = null;
     if (resolved) {
       const { pathToFileURL } = require("url");
-      let bust = currentMtime ? `?v=${currentMtime}` : `?v=${Date.now()}`;
-      mod = await import(pathToFileURL(resolved).href + bust).catch((e) => {
-        if (DEBUG) { try { console.warn('[canopy][mdx] ESM import failed for', resolved, '\n', e && (e.stack || e.message || String(e))); } catch(_){} }
-        return null;
-      });
+      const fileUrl = pathToFileURL(resolved).href;
+      const attempts = 5;
+      for (let i = 0; i < attempts && !mod; i++) {
+        const bustVal = currentMtime ? `${currentMtime}-${i}` : `${Date.now()}-${i}`;
+        try {
+          mod = await import(fileUrl + `?v=${bustVal}`);
+        } catch (e) {
+          importErr = e;
+          if (DEBUG) {
+            try { console.warn('[canopy][mdx] ESM import failed for', resolved, '(attempt', i + 1, 'of', attempts + ')\n', e && (e.stack || e.message || String(e))); } catch(_){}
+          }
+          // Small delay to avoid watch-write race
+          await new Promise((r) => setTimeout(r, 60));
+        }
+      }
       if (DEBUG) {
         try { console.log('[canopy][mdx] UI components resolved', { path: resolved, mtime: currentMtime, loaded: !!mod }); } catch(_){}
       }
     }
     if (!mod) {
-      mod = await import("@canopy-iiif/app/ui/server").catch((e) => {
-        if (DEBUG) { try { console.warn('[canopy][mdx] Export-map import failed for @canopy-iiif/app/ui/server', '\n', e && (e.stack || e.message || String(e))); } catch(_){} }
-        return null;
-      });
-      if (DEBUG) {
-        try { console.log('[canopy][mdx] UI components fallback import via export map', { ok: !!mod }); } catch(_){}
+      // Try package subpath as a secondary resolution path (not a UI component fallback)
+      try {
+        mod = await import('@canopy-iiif/app/ui/server');
+      } catch (e2) {
+        const msgA = importErr && (importErr.stack || importErr.message);
+        const msgB = e2 && (e2.stack || e2.message);
+        throw new Error('Failed to load @canopy-iiif/app/ui/server. Ensure the UI package is built.\nPath import error: ' + (msgA||'') + '\nExport-map import error: ' + (msgB||''));
       }
     }
     let comp = (mod && typeof mod === 'object') ? mod : {};
-    // Fallback: import workspace source directly if key exports missing
-    const needFallback = !(comp && (comp.CommandPalette || comp.FeaturedHero || comp.Viewer));
-    if (needFallback) {
-      try {
-        const ws = path.join(process.cwd(), 'packages', 'app', 'ui', 'server.js');
-        if (fs.existsSync(ws)) {
-          const { pathToFileURL } = require('url');
-          // Use workspace server.js mtime for busting
-          let bustWs = `?v=${Date.now()}`;
-          try { const st = fs.statSync(ws); currentPath = ws; currentMtime = Math.floor(st.mtimeMs || 0); bustWs = `?v=${currentMtime}`; } catch (_) {}
-          const wsMod = await import(pathToFileURL(ws).href + bustWs).catch(() => null);
-          if (wsMod && typeof wsMod === 'object') {
-            comp = { ...wsMod, ...comp };
-          }
-          if (DEBUG) {
-            try { console.log('[canopy][mdx] UI components augmented from workspace source', { ws, ok: !!wsMod }); } catch(_){}
-          }
-        }
-      } catch (_) {}
+    // Hard-require core exports; do not inject fallbacks
+    const required = ['SearchPanel', 'CommandPalette', 'SearchForm', 'SearchResults', 'SearchSummary', 'SearchTotal', 'SearchTabs', 'Viewer', 'Slider', 'RelatedItems'];
+    const missing = required.filter((k) => !comp || !comp[k]);
+    if (missing.length) {
+      throw new Error('[canopy][mdx] Missing UI exports: ' + missing.join(', '));
     }
-    // Ensure core placeholders exist to avoid MDX compile failures
-    if (!comp.CommandPalette) comp.CommandPalette = fallbackCommand;
-    if (!comp.SearchPanel) comp.SearchPanel = comp.CommandPalette || fallbackCommand;
     if (DEBUG) {
       try { console.log('[canopy][mdx] UI component sources', {
         path: currentPath,
@@ -163,49 +128,7 @@ async function loadUiComponents() {
         Slider: !!comp.Slider,
       }); } catch(_){}
     }
-    const mkJson = (props) => {
-      try { return JSON.stringify(props || {}); } catch (_) { return '{}'; }
-    };
-    if (!comp.Viewer) comp.Viewer = function Viewer(props){
-      return React.createElement('div', { 'data-canopy-viewer': '1', className: 'not-prose' },
-        React.createElement('script', { type: 'application/json', dangerouslySetInnerHTML: { __html: mkJson(props) } })
-      );
-    };
-    if (!comp.Slider) comp.Slider = function Slider(props){
-      return React.createElement('div', { 'data-canopy-slider': '1', className: 'not-prose' },
-        React.createElement('script', { type: 'application/json', dangerouslySetInnerHTML: { __html: mkJson(props) } })
-      );
-    };
-    if (!comp.RelatedItems) comp.RelatedItems = function RelatedItems(props){
-      return React.createElement('div', { 'data-canopy-related-items': '1', className: 'not-prose' },
-        React.createElement('script', { type: 'application/json', dangerouslySetInnerHTML: { __html: mkJson(props) } })
-      );
-    };
-    if (!comp.SearchForm) comp.SearchForm = function SearchForm(props){
-      return React.createElement('div', { 'data-canopy-search-form': '1' },
-        React.createElement('script', { type: 'application/json', dangerouslySetInnerHTML: { __html: mkJson(props) } })
-      );
-    };
-    if (!comp.SearchResults) comp.SearchResults = function SearchResults(props){
-      return React.createElement('div', { 'data-canopy-search-results': '1' },
-        React.createElement('script', { type: 'application/json', dangerouslySetInnerHTML: { __html: mkJson(props) } })
-      );
-    };
-    if (!comp.SearchSummary) comp.SearchSummary = function SearchSummary(props){
-      return React.createElement('div', { 'data-canopy-search-summary': '1' },
-        React.createElement('script', { type: 'application/json', dangerouslySetInnerHTML: { __html: mkJson(props) } })
-      );
-    };
-    if (!comp.SearchTotal) comp.SearchTotal = function SearchTotal(props){
-      return React.createElement('div', { 'data-canopy-search-total': '1' },
-        React.createElement('script', { type: 'application/json', dangerouslySetInnerHTML: { __html: mkJson(props) } })
-      );
-    };
-    if (!comp.SearchTabs) comp.SearchTabs = function SearchTabs(props){
-      return React.createElement('div', { 'data-canopy-search-tabs': '1' },
-        React.createElement('script', { type: 'application/json', dangerouslySetInnerHTML: { __html: mkJson(props) } })
-      );
-    };
+    // No stub injection beyond this point; UI package must supply these.
     // Ensure a minimal SSR Hero exists
     if (!comp.Hero) {
       comp.Hero = function SimpleHero({ height = 360, item, className = '', style = {}, ...rest }){
@@ -243,11 +166,9 @@ async function loadUiComponents() {
     UI_COMPONENTS = comp;
     UI_COMPONENTS_PATH = currentPath;
     UI_COMPONENTS_MTIME = currentMtime;
-  } catch (_) {
-    // As a last resort, supply minimal stubs so pages still compile
-    UI_COMPONENTS = { CommandPalette: fallbackCommand };
-    UI_COMPONENTS_PATH = '';
-    UI_COMPONENTS_MTIME = 0;
+  } catch (e) {
+    const msg = e && (e.stack || e.message || String(e)) || 'unknown error';
+    throw new Error('[canopy][mdx] Failed to load UI components (no fallbacks): ' + msg);
   }
   return UI_COMPONENTS;
 }
