@@ -68,7 +68,7 @@ export default function Hero({
     <figure
       className={["canopy-hero", className].filter(Boolean).join(" ")}
       style={{ ...baseStyles, ...style }}
-      {...rest}
+      {...(() => { const r = { ...rest }; try { delete r.random; delete r.index; } catch (_) {} return r; })()}
     >
       {thumbnail ? (
         <img src={thumbnail} alt="" aria-hidden="true" style={imgStyles} />

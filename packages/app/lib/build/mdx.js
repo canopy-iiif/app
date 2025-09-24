@@ -59,24 +59,31 @@ async function loadUiComponents() {
       groupOrder = ['work', 'page'],
       button = true,
       buttonLabel = 'Search',
+      label,
+      searchPath = '/search',
     } = props || {};
+    const text = (typeof label === 'string' && label.trim()) ? label.trim() : buttonLabel;
     let json = "{}";
-    try { json = JSON.stringify({ placeholder, hotkey, maxResults, groupOrder }); } catch (_) { json = "{}"; }
+    try { json = JSON.stringify({ placeholder, hotkey, maxResults, groupOrder, label: text, searchPath }); } catch (_) { json = "{}"; }
     return React.createElement(
       'div',
-      { 'data-canopy-command': true },
-      // Default trigger button so users have a visible control even if the UI bundle isn't available
-      button ? React.createElement(
-        'button',
-        {
-          type: 'button',
-          'data-canopy-command-trigger': true,
-          className: 'inline-flex items-center gap-1 px-2 py-1 rounded border border-slate-300 text-slate-700 hover:bg-slate-50',
-          'aria-label': 'Open search',
-        },
-        React.createElement('span', { 'aria-hidden': true }, '⌘K'),
-        React.createElement('span', { className: 'sr-only' }, buttonLabel)
-      ) : null,
+      { 'data-canopy-command': true, className: 'flex-1 min-w-0' },
+      // Teaser form fallback
+      React.createElement('div', { className: 'relative w-full' },
+        React.createElement('style', { dangerouslySetInnerHTML: { __html: ".relative[data-canopy-panel-auto='1']:focus-within [data-canopy-command-panel]{display:block}" } }),
+        React.createElement('form', { action: searchPath, method: 'get', role: 'search', className: 'group flex items-center gap-2 px-2 py-1.5 rounded-lg border border-slate-300 bg-white/95 backdrop-blur text-slate-700 shadow-sm hover:shadow transition w-full focus-within:ring-2 focus-within:ring-brand-500' },
+          // Left icon
+          React.createElement('span', { 'aria-hidden': true, className: 'text-slate-500' }, '🔎'),
+          // Input teaser
+          React.createElement('input', { type: 'search', name: 'q', 'data-canopy-command-input': true, placeholder, 'aria-label': 'Search', className: 'flex-1 bg-transparent outline-none placeholder:text-slate-400 py-0.5 min-w-0' }),
+          // Right submit (navigates)
+          React.createElement('button', { type: 'submit', 'data-canopy-command-link': true, className: 'inline-flex items-center gap-1 px-2 py-1 rounded-md border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700' }, text)
+        ),
+        // SSR placeholder panel; runtime will reuse and control visibility
+        React.createElement('div', { 'data-canopy-command-panel': true, style: { display: 'none', position: 'absolute', left: 0, right: 0, top: 'calc(100% + 4px)', background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.12)', zIndex: 1000, overflow: 'auto', maxHeight: '60vh' } },
+          React.createElement('div', { id: 'cplist' })
+        )
+      ),
       React.createElement('script', { type: 'application/json', dangerouslySetInnerHTML: { __html: json } })
     );
   };
@@ -144,6 +151,7 @@ async function loadUiComponents() {
     }
     // Ensure core placeholders exist to avoid MDX compile failures
     if (!comp.CommandPalette) comp.CommandPalette = fallbackCommand;
+    if (!comp.SearchPanel) comp.SearchPanel = comp.CommandPalette || fallbackCommand;
     if (DEBUG) {
       try { console.log('[canopy][mdx] UI component sources', {
         path: currentPath,
@@ -190,6 +198,11 @@ async function loadUiComponents() {
     };
     if (!comp.SearchTotal) comp.SearchTotal = function SearchTotal(props){
       return React.createElement('div', { 'data-canopy-search-total': '1' },
+        React.createElement('script', { type: 'application/json', dangerouslySetInnerHTML: { __html: mkJson(props) } })
+      );
+    };
+    if (!comp.SearchTabs) comp.SearchTabs = function SearchTabs(props){
+      return React.createElement('div', { 'data-canopy-search-tabs': '1' },
         React.createElement('script', { type: 'application/json', dangerouslySetInnerHTML: { __html: mkJson(props) } })
       );
     };

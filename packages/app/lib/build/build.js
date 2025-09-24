@@ -58,11 +58,15 @@ async function build(options = {}) {
     underscore: true,
   });
   let iiifRecords = [];
+  const CONFIG = await iiif.loadConfig();
   if (!skipIiif) {
-    const CONFIG = await iiif.loadConfig();
     const results = await iiif.buildIiifCollectionPages(CONFIG);
     iiifRecords = results?.iiifRecords;
   }
+  // Ensure any configured featured manifests are cached (and thumbnails computed)
+  // so SSR components like <Hero /> can resolve items even if they are not part of
+  // the traversed collection or when IIIF build is skipped during incremental rebuilds.
+  try { await iiif.ensureFeaturedInCache(CONFIG); } catch (_) {}
 
   /**
    * Build contextual MDX content from the content directory.

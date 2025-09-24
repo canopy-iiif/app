@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useSyncExternalStore, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { SearchFormUI, SearchResultsUI } from '@canopy-iiif/app/ui';
+import { SearchFormUI, SearchResultsUI, SearchTabsUI } from '@canopy-iiif/app/ui';
 
 // Lightweight IndexedDB utilities (no deps) with graceful fallback
 function hasIDB() {
@@ -133,11 +133,14 @@ function createSearchStore() {
       // Broadcast new index installs to other tabs
       let bc = null;
       try { if (typeof BroadcastChannel !== 'undefined') bc = new BroadcastChannel('canopy-search'); } catch (_) {}
-      // Try to load meta version for cache-busting; fall back to hash of JSON
+      // Try to load meta for cache-busting and tab order; fall back to hash of JSON
       let version = '';
+      let tabsOrder = [];
       try {
         const meta = await fetch('./api/index.json').then((r) => (r && r.ok ? r.json() : null)).catch(() => null);
         if (meta && typeof meta.version === 'string') version = meta.version;
+        const ord = meta && meta.search && meta.search.tabs && Array.isArray(meta.search.tabs.order) ? meta.search.tabs.order : [];
+        tabsOrder = ord.map((s) => String(s)).filter(Boolean);
       } catch (_) {}
       const res = await fetch('./api/search-index.json' + (version ? `?v=${encodeURIComponent(version)}` : ''));
       const text = await res.text();
@@ -198,8 +201,22 @@ function createSearchStore() {
       } catch (_) {}
 
       const ts = Array.from(new Set(data.map((r) => String((r && r.type) || 'page'))));
-      const order = ['work', 'docs', 'page'];
+      const order = Array.isArray(tabsOrder) && tabsOrder.length ? tabsOrder : ['work', 'docs', 'page'];
       ts.sort((a, b) => { const ia = order.indexOf(a); const ib = order.indexOf(b); return (ia<0?99:ia)-(ib<0?99:ib) || a.localeCompare(b); });
+      // Default to configured first tab if no type param present
+      try {
+        const p = new URLSearchParams(location.search);
+        const hasType = p.has('type');
+        if (!hasType) {
+          let def = (order && order.length ? order[0] : 'all');
+          if (!ts.includes(def)) def = ts[0] || 'all';
+          if (def && def !== 'all') {
+            p.set('type', def);
+            history.replaceState(null, '', `${location.pathname}?${p.toString()}`);
+          }
+          set({ type: def });
+        }
+      } catch (_) {}
       set({ index: idx, records: data, types: ts, loading: false });
     } catch (_) { set({ loading: false }); }
   })();
@@ -225,6 +242,10 @@ function ResultsMount(props = {}) {
   if (loading) return <div className="text-slate-600">Loading…</div>;
   const layout = (props && props.layout) || 'grid';
   return <SearchResultsUI results={results} type={type} layout={layout} />;
+}
+function TabsMount() {
+  const { type, setType, types, counts } = useStore();
+  return <SearchTabsUI type={type} onTypeChange={setType} types={types} counts={counts} />;
 }
 function SummaryMount() {
   const { query, type, shown, total } = useStore();
@@ -263,10 +284,20 @@ function mountAt(selector, Comp) {
 
 if (typeof document !== 'undefined') {
   const run = () => {
+    // Mount tabs (preferred) or full form if present, plus summary/total/results
+    mountAt('[data-canopy-search-tabs]', TabsMount);
     mountAt('[data-canopy-search-form]', FormMount);
     mountAt('[data-canopy-search-results]', ResultsMount);
     mountAt('[data-canopy-search-summary]', SummaryMount);
     mountAt('[data-canopy-search-total]', TotalMount);
+    try {
+      window.addEventListener('canopy:search:setQuery', (ev) => {
+        try {
+          const q = ev && ev.detail && typeof ev.detail.query === 'string' ? ev.detail.query : (document.querySelector('[data-canopy-command-input]')?.value || '');
+          if (typeof q === 'string') store.setQuery(q);
+        } catch (_) {}
+      });
+    } catch (_) {}
   };
   if (document.readyState !== 'loading') run();
   else document.addEventListener('DOMContentLoaded', run, { once: true });

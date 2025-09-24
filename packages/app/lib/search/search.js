@@ -361,10 +361,19 @@ async function buildSearchPage() {
         React.createElement('h1', null, 'Search'),
         React.createElement('div', { id: 'search-root' })
       );
-      const { loadAppWrapper } = require('../build/mdx');
+      const { loadAppWrapper, getMdxProvider, loadUiComponents } = require('../build/mdx');
       const app = await loadAppWrapper();
       const wrappedApp = app && app.App ? React.createElement(app.App, null, content) : content;
-      body = ReactDOMServer.renderToStaticMarkup(wrappedApp);
+      // Ensure MDX components like <SearchPanel /> resolve when rendering App wrapper
+      let page = wrappedApp;
+      try {
+        const MDXProvider = await getMdxProvider();
+        const components = await loadUiComponents();
+        if (MDXProvider && components) {
+          page = React.createElement(MDXProvider, { components }, wrappedApp);
+        }
+      } catch (_) { /* render without provider on failure */ }
+      body = ReactDOMServer.renderToStaticMarkup(page);
       head = app && app.Head ? ReactDOMServer.renderToStaticMarkup(React.createElement(app.Head)) : '';
     }
     const importMap = '';

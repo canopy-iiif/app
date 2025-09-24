@@ -13,11 +13,15 @@ export { default as SearchForm } from "./src/search/MdxSearchForm.jsx";
 export { default as SearchResults } from "./src/search/MdxSearchResults.jsx";
 export { default as SearchSummary } from "./src/search/SearchSummary.jsx";
 export { default as SearchTotal } from "./src/search/SearchTotal.jsx";
+export { default as SearchTabs } from "./src/search/MdxSearchTabs.jsx";
 
 // Internal UI components for runtime (not mapped into MDX)
 export { default as SearchFormUI } from "./src/search/SearchForm.jsx";
 export { default as SearchResultsUI } from "./src/search/SearchResults.jsx";
+export { default as SearchTabsUI } from "./src/search/SearchTabs.jsx";
 export { useSearch } from "./src/search/useSearch.js";
 export { default as Search } from "./src/search/Search.jsx";
 // Command palette placeholder (SSR-safe). Client runtime uses a lightweight fallback.
 export { default as CommandPalette } from "./src/command/MdxCommandPalette.jsx";
+// Alias for unified naming
+export { default as SearchPanel } from "./src/command/MdxCommandPalette.jsx";

@@ -365,6 +365,51 @@ async function saveCachedManifest(manifest, id, parentId) {
   } catch (_) {}
 }
 
+// Ensure any configured featured manifests are present in the local cache
+// (and have thumbnails computed) so SSR components like <Hero /> can read them.
+async function ensureFeaturedInCache(cfg) {
+  try {
+    const CONFIG = cfg || (await loadConfig());
+    const featured = Array.isArray(CONFIG && CONFIG.featured) ? CONFIG.featured : [];
+    if (!featured.length) return;
+    const { getThumbnail } = require("../iiif/thumbnail");
+    // Thumbnail sizing config
+    const thumbSize = CONFIG && CONFIG.iiif && CONFIG.iiif.thumbnails && typeof CONFIG.iiif.thumbnails.preferredSize === 'number' ? CONFIG.iiif.thumbnails.preferredSize : 400;
+    const unsafeThumbs = !!(CONFIG && CONFIG.iiif && CONFIG.iiif.thumbnails && (CONFIG.iiif.thumbnails.unsafe === true || CONFIG.iiif.thumbnails.unsafe === 'true'));
+    for (const rawId of featured) {
+      const id = normalizeIiifId(String(rawId || ''));
+      if (!id) continue;
+      let manifest = await loadCachedManifestById(id);
+      if (!manifest) {
+        const m = await readJsonFromUri(id).catch(() => null);
+        if (!m) continue;
+        const v3 = await normalizeToV3(m);
+        if (!v3 || !v3.id) continue;
+        await saveCachedManifest(v3, id, '');
+        manifest = v3;
+      }
+      // Ensure thumbnail fields exist in index for this manifest (if computable)
+      try {
+        const t = await getThumbnail(manifest, thumbSize, unsafeThumbs);
+        if (t && t.url) {
+          const idx = await loadManifestIndex();
+          if (Array.isArray(idx.byId)) {
+            const entry = idx.byId.find((e) => e && e.type === 'Manifest' && normalizeIiifId(String(e.id)) === normalizeIiifId(String(manifest.id)));
+            if (entry) {
+              entry.thumbnail = String(t.url);
+              if (typeof t.width === 'number') entry.thumbnailWidth = t.width;
+              if (typeof t.height === 'number') entry.thumbnailHeight = t.height;
+              await saveManifestIndex(idx);
+            }
+          }
+        }
+      } catch (_) {}
+    }
+  } catch (_) {
+    // ignore failures; fallback SSR will still render a minimal hero without content
+  }
+}
+
 async function flushManifestCache() {
   try {
     await fsp.rm(IIIF_CACHE_MANIFESTS_DIR, { recursive: true, force: true });
@@ -762,7 +807,11 @@ async function buildIiifCollectionPages(CONFIG) {
             href = withBase(href);
             return React.createElement("a", { href, ...rest }, props.children);
           };
+          // Map exported UI components into MDX, with sensible aliases/fallbacks
           const compMap = { ...components, a: Anchor };
+          if (!compMap.SearchPanel && compMap.CommandPalette) {
+            compMap.SearchPanel = compMap.CommandPalette;
+          }
           if (!components.HelloWorld) {
             components.HelloWorld = components.Fallback
               ? (props) =>
@@ -992,6 +1041,10 @@ module.exports = {
   loadConfig,
   loadManifestIndex,
   saveManifestIndex,
+  // Expose helpers used by build for cache warming
+  loadCachedManifestById,
+  saveCachedManifest,
+  ensureFeaturedInCache,
 };
 
 // Debug: list collections cache after traversal
