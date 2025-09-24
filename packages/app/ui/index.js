@@ -23,5 +23,7 @@ export { useSearch } from "./src/search/useSearch.js";
 export { default as Search } from "./src/search/Search.jsx";
 // Command palette placeholder (SSR-safe). Client runtime uses a lightweight fallback.
 export { default as CommandPalette } from "./src/command/MdxCommandPalette.jsx";
-// Alias for unified naming
-export { default as SearchPanel } from "./src/command/MdxCommandPalette.jsx";
+// Search panel (SSR-safe) and its parts
+export { default as SearchPanel } from "./src/search/SearchPanel.jsx";
+export { default as SearchPanelForm } from "./src/search/SearchPanelForm.jsx";
+export { default as SearchPanelTeaserResults } from "./src/search/SearchPanelTeaserResults.jsx";
