@@ -60,6 +60,25 @@ function withBase(href) {
   return href;
 }
 
+function rootRelativeHref(href) {
+  try {
+    let raw = href == null ? '' : String(href);
+    raw = raw.trim();
+    if (!raw) return '/';
+    if (/^[a-z][a-z0-9+.-]*:/i.test(raw)) return raw;
+    if (raw.startsWith('//')) return raw;
+    if (raw.startsWith('#') || raw.startsWith('?')) return raw;
+    let cleaned = raw;
+    if (cleaned.startsWith('/')) cleaned = cleaned.replace(/^\/+/, '');
+    while (cleaned.startsWith('./')) cleaned = cleaned.slice(2);
+    while (cleaned.startsWith('../')) cleaned = cleaned.slice(3);
+    if (!cleaned) return '/';
+    return '/' + cleaned;
+  } catch (_) {
+    return href;
+  }
+}
+
 // Convert a site-relative path (e.g., "/api/foo.json") to an absolute URL.
 // Handles either:
 // - BASE_ORIGIN that may already include a path prefix (e.g., https://host/org/repo)
@@ -121,4 +140,5 @@ module.exports = {
   BASE_ORIGIN,
   absoluteUrl,
   applyBaseToHtml,
+  rootRelativeHref,
 };

@@ -260,6 +260,49 @@ function parseProps(el) {
   return {};
 }
 
+function bindSearchInputToStore() {
+  if (!store || typeof document === 'undefined') return;
+  try {
+    const input = document.querySelector('[data-canopy-command-input]');
+    if (!input || input.dataset.canopySearchSync === '1') return;
+    input.dataset.canopySearchSync = '1';
+
+    const syncFromStore = () => {
+      try {
+        const snap = store.getSnapshot();
+        const nextVal = (snap && typeof snap.query === 'string') ? snap.query : '';
+        if (input.value !== nextVal) input.value = nextVal;
+      } catch (_) {}
+    };
+
+    const onInput = (event) => {
+      try {
+        const val = event && event.target && typeof event.target.value === 'string' ? event.target.value : '';
+        const current = (() => {
+          try {
+            const snap = store.getSnapshot();
+            return snap && typeof snap.query === 'string' ? snap.query : '';
+          } catch (_) {
+            return '';
+          }
+        })();
+        if (val === current) return;
+        store.setQuery(val);
+      } catch (_) {}
+    };
+
+    input.addEventListener('input', onInput);
+    const unsubscribe = store.subscribe(syncFromStore);
+    syncFromStore();
+
+    const cleanup = () => {
+      try { input.removeEventListener('input', onInput); } catch (_) {}
+      try { if (typeof unsubscribe === 'function') unsubscribe(); } catch (_) {}
+    };
+    window.addEventListener('beforeunload', cleanup, { once: true });
+  } catch (_) {}
+}
+
 function mountAt(selector, Comp) {
   const nodes = document.querySelectorAll(selector);
   nodes.forEach((n) => {
@@ -280,6 +323,7 @@ if (typeof document !== 'undefined') {
     mountAt('[data-canopy-search-tabs]', TabsMount);
     mountAt('[data-canopy-search-results]', ResultsMount);
     mountAt('[data-canopy-search-summary]', SummaryMount);
+    bindSearchInputToStore();
     // Total mount removed
     try {
       window.addEventListener('canopy:search:setQuery', (ev) => {

@@ -28,7 +28,25 @@ async function ensureCommandFallback() {
         function ready(fn){ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', fn, { once: true }); else fn(); }
         function parseProps(el){ try{ const s = el.querySelector('script[type="application/json"]'); if(s) return JSON.parse(s.textContent||'{}'); }catch(_){ } return {}; }
         function norm(s){ try{ return String(s||'').toLowerCase(); }catch(_){ return ''; } }
-        function withBase(href){ try{ var bp = (window && window.CANOPY_BASE_PATH) ? String(window.CANOPY_BASE_PATH) : ''; if(!bp) return href; if(/^https?:/i.test(href)) return href; var clean = href.replace(/^\\/+/, ''); return (bp.endsWith('/') ? bp.slice(0,-1) : bp) + '/' + clean; } catch(_){ return href; } }
+        function withBase(href){
+          try{
+            var raw = href == null ? '' : String(href);
+            raw = raw.trim();
+            if(!raw) return raw;
+            var bp = (window && window.CANOPY_BASE_PATH) ? String(window.CANOPY_BASE_PATH) : '';
+            if(!bp){
+              if(/^[a-z][a-z0-9+.-]*:/i.test(raw) || raw.indexOf('//') === 0 || raw.charAt(0)==='#' || raw.charAt(0)==='?') return raw;
+              var cleaned = raw.replace(/^\\/+/, '');
+              while(cleaned.indexOf('./') === 0) cleaned = cleaned.slice(2);
+              while(cleaned.indexOf('../') === 0) cleaned = cleaned.slice(3);
+              if(!cleaned) return '/';
+              return '/' + cleaned;
+            }
+            if(/^https?:/i.test(raw)) return raw;
+            var clean = raw.replace(/^\\/+/, '');
+            return (bp.endsWith('/') ? bp.slice(0,-1) : bp) + '/' + clean;
+          } catch(_){ return href; }
+        }
         function rootBase(){ try { var bp = (window && window.CANOPY_BASE_PATH) ? String(window.CANOPY_BASE_PATH) : ''; return bp && bp.endsWith('/') ? bp.slice(0,-1) : bp; } catch(_) { return ''; } }
         function isOnSearchPage(){ try{ var base=rootBase(); var p=String(location.pathname||''); if(base && p.startsWith(base)) p=p.slice(base.length); if(p.endsWith('/')) p=p.slice(0,-1); return p==='/search'; }catch(_){ return false; } }
         async function loadRecords(){ try{ var v=''; try{ var m = await fetch(rootBase() + '/api/index.json').then(function(r){return r&&r.ok?r.json():null;}).catch(function(){return null;}); v=(m&&m.version)||''; }catch(_){} var res = await fetch(rootBase() + '/api/search-index.json' + (v?('?v='+encodeURIComponent(v)):'')).catch(function(){return null;}); var j = res && res.ok ? await res.json().catch(function(){return[];}) : []; return Array.isArray(j) ? j : (j && j.records) || []; } catch(_){ return []; } }

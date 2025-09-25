@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
+const { rootRelativeHref } = require('../common');
 
 function firstLabelString(label) {
   if (!label) return 'Untitled';
@@ -101,7 +102,7 @@ function readFeaturedFromCacheSync() {
       if (!m) continue;
       const rec = {
         title: firstLabelString(m && m.label),
-        href: path.join('works', slug + '.html').split(path.sep).join('/'),
+        href: rootRelativeHref(path.join('works', slug + '.html').split(path.sep).join('/')),
         type: 'work',
       };
       if (entry && entry.thumbnail) rec.thumbnail = String(entry.thumbnail);

@@ -1,8 +1,7 @@
 const React = require('react');
 const ReactDOMServer = require('react-dom/server');
 const crypto = require('crypto');
-const { path, withBase } = require('../common');
-const { ensureDirSync, OUT_DIR, htmlShell, fsp } = require('../common');
+const { path, withBase, rootRelativeHref, ensureDirSync, OUT_DIR, htmlShell, fsp } = require('../common');
 
 const FALLBACK_SEARCH_APP = `import React, { useEffect, useMemo, useSyncExternalStore, useState } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -367,7 +366,8 @@ async function buildSearchPage() {
 function toSafeString(val, fallback = '') { try { return String(val == null ? fallback : val); } catch (_) { return fallback; } }
 function sanitizeRecord(r) {
   const title = toSafeString(r && r.title, '');
-  const href = toSafeString(r && r.href, '');
+  const hrefRaw = toSafeString(r && r.href, '');
+  const href = rootRelativeHref(hrefRaw);
   const type = toSafeString(r && r.type, 'page');
   const thumbnail = toSafeString(r && r.thumbnail, '');
   const safeTitle = title.length > 300 ? title.slice(0, 300) + '…' : title;

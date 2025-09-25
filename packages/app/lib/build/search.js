@@ -23,7 +23,8 @@ async function buildFacetsForWorks(combined, labelWhitelist) {
     const rec = combined[i];
     if (!rec || String(rec.type) !== 'work') continue;
     const href = String(rec.href || '');
-    const m = href.match(/^works\/(.+)\.html$/i);
+    const normalizedHref = href.replace(/^\/+/, '');
+    const m = normalizedHref.match(/^works\/(.+)\.html$/i);
     if (!m) continue;
     const slug = m[1];
     const p = path.resolve('.cache/iiif/manifests', slug + '.json');
@@ -169,7 +170,7 @@ module.exports = { buildFacetsForWorks, writeFacetCollections, writeFacetsSearch
 
 
 async function collectMdxPageRecords() {
-  const { fs, fsp, path, CONTENT_DIR } = require('../common');
+  const { fs, fsp, path, CONTENT_DIR, rootRelativeHref } = require('../common');
   const mdx = require('./mdx');
   const pagesHelpers = require('./pages');
   const pages = [];
@@ -185,7 +186,7 @@ async function collectMdxPageRecords() {
         const title = mdx.extractTitle(src);
         const rel = path.relative(CONTENT_DIR, p).replace(/\.mdx$/i, '.html');
         if (base !== 'sitemap.mdx') {
-          const href = rel.split(path.sep).join('/');
+          const href = rootRelativeHref(rel.split(path.sep).join('/'));
           const underSearch = /^search\//i.test(href) || href.toLowerCase() === 'search.html';
           let include = !underSearch;
           let resolvedType = null;

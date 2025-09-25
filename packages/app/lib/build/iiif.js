@@ -11,6 +11,7 @@ const {
   CONTENT_DIR,
   ensureDirSync,
   htmlShell,
+  rootRelativeHref,
 } = require("../common");
 const mdx = require("./mdx");
 const { log, logLine, logResponse } = require("./log");
@@ -1009,7 +1010,7 @@ async function buildIiifCollectionPages(CONFIG) {
           iiifRecords.push({
             id: String(manifest.id || id),
             title,
-            href: href.split(path.sep).join("/"),
+            href: rootRelativeHref(href.split(path.sep).join("/")),
             type: "work",
             thumbnail: thumbUrl || undefined,
             thumbnailWidth:
