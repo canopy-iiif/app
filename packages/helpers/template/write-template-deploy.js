@@ -14,6 +14,8 @@ function main() {
   fs.writeFileSync(outPath, yml, 'utf8');
 }
 
+module.exports = main;
+
 if (require.main === module) {
   try {
     main();
@@ -22,4 +24,3 @@ if (require.main === module) {
     process.exit(1);
   }
 }
-

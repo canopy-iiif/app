@@ -99,7 +99,8 @@ function main() {
   mkdirp('dist-template');
   copyRepoToTemplate();
   rewritePackageJson(appVersion);
-  require('./write-template-deploy');
+  const writeTemplateDeploy = require('./write-template-deploy');
+  writeTemplateDeploy();
   writeTailwindFiles();
 }
 
