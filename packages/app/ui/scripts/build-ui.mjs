@@ -10,6 +10,27 @@ const root = path.resolve(__dirname, '..');
 const stylesDir = path.join(root, 'styles');
 const indexScss = path.join(stylesDir, 'index.scss');
 const indexCss = path.join(stylesDir, 'index.css');
+const packageRoot = path.resolve(root, '..');
+const packageName = '@canopy-iiif/app';
+
+const externalizeWorkspaceLibComponents = {
+  name: 'externalize-workspace-lib-components',
+  setup(build) {
+    build.onResolve({ filter: /\/lib\/components\// }, (args) => {
+      try {
+        const importerDir = path.dirname(args.importer);
+        const absPath = path.resolve(importerDir, args.path);
+        const relFromPackage = path.relative(packageRoot, absPath);
+        if (!relFromPackage.startsWith('..')) {
+          const packageImport = `${packageName}/${relFromPackage.split(path.sep).join('/')}`;
+          return { path: packageImport, external: true };
+        }
+      } catch (_) {}
+      // Fallback: keep original specifier but externalize so esbuild doesn't rebundle
+      return { path: args.path, external: true };
+    });
+  }
+};
 
 async function compileStylesOnce() {
   try {
@@ -76,19 +97,7 @@ async function run() {
     conditions: ['module'],
     logLevel: 'info',
     outExtension: { '.js': '.mjs' },
-    plugins: [{
-      name: 'externalize-workspace-lib-components',
-      setup(build) {
-        build.onResolve({ filter: /\/lib\/components\// }, (args) => {
-          try {
-            const abs = path.resolve(path.dirname(args.importer), args.path);
-            return { path: abs, external: true };
-          } catch (e) {
-            return { path: args.path, external: true };
-          }
-        });
-      }
-    }],
+    plugins: [externalizeWorkspaceLibComponents],
   }).catch((e) => {
     console.error('[ui] server build failed:', e?.message || e);
     process.exit(1);
@@ -138,19 +147,7 @@ async function run() {
       conditions: ['module'],
       logLevel: 'info',
       outExtension: { '.js': '.mjs' },
-      plugins: [{
-        name: 'externalize-workspace-lib-components',
-        setup(build) {
-          build.onResolve({ filter: /\/lib\/components\// }, (args) => {
-            try {
-              const abs = path.resolve(path.dirname(args.importer), args.path);
-              return { path: abs, external: true };
-            } catch (e) {
-              return { path: args.path, external: true };
-            }
-          });
-        }
-      }],
+      plugins: [externalizeWorkspaceLibComponents],
     });
     await serverCtx.watch();
 

@@ -1,6 +1,6 @@
 {
   "name": "@canopy-iiif/app",
-  "version": "0.7.12",
+  "version": "0.7.13",
   "private": false,
   "license": "MIT",
   "author": "Mat Jordan <mat@northwestern.edu>",
@@ -13,7 +13,8 @@
     "./ui/server": "./ui/dist/server.mjs",
     "./ui/styles/index.css": "./ui/styles/index.css",
     "./ui/canopy-iiif-plugin": "./ui/tailwind-canopy-iiif-plugin.js",
-    "./ui/canopy-iiif-preset": "./ui/tailwind-canopy-iiif-preset.js"
+    "./ui/canopy-iiif-preset": "./ui/tailwind-canopy-iiif-preset.js",
+    "./lib/components/*": "./lib/components/*"
   },
   "files": [
     "lib/**",
