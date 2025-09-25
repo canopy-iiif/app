@@ -24,6 +24,7 @@ import { createRequire } from "node:module";
 import fs from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 /** Logging helpers */
 
@@ -33,6 +34,16 @@ const err = (msg) => console.error(`[canopy][error] ${msg}`);
 
 /** Track a long-running child (UI watcher) so we can clean it up on exit. */
 let uiWatcherChild = null;
+const workspacePackageJsonPath = (() => {
+  try {
+    return fileURLToPath(new URL("../../packages/app/package.json", import.meta.url));
+  } catch (error) {
+    return null;
+  }
+})();
+const hasAppWorkspace = !!(
+  workspacePackageJsonPath && fs.existsSync(workspacePackageJsonPath)
+);
 
 /** Detect the current mode (build or dev) */
 
@@ -88,6 +99,12 @@ function start(cmd, args, opts = {}) {
  * is not defined, we log a helpful warning and continue (the lib can still work).
  */
 async function prepareUi(mode) {
+  if (!hasAppWorkspace) {
+    log(
+      "Using bundled UI assets from @canopy-iiif/app (workspace not detected)"
+    );
+    return null;
+  }
   if (mode === "build") {
     log("Building UI assets (@canopy-iiif/app/ui)");
     try {
@@ -128,7 +145,9 @@ function loadLibraryApi() {
   } catch (e) {
     // Fallback: load local workspace directly (dev convenience)
     try {
-      const localPath = new URL('../../packages/app/lib/index.js', import.meta.url).pathname;
+      const localPath = fileURLToPath(
+        new URL("../../packages/app/lib/index.js", import.meta.url)
+      );
       lib = requireCjs(localPath);
     } catch (e2) {
       const hint = [
