@@ -112,7 +112,7 @@ async function loadUiComponents() {
     }
     let comp = (mod && typeof mod === 'object') ? mod : {};
     // Hard-require core exports; do not inject fallbacks
-    const required = ['SearchPanel', 'CommandPalette', 'SearchForm', 'SearchResults', 'SearchSummary', 'SearchTotal', 'SearchTabs', 'Viewer', 'Slider', 'RelatedItems'];
+    const required = ['SearchPanel', 'CommandPalette', 'SearchResults', 'SearchSummary', 'SearchTabs', 'Viewer', 'Slider', 'RelatedItems'];
     const missing = required.filter((k) => !comp || !comp[k]);
     if (missing.length) {
       throw new Error('[canopy][mdx] Missing UI exports: ' + missing.join(', '));

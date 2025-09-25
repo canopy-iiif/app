@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useSyncExternalStore, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { SearchFormUI, SearchResultsUI, SearchTabsUI } from '@canopy-iiif/app/ui';
+import { SearchResultsUI, SearchTabsUI } from '@canopy-iiif/app/ui';
 
 // Lightweight IndexedDB utilities (no deps) with graceful fallback
 function hasIDB() {
@@ -233,10 +233,6 @@ function useStore() {
   return { ...snap, setQuery: store.setQuery, setType: store.setType };
 }
 
-function FormMount() {
-  const { query, setQuery, type, setType, types, counts } = useStore();
-  return <SearchFormUI query={query} onQueryChange={setQuery} type={type} onTypeChange={setType} types={types} counts={counts} />;
-}
 function ResultsMount(props = {}) {
   const { results, type, loading } = useStore();
   if (loading) return <div className="text-slate-600">Loading…</div>;
@@ -254,10 +250,6 @@ function SummaryMount() {
     return `Found ${shown} of ${total} in ${type === 'all' ? 'all types' : type} for "${query}"`;
   }, [query, type, shown, total]);
   return <div className="text-sm text-slate-600">{text}</div>;
-}
-function TotalMount() {
-  const { shown } = useStore();
-  return <span>{shown}</span>;
 }
 
 function parseProps(el) {
@@ -284,12 +276,11 @@ function mountAt(selector, Comp) {
 
 if (typeof document !== 'undefined') {
   const run = () => {
-    // Mount tabs (preferred) or full form if present, plus summary/total/results
+    // Mount tabs and other search UI pieces
     mountAt('[data-canopy-search-tabs]', TabsMount);
-    mountAt('[data-canopy-search-form]', FormMount);
     mountAt('[data-canopy-search-results]', ResultsMount);
     mountAt('[data-canopy-search-summary]', SummaryMount);
-    mountAt('[data-canopy-search-total]', TotalMount);
+    // Total mount removed
     try {
       window.addEventListener('canopy:search:setQuery', (ev) => {
         try {

@@ -52,7 +52,7 @@ Browser-only UI (e.g., components that touch `document` or depend on non-SSR lib
 
 Existing examples:
  - Viewer: placeholder from `@canopy-iiif/app/ui/iiif/Viewer`, hydration in `packages/app/lib/mdx.js` → `site/canopy-viewer.js`.
- - Search: MDX placeholders (`SearchForm`, `SearchSummary`, `SearchResults`, `SearchTotal`) from `@canopy-iiif/app/ui/search/*`, runtime in `packages/app/lib/search.js` (shared client store) → `site/search.js`.
+ - Search: MDX placeholders (`SearchTabs`, `SearchSummary`, `SearchResults`) from `@canopy-iiif/app/ui/search/*`, runtime in `packages/app/lib/search.js` (shared client store) → `site/search.js`.
 
 Tips:
  - Add a detection to inject React globals when a page contains your placeholder.

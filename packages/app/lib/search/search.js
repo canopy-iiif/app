@@ -6,7 +6,7 @@ const { ensureDirSync, OUT_DIR, htmlShell, fsp } = require('../common');
 
 const FALLBACK_SEARCH_APP = `import React, { useEffect, useMemo, useSyncExternalStore, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { SearchFormUI, SearchResultsUI } from '@canopy-iiif/app/ui';
+import { SearchResultsUI } from '@canopy-iiif/app/ui';
 
 function hasIDB(){ try { return typeof indexedDB !== 'undefined'; } catch (_) { return false; } }
 function idbOpen(){ return new Promise((resolve)=>{ if(!hasIDB()) return resolve(null); try{ const req = indexedDB.open('canopy-search',1); req.onupgradeneeded=()=>{ const db=req.result; if(!db.objectStoreNames.contains('indexes')) db.createObjectStore('indexes',{keyPath:'version'}); }; req.onsuccess=()=>resolve(req.result); req.onerror=()=>resolve(null);}catch(_){ resolve(null);} }); }
@@ -153,10 +153,6 @@ function useStore() {
   return { ...snap, setQuery: store.setQuery, setType: store.setType };
 }
 
-function FormMount() {
-  const { query, setQuery, type, setType, types, counts } = useStore();
-  return <SearchFormUI query={query} onQueryChange={setQuery} type={type} onTypeChange={setType} types={types} counts={counts} />;
-}
 function ResultsMount() {
   const { results, type, loading } = useStore();
   if (loading) return <div className=\"text-slate-600\">Loading…</div>;
@@ -170,10 +166,7 @@ function SummaryMount() {
   }, [query, type, shown, total]);
   return <div className=\"text-sm text-slate-600\">{text}</div>;
 }
-function TotalMount() {
-  const { shown } = useStore();
-  return <span>{shown}</span>;
-}
+ 
 
 function mountAt(selector, Comp) {
   const nodes = document.querySelectorAll(selector);
@@ -189,10 +182,9 @@ function mountAt(selector, Comp) {
 
 if (typeof document !== 'undefined') {
   const run = () => {
-    mountAt('[data-canopy-search-form]', FormMount);
     mountAt('[data-canopy-search-results]', ResultsMount);
     mountAt('[data-canopy-search-summary]', SummaryMount);
-    mountAt('[data-canopy-search-total]', TotalMount);
+    
   };
   if (document.readyState !== 'loading') run();
   else document.addEventListener('DOMContentLoaded', run, { once: true });

@@ -145,10 +145,9 @@ Two interactive areas are available out of the box and render safely in MDX:
 - Viewer: `<Viewer iiifContent="…" />` — wraps `@samvera/clover-iiif` and hydrates client‑side.
 - Slider: `<Slider iiifContent="…" />` — wraps Clover’s slider; hydrates client‑side via a separate bundle.
 - Search (composable): place any of these where you want on the page and they hydrate client‑side:
-  - `<SearchForm />` — input + type select
   - `<SearchSummary />` — summary text (query/type aware)
   - `<SearchResults />` — results list
-  - `<SearchTotal />` — live count of shown results
+  - `<SearchTabs />` — type tabs (e.g., work/pages/docs)
   - `<RelatedItems top={3} iiifContent?="…" />` — related item sliders (facet‑driven)
     - Without `iiifContent` (e.g., homepage): picks one top value per indexed facet label and renders one slider per label.
     - With `iiifContent` (work pages): reads the Manifest’s metadata, intersects with indexed facets, then picks one of the Manifest’s values at random for each label and renders exactly one slider per label. Facets not present on the Manifest are skipped.
@@ -171,17 +170,16 @@ Usage examples:
 
 // content/search/_layout.mdx
 # Search
-<SearchForm />
+<SearchTabs />
 <SearchSummary />
 <SearchResults />
-<div className="sr-only">Total: <SearchTotal /></div>
 ```
 
 Notes:
 
 - You do not need to import components in MDX; they are auto‑provided by the MDX provider from `@canopy-iiif/ui`.
 - The Viewer and Search placeholders render minimal HTML on the server and hydrate in the browser.
-- The search runtime (`site/search.js`) uses FlexSearch and supports filtering by `type` (e.g., `work`, `page`, `docs`). The four subcomponents share a single client store so they stay in sync.
+- The search runtime (`site/search.js`) uses FlexSearch and supports filtering by `type` (e.g., `work`, `page`, `docs`). These subcomponents share a single client store so they stay in sync.
 
 ### Search Results Layout (Grid vs List)
 
