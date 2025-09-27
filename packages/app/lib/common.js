@@ -115,11 +115,18 @@ function absoluteUrl(p) {
 function applyBaseToHtml(html) {
   if (!BASE_PATH) return html;
   try {
-    let out = String(html || '');
-    // Avoid protocol-relative (//example.com) by using a negative lookahead
-    out = out.replace(/(href|src)=(\")\/(?!\/)/g, `$1=$2${BASE_PATH}/`);
-    out = out.replace(/(href|src)=(\')\/(?!\/)/g, `$1=$2${BASE_PATH}/`);
-    return out;
+    const out = String(html || '');
+    const normalizedBase = BASE_PATH.startsWith('/')
+      ? BASE_PATH.replace(/\/$/, '')
+      : `/${BASE_PATH.replace(/\/$/, '')}`;
+    if (!normalizedBase || normalizedBase === '/') return out;
+    const pattern = /(href|src)=(['"])(\/(?!\/)[^'"\s]*)\2/g;
+    return out.replace(pattern, (match, attr, quote, path) => {
+      if (path === normalizedBase || path.startsWith(`${normalizedBase}/`)) {
+        return match;
+      }
+      return `${attr}=${quote}${normalizedBase}${path}${quote}`;
+    });
   } catch (_) {
     return html;
   }
