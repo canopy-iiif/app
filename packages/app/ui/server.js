@@ -1,4 +1,3 @@
-export { Fallback } from "./src/Fallback.jsx";
 export { HelloWorld } from "./src/HelloWorld.jsx";
 export { Viewer } from "./src/iiif/Viewer.jsx";
 export { Slider } from "./src/iiif/Slider.jsx";
@@ -6,6 +5,7 @@ export { Slider } from "./src/iiif/Slider.jsx";
 export { default as RelatedItems } from "./src/iiif/MdxRelatedItems.jsx";
 // SSR-only Hero (includes featured selection via helpers)
 export { default as Hero } from "./src/iiif/Hero.jsx";
+export { default as FeaturedHero } from "./src/iiif/FeaturedHero.jsx";
 
 // SSR-safe MDX placeholders (do not import browser-only UI here)
 export { default as SearchResults } from "./src/search/MdxSearchResults.jsx";

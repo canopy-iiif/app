@@ -50,7 +50,7 @@ function rewritePackageJson(appVersion) {
   delete j.devDependencies['@playwright/test'];
   delete j.devDependencies.husky;
   j.devDependencies.esbuild = j.devDependencies.esbuild || '^0.21.4';
-  j.devDependencies.tailwindcss = j.devDependencies.tailwindcss || '^3.4.10';
+  j.devDependencies.tailwindcss = j.devDependencies.tailwindcss || '^4.1.13';
   // No longer include @tailwindcss/typography by default
   fs.writeFileSync(p, JSON.stringify(j, null, 2));
 }
@@ -80,13 +80,18 @@ module.exports = {
   ],
 };
 `;
-  const css = `@tailwind base;
+  const css = `@source "../content/**/*.{mdx,html}";
+@source "../site/**/*.html";
+@source "../packages/app/ui/**/*.{js,jsx,ts,tsx}";
+@source "../packages/app/lib/iiif/components/**/*.{js,jsx}";
+
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* Example component layer overrides */
 @layer components {
-  .brand-link { @apply text-brand-600 hover:underline font-semibold; }
+  .brand-link { @apply text-brand hover:underline font-semibold; }
 }
 `;
   fs.writeFileSync(tp, tw, 'utf8');

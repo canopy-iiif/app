@@ -91,11 +91,15 @@ export default function SearchPanelForm(props = {}) {
         aria-label="Search"
       />
       <button
-        type="submit"
-        data-canopy-command-link
-        className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700"
+        type="button"
+        data-canopy-command-trigger
+        className="inline-flex items-center gap-2 rounded-md border border-transparent bg-brand px-2 py-1 text-sm font-medium text-white shadow-sm transition hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
       >
         <span>{text}</span>
+        <span aria-hidden className="hidden sm:inline-flex items-center gap-1 rounded border border-white/40 bg-white/20 px-1.5 py-0.5 text-xs font-semibold">
+          <span>⌘</span>
+          <span>K</span>
+        </span>
       </button>
     </form>
   );

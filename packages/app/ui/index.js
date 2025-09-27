@@ -1,4 +1,3 @@
-export { Fallback } from "./src/Fallback.jsx";
 export { HelloWorld } from "./src/HelloWorld.jsx";
 export { default as Card } from "./src/layout/Card.jsx";
 export { default as Grid, GridItem } from "./src/layout/Grid.jsx";
@@ -15,7 +14,7 @@ export { default as SearchTabs } from "./src/search/MdxSearchTabs.jsx";
 export { default as SearchResultsUI } from "./src/search/SearchResults.jsx";
 export { default as SearchTabsUI } from "./src/search/SearchTabs.jsx";
 // Removed deprecated exports: useSearch, Search placeholder
-// Command palette placeholder (SSR-safe). Client runtime uses a lightweight fallback.
+// Command palette placeholder (SSR-safe). Client runtime hydrates with the search command app.
 export { default as CommandPalette } from "./src/command/MdxCommandPalette.jsx";
 // Search panel (SSR-safe) and its parts
 export { default as SearchPanel } from "./src/search/SearchPanel.jsx";

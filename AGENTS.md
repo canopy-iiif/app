@@ -5,7 +5,7 @@ This repository is a minimal Node.js project. Use this guide to add code and gro
 ## Project Structure & Module Organization
 - `app/`: app entry and styles
   - `app/scripts/canopy-build.mjs`: single stable entry for dev/build (orchestrates UI + lib)
-  - `app/styles/`: optional app CSS
+  - `app/styles/`: Tailwind v4 entrypoint. The UI preset injects Sass-exported design tokens (colors, fonts, etc.) so utilities like `bg-brand` resolve to the CSS variables defined in the preset.
 - `content/`: MDX pages and section layouts
 - `assets/`: static files copied into `site/`
 - `packages/`: workspaces
@@ -177,6 +177,11 @@ Goal: Allow authors to fully compose the search page via MDX, while the builder 
   - Rewrites `dist-template/package.json` to remove workspaces, swap `workspace:*` deps for published versions of `@canopy-iiif/lib` and `@canopy-iiif/ui`, and set `build`/`dev` scripts to run `node app/scripts/canopy-build.mjs`.
   - Patches the Pages deploy workflow in the template to inline the build verify step (no helpers package there).
   - Force‑pushes the result to `main` of `${OWNER}/template` (org: `canopy-iiif`).
+- Template expectations:
+  - The generated template consumes the published `@canopy-iiif/app` package; it does not include the monorepo `packages/` directory.
+  - `packages/helpers` is omitted from the template; template automation reuses the verified workflows committed to this repo.
+  - Root `package.json` in the template is rewritten without workspaces and with pinned semver dependencies; `.github/workflows` are pared down so they reference the published package only.
+- Keep template parity notes in `packages/helpers/AGENTS.md` when helper scripts change.
 - Setup required:
   - Create the `template` repository under the `canopy-iiif` org.
   - Add a secret in this repo named `TEMPLATE_PUSH_TOKEN` (PAT with `repo` write access to `canopy-iiif/template`).

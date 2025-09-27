@@ -15,21 +15,16 @@ function compileScss(filePath) {
     const out = sass.compile(filePath, { style: "expanded" });
     return out && out.css ? out.css : "";
   } catch (e) {
-    // No CSS fallback; if compilation fails, skip with an empty string.
-    try { console.warn("Canopy UI: failed to compile", filePath, e && e.message ? e.message : e); } catch (_) {}
-    return "";
+    const message = e && e.message ? e.message : e;
+    throw new Error(`Canopy UI: failed to compile ${filePath}: ${message}`);
   }
 }
 
 module.exports = plugin(function ({ addComponents, postcss }) {
-  try {
-    const entry = path.join(__dirname, 'styles', 'components', 'index.scss');
-    const css = compileScss(entry);
-    if (css && css.trim()) {
-      const root = postcss && postcss.parse ? postcss.parse(css) : null;
-      if (root) addComponents(root);
-    }
-  } catch (_) {
-    // no-op on failure
+  const entry = path.join(__dirname, 'styles', 'components', 'index.scss');
+  const css = compileScss(entry);
+  if (css && css.trim()) {
+    const root = postcss && postcss.parse ? postcss.parse(css) : null;
+    if (root) addComponents(root);
   }
 });

@@ -26,7 +26,7 @@ const externalizeWorkspaceLibComponents = {
           return { path: packageImport, external: true };
         }
       } catch (_) {}
-      // Fallback: keep original specifier but externalize so esbuild doesn't rebundle
+      // Otherwise keep original specifier but externalize so esbuild doesn't rebundle
       return { path: args.path, external: true };
     });
   }

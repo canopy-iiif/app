@@ -101,7 +101,7 @@ async function loadUiComponents() {
       }
     }
     if (!mod) {
-      // Try package subpath as a secondary resolution path (not a UI component fallback)
+      // Try package subpath as a secondary resolution path to avoid export-map issues
       try {
         mod = await import('@canopy-iiif/app/ui/server');
       } catch (e2) {
@@ -112,7 +112,7 @@ async function loadUiComponents() {
     }
     let comp = (mod && typeof mod === 'object') ? mod : {};
     // Hard-require core exports; do not inject fallbacks
-    const required = ['SearchPanel', 'CommandPalette', 'SearchResults', 'SearchSummary', 'SearchTabs', 'Viewer', 'Slider', 'RelatedItems'];
+    const required = ['SearchPanel', 'CommandPalette', 'SearchResults', 'SearchSummary', 'SearchTabs', 'Viewer', 'Slider', 'RelatedItems', 'Hero', 'FeaturedHero'];
     const missing = required.filter((k) => !comp || !comp[k]);
     if (missing.length) {
       throw new Error('[canopy][mdx] Missing UI exports: ' + missing.join(', '));
@@ -127,41 +127,6 @@ async function loadUiComponents() {
         Viewer: !!comp.Viewer,
         Slider: !!comp.Slider,
       }); } catch(_){}
-    }
-    // No stub injection beyond this point; UI package must supply these.
-    // Ensure a minimal SSR Hero exists
-    if (!comp.Hero) {
-      comp.Hero = function SimpleHero({ height = 360, item, className = '', style = {}, ...rest }){
-        const h = typeof height === 'number' ? `${height}px` : String(height || '').trim() || '360px';
-        const base = { position: 'relative', width: '100%', height: h, overflow: 'hidden', backgroundColor: 'var(--color-gray-muted)', ...style };
-        const title = (item && item.title) || '';
-        const href = (item && item.href) || '#';
-        const thumbnail = (item && item.thumbnail) || '';
-        return React.createElement('div', { className: ['canopy-hero', className].filter(Boolean).join(' '), style: base, ...rest },
-          thumbnail ? React.createElement('img', { src: thumbnail, alt: '', 'aria-hidden': 'true', style: { position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', objectPosition:'center', filter:'none' } }) : null,
-          React.createElement('div', { className:'canopy-hero-overlay', style: { position:'absolute', left:0, right:0, bottom:0, padding:'1rem', background:'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.35) 55%, rgba(0,0,0,0.65) 100%)', color:'white' } },
-            React.createElement('h3', { style: { margin:0, fontSize:'1.5rem', fontWeight:600, lineHeight:1.2, textShadow:'0 1px 3px rgba(0,0,0,0.6)' } },
-              React.createElement('a', { href, style:{ color:'inherit', textDecoration:'none' }, className:'canopy-hero-link' }, title)
-            )
-          )
-        );
-      };
-    }
-    // Provide a minimal SSR FeaturedHero fallback if missing
-    if (!comp.FeaturedHero) {
-      try {
-        const helpers = require('../components/featured');
-        comp.FeaturedHero = function FeaturedHero(props) {
-          try {
-            const list = helpers && helpers.readFeaturedFromCacheSync ? helpers.readFeaturedFromCacheSync() : [];
-            if (!Array.isArray(list) || list.length === 0) return null;
-            const index = (props && typeof props.index === 'number') ? Math.max(0, Math.min(list.length - 1, Math.floor(props.index))) : null;
-            const pick = (index != null) ? index : ((props && (props.random === true || props.random === 'true')) ? Math.floor(Math.random() * list.length) : 0);
-            const item = list[pick] || list[0];
-            return React.createElement(comp.Hero, { ...props, item });
-          } catch (_) { return null; }
-        };
-      } catch (_) { /* ignore */ }
     }
     UI_COMPONENTS = comp;
     UI_COMPONENTS_PATH = currentPath;
@@ -265,26 +230,9 @@ async function loadAppWrapper() {
     ok = false;
   }
   if (!ok) {
-    // If default export swallowed children, try to recover using __MDXLayout
-    if (!App && mod.__MDXLayout) {
-      App = mod.__MDXLayout;
-    }
-    // Fallback to pass-through wrapper to avoid blocking builds
-    if (!App) {
-      App = function PassThrough(props) {
-        return React.createElement(React.Fragment, null, props.children);
-      };
-    }
-    try {
-      require("./log").log(
-        "! Warning: content/_app.mdx did not clearly render {children}; proceeding with best-effort wrapper\n",
-        "yellow"
-      );
-    } catch (_) {
-      console.warn(
-        "Warning: content/_app.mdx did not clearly render {children}; proceeding."
-      );
-    }
+    throw new Error(
+      "content/_app.mdx must render {children}. Update the layout so downstream pages receive their content."
+    );
   }
   APP_WRAPPER = { App, Head };
   return APP_WRAPPER;
@@ -390,7 +338,7 @@ async function ensureClientRuntime() {
       esbuild = require("esbuild");
     } catch (_) {}
   }
-  if (!esbuild) return;
+  if (!esbuild) throw new Error('Viewer runtime bundling requires esbuild. Install dependencies before building.');
   ensureDirSync(OUT_DIR);
   const scriptsDir = path.join(OUT_DIR, 'scripts');
   ensureDirSync(scriptsDir);
@@ -509,6 +457,9 @@ async function ensureClientRuntime() {
 async function ensureFacetsRuntime() {
   let esbuild = null;
   try { esbuild = require("../../ui/node_modules/esbuild"); } catch (_) { try { esbuild = require("esbuild"); } catch (_) {} }
+  if (!esbuild) {
+    throw new Error('RelatedItems runtime bundling requires esbuild. Install dependencies before building.');
+  }
   ensureDirSync(OUT_DIR);
   const scriptsDir = path.join(OUT_DIR, 'scripts');
   ensureDirSync(scriptsDir);
@@ -589,18 +540,30 @@ async function ensureFacetsRuntime() {
     });
   `;
   const shim = { name: 'facets-vanilla', setup(){} };
-  if (esbuild) {
-    try {
-      await esbuild.build({ stdin: { contents: entry, resolveDir: process.cwd(), sourcefile: 'canopy-facets-entry.js', loader: 'js' }, outfile: outFile, platform: 'browser', format: 'iife', bundle: true, sourcemap: false, target: ['es2018'], logLevel: 'silent', minify: true, plugins: [shim] });
-    } catch(e){ try{ console.error('RelatedItems: bundle error:', e && e.message ? e.message : e); }catch(_){ }
-      // Fallback: write the entry script directly so the file exists
-      try { fs.writeFileSync(outFile, entry, 'utf8'); } catch(_){}
-      return; }
-    try { const { logLine } = require('./log'); let size=0; try{ const st = fs.statSync(outFile); size = st && st.size || 0; }catch(_){} const kb = size ? ` (${(size/1024).toFixed(1)} KB)` : ''; const rel = path.relative(process.cwd(), outFile).split(path.sep).join('/'); logLine(`✓ Wrote ${rel}${kb}`, 'cyan'); } catch(_){}
-  } else {
-    // No esbuild: write a non-bundled version (no imports used)
-    try { fs.writeFileSync(outFile, entry, 'utf8'); } catch(_){}
+  try {
+    await esbuild.build({
+      stdin: { contents: entry, resolveDir: process.cwd(), sourcefile: 'canopy-facets-entry.js', loader: 'js' },
+      outfile: outFile,
+      platform: 'browser',
+      format: 'iife',
+      bundle: true,
+      sourcemap: false,
+      target: ['es2018'],
+      logLevel: 'silent',
+      minify: true,
+      plugins: [shim]
+    });
+  } catch (e) {
+    const message = e && e.message ? e.message : e;
+    throw new Error(`RelatedItems runtime build failed: ${message}`);
   }
+  try {
+    const { logLine } = require('./log');
+    let size = 0; try { const st = fs.statSync(outFile); size = st && st.size || 0; } catch (_) {}
+    const kb = size ? ` (${(size/1024).toFixed(1)} KB)` : '';
+    const rel = path.relative(process.cwd(), outFile).split(path.sep).join('/');
+    logLine(`✓ Wrote ${rel}${kb}`, 'cyan');
+  } catch (_) {}
 }
 
 // Bundle a separate client runtime for the Clover Slider to keep payloads split.
@@ -611,7 +574,7 @@ async function ensureSliderRuntime() {
   } catch (_) {
     try { esbuild = require("esbuild"); } catch (_) {}
   }
-  if (!esbuild) return;
+  if (!esbuild) throw new Error('Slider runtime bundling requires esbuild. Install dependencies before building.');
   ensureDirSync(OUT_DIR);
   const scriptsDir = path.join(OUT_DIR, 'scripts');
   ensureDirSync(scriptsDir);
@@ -735,8 +698,8 @@ async function ensureSliderRuntime() {
       plugins: [plugin],
     });
   } catch (e) {
-    try { console.error('Slider: bundle error:', e && e.message ? e.message : e); } catch (_) {}
-    return;
+    const message = e && e.message ? e.message : e;
+    throw new Error(`Slider runtime build failed: ${message}`);
   }
   try {
     const { logLine } = require('./log');
@@ -757,7 +720,7 @@ async function ensureReactGlobals() {
       esbuild = require("esbuild");
     } catch (_) {}
   }
-  if (!esbuild) return;
+  if (!esbuild) throw new Error('React globals bundling requires esbuild. Install dependencies before building.');
   const { path } = require("../common");
   ensureDirSync(OUT_DIR);
   const scriptsDir = path.join(OUT_DIR, "scripts");
@@ -792,7 +755,7 @@ async function ensureReactGlobals() {
 async function ensureHeroRuntime() {
   let esbuild = null;
   try { esbuild = require("../../ui/node_modules/esbuild"); } catch (_) { try { esbuild = require("esbuild"); } catch (_) {} }
-  if (!esbuild) return;
+  if (!esbuild) throw new Error('Hero runtime bundling requires esbuild. Install dependencies before building.');
   const { path } = require("../common");
   ensureDirSync(OUT_DIR);
   const scriptsDir = path.join(OUT_DIR, 'scripts');

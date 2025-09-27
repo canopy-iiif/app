@@ -16,8 +16,9 @@ function run(cmd, args) {
     const cli = require.resolve('@changesets/cli/bin.js');
     run(process.execPath, [cli, ...args]);
   } catch (e) {
-    // Fallback to npx to avoid requiring a local devDependency
-    run('npx', ['-y', '@changesets/cli', ...args]);
+    const message = e && e.message ? e.message : e;
+    console.error('[changesets] CLI not found in workspace. Install @changesets/cli as a dependency.');
+    if (message) console.error('[changesets] Resolve error:', message);
+    process.exit(1);
   }
 })();
-

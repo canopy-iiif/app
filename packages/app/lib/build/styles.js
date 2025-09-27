@@ -70,21 +70,15 @@ async function ensureStyles() {
   }
 
   function resolveTailwindCli() {
-    try {
-      const cliJs = require.resolve("tailwindcss/lib/cli.js");
-      return { cmd: process.execPath, args: [cliJs] };
-    } catch (_) {}
-    try {
-      const localBin = path.join(
-        process.cwd(),
-        "node_modules",
-        ".bin",
-        process.platform === "win32" ? "tailwindcss.cmd" : "tailwindcss"
-      );
-      if (fs.existsSync(localBin)) return { cmd: localBin, args: [] };
-    } catch (_) {}
-    return null;
-  }
+  const localBin = path.join(
+    process.cwd(),
+    "node_modules",
+    ".bin",
+    process.platform === "win32" ? "tailwindcss.cmd" : "tailwindcss"
+  );
+  if (fs.existsSync(localBin)) return { cmd: localBin, args: [] };
+  return { cmd: 'tailwindcss', args: [] };
+}
   function buildTailwindCli({ input, output, config, minify = true }) {
     try {
       const cli = resolveTailwindCli();

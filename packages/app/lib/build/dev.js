@@ -1,7 +1,7 @@
 const fs = require("fs");
 const fsp = fs.promises;
 const path = require("path");
-const { spawn } = require("child_process");
+const { spawn, spawnSync } = require("child_process");
 const { build } = require("../build/build");
 const http = require("http");
 const url = require("url");
@@ -11,28 +11,15 @@ const {
   ASSETS_DIR,
   ensureDirSync,
 } = require("../common");
-const twHelper = (() => {
-  try {
-    return require("../../helpers/build-tailwind");
-  } catch (_) {
-    return null;
-  }
-})();
 function resolveTailwindCli() {
-  try {
-    const cliJs = require.resolve("tailwindcss/lib/cli.js");
-    return { cmd: process.execPath, args: [cliJs] };
-  } catch (_) {}
-  try {
-    const bin = path.join(
-      process.cwd(),
-      "node_modules",
-      ".bin",
-      process.platform === "win32" ? "tailwindcss.cmd" : "tailwindcss"
-    );
-    if (fs.existsSync(bin)) return { cmd: bin, args: [] };
-  } catch (_) {}
-  return null;
+  const bin = path.join(
+    process.cwd(),
+    "node_modules",
+    ".bin",
+    process.platform === "win32" ? "tailwindcss.cmd" : "tailwindcss"
+  );
+  if (fs.existsSync(bin)) return { cmd: bin, args: [] };
+  return { cmd: 'tailwindcss', args: [] };
 }
 const PORT = Number(process.env.PORT || 3000);
 let onBuildSuccess = () => {};
@@ -609,381 +596,291 @@ async function dev() {
       "tailwind.config.mjs",
       "tailwind.config.ts",
     ].map((n) => path.join(appStylesDir, n));
-    let configPath = [...twConfigsApp, ...twConfigsRoot].find((p) => {
+    const configPath = [...twConfigsApp, ...twConfigsRoot].find((p) => {
       try {
         return fs.existsSync(p);
       } catch (_) {
         return false;
       }
     });
+    if (!configPath) {
+      throw new Error(
+        "[tailwind] Missing Tailwind config. Expected app/styles/tailwind.config.{js,cjs,mjs,ts} or a root-level Tailwind config."
+      );
+    }
     const inputCandidates = [
       path.join(appStylesDir, "index.css"),
       path.join(CONTENT_DIR, "_styles.css"),
     ];
-    let inputCss = inputCandidates.find((p) => {
+    const inputCss = inputCandidates.find((p) => {
       try {
         return fs.existsSync(p);
       } catch (_) {
         return false;
       }
     });
-    // Generate fallback config and input if missing
-    if (!configPath) {
-      try {
-        const { CACHE_DIR } = require("./common");
-        const genDir = path.join(CACHE_DIR, "tailwind");
-        ensureDirSync(genDir);
-        const genCfg = path.join(genDir, "tailwind.config.js");
-        const cfg = `module.exports = {\n  presets: [require('@canopy-iiif/app/ui/canopy-iiif-preset')],\n  content: [\n    './content/**/*.{mdx,html}',\n    './site/**/*.html',\n    './site/**/*.js',\n    './packages/app/ui/**/*.{js,jsx,ts,tsx}',\n    './packages/app/lib/iiif/components/**/*.{js,jsx}',\n  ],\n  theme: { extend: {} },\n  plugins: [require('@canopy-iiif/app/ui/canopy-iiif-plugin')],\n};\n`;
-        fs.writeFileSync(genCfg, cfg, "utf8");
-        configPath = genCfg;
-      } catch (_) {
-        configPath = null;
-      }
-    }
     if (!inputCss) {
-      try {
-        const { CACHE_DIR } = require("./common");
-        const genDir = path.join(CACHE_DIR, "tailwind");
-        ensureDirSync(genDir);
-        const genCss = path.join(genDir, "index.css");
-        fs.writeFileSync(
-          genCss,
-          `@tailwind base;\n@tailwind components;\n@tailwind utilities;\n`,
-          "utf8"
-        );
-        inputCss = genCss;
-      } catch (_) {
-        inputCss = null;
-      }
+      throw new Error(
+        "[tailwind] Missing Tailwind entry stylesheet. Create app/styles/index.css (or content/_styles.css)."
+      );
     }
     const outputCss = path.join(OUT_DIR, "styles", "styles.css");
-    if (configPath && inputCss) {
-      // Ensure output dir exists and start watcher
-      ensureDirSync(path.dirname(outputCss));
-      let child = null;
-      // Ensure output file exists (fallback minimal CSS if CLI/compile fails)
-      function writeFallbackCssIfMissing() {
-        try {
-          if (!fs.existsSync(outputCss)) {
-            const base = `:root{--max-w:760px;--muted:#6b7280}*{box-sizing:border-box}body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif;max-width:var(--max-w);margin:2rem auto;padding:0 1rem;line-height:1.6}a{color:#2563eb;text-decoration:none}a:hover{text-decoration:underline}`;
-            ensureDirSync(path.dirname(outputCss));
-            fs.writeFileSync(outputCss, base + "\n", "utf8");
-            console.log(
-              "[tailwind] wrote fallback CSS to",
-              prettyPath(outputCss)
-            );
-          }
-        } catch (_) {}
-      }
-      function fileSizeKb(p) {
-        try {
-          const st = fs.statSync(p);
-          return st && st.size ? (st.size / 1024).toFixed(1) : "0.0";
-        } catch (_) {
-          return "0.0";
-        }
-      }
-      // Initial one-off compile so the CSS exists before watcher starts
+    ensureDirSync(path.dirname(outputCss));
+
+    const cli = resolveTailwindCli();
+    if (!cli) {
+      throw new Error(
+        "[tailwind] Tailwind CLI not found. Install the 'tailwindcss' package in the workspace."
+      );
+    }
+
+    const fileSizeKb = (p) => {
       try {
-        const cliOnce = resolveTailwindCli();
-        if (cliOnce) {
-          const { spawnSync } = require("child_process");
-          const argsOnce = [
-            "-i",
-            inputCss,
-            "-o",
-            outputCss,
-            "-c",
-            configPath,
-            "--minify",
-          ];
-          const res = spawnSync(cliOnce.cmd, [...cliOnce.args, ...argsOnce], {
-            stdio: ["ignore", "pipe", "pipe"],
-            env: { ...process.env, BROWSERSLIST_IGNORE_OLD_DATA: "1" },
-          });
-          if (res && res.status === 0) {
+        const st = fs.statSync(p);
+        return st && st.size ? (st.size / 1024).toFixed(1) : "0.0";
+      } catch (_) {
+        return "0.0";
+      }
+    };
+
+    const baseArgs = [
+      "-i",
+      inputCss,
+      "-o",
+      outputCss,
+      "-c",
+      configPath,
+      "--minify",
+    ];
+
+    const initial = spawnSync(cli.cmd, [...cli.args, ...baseArgs], {
+      stdio: ["ignore", "pipe", "pipe"],
+      env: { ...process.env, BROWSERSLIST_IGNORE_OLD_DATA: "1" },
+    });
+    if (!initial || initial.status !== 0) {
+      if (initial && initial.stderr) {
+        try { process.stderr.write(initial.stderr); } catch (_) {}
+      }
+      throw new Error("[tailwind] Initial Tailwind build failed.");
+    }
+    console.log(
+      `[tailwind] initial build ok (${fileSizeKb(outputCss)} KB) →`,
+      prettyPath(outputCss)
+    );
+
+    const watchArgs = [
+      "-i",
+      inputCss,
+      "-o",
+      outputCss,
+      "--watch",
+      "-c",
+      configPath,
+      "--minify",
+    ];
+    let child = null;
+    let unmuted = false;
+    let cssWatcherAttached = false;
+
+    function attachCssWatcherOnce() {
+      if (cssWatcherAttached) return;
+      cssWatcherAttached = true;
+      try {
+        fs.watch(outputCss, { persistent: false }, () => {
+          if (!unmuted) {
+            unmuted = true;
             console.log(
-              `[tailwind] initial build ok (${fileSizeKb(outputCss)} KB) →`,
-              prettyPath(outputCss)
+              `[tailwind] watching ${prettyPath(
+                inputCss
+              )} — compiled (${fileSizeKb(outputCss)} KB)`
             );
-          } else {
-            console.warn("[tailwind] initial build failed; using fallback CSS");
-            try {
-              if (res && res.stderr) process.stderr.write(res.stderr);
-            } catch (_) {}
-            writeFallbackCssIfMissing();
           }
-        } else {
-          console.warn("[tailwind] CLI not found; using fallback CSS");
-          writeFallbackCssIfMissing();
-        }
-      } catch (_) {}
-      // Prefer direct CLI spawn so we can mute initial rebuild logs
-      const cli = resolveTailwindCli();
-      if (cli) {
-        const args = [
-          "-i",
-          inputCss,
-          "-o",
-          outputCss,
-          "--watch",
-          "-c",
-          configPath,
-          "--minify",
-        ];
-        let unmuted = false;
-        let cssWatcherAttached = false;
-        function attachCssWatcherOnce() {
-          if (cssWatcherAttached) return;
-          cssWatcherAttached = true;
           try {
-            fs.watch(outputCss, { persistent: false }, () => {
-              if (!unmuted) {
-                unmuted = true;
-                console.log(
-                  `[tailwind] watching ${prettyPath(
-                    inputCss
-                  )} — compiled (${fileSizeKb(outputCss)} KB)`
-                );
-              }
-              try {
-                onCssChange();
-              } catch (_) {}
-            });
+            onCssChange();
           } catch (_) {}
-        }
-        function compileTailwindOnce() {
-          try {
-            const { spawnSync } = require("child_process");
-            const res = spawnSync(
-              cli.cmd,
-              [
-                ...cli.args,
-                "-i",
-                inputCss,
-                "-o",
-                outputCss,
-                "-c",
-                configPath,
-                "--minify",
-              ],
-              {
-                stdio: ["ignore", "pipe", "pipe"],
-                env: { ...process.env, BROWSERSLIST_IGNORE_OLD_DATA: "1" },
-              }
-            );
-            if (res && res.status === 0) {
-              console.log(
-                `[tailwind] compiled (${fileSizeKb(outputCss)} KB) →`,
-                prettyPath(outputCss)
-              );
-              try {
-                onCssChange();
-              } catch (_) {}
-            } else {
-              console.warn("[tailwind] on-demand compile failed");
-              try {
-                if (res && res.stderr) process.stderr.write(res.stderr);
-              } catch (_) {}
-            }
-          } catch (_) {}
-        }
-        function startTailwindWatcher() {
-          unmuted = false;
-          const proc = spawn(cli.cmd, [...cli.args, ...args], {
-            stdio: ["ignore", "pipe", "pipe"],
-            env: { ...process.env, BROWSERSLIST_IGNORE_OLD_DATA: "1" },
-          });
-          if (proc.stdout)
-            proc.stdout.on("data", (d) => {
-              const s = d ? String(d) : "";
-              if (!unmuted) {
-                if (/error/i.test(s)) {
-                  try {
-                    process.stdout.write("[tailwind] " + s);
-                  } catch (_) {}
-                }
-              } else {
-                try {
-                  process.stdout.write(s);
-                } catch (_) {}
-              }
-            });
-          if (proc.stderr)
-            proc.stderr.on("data", (d) => {
-              const s = d ? String(d) : "";
-              if (!unmuted) {
-                if (s.trim()) {
-                  try {
-                    process.stderr.write("[tailwind] " + s);
-                  } catch (_) {}
-                }
-              } else {
-                try {
-                  process.stderr.write(s);
-                } catch (_) {}
-              }
-            });
-          proc.on("exit", (code) => {
-            // Ignore null exits (expected when we intentionally restart the watcher)
-            if (code !== 0 && code !== null) {
-              console.error("[tailwind] watcher exited with code", code);
-            }
-          });
-          attachCssWatcherOnce();
-          return proc;
-        }
-        child = startTailwindWatcher();
-        // Unmute Tailwind logs after the first successful CSS write
-        // Watch UI Tailwind plugin/preset files and restart Tailwind to pick up code changes
-        try {
-          const uiPlugin = path.join(
-            __dirname,
-            "../ui",
-            "tailwind-canopy-iiif-plugin.js"
-          );
-          const uiPreset = path.join(
-            __dirname,
-            "../ui",
-            "tailwind-canopy-iiif-preset.js"
-          );
-          const uiStylesDir = path.join(__dirname, "../ui", "styles");
-          const files = [uiPlugin, uiPreset].filter((p) => {
-            try {
-              return fs.existsSync(p);
-            } catch (_) {
-              return false;
-            }
-          });
-          let restartTimer = null;
-          const restart = () => {
-            clearTimeout(restartTimer);
-            restartTimer = setTimeout(() => {
-              console.log(
-                "[tailwind] detected UI plugin/preset change — restarting Tailwind"
-              );
-              try {
-                if (child && !child.killed) child.kill();
-              } catch (_) {}
-              // Force a compile immediately so new CSS lands before reload
-              compileTailwindOnce();
-              child = startTailwindWatcher();
-              // Notify clients that a rebuild is in progress; CSS watcher will trigger reload on write
-              try {
-                onBuildStart();
-              } catch (_) {}
-            }, 50);
-          };
-          for (const f of files) {
-            try {
-              fs.watch(f, { persistent: false }, restart);
-            } catch (_) {}
-          }
-          // Watch UI styles directory (Sass partials used by the plugin); restart Tailwind on Sass changes
-          try {
-            if (fs.existsSync(uiStylesDir)) {
-              try {
-                fs.watch(
-                  uiStylesDir,
-                  { persistent: false, recursive: true },
-                  (evt, fn) => {
-                    try {
-                      if (fn && /\.s[ac]ss$/i.test(String(fn))) restart();
-                    } catch (_) {}
-                  }
-                );
-              } catch (_) {
-                // Fallback: per-dir watch without recursion
-                const watchers = new Map();
-                const watchDir = (dir) => {
-                  if (watchers.has(dir)) return;
-                  try {
-                    const w = fs.watch(
-                      dir,
-                      { persistent: false },
-                      (evt, fn) => {
-                        try {
-                          if (fn && /\.s[ac]ss$/i.test(String(fn))) restart();
-                        } catch (_) {}
-                      }
-                    );
-                    watchers.set(dir, w);
-                  } catch (_) {}
-                };
-                const scan = (dir) => {
-                  try {
-                    const entries = fs.readdirSync(dir, {
-                      withFileTypes: true,
-                    });
-                    for (const e of entries) {
-                      const p = path.join(dir, e.name);
-                      if (e.isDirectory()) {
-                        watchDir(p);
-                        scan(p);
-                      }
-                    }
-                  } catch (_) {}
-                };
-                watchDir(uiStylesDir);
-                scan(uiStylesDir);
-              }
-            }
-          } catch (_) {}
-          // Also watch the app Tailwind config; restart Tailwind when it changes
-          try {
-            if (configPath && fs.existsSync(configPath))
-              fs.watch(configPath, { persistent: false }, () => {
-                console.log(
-                  "[tailwind] tailwind.config change — restarting Tailwind"
-                );
-                restart();
-              });
-          } catch (_) {}
-          // If the input CSS lives under app/styles, watch the directory for direct edits to CSS/partials
-          try {
-            const stylesDir = path.dirname(inputCss || "");
-            if (stylesDir && stylesDir.includes(path.join("app", "styles"))) {
-              let cssDebounce = null;
-              fs.watch(stylesDir, { persistent: false }, (evt, fn) => {
-                clearTimeout(cssDebounce);
-                cssDebounce = setTimeout(() => {
-                  try {
-                    onBuildStart();
-                  } catch (_) {}
-                  // Force a compile so changes in index.css or partials are reflected immediately
-                  try {
-                    compileTailwindOnce();
-                  } catch (_) {}
-                  try {
-                    onCssChange();
-                  } catch (_) {}
-                }, 50);
-              });
-            }
-          } catch (_) {}
-        } catch (_) {}
-      } else if (twHelper && typeof twHelper.watchTailwind === "function") {
-        // Fallback to helper (cannot mute its initial logs)
-        child = twHelper.watchTailwind({
-          input: inputCss,
-          output: outputCss,
-          config: configPath,
-          minify: false,
         });
-        if (child) {
-          console.log("[tailwind] watching", prettyPath(inputCss));
-          try {
-            fs.watch(outputCss, { persistent: false }, () => {
-              try {
-                onCssChange();
-              } catch (_) {}
-            });
-          } catch (_) {}
+      } catch (_) {}
+    }
+
+    function compileTailwindOnce() {
+      const res = spawnSync(cli.cmd, [...cli.args, ...baseArgs], {
+        stdio: ["ignore", "pipe", "pipe"],
+        env: { ...process.env, BROWSERSLIST_IGNORE_OLD_DATA: "1" },
+      });
+      if (!res || res.status !== 0) {
+        if (res && res.stderr) {
+          try { process.stderr.write(res.stderr); } catch (_) {}
         }
+        throw new Error("[tailwind] On-demand Tailwind compile failed.");
+      }
+      console.log(
+        `[tailwind] compiled (${fileSizeKb(outputCss)} KB) →`,
+        prettyPath(outputCss)
+      );
+      try {
+        onCssChange();
+      } catch (_) {}
+    }
+
+    function startTailwindWatcher() {
+      unmuted = false;
+      const proc = spawn(cli.cmd, [...cli.args, ...watchArgs], {
+        stdio: ["ignore", "pipe", "pipe"],
+        env: { ...process.env, BROWSERSLIST_IGNORE_OLD_DATA: "1" },
+      });
+      if (proc.stdout)
+        proc.stdout.on("data", (d) => {
+          const s = d ? String(d) : "";
+          if (!unmuted) {
+            if (/error/i.test(s)) {
+              try { process.stdout.write("[tailwind] " + s); } catch (_) {}
+            }
+          } else {
+            try { process.stdout.write(s); } catch (_) {}
+          }
+        });
+      if (proc.stderr)
+        proc.stderr.on("data", (d) => {
+          const s = d ? String(d) : "";
+          if (!unmuted) {
+            if (s.trim()) {
+              try { process.stderr.write("[tailwind] " + s); } catch (_) {}
+            }
+          } else {
+            try { process.stderr.write(s); } catch (_) {}
+          }
+        });
+      proc.on("exit", (code) => {
+        if (code !== null && code !== 0) {
+          console.error("[tailwind] watcher exited with code", code);
+          process.exit(typeof code === "number" ? code : 1);
+        }
+      });
+      attachCssWatcherOnce();
+      return proc;
+    }
+
+    const safeCompile = (label) => {
+      try {
+        compileTailwindOnce();
+      } catch (err) {
+        console.error(label ? `${label}: ${err.message || err}` : err);
+        process.exit(1);
+      }
+    };
+
+    child = startTailwindWatcher();
+
+    const uiPlugin = path.join(
+      __dirname,
+      "../ui",
+      "tailwind-canopy-iiif-plugin.js"
+    );
+    const uiPreset = path.join(
+      __dirname,
+      "../ui",
+      "tailwind-canopy-iiif-preset.js"
+    );
+    const uiStylesDir = path.join(__dirname, "../ui", "styles");
+    const files = [uiPlugin, uiPreset].filter((p) => {
+      try {
+        return fs.existsSync(p);
+      } catch (_) {
+        return false;
+      }
+    });
+    let restartTimer = null;
+    const restart = () => {
+      clearTimeout(restartTimer);
+      restartTimer = setTimeout(() => {
+        console.log(
+          "[tailwind] detected UI plugin/preset change — restarting Tailwind"
+        );
+        try {
+          if (child && !child.killed) child.kill();
+        } catch (_) {}
+        safeCompile("[tailwind] compile after plugin change failed");
+        child = startTailwindWatcher();
+        try { onBuildStart(); } catch (_) {}
+      }, 50);
+    };
+    for (const f of files) {
+      try {
+        fs.watch(f, { persistent: false }, restart);
+      } catch (_) {}
+    }
+    if (fs.existsSync(uiStylesDir)) {
+      try {
+        fs.watch(
+          uiStylesDir,
+          { persistent: false, recursive: true },
+          (evt, fn) => {
+            try {
+              if (fn && /\.s[ac]ss$/i.test(String(fn))) restart();
+            } catch (_) {}
+          }
+        );
+      } catch (_) {
+        const watchers = new Map();
+        const watchDir = (dir) => {
+          if (watchers.has(dir)) return;
+          try {
+            const w = fs.watch(
+              dir,
+              { persistent: false },
+              (evt, fn) => {
+                try {
+                  if (fn && /\.s[ac]ss$/i.test(String(fn))) restart();
+                } catch (_) {}
+              }
+            );
+            watchers.set(dir, w);
+          } catch (_) {}
+        };
+        const scan = (dir) => {
+          try {
+            const entries = fs.readdirSync(dir, {
+              withFileTypes: true,
+            });
+            for (const e of entries) {
+              const p = path.join(dir, e.name);
+              if (e.isDirectory()) {
+                watchDir(p);
+                scan(p);
+              }
+            }
+          } catch (_) {}
+        };
+        watchDir(uiStylesDir);
+        scan(uiStylesDir);
       }
     }
-  } catch (_) {}
+    if (fs.existsSync(configPath)) {
+      try {
+        fs.watch(configPath, { persistent: false }, () => {
+          console.log("[tailwind] tailwind.config change — restarting Tailwind");
+          restart();
+        });
+      } catch (_) {}
+    }
+    const stylesDir = path.dirname(inputCss);
+    if (stylesDir && stylesDir.includes(path.join("app", "styles"))) {
+      let cssDebounce = null;
+      try {
+        fs.watch(stylesDir, { persistent: false }, (evt, fn) => {
+          clearTimeout(cssDebounce);
+          cssDebounce = setTimeout(() => {
+            try { onBuildStart(); } catch (_) {}
+            safeCompile("[tailwind] compile after CSS change failed");
+            try { onCssChange(); } catch (_) {}
+          }, 50);
+        });
+      } catch (_) {}
+    }
+  } catch (err) {
+    console.error("[tailwind] setup failed:", err && err.message ? err.message : err);
+    process.exit(1);
+  }
   console.log("[Watching]", prettyPath(CONTENT_DIR), "(Ctrl+C to stop)");
   const rw = tryRecursiveWatch();
   if (!rw) watchPerDir();

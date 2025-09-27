@@ -22,7 +22,7 @@ const IIIF_CACHE_COLLECTIONS_DIR = path.join(IIIF_CACHE_DIR, "collections");
 const IIIF_CACHE_COLLECTION = path.join(IIIF_CACHE_DIR, "collection.json");
 // Primary global index location
 const IIIF_CACHE_INDEX = path.join(IIIF_CACHE_DIR, "index.json");
-// Legacy locations kept for backward compatibility (read + optional write)
+// Additional legacy locations kept for backward compatibility (read + optional write)
 const IIIF_CACHE_INDEX_LEGACY = path.join(
   IIIF_CACHE_DIR,
   "manifest-index.json"
@@ -150,7 +150,7 @@ async function loadManifestIndex() {
         return { byId, collection: idx.collection || null };
       }
     }
-    // Fallback: legacy in .cache/iiif
+    // Legacy index location retained for backward compatibility
     if (fs.existsSync(IIIF_CACHE_INDEX_LEGACY)) {
       const idx = await readJson(IIIF_CACHE_INDEX_LEGACY);
       if (idx && typeof idx === "object") {
@@ -167,7 +167,7 @@ async function loadManifestIndex() {
         return { byId, collection: idx.collection || null };
       }
     }
-    // Fallback: legacy in manifests subdir
+    // Legacy manifests index retained for backward compatibility
     if (fs.existsSync(IIIF_CACHE_INDEX_MANIFESTS)) {
       const idx = await readJson(IIIF_CACHE_INDEX_MANIFESTS);
       if (idx && typeof idx === "object") {
@@ -406,8 +406,9 @@ async function ensureFeaturedInCache(cfg) {
         }
       } catch (_) {}
     }
-  } catch (_) {
-    // ignore failures; fallback SSR will still render a minimal hero without content
+  } catch (err) {
+    const message = err && err.message ? err.message : err;
+    throw new Error(`[iiif] Failed to populate featured cache: ${message}`);
   }
 }
 
@@ -643,33 +644,20 @@ async function buildIiifCollectionPages(CONFIG) {
     1200;
 
   // Compile the works layout component once per run
+  const worksLayoutPath = path.join(CONTENT_DIR, "works", "_layout.mdx");
+  if (!fs.existsSync(worksLayoutPath)) {
+    throw new Error(
+      "IIIF build requires content/works/_layout.mdx. Create the layout instead of relying on generated output."
+    );
+  }
   let WorksLayoutComp = null;
   try {
-    const worksLayoutPath = path.join(CONTENT_DIR, "works", "_layout.mdx");
     WorksLayoutComp = await mdx.compileMdxToComponent(worksLayoutPath);
-  } catch (_) {
-    // Minimal fallback layout if missing or fails to compile
-    WorksLayoutComp = function FallbackWorksLayout({ manifest }) {
-      const title = firstLabelString(manifest && manifest.label);
-      return React.createElement(
-        "div",
-        { className: "content" },
-        React.createElement("h1", null, title || "Untitled"),
-        // Render viewer placeholder for hydration
-        React.createElement(
-          "div",
-          { "data-canopy-viewer": "1" },
-          React.createElement("script", {
-            type: "application/json",
-            dangerouslySetInnerHTML: {
-              __html: JSON.stringify({
-                iiifContent: manifest && (manifest.id || ""),
-              }),
-            },
-          })
-        )
-      );
-    };
+  } catch (err) {
+    const message = err && err.message ? err.message : err;
+    throw new Error(
+      `Failed to compile content/works/_layout.mdx: ${message}`
+    );
   }
 
   for (let ci = 0; ci < chunks; ci++) {
@@ -808,20 +796,8 @@ async function buildIiifCollectionPages(CONFIG) {
             href = withBase(href);
             return React.createElement("a", { href, ...rest }, props.children);
           };
-          // Map exported UI components into MDX, with sensible aliases/fallbacks
+          // Map exported UI components into MDX and add anchor helper
           const compMap = { ...components, a: Anchor };
-          if (!compMap.SearchPanel && compMap.CommandPalette) {
-            compMap.SearchPanel = compMap.CommandPalette;
-          }
-          if (!components.HelloWorld) {
-            components.HelloWorld = components.Fallback
-              ? (props) =>
-                  React.createElement(components.Fallback, {
-                    name: "HelloWorld",
-                    ...props,
-                  })
-              : () => null;
-          }
           let MDXProvider = null;
           try {
             const mod = await import("@mdx-js/react");

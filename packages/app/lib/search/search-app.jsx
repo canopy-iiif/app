@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useSyncExternalStore, useState } from 'react
 import { createRoot } from 'react-dom/client';
 import { SearchResultsUI, SearchTabsUI } from '@canopy-iiif/app/ui';
 
-// Lightweight IndexedDB utilities (no deps) with graceful fallback
+// Lightweight IndexedDB utilities (no deps) with defensive guards
 function hasIDB() {
   try { return typeof indexedDB !== 'undefined'; } catch (_) { return false; }
 }
@@ -70,7 +70,7 @@ async function sha256Hex(str) {
       return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
     }
   } catch (_) {}
-  // Fallback: simple non-crypto hash
+  // Defensive: simple non-crypto hash when Web Crypto is unavailable
   try {
     let h = 5381; for (let i = 0; i < str.length; i++) h = ((h << 5) + h) ^ str.charCodeAt(i);
     return (h >>> 0).toString(16);
