@@ -1,7 +1,6 @@
-@source "../content/**/*.{mdx,html}";
-@source "../site/**/*.html";
-@source "../packages/app/ui/**/*.{js,jsx,ts,tsx}";
-@source "../packages/app/lib/iiif/components/**/*.{js,jsx}";
+@config "./tailwind.config.js";
+
+@import "tailwindcss/theme";
 
 @tailwind base;
 @tailwind components;

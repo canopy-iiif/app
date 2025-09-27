@@ -1,13 +1,60 @@
 // Canopy defaults: design tokens + UI styles.
 // To disable component styles, remove the plugin line.
 // To disable Canopy tokens entirely, remove the preset line.
+const path = require("path");
+const plugin = require("tailwindcss/plugin");
+const sass = require("sass");
+
+const toGlob = (...parts) => path.join(...parts).replace(/\\/g, "/");
+const projectRoot = path.join(__dirname, "..", "..");
+const canopyUiDist = path.dirname(require.resolve("@canopy-iiif/app/ui"));
+const canopyUiRoot = path.dirname(canopyUiDist);
+const canopyLibRoot = path.dirname(require.resolve("@canopy-iiif/app"));
+
+function compileCanopyTokens() {
+  try {
+    const entry = path.join(canopyUiRoot, "styles", "variables.emit.scss");
+    const result = sass.compile(entry, { style: "expanded" });
+    return result && result.css ? result.css : "";
+  } catch (error) {
+    return "";
+  }
+}
+
+const canopyTokensCss = compileCanopyTokens();
+
+function parseTokens(css) {
+  if (!css) return {};
+  const match = css.match(/:root\s*\{([\s\S]*?)\}/);
+  if (!match) return {};
+  const body = match[1];
+  const entries = body
+    .split(';')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const idx = line.indexOf(':');
+      if (idx === -1) return null;
+      const prop = line.slice(0, idx).trim();
+      const value = line.slice(idx + 1).replace(/!important/g, '').trim();
+      return [prop, value];
+    })
+    .filter(Boolean);
+  const root = {};
+  for (const [prop, value] of entries) {
+    root[prop] = value;
+  }
+  return Object.keys(root).length ? { ':root': root } : {};
+}
+
+const canopyTokenBase = parseTokens(canopyTokensCss);
+
 module.exports = {
   presets: [require("@canopy-iiif/app/ui/canopy-iiif-preset")],
   content: [
-    "./content/**/*.{mdx,html}",
-    "./site/**/*.html",
-    "./packages/app/ui/**/*.{js,jsx,ts,tsx}",
-    "./packages/app/lib/iiif/components/**/*.{js,jsx}",
+    toGlob(projectRoot, "content/**/*.{mdx,html}"),
+    toGlob(canopyUiDist, "**/*.{js,mjs,jsx,tsx}"),
+    toGlob(canopyLibRoot, "iiif/components/**/*.{js,jsx}"),
   ],
   theme: {
     extend: {
@@ -34,7 +81,13 @@ module.exports = {
   corePlugins: {
     // preflight: false, // uncomment to disable base reset
   },
-  plugins: [require("@canopy-iiif/app/ui/canopy-iiif-plugin")],
+  plugins: [
+    require("@canopy-iiif/app/ui/canopy-iiif-plugin"),
+    plugin(function ({ addBase }) {
+      if (!canopyTokenBase || !Object.keys(canopyTokenBase).length) return;
+      addBase(canopyTokenBase);
+    }),
+  ],
   safelist: [
     // Add dynamic classes here if needed
   ],
