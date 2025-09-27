@@ -17,7 +17,7 @@ export default function SearchTabs({ type = 'all', onTypeChange, types = [], cou
             type="button"
             onClick={() => onTypeChange && onTypeChange(t)}
             className={
-              'px-3 py-1.5 text-sm rounded-t-md border-b-2 -mb-px transition-colors ' +
+              'px-3 py-2 text-sm rounded-t-md border-b-2 -mb-px transition-colors ' +
               (active
                 ? 'border-brand-600 text-brand-700'
                 : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300')
@@ -30,4 +30,3 @@ export default function SearchTabs({ type = 'all', onTypeChange, types = [], cou
     </div>
   );
 }
-

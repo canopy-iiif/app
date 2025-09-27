@@ -2,10 +2,31 @@
 
 @import "tailwindcss/theme";
 
+@import "@canopy-iiif/app/ui/styles/index.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* Example component layer overrides */
 @layer components {
+}
+
+@layer base {
+  :root {
+    --canopy-font-sans: system-ui, "Segoe UI", "Helvetica Neue", Helvetica,
+      Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+      "Segoe UI Symbol";
+  }
+
+  body {
+    font-family: var(--canopy-font-sans);
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font-family: inherit;
+  }
 }

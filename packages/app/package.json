@@ -14,7 +14,8 @@
     "./ui/styles/index.css": "./ui/styles/index.css",
     "./ui/canopy-iiif-plugin": "./ui/tailwind-canopy-iiif-plugin.js",
     "./ui/canopy-iiif-preset": "./ui/tailwind-canopy-iiif-preset.js",
-    "./lib/components/*": "./lib/components/*"
+    "./lib/components/*": "./lib/components/*",
+    "./head": "./lib/head.js"
   },
   "files": [
     "lib/**",

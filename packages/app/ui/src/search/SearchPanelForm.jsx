@@ -62,6 +62,7 @@ export default function SearchPanelForm(props = {}) {
     buttonLabel = "Search",
     label,
     searchPath = "/search",
+    inputId: inputIdProp,
   } = props || {};
 
   const text =
@@ -70,6 +71,31 @@ export default function SearchPanelForm(props = {}) {
     () => resolveSearchPath(searchPath),
     [searchPath]
   );
+  const autoId = typeof React.useId === 'function' ? React.useId() : undefined;
+  const [fallbackId] = React.useState(
+    () => `canopy-cmdk-${Math.random().toString(36).slice(2, 10)}`
+  );
+  const inputId = inputIdProp || autoId || fallbackId;
+  const inputRef = React.useRef(null);
+
+  const focusInput = React.useCallback(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    if (document.activeElement === el) return;
+    try { el.focus({ preventScroll: true }); }
+    catch (_) {
+      try { el.focus(); } catch (_) {}
+    }
+  }, []);
+
+  const handlePointerDown = React.useCallback((event) => {
+    const target = event.target;
+    if (target && typeof target.closest === 'function') {
+      if (target.closest('[data-canopy-command-trigger]')) return;
+    }
+    event.preventDefault();
+    focusInput();
+  }, [focusInput]);
 
   return (
     <form
@@ -78,25 +104,34 @@ export default function SearchPanelForm(props = {}) {
       role="search"
       autoComplete="off"
       spellCheck="false"
-      className="group flex items-center gap-2 px-2 py-1.5 rounded-lg border border-slate-300 bg-white/95 backdrop-blur text-slate-700 shadow-sm hover:shadow transition w-full focus-within:ring-2 focus-within:ring-brand-500"
+      className="group flex items-center gap-2 rounded-lg border border-slate-300 text-slate-700 shadow-sm transition w-full focus-within:ring-2 focus-within:ring-brand-500 canopy-cmdk-form"
+      onPointerDown={handlePointerDown}
+      data-placeholder={placeholder || ''}
     >
-      <MagnifyingGlassIcon className="w-5 h-5 text-slate-400 group-focus-within:text-brand-500" />
-      <input
-        type="search"
-        name="q"
-        inputMode="search"
-        data-canopy-command-input
-        placeholder={placeholder}
-        className="flex-1 bg-transparent outline-none placeholder:text-slate-400 py-0.5 min-w-0"
-        aria-label="Search"
-      />
+      <label
+        htmlFor={inputId}
+        className="flex items-center gap-2 flex-1 min-w-0 cursor-text canopy-cmdk-label"
+      >
+        <MagnifyingGlassIcon className="w-5 h-5 text-slate-400 group-focus-within:text-brand-500 pointer-events-none" />
+        <input
+          id={inputId}
+          type="search"
+          name="q"
+          inputMode="search"
+          data-canopy-command-input
+          placeholder={placeholder}
+          className="flex-1 bg-transparent outline-none placeholder:text-slate-400 py-1 min-w-0"
+          aria-label="Search"
+          ref={inputRef}
+        />
+      </label>
       <button
         type="button"
         data-canopy-command-trigger
         className="inline-flex items-center gap-2 rounded-md border border-transparent bg-brand px-2 py-1 text-sm font-medium text-white shadow-sm transition hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
       >
         <span>{text}</span>
-        <span aria-hidden className="hidden sm:inline-flex items-center gap-1 rounded border border-white/40 bg-white/20 px-1.5 py-0.5 text-xs font-semibold">
+        <span aria-hidden className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold canopy-cmdk-shortcut">
           <span>⌘</span>
           <span>K</span>
         </span>

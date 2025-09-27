@@ -45,10 +45,6 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}) {
   const source = await fsp.readFile(filePath, 'utf8');
   const title = mdx.extractTitle(source);
   const { body, head } = await mdx.compileMdxFile(filePath, outPath, null, extraProps);
-  const cssRel = path
-    .relative(path.dirname(outPath), path.join(OUT_DIR, 'styles', 'styles.css'))
-    .split(path.sep)
-    .join('/');
   const needsHydrateViewer = body.includes('data-canopy-viewer');
   const needsHydrateSlider = body.includes('data-canopy-slider');
   const needsCommand = true; // command runtime is global
@@ -96,7 +92,7 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}) {
   if (sliderRel && jsRel !== sliderRel) extraScripts.push(`<script defer src="${sliderRel}"></script>`);
   if (commandRel && jsRel !== commandRel) extraScripts.push(`<script defer src="${commandRel}"></script>`);
   if (extraScripts.length) headExtra = extraScripts.join('') + headExtra;
-  const html = htmlShell({ title, body, cssHref: cssRel || 'styles.css', scriptHref: jsRel, headExtra: vendorTag + headExtra });
+  const html = htmlShell({ title, body, cssHref: null, scriptHref: jsRel, headExtra: vendorTag + headExtra });
   const { applyBaseToHtml } = require('../common');
   return applyBaseToHtml(html);
 }

@@ -139,8 +139,11 @@ async function loadUiComponents() {
 }
 
 function extractTitle(mdxSource) {
-  const { content } = parseFrontmatter(String(mdxSource || ""));
-  const m = content.match(/^\s*#\s+(.+)\s*$/m);
+  const { data, content } = parseFrontmatter(String(mdxSource || ""));
+  if (data && typeof data.title === "string" && data.title.trim()) {
+    return data.title.trim();
+  }
+  const m = content.match(/^\s*#{1,6}\s+(.+?)\s*$/m);
   return m ? m[1].trim() : "Untitled";
 }
 

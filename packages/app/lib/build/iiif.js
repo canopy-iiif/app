@@ -828,13 +828,6 @@ async function buildIiifCollectionPages(CONFIG) {
                   React.createElement(app.Head)
                 )
               : "";
-          const cssRel = path
-            .relative(
-              path.dirname(outPath),
-              path.join(OUT_DIR, "styles", "styles.css")
-            )
-            .split(path.sep)
-            .join("/");
           const needsHydrateViewer = body.includes("data-canopy-viewer");
           const needsRelated = body.includes("data-canopy-related-items");
           const needsHero = body.includes("data-canopy-hero");
@@ -942,7 +935,7 @@ async function buildIiifCollectionPages(CONFIG) {
           let html = htmlShell({
             title,
             body: pageBody,
-            cssHref: cssRel || "styles/styles.css",
+            cssHref: null,
             scriptHref: jsRel,
             headExtra: vendorTag + headExtra,
           });

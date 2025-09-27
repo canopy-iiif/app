@@ -150,7 +150,6 @@ async function buildSearchPage() {
     head = rendered && rendered.head ? rendered.head : '';
     if (!body) throw new Error('Search: content/search/_layout.mdx produced empty output');
     const importMap = '';
-    const cssRel = path.relative(path.dirname(outPath), path.join(OUT_DIR, 'styles', 'styles.css')).split(path.sep).join('/');
     const jsAbs = path.join(OUT_DIR, 'scripts', 'search.js');
     let jsRel = path.relative(path.dirname(outPath), jsAbs).split(path.sep).join('/');
     let v = '';
@@ -166,7 +165,14 @@ async function buildSearchPage() {
       return rel;
     }
     const vendorTags = `<script src="${verRel(vendorReactAbs)}"></script><script src="${verRel(vendorFlexAbs)}"></script><script src="${verRel(vendorCommandAbs)}"></script>`;
-    let html = htmlShell({ title: 'Search', body, cssHref: cssRel || 'styles.css', scriptHref: jsRel, headExtra: vendorTags + head + importMap });
+    let headExtra = vendorTags + head + importMap;
+    try {
+      const { BASE_PATH } = require('../common');
+      if (BASE_PATH) {
+        headExtra = `<script>window.CANOPY_BASE_PATH=${JSON.stringify(BASE_PATH)}</script>` + headExtra;
+      }
+    } catch (_) {}
+    let html = htmlShell({ title: 'Search', body, cssHref: null, scriptHref: jsRel, headExtra });
     try { html = require('./common').applyBaseToHtml(html); } catch (_) {}
     await fsp.writeFile(outPath, html, 'utf8');
     console.log('Search: Built', path.relative(process.cwd(), outPath));

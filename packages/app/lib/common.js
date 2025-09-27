@@ -50,7 +50,8 @@ async function cleanDir(dir) {
 function htmlShell({ title, body, cssHref, scriptHref, headExtra }) {
   const scriptTag = scriptHref ? `<script defer src="${scriptHref}"></script>` : '';
   const extra = headExtra ? String(headExtra) : '';
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>${title}</title>${extra}<link rel="stylesheet" href="${cssHref}">${scriptTag}</head><body>${body}</body></html>`;
+  const cssTag = cssHref ? `<link rel="stylesheet" href="${cssHref}">` : '';
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>${title}</title>${extra}${cssTag}${scriptTag}</head><body>${body}</body></html>`;
 }
 
 function withBase(href) {

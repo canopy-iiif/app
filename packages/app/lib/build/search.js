@@ -165,10 +165,6 @@ async function writeFacetsSearchApi() {
   await fsp.writeFile(dest, JSON.stringify(data, null, 2), 'utf8');
 }
 
-module.exports = { buildFacetsForWorks, writeFacetCollections, writeFacetsSearchApi };
-
-
-
 async function collectMdxPageRecords() {
   const { fs, fsp, path, CONTENT_DIR, rootRelativeHref } = require('../common');
   const mdx = require('./mdx');
@@ -183,7 +179,8 @@ async function collectMdxPageRecords() {
         const base = path.basename(p).toLowerCase();
         const src = await fsp.readFile(p, 'utf8');
         const fm = mdx.parseFrontmatter(src);
-        const title = mdx.extractTitle(src);
+        const titleRaw = mdx.extractTitle(src);
+        const title = typeof titleRaw === 'string' ? titleRaw.trim() : '';
         const rel = path.relative(CONTENT_DIR, p).replace(/\.mdx$/i, '.html');
         if (base !== 'sitemap.mdx') {
           const href = rootRelativeHref(rel.split(path.sep).join('/'));

@@ -9,7 +9,7 @@ export default function SearchPanel(props = {}) {
     placeholder = 'Search…',
     hotkey = 'mod+k',
     maxResults = 8,
-    groupOrder = ['work', 'page'],
+    groupOrder = ['work', 'docs', 'page'],
     // Kept for backward compat; form always renders submit
     button = true, // eslint-disable-line no-unused-vars
     buttonLabel = 'Search',

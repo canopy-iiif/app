@@ -1,6 +1,9 @@
+import { Stylesheet } from '@canopy-iiif/app/head';
+
 export function Head() {
   return (
     <>
+      <Stylesheet />
       <meta name="theme-color" content="#111" />
     </>
   );
@@ -13,7 +16,7 @@ return (
   <div className="bg-white text-slate-800">
     <header className="border-b border-slate-200">
       <div className="px-4 py-3 flex items-center justify-between  gap-4">
-        <a href="/" className="brand-link text-lg">Canopy IIIF</a>
+        <a href="/" className="text-lg font-semibold text-brand hover:underline">Canopy IIIF</a>
         <SearchPanel label="Search" hotkey="mod+k" placeholder="Search…" />
         <nav className="flex items-center gap-4">
           <a href="/getting-started" className="hover:underline">Getting Started</a>

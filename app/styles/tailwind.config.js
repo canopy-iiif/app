@@ -1,6 +1,13 @@
 // Canopy defaults: design tokens + UI styles.
-// To disable component styles, remove the plugin line.
-// To disable Canopy tokens entirely, remove the preset line.
+// This config is the bridge between the UI workspace (packages/app/ui)
+// and the site-level Tailwind build:
+//  - Resolve the published Canopy Tailwind preset/plugin so utility classes
+//    remain in sync with @canopy-iiif/app releases.
+//  - Compile the Sass design tokens once and register them on :root before
+//    Tailwind runs, ensuring utilities like bg-brand resolve to the same
+//    CSS variables used by the UI runtime.
+//  - Target authored MDX/HTML along with the shipped UI/IIIF component code
+//    so the extractor sees every class we emit server-side.
 const path = require("path");
 const plugin = require("tailwindcss/plugin");
 const sass = require("sass");
