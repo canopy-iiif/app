@@ -14,12 +14,18 @@ export function App({ children }) {
 return (
 
   <div className="bg-white text-slate-800">
-    <header className="border-b border-slate-200">
-      <div className="px-4 py-3 flex items-center justify-between  gap-4">
-        <a href="/" className="text-lg font-semibold text-brand hover:underline">Canopy IIIF</a>
+    <header>
+      <div className="px-4 py-3 flex items-center justify-between gap-4">
+        <a href="/" className="flex items-center gap-2 ">
+          <img src="/canopy.svg" alt="Canopy IIIF" style={{
+            height: '1.5rem',
+          }} />
+          <span>Canopy IIIF</span>
+        </a>
         <SearchPanel label="Search" hotkey="mod+k" placeholder="Search…" />
         <nav className="flex items-center gap-4">
-          <a href="/getting-started" className="hover:underline">Getting Started</a>
+          <a href="/getting-started">Documentation</a>
+          <a href="/about">About</a>
         </nav>
       </div>
     </header>

@@ -11,7 +11,7 @@ Thank you for contributing to Canopy. This repository is a monorepo with a priva
 ## Local Development
 - Install: `npm install`
 - Build once: `npm run build`
-- Dev server (watch + live reload): `npm run dev` (serves `site/` at `http://localhost:3000`)
+- Dev server (watch + live reload): `npm run dev` (serves `site/` at `http://localhost:5001`)
 
 Entrypoint
 - Both commands call `node app/scripts/canopy-build.mjs`.

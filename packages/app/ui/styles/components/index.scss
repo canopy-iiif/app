@@ -1,5 +1,4 @@
-// Components bundle. Provide variables to all components, then import each partial.
-@use '../variables' as *;
-
 @use './card';
 @use './command';
+@use './header';
+@use './hero';

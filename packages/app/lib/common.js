@@ -26,13 +26,13 @@ function readYamlConfigBaseUrl() {
 // Priority:
 // 1) CANOPY_BASE_URL env
 // 2) canopy.yml → site.baseUrl
-// 3) dev server default http://localhost:PORT (PORT env or 3000)
+// 3) dev server default http://localhost:PORT (PORT env or 5001)
 const BASE_ORIGIN = (() => {
   const env = String(process.env.CANOPY_BASE_URL || '').trim();
   if (env) return env.replace(/\/$/, '');
   const cfg = readYamlConfigBaseUrl();
   if (cfg) return cfg.replace(/\/$/, '');
-  const port = Number(process.env.PORT || 3000);
+  const port = Number(process.env.PORT || 5001);
   return `http://localhost:${port}`;
 })();
 

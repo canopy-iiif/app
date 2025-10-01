@@ -1,3 +1,4 @@
-// UI styles entry (optional). Import the components bundle.
-@use './components/index';
+@use './variables' as *;
+@use './base';
+@use './components';
 

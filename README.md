@@ -7,7 +7,7 @@ Static site generator powered by MDX and IIIF. The stable app entry at `app/scri
 ## Quick Start
 
 - Install: `npm install`
-- Develop: `npm run dev` (serves `http://localhost:3000`)
+- Develop: `npm run dev` (serves `http://localhost:5001`)
 - Build: `npm run build`
 
 Entrypoint details
@@ -49,7 +49,7 @@ Place static files under `assets/` and they will be copied to the site root, pre
 
 ## Development
 
-- Run `npm run dev` to start a local server at `http://localhost:3000` with live reload.
+- Run `npm run dev` to start a local server at `http://localhost:5001` with live reload.
 - Editing MDX under `content/` triggers a site rebuild and automatic browser reload.
 - Editing files under `assets/` copies only the changed files into `site/` (no full rebuild) and reloads the browser.
 
@@ -123,7 +123,7 @@ Base URL rules for IIIF ids
   1) GitHub Actions: auto‑detected in the Pages workflow (`owner.github.io[/repo]`).
   2) `CANOPY_BASE_URL` env var (e.g., `https://canopy-iiif.github.io/canopy-iiif`).
   3) `canopy.yml` → `site.baseUrl`.
-  4) Dev default `http://localhost:3000` (or `PORT` env).
+  4) Dev default `http://localhost:5001` (or `PORT` env).
 
 Why this is cool
 

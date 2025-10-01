@@ -3,6 +3,29 @@ import React from "react";
 import helpers from "../../../lib/components/featured.js";
 import { computeHeroHeightStyle } from './hero-utils.js';
 
+const basePath = (() => {
+  try {
+    const raw =
+      typeof process !== "undefined" && process && process.env
+        ? String(process.env.CANOPY_BASE_PATH || "")
+        : "";
+    return raw.replace(/\/$/, "");
+  } catch (_) {
+    return "";
+  }
+})();
+
+function applyBasePath(href) {
+  try {
+    if (!href) return href;
+    if (!basePath) return href;
+    if (typeof href === "string" && href.startsWith("/")) {
+      return `${basePath}${href}`;
+    }
+  } catch (_) {}
+  return href;
+}
+
 /**
  * Hero
  *
@@ -10,7 +33,7 @@ import { computeHeroHeightStyle } from './hero-utils.js';
  * - Fluid width (100% of container)
  * - Fixed height from `height` prop (no aspect ratio lock)
  * - Renders a background image from `item.thumbnail` with cover fit
- * - Title overlays with link to item.href
+ * - Title rendered as caption beneath the hero and linked to item.href
  *
  * Props:
  * - height: number | string — required; e.g., 360 or '420px'
@@ -47,7 +70,7 @@ export default function Hero({
   const href = (resolved && resolved.href) || "#";
   const thumbnail = (resolved && resolved.thumbnail) || "";
 
-  const baseStyles = {
+  const mediaStyles = {
     position: "relative",
     ...hStyle,
     overflow: "hidden",
@@ -64,24 +87,29 @@ export default function Hero({
     filter: "none",
   };
 
+  const sanitizedRest = (() => {
+    const r = { ...rest };
+    try {
+      delete r.random;
+      delete r.index;
+    } catch (_) {}
+    return r;
+  })();
+
+  const figureClassName = ["canopy-hero", className].filter(Boolean).join(" ");
+  const figureStyles = { margin: 0, padding: 0, ...style };
+  const safeHref = applyBasePath(href);
+
   return (
-    <figure
-      className={["canopy-hero", className].filter(Boolean).join(" ")}
-      style={{ ...baseStyles, ...style }}
-      {...(() => { const r = { ...rest }; try { delete r.random; delete r.index; } catch (_) {} return r; })()}
-    >
-      {thumbnail ? (
-        <img src={thumbnail} alt="" aria-hidden="true" style={imgStyles} />
-      ) : null}
-      <h3>
-        <a
-          href={href}
-          style={{ color: "inherit", textDecoration: "none" }}
-          className="canopy-hero-link"
-        >
-          {title}
-        </a>
-      </h3>
-    </figure>
+    <a href={safeHref} className="canopy-hero-link">
+      <figure className={figureClassName} style={figureStyles} {...sanitizedRest}>
+        <div className="canopy-hero__media" style={mediaStyles}>
+          {thumbnail ? (
+            <img src={thumbnail} alt="" aria-hidden="true" style={imgStyles} />
+          ) : null}
+        </div>
+        {title ? <figcaption className="canopy-hero__caption">{title}</figcaption> : null}
+      </figure>
+    </a>
   );
 }

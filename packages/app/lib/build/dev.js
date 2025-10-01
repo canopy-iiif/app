@@ -21,7 +21,7 @@ function resolveTailwindCli() {
   if (fs.existsSync(bin)) return { cmd: bin, args: [] };
   return { cmd: 'tailwindcss', args: [] };
 }
-const PORT = Number(process.env.PORT || 3000);
+const PORT = Number(process.env.PORT || 5001);
 let onBuildSuccess = () => {};
 let onBuildStart = () => {};
 let onCssChange = () => {};

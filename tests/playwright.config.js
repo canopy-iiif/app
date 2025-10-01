@@ -7,12 +7,12 @@ module.exports = defineConfig({
   timeout: 30_000,
   retries: process.env.CI ? 2 : 0,
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: "http://localhost:5001",
     headless: true,
   },
   webServer: {
     command: "bash -lc 'cd .. && node app/scripts/canopy-build.mjs --dev'",
-    url: "http://localhost:3000",
+    url: "http://localhost:5001",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     env: {

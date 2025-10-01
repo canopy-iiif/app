@@ -15,7 +15,7 @@ This repository is a minimal Node.js project. Use this guide to add code and gro
 
 ## Build, Test, and Development Commands
 - `npm install`: install dependencies.
-- `npm run dev`: starts UI watcher and dev server (port 3000).
+- `npm run dev`: starts UI watcher and dev server (port 5001).
 - `npm run build`: builds UI assets, then the static site to `site/`.
 - `npm test`: placeholder; configure a real test runner before use.
 
