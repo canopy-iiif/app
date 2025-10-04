@@ -87,6 +87,7 @@
   background-color: color-mix(in srgb, #fff 95%, transparent);
   transition: box-shadow var(--duration-fast, 150ms) ease, background-color var(--duration-fast, 150ms) ease;
   cursor: text;
+  padding-right: 0.4rem;
 
   &::after {
     content: attr(data-placeholder);

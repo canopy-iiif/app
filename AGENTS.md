@@ -19,6 +19,8 @@ This repository is a minimal Node.js project. Use this guide to add code and gro
 - `npm run build`: builds UI assets, then the static site to `site/`.
 - `npm test`: placeholder; configure a real test runner before use.
 
+> **Networking note:** The build must reach live IIIF collections and manifests. Always enable network access for the agent and approve elevated commands before running any task that fetches IIIF data (build, dev, cache refresh) so remote resources are retrieved rather than relying on stale caches.
+
 Recommended scripts in `package.json`:
 ```json
 {

@@ -104,7 +104,7 @@ export default function SearchPanelForm(props = {}) {
       role="search"
       autoComplete="off"
       spellCheck="false"
-      className="group flex items-center gap-2 rounded-lg border border-slate-300 text-slate-700 shadow-sm transition w-full focus-within:ring-2 focus-within:ring-brand-500 canopy-cmdk-form"
+      className="group flex items-center gap-2 rounded-lg border border-slate-300 text-slate-700 shadow-sm transition focus-within:ring-2 focus-within:ring-brand-500 canopy-cmdk-form"
       onPointerDown={handlePointerDown}
       data-placeholder={placeholder || ''}
     >

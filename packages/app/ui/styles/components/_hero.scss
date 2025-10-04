@@ -1,6 +1,13 @@
 .canopy-hero {
     padding: 0;
     margin: 0;
+
+    figcaption {
+        margin: 0;
+        padding: 1rem 0 0;
+        font-size: 1rem;
+        text-align: right;
+    }
 }
 
 .canopy-hero-link {
@@ -11,12 +18,4 @@
 
 .canopy-hero__media {
     position: relative;
-}
-
-.canopy-hero__caption {
-    margin: 0;
-    padding: 1rem 0 0;
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: currentColor;
 }

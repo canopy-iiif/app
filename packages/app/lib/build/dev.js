@@ -2,7 +2,6 @@ const fs = require("fs");
 const fsp = fs.promises;
 const path = require("path");
 const { spawn, spawnSync } = require("child_process");
-const { build } = require("../build/build");
 const http = require("http");
 const url = require("url");
 const {
@@ -22,11 +21,29 @@ function resolveTailwindCli() {
   return { cmd: 'tailwindcss', args: [] };
 }
 const PORT = Number(process.env.PORT || 5001);
+const BUILD_MODULE_PATH = path.resolve(__dirname, "build.js");
 let onBuildSuccess = () => {};
 let onBuildStart = () => {};
 let onCssChange = () => {};
 let nextBuildSkipIiif = false; // hint set by watchers
 const UI_DIST_DIR = path.resolve(path.join(__dirname, "../../ui/dist"));
+const APP_PACKAGE_ROOT = path.resolve(path.join(__dirname, "..", ".."));
+const APP_LIB_DIR = path.join(APP_PACKAGE_ROOT, "lib");
+const APP_UI_DIR = path.join(APP_PACKAGE_ROOT, "ui");
+const APP_WATCH_TARGETS = [
+  { dir: APP_LIB_DIR, label: "@canopy-iiif/app/lib" },
+  { dir: APP_UI_DIR, label: "@canopy-iiif/app/ui" },
+];
+const HAS_APP_WORKSPACE = (() => {
+  try {
+    return fs.existsSync(path.join(APP_PACKAGE_ROOT, "package.json"));
+  } catch (_) {
+    return false;
+  }
+})();
+let pendingModuleReload = false;
+let building = false;
+let buildAgain = false;
 
 function prettyPath(p) {
   try {
@@ -40,16 +57,71 @@ function prettyPath(p) {
   }
 }
 
-async function runBuild() {
+function loadBuildFunction() {
+  let mod = null;
   try {
-    const hint = { skipIiif: !!nextBuildSkipIiif };
-    nextBuildSkipIiif = false;
-    await build(hint);
+    mod = require(BUILD_MODULE_PATH);
+  } catch (error) {
+    throw new Error(
+      `[watch] Failed to load build module (${BUILD_MODULE_PATH}): ${
+        error && error.message ? error.message : error
+      }`
+    );
+  }
+  const fn =
+    mod && typeof mod.build === "function"
+      ? mod.build
+      : mod && mod.default && typeof mod.default.build === "function"
+      ? mod.default.build
+      : null;
+  if (typeof fn !== "function") {
+    throw new Error("[watch] Invalid build module export: expected build() function");
+  }
+  return fn;
+}
+
+function clearAppModuleCache() {
+  try {
+    const prefix = APP_PACKAGE_ROOT.endsWith(path.sep)
+      ? APP_PACKAGE_ROOT
+      : APP_PACKAGE_ROOT + path.sep;
+    for (const key of Object.keys(require.cache || {})) {
+      if (!key) continue;
+      try {
+        if (key === APP_PACKAGE_ROOT || key.startsWith(prefix)) {
+          delete require.cache[key];
+        }
+      } catch (_) {}
+    }
+  } catch (_) {}
+}
+
+async function runBuild() {
+  if (building) {
+    buildAgain = true;
+    return;
+  }
+  building = true;
+  const hint = { skipIiif: !!nextBuildSkipIiif };
+  nextBuildSkipIiif = false;
+  try {
+    if (pendingModuleReload) {
+      clearAppModuleCache();
+      pendingModuleReload = false;
+    }
+    const buildFn = loadBuildFunction();
+    await buildFn(hint);
     try {
       onBuildSuccess();
     } catch (_) {}
   } catch (e) {
     console.error("Build failed:", e && e.message ? e.message : e);
+  } finally {
+    building = false;
+    if (buildAgain) {
+      buildAgain = false;
+      debounceBuild();
+    }
   }
 }
 
@@ -331,6 +403,131 @@ function watchUiDistPerDir() {
   scan(UI_DIST_DIR);
   return () => {
     for (const w of watchers.values()) w.close();
+  };
+}
+
+const APP_WATCH_EXTENSIONS = new Set([".js", ".jsx", ".scss"]);
+
+function shouldIgnoreAppSourcePath(p) {
+  try {
+    const resolved = path.resolve(p);
+    const rel = path.relative(APP_PACKAGE_ROOT, resolved);
+    if (!rel || rel === "") return false;
+    if (rel.startsWith("..")) return true;
+    const segments = rel.split(path.sep).filter(Boolean);
+    if (!segments.length) return false;
+    if (segments.includes("node_modules")) return true;
+    if (segments.includes(".git")) return true;
+    if (segments[0] === "ui" && segments[1] === "dist") return true;
+    return false;
+  } catch (_) {
+    return true;
+  }
+}
+
+function handleAppSourceChange(baseDir, eventType, filename, label) {
+  if (!filename) return;
+  const full = path.resolve(baseDir, filename);
+  if (shouldIgnoreAppSourcePath(full)) return;
+  const ext = path.extname(full).toLowerCase();
+  if (!APP_WATCH_EXTENSIONS.has(ext)) return;
+  try {
+    const relLib = path.relative(APP_LIB_DIR, full);
+    if (!relLib.startsWith("..") && !path.isAbsolute(relLib)) {
+      pendingModuleReload = true;
+    }
+  } catch (_) {}
+  try {
+    console.log(
+      `[pkg] ${eventType}: ${prettyPath(full)}${label ? ` (${label})` : ""}`
+    );
+  } catch (_) {}
+  nextBuildSkipIiif = true;
+  try {
+    onBuildStart();
+  } catch (_) {}
+  debounceBuild();
+}
+
+function tryRecursiveWatchAppDir(dir, label) {
+  try {
+    return fs.watch(dir, { recursive: true }, (eventType, filename) => {
+      handleAppSourceChange(dir, eventType, filename, label);
+    });
+  } catch (_) {
+    return null;
+  }
+}
+
+function watchAppDirPerDir(dir, label) {
+  const watchers = new Map();
+
+  function watchDir(target) {
+    if (watchers.has(target)) return;
+    if (shouldIgnoreAppSourcePath(target)) return;
+    try {
+      const w = fs.watch(target, (eventType, filename) => {
+        if (filename) {
+          handleAppSourceChange(target, eventType, filename, label);
+        }
+        scan(target);
+      });
+      watchers.set(target, w);
+    } catch (_) {}
+  }
+
+  function scan(target) {
+    let entries;
+    try {
+      entries = fs.readdirSync(target, { withFileTypes: true });
+    } catch (_) {
+      return;
+    }
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const sub = path.join(target, entry.name);
+      if (shouldIgnoreAppSourcePath(sub)) continue;
+      watchDir(sub);
+      scan(sub);
+    }
+  }
+
+  watchDir(dir);
+  scan(dir);
+
+  return () => {
+    for (const w of watchers.values()) {
+      try {
+        w.close();
+      } catch (_) {}
+    }
+  };
+}
+
+function watchAppSources() {
+  if (!HAS_APP_WORKSPACE) return () => {};
+  const stops = [];
+  for (const target of APP_WATCH_TARGETS) {
+    const { dir, label } = target;
+    if (!dir || !fs.existsSync(dir)) continue;
+    console.log(`[Watching] ${prettyPath(dir)} (${label})`);
+    const watcher = tryRecursiveWatchAppDir(dir, label);
+    if (!watcher) {
+      stops.push(watchAppDirPerDir(dir, label));
+    } else {
+      stops.push(() => {
+        try {
+          watcher.close();
+        } catch (_) {}
+      });
+    }
+  }
+  return () => {
+    for (const stop of stops) {
+      try {
+        if (typeof stop === "function") stop();
+      } catch (_) {}
+    }
   };
 }
 
@@ -899,6 +1096,9 @@ async function dev() {
     );
     const urw = tryRecursiveWatchUiDist();
     if (!urw) watchUiDistPerDir();
+  }
+  if (HAS_APP_WORKSPACE) {
+    watchAppSources();
   }
 }
 

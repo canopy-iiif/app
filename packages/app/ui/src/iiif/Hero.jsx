@@ -108,7 +108,7 @@ export default function Hero({
             <img src={thumbnail} alt="" aria-hidden="true" style={imgStyles} />
           ) : null}
         </div>
-        {title ? <figcaption className="canopy-hero__caption">{title}</figcaption> : null}
+        {title ? <figcaption>{title}</figcaption> : null}
       </figure>
     </a>
   );
