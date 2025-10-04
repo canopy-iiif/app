@@ -18,3 +18,11 @@ export { default as CommandPalette } from "./src/command/MdxCommandPalette.jsx";
 export { default as SearchPanel } from "./src/search/SearchPanel.jsx";
 export { default as SearchPanelForm } from "./src/search/SearchPanelForm.jsx";
 export { default as SearchPanelTeaserResults } from "./src/search/SearchPanelTeaserResults.jsx";
+
+// Clover IIIF primitives wrappers for SSR rendering
+export {
+  Label,
+  Metadata,
+  RequiredStatement,
+  Summary,
+} from "./src/iiif/ManifestPrimitives.jsx";
