@@ -346,10 +346,11 @@ async function attachCommand(host) {
 
   host.addEventListener('click', (event) => {
     const trigger = event.target && event.target.closest && event.target.closest('[data-canopy-command-trigger]');
-    if (trigger) {
-      event.preventDefault();
-      openPanel();
-    }
+    if (!trigger) return;
+    const mode = (trigger.dataset && trigger.dataset.canopyCommandTrigger) || '';
+    if (mode === 'submit' || mode === 'form') return;
+    event.preventDefault();
+    openPanel();
   });
 
   try {

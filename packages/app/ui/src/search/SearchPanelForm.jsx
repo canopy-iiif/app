@@ -126,8 +126,8 @@ export default function SearchPanelForm(props = {}) {
         />
       </label>
       <button
-        type="button"
-        data-canopy-command-trigger
+        type="submit"
+        data-canopy-command-trigger="submit"
         className="inline-flex items-center gap-2 rounded-md border border-transparent bg-brand px-2 py-1 text-sm font-medium text-white shadow-sm transition hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
       >
         <span>{text}</span>
