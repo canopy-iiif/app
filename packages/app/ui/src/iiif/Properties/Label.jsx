@@ -1,6 +1,6 @@
-import { Label } from "@samvera/clover-iiif/primitives";
-import React from "react";
+import React from 'react';
+import { Label as CloverLabel } from '@samvera/clover-iiif/primitives';
 
 export function Label({ name, ...props }) {
-  return <Label label={props.label} />;
+  return <CloverLabel label={props.label} />;
 }

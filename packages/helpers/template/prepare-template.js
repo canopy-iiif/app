@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
+const esbuild = require('esbuild');
 
 function rmrf(p) {
   try { fs.rmSync(p, { recursive: true, force: true }); } catch (_) {}
@@ -16,6 +17,7 @@ function copyRepoToTemplate() {
     'AGENTS.md',
     'tests',
     '.husky',
+    'configs',
     'packages',
     '.cache',
     '.changeset',
@@ -49,6 +51,19 @@ function rewritePackageJson(appVersion) {
   delete j.devDependencies.jest;
   delete j.devDependencies['@playwright/test'];
   delete j.devDependencies.husky;
+  delete j.devDependencies.tsx;
+  delete j.devDependencies.eslint;
+  delete j.devDependencies['eslint-config-prettier'];
+  delete j.devDependencies['eslint-import-resolver-typescript'];
+  delete j.devDependencies['eslint-plugin-import'];
+  delete j.devDependencies['eslint-plugin-react'];
+  delete j.devDependencies['eslint-plugin-react-hooks'];
+  delete j.devDependencies.prettier;
+  delete j.devDependencies['@typescript-eslint/eslint-plugin'];
+  delete j.devDependencies['@typescript-eslint/parser'];
+  delete j.devDependencies['typescript-eslint'];
+  delete j.devDependencies.typescript;
+  delete j.devDependencies['@types/node'];
   j.devDependencies.esbuild = j.devDependencies.esbuild || '^0.21.4';
   j.devDependencies.tailwindcss = j.devDependencies.tailwindcss || '^4.1.13';
   // No longer include @tailwindcss/typography by default
@@ -98,12 +113,36 @@ module.exports = {
   fs.writeFileSync(cssp, css, 'utf8');
 }
 
+function emitTemplateBuildScript() {
+  const entry = path.join('app', 'scripts', 'canopy-build.mts');
+  const outFile = path.join('dist-template', 'app', 'scripts', 'canopy-build.mjs');
+  esbuild.buildSync({
+    entryPoints: [entry],
+    outfile: outFile,
+    platform: 'node',
+    format: 'esm',
+    target: ['node18'],
+    bundle: false,
+  });
+  const copiedTs = path.join('dist-template', 'app', 'scripts', 'canopy-build.mts');
+  if (fs.existsSync(copiedTs)) fs.rmSync(copiedTs);
+}
+
+function pruneTypeScriptArtifacts() {
+  const tsconfigPath = path.join('dist-template', 'tsconfig.json');
+  const typesDir = path.join('dist-template', 'types');
+  if (fs.existsSync(tsconfigPath)) fs.rmSync(tsconfigPath);
+  if (fs.existsSync(typesDir)) rmrf(typesDir);
+}
+
 function main() {
   const appVersion = process.env.APP_VERSION || '';
   rmrf('dist-template');
   mkdirp('dist-template');
   copyRepoToTemplate();
   rewritePackageJson(appVersion);
+  emitTemplateBuildScript();
+  pruneTypeScriptArtifacts();
   const writeTemplateDeploy = require('./write-template-deploy');
   writeTemplateDeploy();
   writeTailwindFiles();

@@ -1,6 +1,6 @@
 {
   "name": "@canopy-iiif/app",
-  "version": "0.7.17",
+  "version": "0.7.18",
   "private": false,
   "license": "MIT",
   "author": "Mat Jordan <mat@northwestern.edu>",
@@ -15,14 +15,20 @@
     "./ui/canopy-iiif-plugin": "./ui/tailwind-canopy-iiif-plugin.js",
     "./ui/canopy-iiif-preset": "./ui/tailwind-canopy-iiif-preset.js",
     "./lib/components/*": "./lib/components/*",
-    "./head": "./lib/head.js"
+    "./head": "./lib/head.js",
+    "./orchestrator": {
+      "types": "./types/orchestrator.d.ts",
+      "require": "./lib/orchestrator.js",
+      "default": "./lib/orchestrator.js"
+    }
   },
   "files": [
     "lib/**",
     "ui/dist/**",
     "ui/styles/**",
     "ui/tailwind-canopy-iiif-plugin.js",
-    "ui/tailwind-canopy-iiif-preset.js"
+    "ui/tailwind-canopy-iiif-preset.js",
+    "types/**"
   ],
   "publishConfig": {
     "access": "public"

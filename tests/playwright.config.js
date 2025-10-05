@@ -11,7 +11,7 @@ module.exports = defineConfig({
     headless: true,
   },
   webServer: {
-    command: "bash -lc 'cd .. && node app/scripts/canopy-build.mjs --dev'",
+    command: "bash -lc 'cd .. && npm run dev -- --dev'",
     url: "http://localhost:5001",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

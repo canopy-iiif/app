@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": [
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "app/**/*.mts",
+    "app/**/*.cts",
+    "packages/**/*.ts",
+    "packages/**/*.tsx",
+    "packages/**/*.mts",
+    "packages/**/*.cts",
+    "packages/**/*.d.ts",
+    "content/**/*.ts",
+    "packages/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "site",
+    "dist",
+    "coverage",
+    "tests/fixtures",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
+}
