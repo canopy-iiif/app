@@ -1,5 +1,17 @@
 # @canopy-iiif/app
 
+## 0.8.0
+
+### Minor Changes
+
+- Move the build/dev orchestrator into the published package so downstream
+  projects share the TypeScript entrypoint, and expose the new orchestrator
+  API alongside published type definitions.
+
+### Patch Changes
+
+- chore: version bump (patch) via helper script.
+
 ## 0.7.18
 
 ### Patch Changes
