@@ -188,23 +188,20 @@ async function collectMdxPageRecords() {
           let include = !underSearch;
           let resolvedType = null;
           const pageFm = fm && fm.data ? fm.data : null;
-          if (pageFm) {
-            if (pageFm.search === false) include = false;
-            if (Object.prototype.hasOwnProperty.call(pageFm, 'type')) {
-              if (pageFm.type) resolvedType = String(pageFm.type);
-              else include = false;
-            } else {
-              include = false; // frontmatter present w/o type => exclude per policy
-            }
+          if (pageFm && pageFm.search === false) include = false;
+          if (include && pageFm && Object.prototype.hasOwnProperty.call(pageFm, 'type')) {
+            if (pageFm.type) resolvedType = String(pageFm.type);
+            else include = false;
           }
           if (include && !resolvedType) {
             const layoutMeta = await pagesHelpers.getNearestDirLayoutMeta(p);
             if (layoutMeta && layoutMeta.type) resolvedType = String(layoutMeta.type);
           }
           if (include && !resolvedType) {
-            if (!pageFm) resolvedType = 'page';
+            resolvedType = 'page';
           }
-          pages.push({ title, href, searchInclude: include && !!resolvedType, searchType: resolvedType || undefined });
+          const trimmedType = resolvedType && String(resolvedType).trim();
+          pages.push({ title, href, searchInclude: include && !!trimmedType, searchType: trimmedType || undefined });
         }
       }
     }

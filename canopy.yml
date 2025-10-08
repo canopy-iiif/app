@@ -19,4 +19,4 @@ iiif:
   concurrency: 5
 search:
   tabs:
-    order: ["work", "docs", "page"]
+    order: ["work", "page", "examples"]
