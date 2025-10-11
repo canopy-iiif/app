@@ -831,12 +831,12 @@ async function buildIiifCollectionPages(CONFIG) {
           const needsHydrateViewer = body.includes("data-canopy-viewer");
           const needsRelated = body.includes("data-canopy-related-items");
           const needsHero = body.includes("data-canopy-hero");
-          const needsCommand = body.includes("data-canopy-command");
+          const needsSearchForm = body.includes("data-canopy-search-form");
           const needsHydrate =
             body.includes("data-canopy-hydrate") ||
             needsHydrateViewer ||
             needsRelated ||
-            needsCommand;
+            needsSearchForm;
 
           const viewerRel = needsHydrateViewer
             ? path
@@ -874,11 +874,11 @@ async function buildIiifCollectionPages(CONFIG) {
                 .split(path.sep)
                 .join("/")
             : null;
-          const commandRel = needsCommand
+          const searchFormRel = needsSearchForm
             ? path
                 .relative(
                   path.dirname(outPath),
-                  path.join(OUT_DIR, "scripts", "canopy-command.js")
+                  path.join(OUT_DIR, "scripts", "canopy-search-form.js")
                 )
                 .split(path.sep)
                 .join("/")
@@ -919,8 +919,8 @@ async function buildIiifCollectionPages(CONFIG) {
             extraScripts.push(`<script defer src="${viewerRel}"></script>`);
           if (sliderRel && jsRel !== sliderRel)
             extraScripts.push(`<script defer src="${sliderRel}"></script>`);
-          if (commandRel && jsRel !== commandRel)
-            extraScripts.push(`<script defer src="${commandRel}"></script>`);
+          if (searchFormRel && jsRel !== searchFormRel)
+            extraScripts.push(`<script defer src="${searchFormRel}"></script>`);
           if (extraScripts.length)
             headExtra = extraScripts.join("") + headExtra;
           try {

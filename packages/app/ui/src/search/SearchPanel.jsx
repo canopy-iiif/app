@@ -22,9 +22,8 @@ export default function SearchPanel(props = {}) {
   const data = { placeholder, hotkey, maxResults, groupOrder, label: text, searchPath: resolvedSearchPath };
 
   return (
-    <div data-canopy-command className="flex-1 min-w-0">
+    <div data-canopy-search-form className="flex-1 min-w-0">
       <div className="relative w-full">
-        <style>{`.relative[data-canopy-panel-auto='1']:focus-within [data-canopy-command-panel]{display:block}`}</style>
         <SearchPanelForm placeholder={placeholder} buttonLabel={buttonLabel} label={label} searchPath={resolvedSearchPath} />
         <SearchPanelTeaserResults />
       </div>

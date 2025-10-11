@@ -58,6 +58,6 @@ Logbook Template
 
 Logbook
 -------
-- 2025-09-26 / chatgpt: Removed the legacy `Fallback` component, added a dedicated `FeaturedHero` wrapper, and restored an accessible `data-canopy-command-trigger` button inside `SearchPanel` to keep homepage verification passing.
-- 2025-09-26 / chatgpt: Upgraded Tailwind to v4, mapped the command trigger button to `bg-brand`, and ensured template output pins the same dependency.
-- 2025-09-27 / chatgpt: Restyled the Search command form with scoped `.canopy-cmdk-*` classes, added base-path aware form resolution, and defaulted SearchPanel grouping to `['work','docs','page']` so new MDX record types appear in the teaser tabs.
+- 2025-09-26 / chatgpt: Removed the legacy `Fallback` component, added a dedicated `FeaturedHero` wrapper, and restored an accessible `data-canopy-search-form-trigger` button inside `SearchPanel` to keep homepage verification passing.
+- 2025-09-26 / chatgpt: Upgraded Tailwind to v4, mapped the search form trigger button to `bg-brand`, and ensured template output pins the same dependency.
+- 2025-09-27 / chatgpt: Restyled the search form with scoped `.canopy-search-form-*` classes, added base-path aware form resolution, and defaulted SearchPanel grouping to `['work','docs','page']` so new MDX record types appear in the teaser tabs.

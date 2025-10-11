@@ -112,7 +112,7 @@ async function loadUiComponents() {
     }
     let comp = (mod && typeof mod === 'object') ? mod : {};
     // Hard-require core exports; do not inject fallbacks
-    const required = ['SearchPanel', 'CommandPalette', 'SearchResults', 'SearchSummary', 'SearchTabs', 'Viewer', 'Slider', 'RelatedItems', 'Hero', 'FeaturedHero'];
+    const required = ['SearchPanel', 'SearchFormModal', 'SearchResults', 'SearchSummary', 'SearchTabs', 'Viewer', 'Slider', 'RelatedItems', 'Hero', 'FeaturedHero'];
     const missing = required.filter((k) => !comp || !comp[k]);
     if (missing.length) {
       throw new Error('[canopy][mdx] Missing UI exports: ' + missing.join(', '));
@@ -123,7 +123,7 @@ async function loadUiComponents() {
         mtime: currentMtime,
         hasServerExport: !!mod,
         hasWorkspace: typeof comp !== 'undefined',
-        CommandPalette: !!comp.CommandPalette,
+        SearchFormModal: !!comp.SearchFormModal,
         Viewer: !!comp.Viewer,
         Slider: !!comp.Slider,
       }); } catch(_){}

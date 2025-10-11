@@ -12,7 +12,7 @@ function groupLabel(t) {
   return type.charAt(0).toUpperCase() + type.slice(1);
 }
 
-export default function CommandPaletteApp(props) {
+export default function SearchFormModalApp(props) {
   const {
     records = [],
     loading = false,
@@ -81,14 +81,14 @@ export default function CommandPaletteApp(props) {
   const onItemSelect = (href) => { try { onSelect(String(href || '')); setOpenBoth(false); } catch {} };
 
   return (
-    <div className="canopy-cmdk">
+    <div className="canopy-search-form-modal">
       {button && (
         <button
           type="button"
-          className="canopy-cmdk__trigger"
+          className="canopy-search-form-modal__trigger"
           onClick={() => setOpenBoth(true)}
           aria-label="Open search"
-          data-canopy-command-trigger
+          data-canopy-search-form-trigger
         >
           <span aria-hidden>⌘K</span>
           <span className="sr-only">{buttonLabel}</span>
@@ -96,17 +96,17 @@ export default function CommandPaletteApp(props) {
       )}
 
       <div
-        className="canopy-cmdk__overlay"
+        className="canopy-search-form-modal__overlay"
         data-open={open ? '1' : '0'}
         onMouseDown={onOverlayMouseDown}
         style={{ display: open ? 'flex' : 'none' }}
       >
-        <div className="canopy-cmdk__panel">
-          <button className="canopy-cmdk__close" aria-label="Close" onClick={() => setOpenBoth(false)}>&times;</button>
-          <div className="canopy-cmdk__inputWrap">
+        <div className="canopy-search-form-modal__panel">
+          <button className="canopy-search-form-modal__close" aria-label="Close" onClick={() => setOpenBoth(false)}>&times;</button>
+          <div className="canopy-search-form-modal__inputWrap">
             <Command>
-              <Command.Input autoFocus value={q} onValueChange={setQ} placeholder={placeholder} className="canopy-cmdk__input" />
-              <Command.List className="canopy-cmdk__list">
+              <Command.Input autoFocus value={q} onValueChange={setQ} placeholder={placeholder} className="canopy-search-form-modal__input" />
+              <Command.List className="canopy-search-form-modal__list">
                 {loading && <Command.Loading>Hang on…</Command.Loading>}
                 <Command.Empty>No results found.</Command.Empty>
                 {(Array.isArray(groupOrder) ? groupOrder : []).map((t) => (
@@ -114,11 +114,11 @@ export default function CommandPaletteApp(props) {
                     <Command.Group key={t} heading={groupLabel(t)}>
                       {grouped.get(t).map((r, i) => (
                         <Command.Item key={t + '-' + i} onSelect={() => onItemSelect(r.href)}>
-                          <div className="canopy-cmdk__item">
+                          <div className="canopy-search-form-modal__item">
                             {String(r.type || '') === 'work' && r.thumbnail ? (
-                              <img className="canopy-cmdk__thumb" src={r.thumbnail} alt="" />
+                              <img className="canopy-search-form-modal__thumb" src={r.thumbnail} alt="" />
                             ) : null}
-                            <span className="canopy-cmdk__title">{r.title}</span>
+                            <span className="canopy-search-form-modal__title">{r.title}</span>
                           </div>
                         </Command.Item>
                       ))}
@@ -131,11 +131,11 @@ export default function CommandPaletteApp(props) {
                     <Command.Group key={t} heading={groupLabel(t)}>
                       {grouped.get(t).map((r, i) => (
                         <Command.Item key={t + '-x-' + i} onSelect={() => onItemSelect(r.href)}>
-                          <div className="canopy-cmdk__item">
+                          <div className="canopy-search-form-modal__item">
                             {String(r.type || '') === 'work' && r.thumbnail ? (
-                              <img className="canopy-cmdk__thumb" src={r.thumbnail} alt="" />
+                              <img className="canopy-search-form-modal__thumb" src={r.thumbnail} alt="" />
                             ) : null}
-                            <span className="canopy-cmdk__title">{r.title}</span>
+                            <span className="canopy-search-form-modal__title">{r.title}</span>
                           </div>
                         </Command.Item>
                       ))}
@@ -149,4 +149,3 @@ export default function CommandPaletteApp(props) {
     </div>
   );
 }
-

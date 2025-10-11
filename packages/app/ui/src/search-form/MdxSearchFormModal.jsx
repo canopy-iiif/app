@@ -2,9 +2,9 @@ import React from 'react';
 import SearchPanelForm, { resolveSearchPath } from '../search/SearchPanelForm.jsx';
 import SearchPanelTeaserResults from '../search/SearchPanelTeaserResults.jsx';
 
-// SSR-safe placeholder for the command palette, composed from SearchPanel parts.
+// SSR-safe placeholder for the search form modal, composed from SearchPanel parts.
 // This ensures a single JSX source of truth for form/panel markup.
-export default function MdxCommandPalette(props = {}) {
+export default function MdxSearchFormModal(props = {}) {
   const {
     placeholder = 'Search…',
     hotkey = 'mod+k',
@@ -20,9 +20,8 @@ export default function MdxCommandPalette(props = {}) {
   const resolvedSearchPath = resolveSearchPath(searchPath);
   const data = { placeholder, hotkey, maxResults, groupOrder, label: text, searchPath: resolvedSearchPath };
   return (
-    <div data-canopy-command className="flex-1 min-w-0">
+    <div data-canopy-search-form className="flex-1 min-w-0">
       <div className="relative w-full">
-        <style>{`.relative[data-canopy-panel-auto='1']:focus-within [data-canopy-command-panel]{display:block}`}</style>
         <SearchPanelForm placeholder={placeholder} buttonLabel={buttonLabel} label={label} searchPath={resolvedSearchPath} />
         <SearchPanelTeaserResults />
       </div>

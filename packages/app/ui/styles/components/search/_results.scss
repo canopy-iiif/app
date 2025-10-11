@@ -1,0 +1,121 @@
+@use '../../variables' as *;
+
+.canopy-search-form-modal {
+  .canopy-search-form-modal__trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #e5e7eb;
+    color: #374151;
+    background: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .canopy-search-form-modal__overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    padding-top: 10vh;
+  }
+
+  .canopy-search-form-modal__panel {
+    position: relative;
+    background: #fff;
+    min-width: 320px;
+    max-width: 720px;
+    width: 90%;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    font-family: var(
+      --canopy-font-sans,
+      system-ui,
+      -apple-system,
+      'Segoe UI',
+      'Helvetica Neue',
+      Helvetica,
+      Arial,
+      sans-serif
+    );
+  }
+
+  .canopy-search-form-modal__close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    border-radius: 6px;
+    padding: 2px 6px;
+    cursor: pointer;
+  }
+
+  .canopy-search-form-modal__inputWrap {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .canopy-search-form-modal__input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    outline: none;
+  }
+
+  .canopy-search-form-modal__list {
+    max-height: 50vh;
+    overflow: auto;
+    padding: 6px 0;
+  }
+
+  .canopy-search-form-modal__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .canopy-search-form-modal__thumb {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+
+  .canopy-search-form-modal__title {
+    font-size: var(--font-size-sm, 0.875rem);
+    line-height: var(--line-height-sm, 1.25rem);
+    color: var(--color-gray-900, #121418);
+    font-weight: 500;
+  }
+}
+
+[data-canopy-search-form-panel] {
+  display: none;
+}
+
+.canopy-search-teaser {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+  overflow: auto;
+  max-height: 60vh;
+  padding: 0.5rem 0;
+  display: none;
+}
+
+.relative[data-canopy-search-form-auto='1']:focus-within [data-canopy-search-form-panel] {
+  display: block;
+}

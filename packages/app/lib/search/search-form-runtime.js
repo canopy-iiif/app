@@ -217,7 +217,7 @@ function bindKeyboardNavigation({ input, list, panel }) {
   });
 }
 
-async function attachCommand(host) {
+async function attachSearchForm(host) {
   const config = parseProps(host) || {};
   const maxResults = Number(config.maxResults || 8) || 8;
   const groupOrder = Array.isArray(config.groupOrder) ? config.groupOrder : ['work', 'page'];
@@ -225,14 +225,14 @@ async function attachCommand(host) {
   const onSearchPage = isOnSearchPage();
 
   const panel = (() => {
-    try { return host.querySelector('[data-canopy-command-panel]'); } catch (_) { return null; }
+    try { return host.querySelector('[data-canopy-search-form-panel]'); } catch (_) { return null; }
   })();
   if (!panel) return;
 
   if (!onSearchPage) {
     try {
       const wrapper = host.querySelector('.relative');
-      if (wrapper) wrapper.setAttribute('data-canopy-panel-auto', '1');
+      if (wrapper) wrapper.setAttribute('data-canopy-search-form-auto', '1');
     } catch (_) {}
   }
 
@@ -244,7 +244,7 @@ async function attachCommand(host) {
   if (!list) return;
 
   const input = (() => {
-    try { return host.querySelector('[data-canopy-command-input]'); } catch (_) { return null; }
+    try { return host.querySelector('[data-canopy-search-form-input]'); } catch (_) { return null; }
   })();
   if (!input) return;
 
@@ -345,9 +345,9 @@ async function attachCommand(host) {
   }
 
   host.addEventListener('click', (event) => {
-    const trigger = event.target && event.target.closest && event.target.closest('[data-canopy-command-trigger]');
+    const trigger = event.target && event.target.closest && event.target.closest('[data-canopy-search-form-trigger]');
     if (!trigger) return;
-    const mode = (trigger.dataset && trigger.dataset.canopyCommandTrigger) || '';
+    const mode = (trigger.dataset && trigger.dataset.canopySearchFormTrigger) || '';
     if (mode === 'submit' || mode === 'form') return;
     event.preventDefault();
     openPanel();
@@ -359,12 +359,12 @@ async function attachCommand(host) {
 }
 
 ready(() => {
-  const hosts = Array.from(document.querySelectorAll('[data-canopy-command]'));
+  const hosts = Array.from(document.querySelectorAll('[data-canopy-search-form]'));
   if (!hosts.length) return;
   hosts.forEach((host) => {
-    attachCommand(host).catch((err) => {
+    attachSearchForm(host).catch((err) => {
       try {
-        console.warn('[canopy][command] failed to initialise', err && (err.message || err));
+        console.warn('[canopy][search-form] failed to initialise', err && (err.message || err));
       } catch (_) {}
     });
   });

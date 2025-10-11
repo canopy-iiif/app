@@ -35,10 +35,10 @@ try {
   if (!sz) fail(`${indexPath} is empty`);
   const html = fs.readFileSync(indexPath, 'utf8');
   const hasHero = /class=\"[^\"]*canopy-hero/.test(html) || /<div[^>]+canopy-hero/.test(html);
-  const hasCommand = /data-canopy-command=/.test(html);
+  const hasSearchForm = /data-canopy-search-form=/.test(html);
   if (!hasHero) fail('homepage missing Hero (class="canopy-hero")');
-  if (!hasCommand) fail('homepage missing Command (data-canopy-command)');
-  console.log(`✓ Verify: found ${total} HTML page(s); index.html OK; hero and command present`);
+  if (!hasSearchForm) fail('homepage missing search form (data-canopy-search-form)');
+  console.log(`✓ Verify: found ${total} HTML page(s); index.html OK; hero and search form present`);
   process.exit(0);
 } catch (e) {
   fail(e && e.message ? e.message : String(e));

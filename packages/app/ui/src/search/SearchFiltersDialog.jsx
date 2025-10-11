@@ -52,49 +52,49 @@ function FacetSection({facet, selected, onToggle}) {
 
   return (
     <details
-      className="rounded-lg border border-slate-200 bg-slate-50"
+      className="canopy-search-filters__facet"
       open={hasSelection}
     >
-      <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-slate-900">
+      <summary className="canopy-search-filters__facet-summary">
         <span>{label}</span>
-        <span className="text-xs font-normal text-slate-500">
+        <span className="canopy-search-filters__facet-count">
           {values.length}
         </span>
       </summary>
-      <div className="max-h-60 overflow-y-auto border-t border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
-        <div className="mb-3 flex items-center gap-2">
+      <div className="canopy-search-filters__facet-content">
+        <div className="canopy-search-filters__quick">
           <input
             type="search"
             value={quickQuery}
             onChange={(event) => setQuickQuery(event.target.value)}
             placeholder="Search values"
-            className="flex-1 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-700 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+            className="canopy-search-filters__quick-input"
             aria-label={`Filter ${label} values`}
           />
           {quickQuery ? (
             <button
               type="button"
               onClick={() => setQuickQuery("")}
-              className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-600 transition hover:bg-slate-100"
+              className="canopy-search-filters__quick-clear"
             >
               Clear
             </button>
           ) : null}
         </div>
         {hasQuery && !filteredValues.length ? (
-          <p className="mb-3 text-xs text-slate-400">No matches found.</p>
+          <p className="canopy-search-filters__facet-notice">No matches found.</p>
         ) : null}
-        <ul className="space-y-2" style={{padding: 0}}>
+        <ul className="canopy-search-filters__facet-list">
           {filteredValues.map((entry) => {
             const valueSlug = String(entry.slug || entry.value || "");
             const isChecked = selectedValues.has(valueSlug);
             const inputId = checkboxId(valueSlug);
             return (
-              <li key={valueSlug} className="flex items-start gap-2">
+              <li key={valueSlug} className="canopy-search-filters__facet-item">
                 <input
                   id={inputId}
                   type="checkbox"
-                  className="mt-1 h-4 w-4 rounded border-slate-300 text-brand focus:ring-brand"
+                  className="canopy-search-filters__facet-checkbox"
                   checked={isChecked}
                   onChange={(event) => {
                     const nextChecked = !!event.target.checked;
@@ -103,12 +103,12 @@ function FacetSection({facet, selected, onToggle}) {
                 />
                 <label
                   htmlFor={inputId}
-                  className="flex flex-1 flex-col gap-0.5"
+                  className="canopy-search-filters__facet-label"
                 >
                   <span>
                     {entry.value}{" "}
                     {Number.isFinite(entry.doc_count) ? (
-                      <span className="text-xs text-slate-500">
+                      <span className="canopy-search-filters__facet-count">
                         ({entry.doc_count})
                       </span>
                     ) : null}
@@ -118,7 +118,7 @@ function FacetSection({facet, selected, onToggle}) {
             );
           })}
           {!filteredValues.length && !hasQuery ? (
-            <li className="text-xs text-slate-400">No values available.</li>
+            <li className="canopy-search-filters__facet-empty">No values available.</li>
           ) : null}
         </ul>
       </div>
@@ -150,29 +150,29 @@ export default function SearchFiltersDialog(props = {}) {
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/50 px-4 py-8"
+      className="canopy-search-filters-overlay"
       onClick={(event) => {
         if (event.target === event.currentTarget && onOpenChange)
           onOpenChange(false);
       }}
     >
-      <div className="w-full max-w-3xl overflow-hidden rounded-xl bg-white shadow-2xl">
-        <header className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-4">
+      <div className="canopy-search-filters">
+        <header className="canopy-search-filters__header">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-            <p className="text-sm text-slate-500">{subtitle}</p>
+            <h2 className="canopy-search-filters__title">{title}</h2>
+            <p className="canopy-search-filters__subtitle">{subtitle}</p>
           </div>
           <button
             type="button"
             onClick={() => onOpenChange && onOpenChange(false)}
-            className="rounded-md border border-transparent px-2 py-1 text-sm text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+            className="canopy-search-filters__close"
           >
             Close
           </button>
         </header>
-        <div className="grid gap-4 px-6 py-6">
+        <div className="canopy-search-filters__body">
           {Array.isArray(facets) && facets.length ? (
-            <div className="space-y-3">
+            <div className="canopy-search-filters__facets">
               {facets.map((facet) => (
                 <FacetSection
                   key={facet.slug || facet.label}
@@ -183,32 +183,32 @@ export default function SearchFiltersDialog(props = {}) {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-slate-500">
+            <p className="canopy-search-filters__empty">
               No filters are available for this collection.
             </p>
           )}
         </div>
-        <footer className="flex items-center justify-between gap-4 border-t border-slate-200 px-6 py-4">
-          <div className="text-sm text-slate-500">
+        <footer className="canopy-search-filters__footer">
+          <div>
             {activeCount
               ? `${activeCount} filter${activeCount === 1 ? "" : "s"} applied`
               : "No filters applied"}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="canopy-search-filters__footer-actions">
             <button
               type="button"
               onClick={() => {
                 if (onClear) onClear();
               }}
               disabled={!activeCount}
-              className="rounded-md border border-slate-200 px-3 py-1.5 text-sm text-slate-600 transition disabled:cursor-not-allowed disabled:text-slate-400 hover:bg-slate-100"
+              className="canopy-search-filters__button canopy-search-filters__button--secondary"
             >
               Clear all
             </button>
             <button
               type="button"
               onClick={() => onOpenChange && onOpenChange(false)}
-              className="rounded-md bg-brand px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700"
+              className="canopy-search-filters__button canopy-search-filters__button--primary"
             >
               Done
             </button>

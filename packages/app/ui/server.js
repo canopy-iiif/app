@@ -12,8 +12,8 @@ export { default as SearchResults } from "./src/search/MdxSearchResults.jsx";
 export { default as SearchSummary } from "./src/search/SearchSummary.jsx";
 export { default as SearchTabs } from "./src/search/MdxSearchTabs.jsx";
 
-// Command palette (SSR-safe placeholder). Client app not exported to avoid optional deps.
-export { default as CommandPalette } from "./src/command/MdxCommandPalette.jsx";
+// Search form modal (SSR-safe placeholder). Client app not exported to avoid optional deps.
+export { default as SearchFormModal } from "./src/search-form/MdxSearchFormModal.jsx";
 // Search panel (SSR-safe) and its parts for SSR/MDX usage
 export { default as SearchPanel } from "./src/search/SearchPanel.jsx";
 export { default as SearchPanelForm } from "./src/search/SearchPanelForm.jsx";

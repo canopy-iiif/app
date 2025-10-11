@@ -158,13 +158,13 @@ async function buildSearchPage() {
     // Include react-globals vendor shim before search.js to provide window.React globals
     const vendorReactAbs = path.join(OUT_DIR, 'scripts', 'react-globals.js');
     const vendorFlexAbs = path.join(OUT_DIR, 'scripts', 'flexsearch-globals.js');
-    const vendorCommandAbs = path.join(OUT_DIR, 'scripts', 'canopy-command.js');
+    const vendorSearchFormAbs = path.join(OUT_DIR, 'scripts', 'canopy-search-form.js');
     function verRel(abs) {
       let rel = path.relative(path.dirname(outPath), abs).split(path.sep).join('/');
       try { const st = require('fs').statSync(abs); rel += `?v=${Math.floor(st.mtimeMs || Date.now())}`; } catch (_) {}
       return rel;
     }
-    const vendorTags = `<script src="${verRel(vendorReactAbs)}"></script><script src="${verRel(vendorFlexAbs)}"></script><script src="${verRel(vendorCommandAbs)}"></script>`;
+    const vendorTags = `<script src="${verRel(vendorReactAbs)}"></script><script src="${verRel(vendorFlexAbs)}"></script><script src="${verRel(vendorSearchFormAbs)}"></script>`;
     let headExtra = vendorTags + head + importMap;
     try {
       const { BASE_PATH } = require('../common');

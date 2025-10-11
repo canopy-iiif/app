@@ -12,7 +12,7 @@ async function prepareAllRuntimes() {
   } catch (_) {}
   try { if (typeof mdx.ensureFacetsRuntime === 'function') await mdx.ensureFacetsRuntime(); } catch (_) {}
   try { if (typeof mdx.ensureReactGlobals === 'function') await mdx.ensureReactGlobals(); } catch (_) {}
-  await prepareCommandRuntime();
+  await prepareSearchFormRuntime();
   try { logLine('✓ Prepared client hydration runtimes', 'cyan', { dim: true }); } catch (_) {}
 }
 
@@ -24,14 +24,14 @@ async function resolveEsbuild() {
   }
 }
 
-async function prepareCommandRuntime() {
+async function prepareSearchFormRuntime() {
   const esbuild = await resolveEsbuild();
-  if (!esbuild) throw new Error('Command runtime bundling requires esbuild. Install dependencies before building.');
+  if (!esbuild) throw new Error('Search form runtime bundling requires esbuild. Install dependencies before building.');
   ensureDirSync(OUT_DIR);
   const scriptsDir = path.join(OUT_DIR, 'scripts');
   ensureDirSync(scriptsDir);
-  const entry = path.join(__dirname, '..', 'search', 'command-runtime.js');
-  const outFile = path.join(scriptsDir, 'canopy-command.js');
+  const entry = path.join(__dirname, '..', 'search', 'search-form-runtime.js');
+  const outFile = path.join(scriptsDir, 'canopy-search-form.js');
   await esbuild.build({
     entryPoints: [entry],
     outfile: outFile,
@@ -68,4 +68,4 @@ async function prepareSearchRuntime(timeoutMs = 10000, label = '') {
   }
 }
 
-module.exports = { prepareAllRuntimes, prepareCommandRuntime, prepareSearchRuntime };
+module.exports = { prepareAllRuntimes, prepareSearchFormRuntime, prepareSearchRuntime };

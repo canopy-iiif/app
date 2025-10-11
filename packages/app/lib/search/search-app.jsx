@@ -681,7 +681,7 @@ function parseProps(el) {
 function bindSearchInputToStore() {
   if (!store || typeof document === "undefined") return;
   try {
-    const input = document.querySelector("[data-canopy-command-input]");
+    const input = document.querySelector("[data-canopy-search-form-input]");
     if (!input || input.dataset.canopySearchSync === "1") return;
     input.dataset.canopySearchSync = "1";
 
@@ -764,7 +764,7 @@ if (typeof document !== "undefined") {
           const q =
             ev && ev.detail && typeof ev.detail.query === "string"
               ? ev.detail.query
-              : document.querySelector("[data-canopy-command-input]")?.value ||
+              : document.querySelector("[data-canopy-search-form-input]")?.value ||
                 "";
           if (typeof q === "string") store.setQuery(q);
         } catch (_) {}

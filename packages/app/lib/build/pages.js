@@ -47,7 +47,7 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}) {
   const { body, head } = await mdx.compileMdxFile(filePath, outPath, null, extraProps);
   const needsHydrateViewer = body.includes('data-canopy-viewer');
   const needsHydrateSlider = body.includes('data-canopy-slider');
-  const needsCommand = true; // command runtime is global
+  const needsSearchForm = true; // search form runtime is global
   const needsFacets = body.includes('data-canopy-related-items');
   const viewerRel = needsHydrateViewer
     ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-viewer.js')).split(path.sep).join('/')
@@ -58,12 +58,12 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}) {
   const facetsRel = needsFacets
     ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-related-items.js')).split(path.sep).join('/')
     : null;
-  let commandRel = null;
-  if (needsCommand) {
-    const cmdAbs = path.join(OUT_DIR, 'scripts', 'canopy-command.js');
-    let rel = path.relative(path.dirname(outPath), cmdAbs).split(path.sep).join('/');
-    try { const st = fs.statSync(cmdAbs); rel += `?v=${Math.floor(st.mtimeMs || Date.now())}`; } catch (_) {}
-    commandRel = rel;
+  let searchFormRel = null;
+  if (needsSearchForm) {
+    const runtimeAbs = path.join(OUT_DIR, 'scripts', 'canopy-search-form.js');
+    let rel = path.relative(path.dirname(outPath), runtimeAbs).split(path.sep).join('/');
+    try { const st = fs.statSync(runtimeAbs); rel += `?v=${Math.floor(st.mtimeMs || Date.now())}`; } catch (_) {}
+    searchFormRel = rel;
   }
   let jsRel = null;
   if (needsFacets && sliderRel) jsRel = sliderRel;
@@ -90,7 +90,7 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}) {
   if (facetsRel && jsRel !== facetsRel) extraScripts.push(`<script defer src="${facetsRel}"></script>`);
   if (viewerRel && jsRel !== viewerRel) extraScripts.push(`<script defer src="${viewerRel}"></script>`);
   if (sliderRel && jsRel !== sliderRel) extraScripts.push(`<script defer src="${sliderRel}"></script>`);
-  if (commandRel && jsRel !== commandRel) extraScripts.push(`<script defer src="${commandRel}"></script>`);
+  if (searchFormRel && jsRel !== searchFormRel) extraScripts.push(`<script defer src="${searchFormRel}"></script>`);
   if (extraScripts.length) headExtra = extraScripts.join('') + headExtra;
   const html = htmlShell({ title, body, cssHref: null, scriptHref: jsRel, headExtra: vendorTag + headExtra });
   const { applyBaseToHtml } = require('../common');

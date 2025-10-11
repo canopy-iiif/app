@@ -21,10 +21,10 @@ function verifyHomepageElements(outDir) {
   const idx = path.join(outDir, 'index.html');
   const html = readFileSafe(idx);
   const okHero = /class=\"[^\"]*canopy-hero/.test(html) || /<div[^>]+canopy-hero/.test(html);
-  const okCommand = /data-canopy-command=/.test(html);
-  const okCommandTrigger = /data-canopy-command-trigger/.test(html);
-  const okCommandScriptRef = /<script[^>]+canopy-command\.js/.test(html);
-  return { okHero, okCommand, okCommandTrigger, okCommandScriptRef, htmlPath: idx };
+  const okSearchForm = /data-canopy-search-form=/.test(html);
+  const okSearchFormTrigger = /data-canopy-search-form-trigger/.test(html);
+  const okSearchFormScriptRef = /<script[^>]+canopy-search-form\.js/.test(html);
+  return { okHero, okSearchForm, okSearchFormTrigger, okSearchFormScriptRef, htmlPath: idx };
 }
 
 function verifyBuildOutput(options = {}) {
@@ -34,7 +34,7 @@ function verifyBuildOutput(options = {}) {
   const okAny = total > 0;
   const indexPath = path.join(outDir, 'index.html');
   const hasIndex = fs.existsSync(indexPath) && fs.statSync(indexPath).size > 0;
-  const { okHero, okCommand, okCommandTrigger, okCommandScriptRef } = verifyHomepageElements(outDir);
+  const { okHero, okSearchForm, okSearchFormTrigger, okSearchFormScriptRef } = verifyHomepageElements(outDir);
 
   const ck = (label, ok, extra) => {
     const status = ok ? '✓' : '✗';
@@ -44,12 +44,12 @@ function verifyBuildOutput(options = {}) {
   ck('HTML pages exist', okAny, okAny ? `(${total})` : '');
   ck('homepage exists', hasIndex, hasIndex ? `(${indexPath})` : '');
   ck('homepage: Hero present', okHero);
-  ck('homepage: Command present', okCommand);
-  ck('homepage: Command trigger present', okCommandTrigger);
-  ck('homepage: Command script referenced', okCommandScriptRef);
+  ck('homepage: Search form present', okSearchForm);
+  ck('homepage: Search form trigger present', okSearchFormTrigger);
+  ck('homepage: Search form script referenced', okSearchFormScriptRef);
 
   // Do not fail build on missing SSR trigger; the client runtime injects a default.
-  const ok = okAny && hasIndex && okHero && okCommand && okCommandScriptRef;
+  const ok = okAny && hasIndex && okHero && okSearchForm && okSearchFormScriptRef;
   if (!ok) {
     const err = new Error('Build verification failed');
     err.outDir = outDir;
