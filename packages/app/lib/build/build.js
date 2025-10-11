@@ -62,6 +62,14 @@ async function build(options = {}) {
   if (!skipIiif) {
     const results = await iiif.buildIiifCollectionPages(CONFIG);
     iiifRecords = results?.iiifRecords;
+    iiifRecordsCache = Array.isArray(iiifRecords) ? iiifRecords : [];
+  } else {
+    iiifRecords = Array.isArray(iiifRecordsCache) ? iiifRecordsCache : [];
+    logLine(
+      `• Reusing cached IIIF search records (${iiifRecords.length})`,
+      "blue",
+      { dim: true }
+    );
   }
   // Ensure any configured featured manifests are cached (and thumbnails computed)
   // so SSR components like <Hero /> can resolve items even if they are not part of

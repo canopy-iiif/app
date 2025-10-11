@@ -1,0 +1,15 @@
+.canopy-navbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 1rem;
+
+  a {
+    color: var(--color-primary);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}

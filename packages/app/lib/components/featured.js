@@ -105,9 +105,23 @@ function readFeaturedFromCacheSync() {
         href: rootRelativeHref(path.join('works', slug + '.html').split(path.sep).join('/')),
         type: 'work',
       };
-      if (entry && entry.thumbnail) rec.thumbnail = String(entry.thumbnail);
-      if (entry && typeof entry.thumbnailWidth === 'number') rec.thumbnailWidth = entry.thumbnailWidth;
-      if (entry && typeof entry.thumbnailHeight === 'number') rec.thumbnailHeight = entry.thumbnailHeight;
+      if (entry && entry.heroThumbnail) {
+        rec.thumbnail = String(entry.heroThumbnail);
+        if (typeof entry.heroThumbnailWidth === 'number') {
+          rec.thumbnailWidth = entry.heroThumbnailWidth;
+        } else if (typeof entry.thumbnailWidth === 'number') {
+          rec.thumbnailWidth = entry.thumbnailWidth;
+        }
+        if (typeof entry.heroThumbnailHeight === 'number') {
+          rec.thumbnailHeight = entry.heroThumbnailHeight;
+        } else if (typeof entry.thumbnailHeight === 'number') {
+          rec.thumbnailHeight = entry.thumbnailHeight;
+        }
+      } else {
+        if (entry && entry.thumbnail) rec.thumbnail = String(entry.thumbnail);
+        if (entry && typeof entry.thumbnailWidth === 'number') rec.thumbnailWidth = entry.thumbnailWidth;
+        if (entry && typeof entry.thumbnailHeight === 'number') rec.thumbnailHeight = entry.thumbnailHeight;
+      }
       if (!rec.thumbnail) {
         try {
           const t = m && m.thumbnail;

@@ -1,8 +1,21 @@
-a {
-    text-decoration: none;
-    color: var(--color-brand-default);
+@use "../variables" as *;
 
-    &:hover {
-        text-decoration: underline;
-    }
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: $font-sans;
+}
+
+main {
+  margin-top: 5rem;
+}
+
+a {
+  text-decoration: none;
+  color: $color-brand-default;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }

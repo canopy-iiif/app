@@ -1,5 +1,15 @@
-.canopy-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 3rem;
+@use "../../variables" as *;
+
+@layer components {
+  .canopy-header {
+    @apply fixed inset-x-0 top-0 z-50; /* brings in Tailwind’s .fixed class (and friends, if you
+  like) */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.618rem;
+    padding: 0.618rem 1rem;
+    box-shadow: 5px 5px 19px rgba(0, 0, 0, 0.2);
+    background: #fff;
+  }
 }

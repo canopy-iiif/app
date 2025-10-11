@@ -401,8 +401,9 @@ async function ensureFeaturedInCache(cfg) {
     const CONFIG = cfg || (await loadConfig());
     const featured = Array.isArray(CONFIG && CONFIG.featured) ? CONFIG.featured : [];
     if (!featured.length) return;
-    const { getThumbnail } = require("../iiif/thumbnail");
+    const { getThumbnail, getRepresentativeImage } = require("../iiif/thumbnail");
     const { size: thumbSize, unsafe: unsafeThumbs } = resolveThumbnailPreferences();
+    const HERO_THUMBNAIL_SIZE = 1200;
     for (const rawId of featured) {
       const id = normalizeIiifId(String(rawId || ''));
       if (!id) continue;
@@ -418,18 +419,88 @@ async function ensureFeaturedInCache(cfg) {
       // Ensure thumbnail fields exist in index for this manifest (if computable)
       try {
         const t = await getThumbnail(manifest, thumbSize, unsafeThumbs);
+        const idx = await loadManifestIndex();
+        if (!Array.isArray(idx.byId)) continue;
+        const entry = idx.byId.find(
+          (e) =>
+            e &&
+            e.type === 'Manifest' &&
+            normalizeIiifId(String(e.id)) === normalizeIiifId(String(manifest.id))
+        );
+        if (!entry) continue;
+
+        let touched = false;
         if (t && t.url) {
-          const idx = await loadManifestIndex();
-          if (Array.isArray(idx.byId)) {
-            const entry = idx.byId.find((e) => e && e.type === 'Manifest' && normalizeIiifId(String(e.id)) === normalizeIiifId(String(manifest.id)));
-            if (entry) {
-              entry.thumbnail = String(t.url);
-              if (typeof t.width === 'number') entry.thumbnailWidth = t.width;
-              if (typeof t.height === 'number') entry.thumbnailHeight = t.height;
-              await saveManifestIndex(idx);
-            }
+          const nextUrl = String(t.url);
+          if (entry.thumbnail !== nextUrl) {
+            entry.thumbnail = nextUrl;
+            touched = true;
+          }
+          if (typeof t.width === 'number') {
+            if (entry.thumbnailWidth !== t.width) touched = true;
+            entry.thumbnailWidth = t.width;
+          }
+          if (typeof t.height === 'number') {
+            if (entry.thumbnailHeight !== t.height) touched = true;
+            entry.thumbnailHeight = t.height;
           }
         }
+
+        try {
+          const heroSource = (() => {
+            if (manifest && manifest.thumbnail) {
+              const clone = { ...manifest };
+              try {
+                delete clone.thumbnail;
+              } catch (_) {
+                clone.thumbnail = undefined;
+              }
+              return clone;
+            }
+            return manifest;
+          })();
+          const heroRep = await getRepresentativeImage(
+            heroSource || manifest,
+            HERO_THUMBNAIL_SIZE,
+            true
+          );
+          if (heroRep && heroRep.id) {
+            const nextHero = String(heroRep.id);
+            if (entry.heroThumbnail !== nextHero) {
+              entry.heroThumbnail = nextHero;
+              touched = true;
+            }
+            if (typeof heroRep.width === 'number') {
+              if (entry.heroThumbnailWidth !== heroRep.width) touched = true;
+              entry.heroThumbnailWidth = heroRep.width;
+            } else if (entry.heroThumbnailWidth !== undefined) {
+              delete entry.heroThumbnailWidth;
+              touched = true;
+            }
+            if (typeof heroRep.height === 'number') {
+              if (entry.heroThumbnailHeight !== heroRep.height) touched = true;
+              entry.heroThumbnailHeight = heroRep.height;
+            } else if (entry.heroThumbnailHeight !== undefined) {
+              delete entry.heroThumbnailHeight;
+              touched = true;
+            }
+          } else {
+            if (entry.heroThumbnail !== undefined) {
+              delete entry.heroThumbnail;
+              touched = true;
+            }
+            if (entry.heroThumbnailWidth !== undefined) {
+              delete entry.heroThumbnailWidth;
+              touched = true;
+            }
+            if (entry.heroThumbnailHeight !== undefined) {
+              delete entry.heroThumbnailHeight;
+              touched = true;
+            }
+          }
+        } catch (_) {}
+
+        if (touched) await saveManifestIndex(idx);
       } catch (_) {}
     }
   } catch (err) {

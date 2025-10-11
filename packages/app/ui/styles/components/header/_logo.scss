@@ -1,0 +1,20 @@
+@use "../../variables" as *;
+
+.canopy-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.618rem;
+  font-weight: 400;
+  font-size: 1.618rem;
+  font-family: $font-serif;
+  color: $color-gray-default;
+
+  img {
+    height: 1.618rem;
+    margin-bottom: -1px;
+  }
+
+  &:hover {
+    text-decoration: none;
+  }
+}
