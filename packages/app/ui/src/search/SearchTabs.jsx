@@ -16,11 +16,11 @@ export default function SearchTabs({
   const hasFilters = typeof onOpenFilters === "function";
   const filterBadge = activeFilterCount > 0 ? ` (${activeFilterCount})` : "";
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-1">
+    <div className="canopy-search-tabs-wrapper">
       <div
         role="tablist"
         aria-label="Search types"
-        className="flex items-center gap-2"
+        className="canopy-search-tabs"
       >
         {orderedTypes.map((t) => {
           const active = String(type).toLowerCase() === String(t).toLowerCase();
@@ -36,12 +36,6 @@ export default function SearchTabs({
               aria-selected={active}
               type="button"
               onClick={() => onTypeChange && onTypeChange(t)}
-              className={
-                "px-3 py-2 text-sm rounded-t-md border-b-2 -mb-px transition-colors " +
-                (active
-                  ? "border-brand-600 text-brand-700"
-                  : "border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300")
-              }
             >
               {toLabel(t)} ({c})
             </button>

@@ -1,11 +1,10 @@
 collection:
-  uri: https://api.dc.library.northwestern.edu/api/v2/search?query=%28%22nez+perce%22%29&size=40&as=iiif
-# Metadata labels to facet and index for search and browse
-metadata: ["Date", "Subject"]
+  uri: https://api.dc.library.northwestern.edu/api/v2/collections/faf4f60e-78e0-4fbf-96ce-4ca8b4df597a?as=iiif
+metadata: ["Date", "Subject", "Publisher"]
 featured:
   [
-    "https://api.dc.library.northwestern.edu/api/v2/works/15871197-1616-4c37-9257-b0ad0dc5ab30?as=iiif",
-    "https://api.dc.library.northwestern.edu/api/v2/works/2b71b524-0779-47e5-a782-07dc63124bbf?as=iiif",
+    "https://api.dc.library.northwestern.edu/api/v2/works/57211c09-3b10-427d-989e-f025419b6292?as=iiif",
+    "https://api.dc.library.northwestern.edu/api/v2/works/81a7cfb7-5c5e-4b69-9634-17df4aa91980?as=iiif",
   ]
 search:
   tabs:

@@ -2,7 +2,7 @@ import Masonry from "react-masonry-css";
 import React from "react";
 
 // Simple item wrapper to provide consistent spacing between items.
-export function GridItem({ children, className = "", style = {}, ...rest }) {
+export function GridItem({children, className = "", style = {}, ...rest}) {
   return (
     <div
       className={`canopy-grid-item ${className}`.trim()}
@@ -30,7 +30,7 @@ export function GridItem({ children, className = "", style = {}, ...rest }) {
  */
 export default function Grid({
   breakpointCols,
-  gap = "2rem",
+  gap = "1.618rem",
   paddingY = "0",
   className = "",
   style = {},
@@ -45,7 +45,7 @@ export default function Grid({
     768: 3,
     640: 2,
   };
-  const vars = { "--grid-gap": gap, "--grid-padding-y": paddingY };
+  const vars = {"--grid-gap": gap, "--grid-padding-y": paddingY};
 
   return (
     <div className="canopy-grid-wrap">
@@ -65,7 +65,7 @@ export default function Grid({
         breakpointCols={cols}
         className={`canopy-grid ${className}`.trim()}
         columnClassName={columnClassName}
-        style={{ ...vars, ...style }}
+        style={{...vars, ...style}}
         {...rest}
       >
         {children}

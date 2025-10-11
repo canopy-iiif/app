@@ -1,4 +1,40 @@
-@use '../../variables' as *;
+@use "../../variables" as *;
+
+.canopy-search-tabs-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.canopy-search-results {
+  padding: 1.618rem;
+}
+
+.canopy-search-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+
+  button {
+    background: none;
+    border: none;
+    padding: 0.382rem 0.618rem;
+    font-size: 1rem;
+    cursor: pointer;
+    color: $color-gray-600;
+    transition: all 0.2s ease-in-out;
+
+    &.active,
+    &:hover {
+      color: $color-brand-default;
+      background-color: $color-brand-100;
+      border-radius: 0.382rem;
+      font-weight: 400;
+    }
+  }
+}
 
 .canopy-search-form-modal {
   .canopy-search-form-modal__trigger {
@@ -37,8 +73,8 @@
       --canopy-font-sans,
       system-ui,
       -apple-system,
-      'Segoe UI',
-      'Helvetica Neue',
+      "Segoe UI",
+      "Helvetica Neue",
       Helvetica,
       Arial,
       sans-serif
@@ -116,6 +152,7 @@
   display: none;
 }
 
-.relative[data-canopy-search-form-auto='1']:focus-within [data-canopy-search-form-panel] {
+.relative[data-canopy-search-form-auto="1"]:focus-within
+  [data-canopy-search-form-panel] {
   display: block;
 }
