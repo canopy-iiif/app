@@ -32,6 +32,34 @@ const IIIF_CACHE_INDEX_MANIFESTS = path.join(
   "manifest-index.json"
 );
 
+const DEFAULT_THUMBNAIL_SIZE = 400;
+const DEFAULT_CHUNK_SIZE = 20;
+const DEFAULT_FETCH_CONCURRENCY = 5;
+
+function resolvePositiveInteger(value, fallback) {
+  const num = Number(value);
+  if (Number.isFinite(num) && num > 0) return Math.max(1, Math.floor(num));
+  return Math.max(1, Math.floor(fallback));
+}
+
+function resolveBoolean(value) {
+  if (typeof value === "boolean") return value;
+  if (value === undefined || value === null) return false;
+  const normalized = String(value).trim().toLowerCase();
+  if (!normalized) return false;
+  return normalized === "1" || normalized === "true" || normalized === "yes";
+}
+
+function resolveThumbnailPreferences() {
+  return {
+    size: resolvePositiveInteger(
+      process.env.CANOPY_THUMBNAIL_SIZE,
+      DEFAULT_THUMBNAIL_SIZE
+    ),
+    unsafe: resolveBoolean(process.env.CANOPY_THUMBNAILS_UNSAFE),
+  };
+}
+
 function firstLabelString(label) {
   if (!label) return "Untitled";
   if (typeof label === "string") return label;
@@ -374,9 +402,7 @@ async function ensureFeaturedInCache(cfg) {
     const featured = Array.isArray(CONFIG && CONFIG.featured) ? CONFIG.featured : [];
     if (!featured.length) return;
     const { getThumbnail } = require("../iiif/thumbnail");
-    // Thumbnail sizing config
-    const thumbSize = CONFIG && CONFIG.iiif && CONFIG.iiif.thumbnails && typeof CONFIG.iiif.thumbnails.preferredSize === 'number' ? CONFIG.iiif.thumbnails.preferredSize : 400;
-    const unsafeThumbs = !!(CONFIG && CONFIG.iiif && CONFIG.iiif.thumbnails && (CONFIG.iiif.thumbnails.unsafe === true || CONFIG.iiif.thumbnails.unsafe === 'true'));
+    const { size: thumbSize, unsafe: unsafeThumbs } = resolveThumbnailPreferences();
     for (const rawId of featured) {
       const id = normalizeIiifId(String(rawId || ''));
       if (!id) continue;
@@ -613,11 +639,9 @@ async function buildIiifCollectionPages(CONFIG) {
   if (!tasks.length) return { searchRecords: [] };
 
   // Split into chunks and process with limited concurrency
-  const chunkSize = Math.max(
-    1,
-    Number(
-      process.env.CANOPY_CHUNK_SIZE || (cfg.iiif && cfg.iiif.chunkSize) || 20
-    )
+  const chunkSize = resolvePositiveInteger(
+    process.env.CANOPY_CHUNK_SIZE,
+    DEFAULT_CHUNK_SIZE
   );
   const chunks = Math.ceil(tasks.length / chunkSize);
   // Summary before processing chunks
@@ -630,18 +654,8 @@ async function buildIiifCollectionPages(CONFIG) {
     );
   } catch (_) {}
   const iiifRecords = [];
-  const unsafeThumbs = !!(
-    cfg &&
-    cfg.iiif &&
-    cfg.iiif.thumbnails &&
-    cfg.iiif.thumbnails.unsafe === true
-  );
-  const thumbSize =
-    (cfg &&
-      cfg.iiif &&
-      cfg.iiif.thumbnails &&
-      cfg.iiif.thumbnails.preferredSize) ||
-    1200;
+  const { size: thumbSize, unsafe: unsafeThumbs } =
+    resolveThumbnailPreferences();
 
   // Compile the works layout component once per run
   const worksLayoutPath = path.join(CONTENT_DIR, "works", "_layout.mdx");
@@ -664,13 +678,9 @@ async function buildIiifCollectionPages(CONFIG) {
     const chunk = tasks.slice(ci * chunkSize, (ci + 1) * chunkSize);
     logLine(`• Chunk ${ci + 1}/${chunks}`, "blue", { dim: true });
 
-    const concurrency = Math.max(
-      1,
-      Number(
-        process.env.CANOPY_FETCH_CONCURRENCY ||
-          (cfg.iiif && cfg.iiif.concurrency) ||
-          6
-      )
+    const concurrency = resolvePositiveInteger(
+      process.env.CANOPY_FETCH_CONCURRENCY,
+      DEFAULT_FETCH_CONCURRENCY
     );
     let next = 0;
     const logs = new Array(chunk.length);

@@ -145,11 +145,10 @@ Goal: Allow authors to fully compose the search page via MDX, while the builder 
 - Enable IIIF work page generation by adding `content/works/_layout.mdx`. The layout receives `props.manifest` (normalized to IIIF Presentation 3 when possible).
 - The collection URI is configured via `canopy.yml` (`collection.uri`) or the `CANOPY_COLLECTION_URI` environment variable.
 - Output pages are written to `site/works/<slug>.html`.
-- Performance tuning: `iiif.chunkSize` and `iiif.concurrency` in `canopy.yml`, or env vars `CANOPY_CHUNK_SIZE` and `CANOPY_FETCH_CONCURRENCY`.
+- Performance tuning: set `CANOPY_CHUNK_SIZE` (default `20`) and `CANOPY_FETCH_CONCURRENCY` (default `5`).
 - Thumbnails:
-  - Configure under `iiif.thumbnails` in `canopy.yml`:
-    - `unsafe`: false by default; when true, uses an expanded strategy that may perform additional requests.
-    - `preferredSize`: numeric size (default 1200); this repo currently uses 400.
+  - `CANOPY_THUMBNAIL_SIZE` (default `400`) picks the desired width/height when selecting a representative image.
+  - `CANOPY_THUMBNAILS_UNSAFE` (`true`/`1`) opts into a more aggressive lookup that may perform more requests.
   - A resolved thumbnail URL is stored on each Manifest in `.cache/iiif/index.json` as `thumbnail`.
 
 ## IIIF Cache

@@ -94,7 +94,7 @@ Notes
   - Normalizes resources using `@iiif/helpers` to v3 where possible.
   - Caches fetched Manifests in `.cache/iiif/manifests/` and tracks ids/slugs in `.cache/iiif/index.json`.
   - Emits one HTML page per Manifest under `site/works/<slug>.html`.
-- Performance: tune with `iiif.chunkSize` and `iiif.concurrency` in `canopy.yml` or via env `CANOPY_CHUNK_SIZE` and `CANOPY_FETCH_CONCURRENCY`.
+- Performance: tune with environment variables — `CANOPY_CHUNK_SIZE` (default `20`) and `CANOPY_FETCH_CONCURRENCY` (default `5`).
 - Cache notes: switching `collection.uri` resets the manifest cache; you can also delete `.cache/iiif/` to force a refetch.
 
 ### Facet Collections (from IIIF metadata)
@@ -131,12 +131,11 @@ Why this is cool
 
 ### Thumbnails
 
-- Config keys (in `canopy.yml` under `iiif.thumbnails`):
-  - `unsafe` (boolean, default `false`): when `true`, uses an expanded strategy that may perform extra requests to find a representative image.
-  - `preferredSize` (number, default `1200`): target width/height in pixels when selecting a thumbnail.
+- Controls come from environment variables:
+  - `CANOPY_THUMBNAIL_SIZE` (default `400`) — target width/height in pixels when selecting a thumbnail.
+  - `CANOPY_THUMBNAILS_UNSAFE` (`true`/`1` to enable) — opt into an expanded strategy that may perform extra requests to find a representative image.
 - Behavior: during the IIIF build, a thumbnail URL is resolved for each Manifest and stored on its entry in `.cache/iiif/index.json` as `thumbnail`.
-- Safety: with `unsafe: false`, a simpler/safer selection is used; with `unsafe: true`, the helper may probe additional sources to find a better image at the requested size.
-- Current project setting: `preferredSize: 400`.
+- Safety: with the unsafe flag disabled, a simpler/safer selection is used; enabling it allows additional probing for better imagery when size requirements are stricter.
 
 ## Interactive Components (SSR + Hydration)
 
@@ -214,7 +213,7 @@ Dot‑notation (future): we may also expose these as `<Search.Form />`, `<Search
 <!-- PAGES_URL_END -->
 
 - CI tuning (optional):
-  - `canopy.yml` → `iiif.chunkSize`, `iiif.concurrency` to control fetch/build parallelism.
+  - Set `CANOPY_CHUNK_SIZE` and `CANOPY_FETCH_CONCURRENCY` to control fetch/build parallelism.
   - Env overrides (in workflow): `CANOPY_CHUNK_SIZE`, `CANOPY_FETCH_CONCURRENCY`, and `CANOPY_COLLECTION_URI` (use a small collection for faster CI).
 - Project Pages base path: links currently use absolute `/…`. If deploying under `/<repo>` you may want base‑path aware links; open an issue if you want this wired in.
 

@@ -7,16 +7,6 @@ featured:
     "https://api.dc.library.northwestern.edu/api/v2/works/15871197-1616-4c37-9257-b0ad0dc5ab30?as=iiif",
     "https://api.dc.library.northwestern.edu/api/v2/works/2b71b524-0779-47e5-a782-07dc63124bbf?as=iiif",
   ]
-iiif:
-  thumbnails:
-    # Enable to create thumbnails for Manifests missing `thumbnail` property
-    unsafe: false
-    # Preferred thumbnail size in pixels (width/height)
-    preferredSize: 400
-  # Max number of manifests to process per chunk
-  chunkSize: 20
-  # Concurrent fetch/build workers per chunk
-  concurrency: 5
 search:
   tabs:
     order: ["work", "page", "examples"]
