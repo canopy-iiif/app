@@ -78,7 +78,7 @@ jobs:
         run: npm run build
 
       - name: Verify pages were generated
-        run: node app/scripts/canopy-build.mjs --verify
+        run: npx tsx app/scripts/canopy-build.mts --verify
 
       - name: Inspect build output
         run: |
