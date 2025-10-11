@@ -24,6 +24,7 @@ function copyRepoToTemplate() {
     '.github/workflows/retarget-pr-base.yml',
     '.github/workflows/release-and-template.yml',
     '.github/workflows/test.yml',
+    'dist-template',
   ];
   const args = ['-a', '--delete'];
   for (const e of excludes) { args.push('--exclude', e); }
@@ -73,45 +74,41 @@ function rewritePackageJson(appVersion) {
 
 function writeTailwindFiles() {
   const stylesDir = path.join('dist-template', 'app', 'styles');
+  const srcStylesDir = path.join(__dirname, '..', '..', '..', 'app', 'styles');
   mkdirp(stylesDir);
-  const tp = path.join(stylesDir, 'tailwind.config.js');
-  const cssp = path.join(stylesDir, 'index.css');
-  const tw = `// Default Canopy UI enabled. Remove lines below to disable.
-module.exports = {
+
+  function copyIfExists(filename) {
+    const src = path.join(srcStylesDir, filename);
+    const dest = path.join(stylesDir, filename);
+    if (fs.existsSync(src)) {
+      fs.copyFileSync(src, dest);
+      return true;
+    }
+    return false;
+  }
+
+  const copiedConfig = copyIfExists('tailwind.config.js');
+  const copiedCss = copyIfExists('index.css');
+
+  if (!copiedConfig) {
+    const fallbackCfg = `module.exports = {
   presets: [require('@canopy-iiif/app/ui/canopy-iiif-preset')],
   content: [
-    './content/**/*.{mdx,html}',
-    './site/**/*.html',
-    './site/**/*.js',
-    './packages/app/ui/**/*.{js,jsx,ts,tsx}',
-    './packages/app/lib/iiif/components/**/*.{js,jsx}',
+    require.resolve('@canopy-iiif/app/ui'),
   ],
-  theme: { extend: {} },
-  corePlugins: {
-    // preflight: false, // uncomment to disable base reset
-  },
   plugins: [require('@canopy-iiif/app/ui/canopy-iiif-plugin')],
-  safelist: [
-    // Add dynamic classes here if needed
-  ],
 };
 `;
-  const css = `@source "../content/**/*.{mdx,html}";
-@source "../site/**/*.html";
-@source "../packages/app/ui/**/*.{js,jsx,ts,tsx}";
-@source "../packages/app/lib/iiif/components/**/*.{js,jsx}";
+    fs.writeFileSync(path.join(stylesDir, 'tailwind.config.js'), fallbackCfg, 'utf8');
+  }
 
-@tailwind base;
+  if (!copiedCss) {
+    const fallbackCss = `@tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Example component layer overrides */
-@layer components {
-  .brand-link { @apply text-brand hover:underline font-semibold; }
-}
 `;
-  fs.writeFileSync(tp, tw, 'utf8');
-  fs.writeFileSync(cssp, css, 'utf8');
+    fs.writeFileSync(path.join(stylesDir, 'index.css'), fallbackCss, 'utf8');
+  }
 }
 
 function main() {
