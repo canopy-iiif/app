@@ -1,6 +1,7 @@
 const { fs, fsp, path, CONTENT_DIR, OUT_DIR, ensureDirSync, htmlShell } = require('../common');
 const { log } = require('./log');
 const mdx = require('./mdx');
+const navigation = require('../components/navigation');
 
 // Cache: dir -> frontmatter data for _layout.mdx in that dir
 const LAYOUT_META = new Map();
@@ -44,7 +45,20 @@ function mapContentPathToOutput(filePath) {
 async function renderContentMdxToHtml(filePath, outPath, extraProps = {}) {
   const source = await fsp.readFile(filePath, 'utf8');
   const title = mdx.extractTitle(source);
-  const { body, head } = await mdx.compileMdxFile(filePath, outPath, null, extraProps);
+  const relContentPath = path.relative(CONTENT_DIR, filePath);
+  const normalizedRel = navigation.normalizeRelativePath(relContentPath);
+  const pageInfo = navigation.getPageInfo(normalizedRel);
+  const navData = navigation.buildNavigationForFile(normalizedRel);
+  const mergedProps = { ...(extraProps || {}) };
+  if (pageInfo) {
+    mergedProps.page = mergedProps.page
+      ? { ...pageInfo, ...mergedProps.page }
+      : pageInfo;
+  }
+  if (navData && !mergedProps.navigation) {
+    mergedProps.navigation = navData;
+  }
+  const { body, head } = await mdx.compileMdxFile(filePath, outPath, null, mergedProps);
   const needsHydrateViewer = body.includes('data-canopy-viewer');
   const needsHydrateSlider = body.includes('data-canopy-slider');
   const needsSearchForm = true; // search form runtime is global

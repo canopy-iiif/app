@@ -617,29 +617,45 @@ function startServer() {
     }
     if (pathname === "/") pathname = "/index.html";
 
-    // Resolve candidate paths in order:
-    // 1) as-is
-    // 2) add .html for extensionless
-    // 3) if a directory, use its index.html
-    let filePath = null;
-    const candidateA = path.join(OUT_DIR, pathname);
-    const candidateB = path.join(OUT_DIR, pathname + ".html");
-    if (fs.existsSync(candidateA)) {
-      filePath = candidateA;
-    } else if (fs.existsSync(candidateB)) {
-      filePath = candidateB;
+    function toSitePath(p) {
+      const rel = p.startsWith("/") ? `.${p}` : p;
+      return path.resolve(OUT_DIR, rel);
     }
-    if (!filePath) {
-      // Try directory index for extensionless or folder routes
-      const maybeDir = path.join(OUT_DIR, pathname);
-      if (fs.existsSync(maybeDir)) {
-        try {
-          const st = fs.statSync(maybeDir);
-          if (st.isDirectory()) {
-            const idx = path.join(maybeDir, "index.html");
-            if (fs.existsSync(idx)) filePath = idx;
-          }
-        } catch (_) {}
+
+    const ensureLeadingSlash = (p) => (p.startsWith("/") ? p : `/${p}`);
+    const basePath = ensureLeadingSlash(pathname);
+    const noTrailing = basePath !== "/" ? basePath.replace(/\/+$/, "") : basePath;
+    const attempts = [];
+
+    const primaryPath = noTrailing === "/" ? "/index.html" : noTrailing;
+    attempts.push(toSitePath(primaryPath));
+
+    if (!/\.html$/i.test(primaryPath)) {
+      attempts.push(toSitePath(`${primaryPath}.html`));
+    }
+
+    const withoutHtml = primaryPath.replace(/\.html$/i, "");
+    attempts.push(toSitePath(`${withoutHtml}/index.html`));
+
+    let filePath = null;
+    for (const candidate of attempts) {
+      if (!candidate) continue;
+      let stat;
+      try {
+        stat = fs.statSync(candidate);
+      } catch (_) {
+        continue;
+      }
+      if (stat.isFile()) {
+        filePath = candidate;
+        break;
+      }
+      if (stat.isDirectory()) {
+        const idx = path.join(candidate, "index.html");
+        if (fs.existsSync(idx)) {
+          filePath = idx;
+          break;
+        }
       }
     }
     if (!filePath) {

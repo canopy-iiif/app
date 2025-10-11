@@ -12,6 +12,7 @@ const {
   withBase,
 } = require("../common");
 const yaml = require("js-yaml");
+const { getPageContext } = require("../page-context");
 
 function parseFrontmatter(src) {
   let input = String(src || "");
@@ -280,10 +281,19 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
   const app = await loadAppWrapper();
   const dirLayout = await getNearestDirLayout(filePath);
   const contentNode = React.createElement(MDXContent, extraProps);
+  const layoutProps = dirLayout ? { ...extraProps } : null;
   const withLayout = dirLayout
-    ? React.createElement(dirLayout, null, contentNode)
+    ? React.createElement(dirLayout, layoutProps, contentNode)
     : contentNode;
-  const withApp = React.createElement(app.App, null, withLayout);
+  const PageContext = getPageContext();
+  const contextValue = {
+    navigation: extraProps && extraProps.navigation ? extraProps.navigation : null,
+    page: extraProps && extraProps.page ? extraProps.page : null,
+  };
+  const withContext = PageContext
+    ? React.createElement(PageContext.Provider, { value: contextValue }, withLayout)
+    : withLayout;
+  const withApp = React.createElement(app.App, null, withContext);
   const compMap = { ...components, a: Anchor };
   const page = MDXProvider
     ? React.createElement(MDXProvider, { components: compMap }, withApp)

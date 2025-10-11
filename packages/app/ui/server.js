@@ -6,6 +6,7 @@ export { default as RelatedItems } from "./src/iiif/MdxRelatedItems.jsx";
 // SSR-only Hero (includes featured selection via helpers)
 export { default as Hero } from "./src/iiif/Hero.jsx";
 export { default as FeaturedHero } from "./src/iiif/FeaturedHero.jsx";
+export { default as SubNavigation } from "./src/layout/SubNavigation.jsx";
 
 // SSR-safe MDX placeholders (do not import browser-only UI here)
 export { default as SearchResults } from "./src/search/MdxSearchResults.jsx";
