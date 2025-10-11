@@ -969,17 +969,16 @@ async function dev() {
     child = startTailwindWatcher();
 
     const uiPlugin = path.join(
-      __dirname,
-      "../ui",
+      APP_UI_DIR,
       "tailwind-canopy-iiif-plugin.js"
     );
     const uiPreset = path.join(
-      __dirname,
-      "../ui",
+      APP_UI_DIR,
       "tailwind-canopy-iiif-preset.js"
     );
-    const uiStylesDir = path.join(__dirname, "../ui", "styles");
-    const files = [uiPlugin, uiPreset].filter((p) => {
+    const uiStylesDir = path.join(APP_UI_DIR, "styles");
+    const uiStylesCss = path.join(uiStylesDir, "index.css");
+    const pluginFiles = [uiPlugin, uiPreset].filter((p) => {
       try {
         return fs.existsSync(p);
       } catch (_) {
@@ -987,25 +986,54 @@ async function dev() {
       }
     });
     let restartTimer = null;
-    const restart = () => {
+    let uiCssWatcherAttached = false;
+    const scheduleTailwindRestart = (message, compileLabel) => {
       clearTimeout(restartTimer);
       restartTimer = setTimeout(() => {
-        console.log(
-          "[tailwind] detected UI plugin/preset change — restarting Tailwind"
-        );
+        if (message) console.log(message);
         try {
           if (child && !child.killed) child.kill();
         } catch (_) {}
-        safeCompile("[tailwind] compile after plugin change failed");
+        safeCompile(compileLabel);
         child = startTailwindWatcher();
         try { onBuildStart(); } catch (_) {}
-      }, 50);
+      }, 120);
     };
-    for (const f of files) {
+    for (const f of pluginFiles) {
       try {
-        fs.watch(f, { persistent: false }, restart);
+        fs.watch(f, { persistent: false }, () => {
+          scheduleTailwindRestart(
+            "[tailwind] detected UI plugin/preset change — restarting Tailwind",
+            "[tailwind] compile after plugin change failed"
+          );
+        });
       } catch (_) {}
     }
+    const attachCssWatcher = () => {
+      if (uiCssWatcherAttached) {
+        if (fs.existsSync(uiStylesCss)) return;
+        uiCssWatcherAttached = false;
+      }
+      if (!fs.existsSync(uiStylesCss)) return;
+      const handler = () =>
+        scheduleTailwindRestart(
+          "[tailwind] detected @canopy-iiif/app/ui styles change — restarting Tailwind",
+          "[tailwind] compile after UI styles change failed"
+        );
+      try {
+        const watcher = fs.watch(uiStylesCss, { persistent: false }, handler);
+        uiCssWatcherAttached = true;
+        watcher.on("close", () => {
+          uiCssWatcherAttached = false;
+        });
+      } catch (_) {
+        try {
+          fs.watchFile(uiStylesCss, { interval: 250 }, handler);
+          uiCssWatcherAttached = true;
+        } catch (_) {}
+      }
+    };
+    attachCssWatcher();
     if (fs.existsSync(uiStylesDir)) {
       try {
         fs.watch(
@@ -1013,7 +1041,7 @@ async function dev() {
           { persistent: false, recursive: true },
           (evt, fn) => {
             try {
-              if (fn && /\.s[ac]ss$/i.test(String(fn))) restart();
+              if (fn && /\.s[ac]ss$/i.test(String(fn))) attachCssWatcher();
             } catch (_) {}
           }
         );
@@ -1027,8 +1055,9 @@ async function dev() {
               { persistent: false },
               (evt, fn) => {
                 try {
-                  if (fn && /\.s[ac]ss$/i.test(String(fn))) restart();
+                  if (fn && /\.s[ac]ss$/i.test(String(fn))) attachCssWatcher();
                 } catch (_) {}
+                scan(dir);
               }
             );
             watchers.set(dir, w);
@@ -1055,8 +1084,10 @@ async function dev() {
     if (fs.existsSync(configPath)) {
       try {
         fs.watch(configPath, { persistent: false }, () => {
-          console.log("[tailwind] tailwind.config change — restarting Tailwind");
-          restart();
+          scheduleTailwindRestart(
+            "[tailwind] tailwind.config change — restarting Tailwind",
+            "[tailwind] compile after config change failed"
+          );
         });
       } catch (_) {}
     }

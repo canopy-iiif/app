@@ -155,16 +155,49 @@ async function run() {
     try {
       if (fs.existsSync(indexScss)) {
         const srcDir = path.dirname(indexScss);
-        fs.watch(srcDir, { recursive: true }, (evt, fn) => {
-          try {
-            // Only react to Sass source changes; ignore writes to generated index.css
-            if (!fn) return;
-            const changed = path.join(srcDir, fn);
-            if (/\.s[ac]ss$/i.test(changed)) {
-              compileStylesOnce();
+        const watchRecursive = () => {
+          fs.watch(srcDir, { recursive: true }, (evt, fn) => {
+            try {
+              if (!fn) return;
+              const changed = path.join(srcDir, fn);
+              if (/\.s[ac]ss$/i.test(changed)) compileStylesOnce();
+            } catch (_) {}
+          });
+        };
+        try {
+          watchRecursive();
+        } catch (err) {
+          const watchers = new Map();
+          const watchDir = (dir) => {
+            if (watchers.has(dir)) return;
+            try {
+              const watcher = fs.watch(dir, (evt, fn) => {
+                try {
+                  if (fn && /\.s[ac]ss$/i.test(fn)) compileStylesOnce();
+                } catch (_) {}
+                scan(dir);
+              });
+              watchers.set(dir, watcher);
+            } catch (_) {}
+          };
+          const scan = (dir) => {
+            let entries;
+            try {
+              entries = fs.readdirSync(dir, { withFileTypes: true });
+            } catch (_) {
+              return;
             }
-          } catch (_) {}
-        });
+            for (const entry of entries) {
+              const next = path.join(dir, entry.name);
+              if (entry.isDirectory()) {
+                watchDir(next);
+                scan(next);
+              }
+            }
+          };
+          watchDir(srcDir);
+          scan(srcDir);
+        }
       }
     } catch (_) {}
   }
