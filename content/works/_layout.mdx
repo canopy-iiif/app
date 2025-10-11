@@ -7,45 +7,46 @@ import {
   Summary,
   Metadata,
   RequiredStatement,
-} from '@canopy-iiif/app/ui/server';
+} from "@canopy-iiif/app/ui/server";
 
 <article className="space-y-12">
-  <header className="space-y-4">
-    <Label
-      manifest={props.manifest}
-      as="h1"
-      className="text-4xl font-semibold tracking-tight text-slate-900"
-    />
-    <Summary
-      manifest={props.manifest}
-      as="p"
-      className="max-w-3xl text-lg text-slate-700"
-    />
-  </header>
 
-  <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-    <Viewer iiifContent={props.manifest.id} />
-  </div>
+<Viewer iiifContent={props.manifest.id} />
 
-  {Array.isArray(props.manifest?.metadata) && props.manifest.metadata.length ? (
-    <section className="space-y-4">
-      <h2 className="text-2xl font-semibold text-slate-900">Details</h2>
-      <Metadata
-        manifest={props.manifest}
-        className="grid gap-x-12 gap-y-6 md:grid-cols-2"
-      />
-    </section>
-  ) : null}
+<header className="space-y-4">
+  <Label
+    manifest={props.manifest}
+    as="h1"
+    className="text-4xl font-semibold tracking-tight text-slate-900"
+  />
+  <Summary
+    manifest={props.manifest}
+    as="p"
+    className="max-w-3xl text-lg text-slate-700"
+  />
+</header>
 
-  {props.manifest?.requiredStatement ? (
-    <section className="space-y-3">
-      <h2 className="text-xl font-semibold text-slate-900">Rights</h2>
-      <RequiredStatement
-        manifest={props.manifest}
-        className="text-sm text-slate-700"
-      />
-    </section>
-  ) : null}
+{Array.isArray(props.manifest?.metadata) && props.manifest.metadata.length ? (
+
+<section className="space-y-4">
+  <h2 className="text-2xl font-semibold text-slate-900">Details</h2>
+  <Metadata
+    manifest={props.manifest}
+    className="grid gap-x-12 gap-y-6 md:grid-cols-2"
+  />
+</section>
+) : null}
+
+{props.manifest?.requiredStatement ? (
+
+<section className="space-y-3">
+  <h2 className="text-xl font-semibold text-slate-900">Rights</h2>
+  <RequiredStatement
+    manifest={props.manifest}
+    className="text-sm text-slate-700"
+  />
+</section>
+) : null}
 
   <section className="space-y-4">
     <h2 className="text-2xl font-semibold text-slate-900">Related Items</h2>

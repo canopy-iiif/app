@@ -2,8 +2,6 @@
 
 @layer components {
   .canopy-header {
-    @apply fixed inset-x-0 top-0 z-50; /* brings in Tailwind’s .fixed class (and friends, if you
-  like) */
     display: flex;
     justify-content: space-between;
     align-items: center;
