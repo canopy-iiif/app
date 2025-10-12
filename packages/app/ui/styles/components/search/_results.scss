@@ -1,5 +1,3 @@
-@use "../../variables" as *;
-
 .canopy-search-tabs-wrapper {
   display: flex;
   flex-wrap: wrap;
@@ -23,13 +21,13 @@
     padding: 0.382rem 0.618rem;
     font-size: 1rem;
     cursor: pointer;
-    color: $color-gray-600;
+    color: var(--color-gray-600);
     transition: all 0.2s ease-in-out;
 
     &.active,
     &:hover {
-      color: $color-brand-default;
-      background-color: $color-brand-100;
+      color: var(--color-brand-default);
+      background-color: var(--color-brand-100);
       border-radius: 0.382rem;
       font-weight: 400;
     }

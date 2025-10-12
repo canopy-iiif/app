@@ -1,20 +1,28 @@
-@use "../../variables" as *;
-
-.canopy-logo {
+a.canopy-logo {
   display: flex;
   align-items: center;
   gap: 0.618rem;
   font-weight: 400;
   font-size: 1.618rem;
-  font-family: $font-serif;
-  color: $color-gray-default;
-
-  img {
-    height: 1.618rem;
-    margin-bottom: -1px;
-  }
+  font-family: var(--font-serif);
+  color: var(--color-gray-default) !important;
 
   &:hover {
     text-decoration: none;
+  }
+
+  svg {
+    height: 1.618rem;
+    margin-bottom: -1px;
+
+    circle.canopy-logo-backlight {
+      fill: var(--color-brand-900);
+      color: var(--color-brand-900);
+    }
+
+    path.canopy-logo-overlay {
+      fill: var(--color-brand-default);
+      color: var(--color-brand-default);
+    }
   }
 }

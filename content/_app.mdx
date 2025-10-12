@@ -22,7 +22,10 @@ return (
   <div className="bg-white text-slate-800">
     <header className="canopy-header">
       <a href="/" className="canopy-logo">
-        <img src="/canopy.svg" alt="Canopy IIIF" />
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+          <circle className="canopy-logo-backlight" cx="250" cy="250" r="250" />
+          <path className="canopy-logo-overlay" d="M125,33.45C50.28,76.68,0,157.47,0,250s50.28,173.32,125,216.55c74.72-43.23,125-124.01,125-216.55S199.72,76.68,125,33.45Z" />
+        </svg>
         <span>Canopy IIIF</span>
       </a>
       <SearchPanel label="Search" hotkey="mod+k" placeholder="Search…" />

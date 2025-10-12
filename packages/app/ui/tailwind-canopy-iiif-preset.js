@@ -6,14 +6,21 @@
  * Tailwind theme.extend values to those variables for easy use in utilities.
  */
 const plugin = require("tailwindcss/plugin");
-const fs = require("fs");
 const path = require("path");
+const {loadCanopyTheme} = require("./theme");
 
 function compileVarsCss() {
+  const theme = loadCanopyTheme();
+  if (theme && theme.css) {
+    if (process.env.CANOPY_DEBUG_THEME) {
+      console.log('[preset] using theme css');
+    }
+    return theme.css;
+  }
   try {
     const sass = require("sass");
     const entry = path.join(__dirname, "styles", "variables.emit.scss");
-    const out = sass.compile(entry, { style: "expanded" });
+    const out = sass.compile(entry, {style: "expanded"});
     return out && out.css ? out.css : "";
   } catch (_) {
     return "";
@@ -22,7 +29,7 @@ function compileVarsCss() {
 
 module.exports = {
   theme: {
-    container: { center: true, padding: "1rem" },
+    container: {center: true, padding: "1rem"},
     extend: {
       colors: {
         brand: {
@@ -69,33 +76,28 @@ module.exports = {
         black: "#000000",
       },
       fontFamily: {
-        sans: ["var(--font-sans)"],
         mono: ["var(--font-mono)"],
+        sans: ["var(--font-sans)"],
+        serif: ["var(--font-serif)"],
       },
       fontSize: {
-        xs: ["var(--font-size-xs)", { lineHeight: "var(--line-height-xs)" }],
-        sm: ["var(--font-size-sm)", { lineHeight: "var(--line-height-sm)" }],
+        xs: ["var(--font-size-xs)", {lineHeight: "var(--line-height-xs)"}],
+        sm: ["var(--font-size-sm)", {lineHeight: "var(--line-height-sm)"}],
         base: [
           "var(--font-size-base)",
-          { lineHeight: "var(--line-height-base)" },
+          {lineHeight: "var(--line-height-base)"},
         ],
-        lg: ["var(--font-size-lg)", { lineHeight: "var(--line-height-lg)" }],
-        xl: ["var(--font-size-xl)", { lineHeight: "var(--line-height-xl)" }],
-        "2xl": [
-          "var(--font-size-2xl)",
-          { lineHeight: "var(--line-height-2xl)" },
-        ],
-        "3xl": [
-          "var(--font-size-3xl)",
-          { lineHeight: "var(--line-height-3xl)" },
-        ],
+        lg: ["var(--font-size-lg)", {lineHeight: "var(--line-height-lg)"}],
+        xl: ["var(--font-size-xl)", {lineHeight: "var(--line-height-xl)"}],
+        "2xl": ["var(--font-size-2xl)", {lineHeight: "var(--line-height-2xl)"}],
+        "3xl": ["var(--font-size-3xl)", {lineHeight: "var(--line-height-3xl)"}],
       },
       borderRadius: {
         sm: "var(--radius-sm)",
         DEFAULT: "var(--radius-default)",
         md: "var(--radius-md)",
       },
-      maxWidth: { content: "var(--max-w-content)", wide: "var(--max-w-wide)" },
+      maxWidth: {content: "var(--max-w-content)", wide: "var(--max-w-wide)"},
       boxShadow: {
         sm: "var(--shadow-sm)",
         DEFAULT: "var(--shadow)",
@@ -112,7 +114,7 @@ module.exports = {
   },
   plugins: [
     // Inject CSS variables (tokens) derived from Sass variables
-    plugin(function ({ addBase, postcss }) {
+    plugin(function ({addBase, postcss}) {
       const css = compileVarsCss();
       if (css && postcss && postcss.parse) addBase(postcss.parse(css));
     }),

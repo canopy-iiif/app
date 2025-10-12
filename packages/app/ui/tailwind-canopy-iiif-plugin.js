@@ -6,13 +6,21 @@
  * their Tailwind config.
  */
 const plugin = require("tailwindcss/plugin");
-const fs = require("fs");
 const path = require("path");
+const { loadCanopyTheme } = require("./theme");
 
 function compileScss(filePath) {
   try {
     const sass = require("sass");
-    const out = sass.compile(filePath, { style: "expanded" });
+    const theme = loadCanopyTheme();
+    const stylesRoot = path.join(__dirname, "styles");
+    const loadPaths = [stylesRoot];
+    const relModule = path
+      .relative(stylesRoot, filePath)
+      .replace(/\\/g, "/")
+      .replace(/\.scss$/i, "");
+    const source = `${theme && theme.sassConfig ? theme.sassConfig : ""}@use '${relModule}';`;
+    const out = sass.compileString(source, { style: "expanded", loadPaths });
     return out && out.css ? out.css : "";
   } catch (e) {
     const message = e && e.message ? e.message : e;
