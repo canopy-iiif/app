@@ -10,5 +10,6 @@ search:
   tabs:
     order: ["work", "page", "examples"]
 theme:
+  appearance: light # light OR dark
   accentColor: indigo
   grayColor: slate

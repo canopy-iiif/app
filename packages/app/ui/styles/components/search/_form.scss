@@ -3,7 +3,11 @@
   --search-form-label-padding-y: 0.625rem;
   position: relative;
   backdrop-filter: blur(12px);
-  background-color: color-mix(in srgb, #fff 95%, transparent);
+  background-color: color-mix(
+    in srgb,
+    var(--color-gray-100, #f0f0f3) 95%,
+    transparent
+  );
   transition:
     box-shadow var(--duration-fast, 150ms) ease,
     background-color var(--duration-fast, 150ms) ease;
@@ -152,7 +156,7 @@
   &:focus-visible {
     outline: none;
     box-shadow:
-      0 0 0 2px #fff,
+      0 0 0 2px var(--color-gray-100, #ffffff),
       0 0 0 4px
         color-mix(in srgb, var(--color-brand-500, #3e63dd) 65%, transparent);
   }

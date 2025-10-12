@@ -5,6 +5,7 @@ const radixColors = require("@radix-ui/colors");
 
 const DEFAULT_ACCENT = "indigo";
 const DEFAULT_GRAY = "slate";
+const DEFAULT_APPEARANCE = "light";
 const DEBUG_FLAG_RAW = String(process.env.CANOPY_DEBUG_THEME || "");
 const DEBUG_ENABLED = /^(1|true|yes|on)$/i.test(DEBUG_FLAG_RAW.trim());
 
@@ -46,6 +47,8 @@ const AVAILABLE = new Set(
   )
 );
 
+const APPEARANCES = new Set(["light", "dark"]);
+
 function readYamlConfig(cfgPath) {
   try {
     if (!cfgPath) return {};
@@ -69,6 +72,21 @@ function normalizePaletteName(raw) {
   return AVAILABLE.has(compact) ? compact : "";
 }
 
+function normalizeAppearance(raw) {
+  if (!raw) return DEFAULT_APPEARANCE;
+  const cleaned = String(raw).trim().toLowerCase();
+  return APPEARANCES.has(cleaned) ? cleaned : DEFAULT_APPEARANCE;
+}
+
+function resolveRadixPalette(name, appearance) {
+  if (!name || !AVAILABLE.has(name)) return null;
+  const paletteKey = appearance === "dark" ? `${name}Dark` : name;
+  const palette = radixColors[paletteKey];
+  if (palette && palette[`${name}1`]) return palette;
+  const fallback = radixColors[name];
+  return fallback && fallback[`${name}1`] ? fallback : null;
+}
+
 function darkenHex(hex, amount = 0.15) {
   if (!hex) return hex;
   const normalized = hex.replace("#", "");
@@ -83,9 +101,10 @@ function darkenHex(hex, amount = 0.15) {
   return `#${toHex(r * factor)}${toHex(g * factor)}${toHex(b * factor)}`;
 }
 
-function toTailwindScale(name) {
+function toTailwindScale(name, options = {}) {
   if (!name || !AVAILABLE.has(name)) return null;
-  const palette = radixColors[name];
+  const appearance = normalizeAppearance(options.appearance);
+  const palette = resolveRadixPalette(name, appearance);
   if (!palette) return null;
   const prefix = name;
   const scale = {};
@@ -103,7 +122,8 @@ function toTailwindScale(name) {
   return scale;
 }
 
-function buildVariablesMap(brandScale, grayScale) {
+function buildVariablesMap(brandScale, grayScale, options = {}) {
+  const appearance = normalizeAppearance(options.appearance);
   const vars = {};
   if (brandScale) {
     for (const lvl of LEVELS) {
@@ -140,6 +160,7 @@ function buildVariablesMap(brandScale, grayScale) {
       vars["--colors-secondaryMuted"] = secondary;
     }
   }
+  vars["color-scheme"] = appearance === "dark" ? "dark" : "light";
   return vars;
 }
 
@@ -165,33 +186,42 @@ function loadCanopyTheme(options = {}) {
   const theme = (cfg && cfg.theme) || {};
   const accentRequested = theme && theme.accentColor;
   const grayRequested = theme && theme.grayColor;
+  const appearanceRequested = theme && theme.appearance;
+  const appearance = normalizeAppearance(appearanceRequested);
 
   let accentName = normalizePaletteName(accentRequested);
-  let accentScale = accentName ? toTailwindScale(accentName) : null;
+  let accentScale = accentName
+    ? toTailwindScale(accentName, {appearance})
+    : null;
   let accentFallback = false;
   if (!accentScale) {
     accentFallback = true;
     accentName = DEFAULT_ACCENT;
-    accentScale = toTailwindScale(DEFAULT_ACCENT);
+    accentScale = toTailwindScale(DEFAULT_ACCENT, {appearance});
   }
 
   let grayName = normalizePaletteName(grayRequested);
-  let grayScale = grayName ? toTailwindScale(grayName) : null;
+  let grayScale = grayName ? toTailwindScale(grayName, {appearance}) : null;
   let grayFallback = false;
   if (!grayScale) {
     grayFallback = true;
     grayName = DEFAULT_GRAY;
-    grayScale = toTailwindScale(DEFAULT_GRAY);
+    grayScale = toTailwindScale(DEFAULT_GRAY, {appearance});
   }
 
-  const vars = buildVariablesMap(accentScale, grayScale);
+  const vars = buildVariablesMap(accentScale, grayScale, {appearance});
   const css = variablesToCss(vars);
   const sassConfig = buildSassConfig(accentScale, grayScale);
 
   debugLog("resolved theme", {
     configPath: cfgPath,
-    requested: {accent: accentRequested || null, gray: grayRequested || null},
+    requested: {
+      accent: accentRequested || null,
+      gray: grayRequested || null,
+      appearance: appearanceRequested || null,
+    },
     resolved: {
+      appearance,
       accent: accentName,
       gray: grayName,
       accentFallback,
@@ -215,6 +245,7 @@ function loadCanopyTheme(options = {}) {
   ) {
     try {
       console.log("[canopy-theme]", "resolved", {
+        appearance,
         accent: accentName,
         accent500: accentScale && accentScale["500"],
         gray: grayName,
@@ -224,6 +255,7 @@ function loadCanopyTheme(options = {}) {
   }
 
   return {
+    appearance,
     accent: {name: accentName, scale: accentScale},
     gray: {name: grayName, scale: grayScale},
     variables: vars,
@@ -236,6 +268,7 @@ module.exports = {
   loadCanopyTheme,
   toTailwindScale,
   normalizePaletteName,
+  normalizeAppearance,
   AVAILABLE_PALETTES: Array.from(AVAILABLE).sort(),
   __DEBUG_ENABLED: DEBUG_ENABLED,
   variablesToCss,

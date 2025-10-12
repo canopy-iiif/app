@@ -15,7 +15,7 @@
   max-width: 48rem;
   overflow: hidden;
   border-radius: 0.75rem;
-  background: #fff;
+  background: var(--color-gray-100, #ffffff);
   box-shadow:
     0 25px 50px -12px rgba(15, 23, 42, 0.4),
     0 10px 20px rgba(15, 23, 42, 0.12);
@@ -89,7 +89,7 @@
   overflow: hidden;
 
   &[open] {
-    background: #fff;
+    background: var(--color-gray-100, #ffffff);
   }
 }
 
@@ -118,7 +118,7 @@
 
 .canopy-search-filters__facet-content {
   border-top: 1px solid var(--color-gray-200, #e0e1e6);
-  background: #fff;
+  background: var(--color-gray-100, #ffffff);
   padding: 1rem;
   max-height: 15rem;
   overflow-y: auto;
@@ -155,7 +155,7 @@
   padding: 0.25rem 0.5rem;
   font-size: var(--font-size-xs, 0.75rem);
   color: var(--color-gray-600, #80838d);
-  background: #fff;
+  background: var(--color-gray-100, #ffffff);
   transition: background-color var(--duration-fast, 150ms) var(--easing-standard, ease),
     color var(--duration-fast, 150ms) var(--easing-standard, ease);
 
@@ -236,7 +236,7 @@
 
 .canopy-search-filters__button--secondary {
   border: 1px solid var(--color-gray-200, #e0e1e6);
-  background: #fff;
+  background: var(--color-gray-100, #ffffff);
   color: var(--color-gray-600, #80838d);
 
   &:hover:not([disabled]) {

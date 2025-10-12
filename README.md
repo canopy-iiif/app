@@ -85,6 +85,19 @@ Notes
 - The UI components use clear, semantic selectors (e.g., `.canopy-card`). You can override these in your own Tailwind layers if desired.
 - In dev, CSS changes hot‑swap without a full page reload (Tailwind, `app/styles/**`, and the Canopy UI plugin/preset).
 
+### Theme configuration
+
+Add a `theme` block to `canopy.yml` to override the default Indigo/Slate palette. Accent and gray colors map to Radix color families (e.g., `indigo`, `cyan`, `slate`). An optional `appearance` flag switches between the light and dark Radix ramps while keeping token names (`50`, `100`, …) consistent.
+
+```yaml
+theme:
+  accentColor: cyan
+  grayColor: slate
+  appearance: dark # light by default
+```
+
+When `appearance: dark` is set, Canopy pulls from the `*Dark` Radix palettes, flips the CSS `color-scheme` to `dark`, and continues to expose Tailwind utilities such as `bg-brand-500` and `text-gray-900` with values appropriate for the darker surface.
+
 ## IIIF Build
 
 - Layout: add `content/works/_layout.mdx` to enable IIIF work page generation. The layout receives `props.manifest` (normalized to Presentation 3).
