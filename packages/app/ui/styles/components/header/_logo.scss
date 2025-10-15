@@ -26,3 +26,17 @@ a.canopy-logo {
     }
   }
 }
+
+html.dark a.canopy-logo {
+  svg {
+    circle.canopy-logo-backlight {
+      fill: var(--color-brand-200) !important;
+      color: var(--color-brand-200) !important;
+    }
+
+    path.canopy-logo-overlay {
+      fill: var(--color-brand-500) !important;
+      color: var(--color-brand-500) !important;
+    }
+  }
+}

@@ -8,12 +8,37 @@ const DEFAULT_GRAY = "slate";
 const DEFAULT_APPEARANCE = "light";
 const DEBUG_FLAG_RAW = String(process.env.CANOPY_DEBUG_THEME || "");
 const DEBUG_ENABLED = /^(1|true|yes|on)$/i.test(DEBUG_FLAG_RAW.trim());
+const SASS_STYLES_DIR = path.join(__dirname, "styles");
+const SASS_VARIABLES_ENTRY = path.join(SASS_STYLES_DIR, "_variables.scss");
 
 function debugLog(...args) {
   if (!DEBUG_ENABLED) return;
   try {
     console.log("[canopy-theme]", ...args);
   } catch (_) {}
+}
+
+function loadSassVariableTokens() {
+  try {
+    if (!fs.existsSync(SASS_VARIABLES_ENTRY)) return {map: {}, css: ""};
+    const sass = require("sass");
+    const source = `@use 'sass:meta';\n@use 'sass:string';\n@use 'variables';\n$__canopy_tokens: meta.module-variables('variables');\n@function canopy-token-name($name) {\n  $identifier: #{$name};\n  @if $identifier == null or $identifier == '' {\n    @return null;\n  }\n  @if string.slice($identifier, 1, 1) == '_' {\n    @return null;\n  }\n  @return '--#{$identifier}';\n}\n@mixin canopy-emit-tokens() {\n  @each $name, $value in $__canopy_tokens {\n    $css-name: canopy-token-name($name);\n    @if $css-name {\n      #{$css-name}: #{meta.inspect($value)};\n    }\n  }\n}\n:root {\n  @include canopy-emit-tokens();\n}\n:host {\n  @include canopy-emit-tokens();\n}\n`;
+    const result = sass.compileString(source, {
+      loadPaths: [SASS_STYLES_DIR],
+      style: "expanded",
+    });
+    const css = (result && result.css ? result.css : "").trim();
+    const vars = {};
+    const regex = /--([A-Za-z0-9_-]+)\s*:\s*([^;]+);/g;
+    let match;
+    while ((match = regex.exec(css))) {
+      vars[`--${match[1]}`] = match[2].trim();
+    }
+    return {map: vars, css};
+  } catch (error) {
+    debugLog("failed to compile Sass variables", error && error.message ? error.message : error);
+    return {map: {}, css: ""};
+  }
 }
 const LEVELS = [
   "50",
@@ -209,8 +234,10 @@ function loadCanopyTheme(options = {}) {
     grayScale = toTailwindScale(DEFAULT_GRAY, {appearance});
   }
 
-  const vars = buildVariablesMap(accentScale, grayScale, {appearance});
-  const css = variablesToCss(vars);
+  const sassTokens = loadSassVariableTokens();
+  const dynamicVars = buildVariablesMap(accentScale, grayScale, {appearance});
+  const mergedVars = {...(sassTokens && sassTokens.map ? sassTokens.map : {}), ...dynamicVars};
+  const css = variablesToCss(mergedVars);
   const sassConfig = buildSassConfig(accentScale, grayScale);
 
   debugLog("resolved theme", {
@@ -258,7 +285,7 @@ function loadCanopyTheme(options = {}) {
     appearance,
     accent: {name: accentName, scale: accentScale},
     gray: {name: grayName, scale: grayScale},
-    variables: vars,
+    variables: mergedVars,
     css,
     sassConfig,
   };

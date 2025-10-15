@@ -8,6 +8,23 @@ const CACHE_DIR = path.resolve('.cache/mdx');
 const ASSETS_DIR = path.resolve('assets');
 
 const BASE_PATH = String(process.env.CANOPY_BASE_PATH || '').replace(/\/$/, '');
+let cachedAppearance = null;
+
+function resolveThemeAppearance() {
+  if (cachedAppearance) return cachedAppearance;
+  cachedAppearance = 'light';
+  try {
+    const { loadCanopyTheme } = require('@canopy-iiif/app/ui/theme');
+    if (typeof loadCanopyTheme === 'function') {
+      const theme = loadCanopyTheme();
+      const appearance = theme && theme.appearance ? String(theme.appearance) : '';
+      if (appearance.toLowerCase() === 'dark') {
+        cachedAppearance = 'dark';
+      }
+    }
+  } catch (_) {}
+  return cachedAppearance;
+}
 
 function readYamlConfigBaseUrl() {
   try {
@@ -51,7 +68,9 @@ function htmlShell({ title, body, cssHref, scriptHref, headExtra }) {
   const scriptTag = scriptHref ? `<script defer src="${scriptHref}"></script>` : '';
   const extra = headExtra ? String(headExtra) : '';
   const cssTag = cssHref ? `<link rel="stylesheet" href="${cssHref}">` : '';
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>${title}</title>${extra}${cssTag}${scriptTag}</head><body>${body}</body></html>`;
+  const appearance = resolveThemeAppearance();
+  const htmlClass = appearance === 'dark' ? ' class="dark"' : '';
+  return `<!doctype html><html lang="en"${htmlClass}><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>${title}</title>${extra}${cssTag}${scriptTag}</head><body>${body}</body></html>`;
 }
 
 function withBase(href) {
