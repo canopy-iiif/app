@@ -103,21 +103,42 @@ async function ensureStyles() {
       const theme = loadCanopyTheme();
       const themeCss = theme && theme.css ? theme.css.trim() : "";
       if (!themeCss) return;
+
       let existing = "";
       try {
         existing = fs.readFileSync(targetPath, "utf8");
       } catch (_) {}
+
       const marker = "/* canopy-theme */";
       const markerEnd = "/* canopy-theme:end */";
-      const block = `${marker}\n${themeCss}\n${markerEnd}\n`;
-      const replaceRegex = /@layer properties\{[\s\S]*?\}(?=@supports)/;
-      let next;
-      if (replaceRegex.test(existing)) {
-        next = existing.replace(replaceRegex, themeCss);
-      } else {
-        const stripPrev = existing.replace(new RegExp(`${marker}[\\s\\S]*?${markerEnd}\\n?`, 'g'), '').trimStart();
-        next = `${block}${stripPrev ? '\n' + stripPrev : ''}`;
+      const markerRegex = new RegExp(`${marker}[\\s\\S]*?${markerEnd}\\n?`, "g");
+      const sanitized = existing.replace(markerRegex, "");
+
+      const layerRegex = /@layer properties\{([\s\S]*?)\}(?=@|$)/;
+      const match = layerRegex.exec(sanitized);
+      let before = sanitized;
+      let after = "";
+      let customRulesBlock = "";
+
+      if (match) {
+        before = sanitized.slice(0, match.index);
+        after = sanitized.slice(match.index + match[0].length);
+        const layerBody = match[1] || "";
+        const boundaryMatch = /}\s*:/.exec(layerBody);
+        if (boundaryMatch) {
+          const start = boundaryMatch.index + boundaryMatch[0].length - 1;
+          const customSegment = layerBody.slice(start).trim();
+          if (customSegment) {
+            const normalized = customSegment.endsWith("}")
+              ? customSegment
+              : `${customSegment}}`;
+            customRulesBlock = `@layer properties {\n  ${normalized}\n}\n`;
+          }
+        }
       }
+
+      const themeBlock = `${marker}\n${themeCss}\n${markerEnd}\n`;
+      const next = `${before}${themeBlock}${customRulesBlock}${after}`;
       fs.writeFileSync(targetPath, next, "utf8");
     } catch (_) {}
   }
