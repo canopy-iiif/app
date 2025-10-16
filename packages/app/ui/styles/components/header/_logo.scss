@@ -2,10 +2,11 @@ a.canopy-logo {
   display: flex;
   align-items: center;
   gap: 0.618rem;
-  font-weight: 400;
-  font-size: 1.618rem;
+  font-weight: 600;
+  font-size: 1.382rem;
   font-family: var(--font-serif);
   color: var(--color-gray-default) !important;
+  letter-spacing: -0.025em;
 
   &:hover {
     text-decoration: none;

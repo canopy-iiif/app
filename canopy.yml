@@ -1,23 +1,28 @@
-collection:
-  uri: https://ennego.github.io/AccademiaCollectionsAll/index.json
-metadata: ["Date", "Notary", "Key terms"]
+collection: https://api.dc.library.northwestern.edu/api/v2/collections/39cdbd52-116d-4d0e-bebb-d28a4adfcc22?as=iiif
+metadata: ["Date", "Subject", "Contributor"]
 featured:
   [
-    "https://MultimedialitySummerSchool.github.io/NotarialDocumentsAll/iiif/asrtcsvol054116130512/manifest.json",
+    "https://api.dc.library.northwestern.edu/api/v2/works/6d78bcbf-8bff-4f33-b93a-6cf45caea62d?as=iiif",
   ]
+# collection: https://ennego.github.io/AccademiaCollectionsAll/index.json
+# metadata: ["Date", "Notary", "Key terms"]
+# featured:
+#   [
+#     "https://MultimedialitySummerSchool.github.io/NotarialDocumentsAll/iiif/asrtcsvol054116130512/manifest.json",
+#   ]
 search:
   tabs:
     order: ["work", "page", "examples"]
   index:
     metadata:
-      enabled: true
-      all: false
+      enabled: true # default: true
+      all: false # default: false
     summary:
-      enabled: true
+      enabled: true # default: true
     annotations:
-      enabled: true
+      enabled: false # default: false
       motivation: ["commenting", "tagging"]
 theme:
   appearance: light # light OR dark
-  accentColor: indigo # blue, purple, green, orange, red, pink, teal, ...
+  accentColor: blue # blue, purple, green, orange, red, pink, teal, ...
   grayColor: slate # slate, gray, mauve, olive, sand, ...

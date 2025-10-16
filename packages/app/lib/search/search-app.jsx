@@ -116,6 +116,7 @@ function createSearchStore() {
     facetsDocsMap: {},
     filters: {},
     activeFilterCount: 0,
+    annotationsEnabled: false,
   };
   const listeners = new Set();
   function notify() {
@@ -209,22 +210,34 @@ function createSearchStore() {
         counts = {};
       }
 
-      results =
-        type === "all"
-          ? base
-          : base.filter(
-              (r) => String(r.type).toLowerCase() === String(type).toLowerCase()
-            );
-      if (shouldFilterWorks && allowed) {
-        results = results.filter((r) => allowed.has(r && r.__docIndex));
-      }
+      const annotationMatches = base.filter((r) => r && r.annotation);
+      if (annotationMatches.length)
+        counts.annotation = annotationMatches.length;
 
-      if (type !== "all") {
-        try {
-          totalForType = records.filter(
-            (r) => String(r.type).toLowerCase() === String(type).toLowerCase()
-          ).length;
-        } catch (_) {}
+      const typeLower = String(type).toLowerCase();
+      if (typeLower === "annotation") {
+        results = annotationMatches.map((r) => ({
+          ...r,
+          type: "annotation",
+          originalType: r ? r.type : undefined,
+        }));
+        totalForType = annotationMatches.length;
+      } else {
+        results =
+          typeLower === "all"
+            ? base
+            : base.filter((r) => String(r.type).toLowerCase() === typeLower);
+        if (shouldFilterWorks && allowed) {
+          results = results.filter((r) => allowed.has(r && r.__docIndex));
+        }
+
+        if (typeLower !== "all") {
+          try {
+            totalForType = records.filter(
+              (r) => String(r.type).toLowerCase() === typeLower
+            ).length;
+          } catch (_) {}
+        }
       }
     }
     const {facetsDocsMap: _fMap, ...publicState} = state;
@@ -390,6 +403,7 @@ function createSearchStore() {
       // Try to load meta for cache-busting and tab order; fall back to hash of JSON
       let version = "";
       let tabsOrder = [];
+      let annotationsAssetPath = "";
       try {
         const meta = await fetch("./api/index.json")
           .then((r) => (r && r.ok ? r.json() : null))
@@ -403,11 +417,17 @@ function createSearchStore() {
             ? meta.search.tabs.order
             : [];
         tabsOrder = ord.map((s) => String(s)).filter(Boolean);
+        const annotationsAsset =
+          meta &&
+          meta.search &&
+          meta.search.assets &&
+          meta.search.assets.annotations;
+        if (annotationsAsset && annotationsAsset.path) {
+          annotationsAssetPath = String(annotationsAsset.path);
+        }
       } catch (_) {}
-      const res = await fetch(
-        "./api/search-index.json" +
-          (version ? `?v=${encodeURIComponent(version)}` : "")
-      );
+      const suffix = version ? `?v=${encodeURIComponent(version)}` : "";
+      const res = await fetch(`./api/search-index.json${suffix}`);
       const text = await res.text();
       const parsed = (() => {
         try {
@@ -416,16 +436,88 @@ function createSearchStore() {
           return [];
         }
       })();
-      const rawData = Array.isArray(parsed)
+      const indexRecords = Array.isArray(parsed)
         ? parsed
         : parsed && parsed.records
         ? parsed.records
         : [];
-      const data = rawData.map((rec, i) => ({...(rec || {}), __docIndex: i}));
+
+      let displayRecords = [];
+      try {
+        const displayRes = await fetch(`./api/search-records.json${suffix}`);
+        if (displayRes && displayRes.ok) {
+          const displayJson = await displayRes.json().catch(() => []);
+          displayRecords = Array.isArray(displayJson)
+            ? displayJson
+            : displayJson && Array.isArray(displayJson.records)
+            ? displayJson.records
+            : [];
+        }
+      } catch (_) {}
+
+      const displayMap = new Map();
+      displayRecords.forEach((rec) => {
+        if (!rec || typeof rec !== "object") return;
+        const key = rec.id ? String(rec.id) : rec.href ? String(rec.href) : "";
+        if (!key) return;
+        displayMap.set(key, rec);
+      });
+
+      let annotationsRecords = [];
+      if (annotationsAssetPath) {
+        try {
+          const annotationsUrl = `./api/${annotationsAssetPath.replace(/^\/+/, '')}` + (version ? `?v=${encodeURIComponent(version)}` : "");
+          const annotationsRes = await fetch(annotationsUrl);
+          if (annotationsRes && annotationsRes.ok) {
+            const annotationsJson = await annotationsRes.json().catch(() => []);
+            annotationsRecords = Array.isArray(annotationsJson)
+              ? annotationsJson
+              : annotationsJson && Array.isArray(annotationsJson.records)
+              ? annotationsJson.records
+              : [];
+          }
+        } catch (_) {}
+      }
+
+      const annotationsMap = new Map();
+      annotationsRecords.forEach((rec, idx) => {
+        if (!rec || typeof rec !== "object") return;
+        const key = rec.id ? String(rec.id) : String(idx);
+        const text = rec.annotation ? String(rec.annotation) : rec.text ? String(rec.text) : "";
+        if (!key || !text) return;
+        annotationsMap.set(key, text);
+      });
+
+      const data = indexRecords.map((rec, i) => {
+        const key = rec && rec.id ? String(rec.id) : String(i);
+        const display = key ? displayMap.get(key) : null;
+        const merged = { ...(display || {}), ...(rec || {}), __docIndex: i };
+        if (!merged.id && key) merged.id = key;
+        if (!merged.href && display && display.href) merged.href = String(display.href);
+        if (!merged.title) merged.title = merged.href || "";
+        if (!Array.isArray(merged.metadata)) {
+          const meta = Array.isArray(rec && rec.metadata) ? rec.metadata : [];
+          merged.metadata = meta;
+        }
+        if (annotationsMap.has(key) && !merged.annotation)
+          merged.annotation = annotationsMap.get(key);
+        return merged;
+      });
       if (!version)
         version = (parsed && parsed.version) || (await sha256Hex(text));
 
       const idx = new Flex.Index({tokenize: "forward"});
+      const collectSearchText = (rec) => {
+        const parts = [];
+        if (rec && rec.title) parts.push(String(rec.title));
+        const metadata = Array.isArray(rec && rec.metadata) ? rec.metadata : [];
+        for (const value of metadata) {
+          if (value) parts.push(String(value));
+        }
+        if (rec && rec.summary) parts.push(String(rec.summary));
+        if (rec && rec.annotation) parts.push(String(rec.annotation));
+        return parts.join(" ").trim();
+      };
       let hydrated = false;
       const t0 =
         typeof performance !== "undefined" && performance.now
@@ -455,7 +547,8 @@ function createSearchStore() {
       if (!hydrated) {
         data.forEach((rec, i) => {
           try {
-            idx.add(i, rec && rec.title ? String(rec.title) : "");
+            const payload = collectSearchText(rec);
+            idx.add(i, payload);
           } catch (_) {}
         });
         try {
@@ -521,6 +614,8 @@ function createSearchStore() {
       const ts = Array.from(
         new Set(data.map((r) => String((r && r.type) || "page")))
       );
+      if (annotationsRecords.length && !ts.includes("annotation"))
+        ts.push("annotation");
       const order =
         Array.isArray(tabsOrder) && tabsOrder.length
           ? tabsOrder
@@ -548,7 +643,13 @@ function createSearchStore() {
           set({type: def});
         }
       } catch (_) {}
-      set({index: idx, records: data, types: ts, loading: false});
+      set({
+        index: idx,
+        records: data,
+        types: ts,
+        loading: false,
+        annotationsEnabled: annotationsRecords.length > 0,
+      });
       await hydrateFacets();
     } catch (_) {
       set({loading: false});
@@ -609,10 +710,17 @@ function useStore() {
 }
 
 function ResultsMount(props = {}) {
-  const {results, type, loading} = useStore();
+  const {results, type, loading, query} = useStore();
   if (loading) return <div className="text-slate-600">Loading…</div>;
   const layout = (props && props.layout) || "grid";
-  return <SearchResultsUI results={results} type={type} layout={layout} />;
+  return (
+    <SearchResultsUI
+      results={results}
+      type={type}
+      layout={layout}
+      query={query}
+    />
+  );
 }
 function TabsMount() {
   const {

@@ -1,5 +1,4 @@
 .canopy-sub-navigation {
-  --sub-nav-indent: 0.85rem;
   font-size: 0.95rem;
   color: inherit;
 }
@@ -26,12 +25,14 @@
   border-radius: 0.375rem;
   color: inherit;
   text-decoration: none;
-  transition: background-color 120ms ease, color 120ms ease;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
 }
 
 .canopy-sub-navigation__link:hover {
-  background-color: var(--sub-nav-hover, rgba(37, 99, 235, 0.08));
-  color: inherit;
+  color: var(--color-brand-default);
 }
 
 .canopy-sub-navigation__link.is-label {
@@ -40,37 +41,36 @@
 }
 
 .canopy-sub-navigation__link.is-active {
-  background-color: var(--sub-nav-active, rgba(37, 99, 235, 0.16));
-  color: var(--color-brand-900, #1d4ed8);
+  color: var(--color-gray-900, #1d4ed8);
   font-weight: 600;
 }
 
 .canopy-sub-navigation__list--nested {
   margin: 0.35rem 0 0.35rem 0.5rem;
-  padding-left: 0.75rem;
-  border-left: 1px solid var(--color-gray-200, #e4e4e7);
+  padding-left: 0.5rem;
+  border-left: 1px solid var(--color-gray-100, #e4e4e7);
 }
 
 .canopy-sub-navigation__link.depth-0 {
-  padding-left: 0.5rem;
+  padding-left: 0.25rem;
 }
 
 .canopy-sub-navigation__link.depth-1 {
-  padding-left: calc(0.5rem + var(--sub-nav-indent));
+  padding-left: calc(0.25rem);
 }
 
 .canopy-sub-navigation__link.depth-2 {
-  padding-left: calc(0.5rem + var(--sub-nav-indent) * 2);
+  padding-left: calc(0.25rem * 2);
 }
 
 .canopy-sub-navigation__link.depth-3 {
-  padding-left: calc(0.5rem + var(--sub-nav-indent) * 3);
+  padding-left: calc(0.25rem * 3);
 }
 
 .canopy-sub-navigation__link.depth-4 {
-  padding-left: calc(0.5rem + var(--sub-nav-indent) * 4);
+  padding-left: calc(0.25rem * 4);
 }
 
 .canopy-sub-navigation__link.depth-5 {
-  padding-left: calc(0.5rem + var(--sub-nav-indent) * 5);
+  padding-left: calc(0.25rem * 5);
 }

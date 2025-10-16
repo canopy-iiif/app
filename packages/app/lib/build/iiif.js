@@ -14,7 +14,7 @@ const {
   rootRelativeHref,
 } = require("../common");
 const mdx = require("./mdx");
-const { log, logLine, logResponse } = require("./log");
+const {log, logLine, logResponse} = require("./log");
 
 const IIIF_CACHE_DIR = path.resolve(".cache/iiif");
 const IIIF_CACHE_MANIFESTS_DIR = path.join(IIIF_CACHE_DIR, "manifests");
@@ -70,6 +70,189 @@ function firstLabelString(label) {
   return "Untitled";
 }
 
+function flattenMetadataValue(value, out, depth) {
+  if (!value || depth > 5) return;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (trimmed) out.push(trimmed);
+    return;
+  }
+  if (Array.isArray(value)) {
+    for (const entry of value) flattenMetadataValue(entry, out, depth + 1);
+    return;
+  }
+  if (typeof value === "object") {
+    for (const key of Object.keys(value))
+      flattenMetadataValue(value[key], out, depth + 1);
+    return;
+  }
+  try {
+    const str = String(value).trim();
+    if (str) out.push(str);
+  } catch (_) {}
+}
+
+function normalizeMetadataLabel(label) {
+  if (typeof label !== "string") return "";
+  const trimmed = label.trim().replace(/[:\s]+$/g, "");
+  return trimmed.toLowerCase();
+}
+
+function extractSummaryValues(manifest) {
+  const values = [];
+  try {
+    flattenMetadataValue(manifest && manifest.summary, values, 0);
+  } catch (_) {}
+  const unique = Array.from(
+    new Set(values.map((val) => String(val || "").trim()).filter(Boolean))
+  );
+  if (!unique.length) return "";
+  return unique.join(" ");
+}
+
+function stripHtml(value) {
+  try {
+    return String(value || "")
+      .replace(/<[^>]*>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  } catch (_) {
+    return "";
+  }
+}
+
+function collectTextualBody(body, out) {
+  if (!body) return;
+  if (Array.isArray(body)) {
+    for (const entry of body) collectTextualBody(entry, out);
+    return;
+  }
+  if (typeof body === "string") {
+    const text = stripHtml(body);
+    if (text) out.push(text);
+    return;
+  }
+  if (typeof body !== "object") return;
+  const type = String(body.type || "").toLowerCase();
+  const format = String(body.format || "").toLowerCase();
+  const isTextual =
+    type === "textualbody" ||
+    format.startsWith("text/") ||
+    typeof body.value === "string" ||
+    Array.isArray(body.value);
+  if (!isTextual) return;
+  if (body.value !== undefined) collectTextualBody(body.value, out);
+  if (body.label !== undefined) collectTextualBody(body.label, out);
+  if (body.body !== undefined) collectTextualBody(body.body, out);
+  if (body.items !== undefined) collectTextualBody(body.items, out);
+  if (body.text !== undefined) collectTextualBody(body.text, out);
+}
+
+function extractAnnotationText(manifest, options = {}) {
+  if (!manifest || typeof manifest !== "object") return "";
+  if (!options.enabled) return "";
+  const motivations =
+    options.motivations instanceof Set ? options.motivations : new Set();
+  const allowAll = motivations.size === 0;
+  const results = [];
+  const seenText = new Set();
+  const seenNodes = new Set();
+
+  function matchesMotivation(value) {
+    if (allowAll) return true;
+    if (!value) return false;
+    if (Array.isArray(value)) {
+      return value.some((entry) => matchesMotivation(entry));
+    }
+    try {
+      const norm = String(value || "")
+        .trim()
+        .toLowerCase();
+      return motivations.has(norm);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function handleAnnotation(annotation) {
+    if (!annotation || typeof annotation !== "object") return;
+    if (!matchesMotivation(annotation.motivation)) return;
+    const body = annotation.body;
+    const texts = [];
+    collectTextualBody(body, texts);
+    for (const text of texts) {
+      if (!text) continue;
+      if (seenText.has(text)) continue;
+      seenText.add(text);
+      results.push(text);
+    }
+  }
+
+  function walk(value) {
+    if (!value) return;
+    if (Array.isArray(value)) {
+      for (const entry of value) walk(entry);
+      return;
+    }
+    if (typeof value !== "object") return;
+    if (seenNodes.has(value)) return;
+    seenNodes.add(value);
+    if (Array.isArray(value.annotations)) {
+      for (const page of value.annotations) {
+        if (page && Array.isArray(page.items)) {
+          for (const item of page.items) handleAnnotation(item);
+        }
+        walk(page);
+      }
+    }
+    if (Array.isArray(value.items)) {
+      for (const item of value.items) walk(item);
+    }
+    for (const key of Object.keys(value)) {
+      if (key === "annotations" || key === "items") continue;
+      walk(value[key]);
+    }
+  }
+
+  walk(manifest);
+  if (!results.length) return "";
+  return results.join(" ");
+}
+
+function extractMetadataValues(manifest, options = {}) {
+  const meta = Array.isArray(manifest && manifest.metadata)
+    ? manifest.metadata
+    : [];
+  if (!meta.length) return [];
+  const includeAll = !!options.includeAll;
+  const labelsSet = includeAll
+    ? null
+    : options && options.labelsSet instanceof Set
+      ? options.labelsSet
+      : new Set();
+  const seen = new Set();
+  const out = [];
+  for (const entry of meta) {
+    if (!entry) continue;
+    const label = firstLabelString(entry.label);
+    if (!label) continue;
+    if (!includeAll && labelsSet && labelsSet.size) {
+      const normLabel = normalizeMetadataLabel(label);
+      if (!labelsSet.has(normLabel)) continue;
+    }
+    const values = [];
+    flattenMetadataValue(entry.value, values, 0);
+    for (const val of values) {
+      const normalized = String(val || "").trim();
+      if (!normalized) continue;
+      if (seen.has(normalized)) continue;
+      seen.add(normalized);
+      out.push(normalized);
+    }
+  }
+  return out;
+}
+
 async function normalizeToV3(resource) {
   try {
     const helpers = await import("@iiif/helpers");
@@ -107,12 +290,12 @@ function normalizeIiifId(raw) {
   }
 }
 
-async function readJsonFromUri(uri, options = { log: false }) {
+async function readJsonFromUri(uri, options = {log: false}) {
   try {
     if (/^https?:\/\//i.test(uri)) {
       if (typeof fetch !== "function") return null;
       const res = await fetch(uri, {
-        headers: { Accept: "application/json" },
+        headers: {Accept: "application/json"},
       }).catch(() => null);
       if (options && options.log) {
         try {
@@ -122,14 +305,14 @@ async function readJsonFromUri(uri, options = { log: false }) {
             });
           } else {
             const code = res ? res.status : "ERR";
-            logLine(`⊘ ${String(uri)} → ${code}`, "red", { bright: true });
+            logLine(`⊘ ${String(uri)} → ${code}`, "red", {bright: true});
           }
         } catch (_) {}
       }
       if (!res || !res.ok) return null;
       return await res.json();
     }
-    const p = uri.startsWith("file://") ? new URL(uri) : { pathname: uri };
+    const p = uri.startsWith("file://") ? new URL(uri) : {pathname: uri};
     const localPath = uri.startsWith("file://")
       ? p.pathname
       : path.resolve(String(p.pathname));
@@ -168,14 +351,14 @@ async function loadManifestIndex() {
         const byId = Array.isArray(idx.byId)
           ? idx.byId
           : idx.byId && typeof idx.byId === "object"
-          ? Object.keys(idx.byId).map((k) => ({
-              id: k,
-              type: "Manifest",
-              slug: String(idx.byId[k] || ""),
-              parent: (idx.parents && idx.parents[k]) || "",
-            }))
-          : [];
-        return { byId, collection: idx.collection || null };
+            ? Object.keys(idx.byId).map((k) => ({
+                id: k,
+                type: "Manifest",
+                slug: String(idx.byId[k] || ""),
+                parent: (idx.parents && idx.parents[k]) || "",
+              }))
+            : [];
+        return {byId, collection: idx.collection || null};
       }
     }
     // Legacy index location retained for backward compatibility
@@ -185,14 +368,14 @@ async function loadManifestIndex() {
         const byId = Array.isArray(idx.byId)
           ? idx.byId
           : idx.byId && typeof idx.byId === "object"
-          ? Object.keys(idx.byId).map((k) => ({
-              id: k,
-              type: "Manifest",
-              slug: String(idx.byId[k] || ""),
-              parent: (idx.parents && idx.parents[k]) || "",
-            }))
-          : [];
-        return { byId, collection: idx.collection || null };
+            ? Object.keys(idx.byId).map((k) => ({
+                id: k,
+                type: "Manifest",
+                slug: String(idx.byId[k] || ""),
+                parent: (idx.parents && idx.parents[k]) || "",
+              }))
+            : [];
+        return {byId, collection: idx.collection || null};
       }
     }
     // Legacy manifests index retained for backward compatibility
@@ -202,18 +385,18 @@ async function loadManifestIndex() {
         const byId = Array.isArray(idx.byId)
           ? idx.byId
           : idx.byId && typeof idx.byId === "object"
-          ? Object.keys(idx.byId).map((k) => ({
-              id: k,
-              type: "Manifest",
-              slug: String(idx.byId[k] || ""),
-              parent: (idx.parents && idx.parents[k]) || "",
-            }))
-          : [];
-        return { byId, collection: idx.collection || null };
+            ? Object.keys(idx.byId).map((k) => ({
+                id: k,
+                type: "Manifest",
+                slug: String(idx.byId[k] || ""),
+                parent: (idx.parents && idx.parents[k]) || "",
+              }))
+            : [];
+        return {byId, collection: idx.collection || null};
       }
     }
   } catch (_) {}
-  return { byId: [], collection: null };
+  return {byId: [], collection: null};
 }
 
 async function saveManifestIndex(index) {
@@ -228,10 +411,10 @@ async function saveManifestIndex(index) {
     await fsp.writeFile(IIIF_CACHE_INDEX, JSON.stringify(out, null, 2), "utf8");
     // Remove legacy files to avoid confusion
     try {
-      await fsp.rm(IIIF_CACHE_INDEX_LEGACY, { force: true });
+      await fsp.rm(IIIF_CACHE_INDEX_LEGACY, {force: true});
     } catch (_) {}
     try {
-      await fsp.rm(IIIF_CACHE_INDEX_MANIFESTS, { force: true });
+      await fsp.rm(IIIF_CACHE_INDEX_MANIFESTS, {force: true});
     } catch (_) {}
   } catch (_) {}
 }
@@ -240,7 +423,7 @@ async function saveManifestIndex(index) {
 const MEMO_ID_TO_SLUG = new Map();
 // Track slugs chosen during this run to avoid collisions when multiple
 // collections/manifests share the same base title but mappings aren't yet saved.
-const RESERVED_SLUGS = { Manifest: new Set(), Collection: new Set() };
+const RESERVED_SLUGS = {Manifest: new Set(), Collection: new Set()};
 
 function computeUniqueSlug(index, baseSlug, id, type) {
   const byId = Array.isArray(index && index.byId) ? index.byId : [];
@@ -371,7 +554,7 @@ async function saveCachedManifest(manifest, id, parentId) {
     const index = await loadManifestIndex();
     const title = firstLabelString(manifest && manifest.label);
     const baseSlug =
-      slugify(title || "untitled", { lower: true, strict: true, trim: true }) ||
+      slugify(title || "untitled", {lower: true, strict: true, trim: true}) ||
       "untitled";
     const slug = computeUniqueSlug(index, baseSlug, id, "Manifest");
     ensureDirSync(IIIF_CACHE_MANIFESTS_DIR);
@@ -399,13 +582,16 @@ async function saveCachedManifest(manifest, id, parentId) {
 async function ensureFeaturedInCache(cfg) {
   try {
     const CONFIG = cfg || (await loadConfig());
-    const featured = Array.isArray(CONFIG && CONFIG.featured) ? CONFIG.featured : [];
+    const featured = Array.isArray(CONFIG && CONFIG.featured)
+      ? CONFIG.featured
+      : [];
     if (!featured.length) return;
-    const { getThumbnail, getRepresentativeImage } = require("../iiif/thumbnail");
-    const { size: thumbSize, unsafe: unsafeThumbs } = resolveThumbnailPreferences();
+    const {getThumbnail, getRepresentativeImage} = require("../iiif/thumbnail");
+    const {size: thumbSize, unsafe: unsafeThumbs} =
+      resolveThumbnailPreferences();
     const HERO_THUMBNAIL_SIZE = 1200;
     for (const rawId of featured) {
-      const id = normalizeIiifId(String(rawId || ''));
+      const id = normalizeIiifId(String(rawId || ""));
       if (!id) continue;
       let manifest = await loadCachedManifestById(id);
       if (!manifest) {
@@ -413,7 +599,7 @@ async function ensureFeaturedInCache(cfg) {
         if (!m) continue;
         const v3 = await normalizeToV3(m);
         if (!v3 || !v3.id) continue;
-        await saveCachedManifest(v3, id, '');
+        await saveCachedManifest(v3, id, "");
         manifest = v3;
       }
       // Ensure thumbnail fields exist in index for this manifest (if computable)
@@ -424,8 +610,9 @@ async function ensureFeaturedInCache(cfg) {
         const entry = idx.byId.find(
           (e) =>
             e &&
-            e.type === 'Manifest' &&
-            normalizeIiifId(String(e.id)) === normalizeIiifId(String(manifest.id))
+            e.type === "Manifest" &&
+            normalizeIiifId(String(e.id)) ===
+              normalizeIiifId(String(manifest.id))
         );
         if (!entry) continue;
 
@@ -436,11 +623,11 @@ async function ensureFeaturedInCache(cfg) {
             entry.thumbnail = nextUrl;
             touched = true;
           }
-          if (typeof t.width === 'number') {
+          if (typeof t.width === "number") {
             if (entry.thumbnailWidth !== t.width) touched = true;
             entry.thumbnailWidth = t.width;
           }
-          if (typeof t.height === 'number') {
+          if (typeof t.height === "number") {
             if (entry.thumbnailHeight !== t.height) touched = true;
             entry.thumbnailHeight = t.height;
           }
@@ -449,7 +636,7 @@ async function ensureFeaturedInCache(cfg) {
         try {
           const heroSource = (() => {
             if (manifest && manifest.thumbnail) {
-              const clone = { ...manifest };
+              const clone = {...manifest};
               try {
                 delete clone.thumbnail;
               } catch (_) {
@@ -470,14 +657,14 @@ async function ensureFeaturedInCache(cfg) {
               entry.heroThumbnail = nextHero;
               touched = true;
             }
-            if (typeof heroRep.width === 'number') {
+            if (typeof heroRep.width === "number") {
               if (entry.heroThumbnailWidth !== heroRep.width) touched = true;
               entry.heroThumbnailWidth = heroRep.width;
             } else if (entry.heroThumbnailWidth !== undefined) {
               delete entry.heroThumbnailWidth;
               touched = true;
             }
-            if (typeof heroRep.height === 'number') {
+            if (typeof heroRep.height === "number") {
               if (entry.heroThumbnailHeight !== heroRep.height) touched = true;
               entry.heroThumbnailHeight = heroRep.height;
             } else if (entry.heroThumbnailHeight !== undefined) {
@@ -511,12 +698,12 @@ async function ensureFeaturedInCache(cfg) {
 
 async function flushManifestCache() {
   try {
-    await fsp.rm(IIIF_CACHE_MANIFESTS_DIR, { recursive: true, force: true });
+    await fsp.rm(IIIF_CACHE_MANIFESTS_DIR, {recursive: true, force: true});
   } catch (_) {}
   ensureDirSync(IIIF_CACHE_MANIFESTS_DIR);
   ensureDirSync(IIIF_CACHE_COLLECTIONS_DIR);
   try {
-    await fsp.rm(IIIF_CACHE_COLLECTIONS_DIR, { recursive: true, force: true });
+    await fsp.rm(IIIF_CACHE_COLLECTIONS_DIR, {recursive: true, force: true});
   } catch (_) {}
   ensureDirSync(IIIF_CACHE_COLLECTIONS_DIR);
 }
@@ -602,8 +789,8 @@ async function saveCachedCollection(collection, id, parentId) {
     await fsp.writeFile(dest, JSON.stringify(collection, null, 2), "utf8");
     try {
       if (process.env.CANOPY_IIIF_DEBUG === "1") {
-        const { logLine } = require("./log");
-        logLine(`IIIF: saved collection → ${slug}.json`, "cyan", { dim: true });
+        const {logLine} = require("./log");
+        logLine(`IIIF: saved collection → ${slug}.json`, "cyan", {dim: true});
       }
     } catch (_) {}
     index.byId = Array.isArray(index.byId) ? index.byId : [];
@@ -639,18 +826,69 @@ async function loadConfig() {
 // Traverse IIIF collection, cache manifests/collections, and render pages
 async function buildIiifCollectionPages(CONFIG) {
   const cfg = CONFIG || (await loadConfig());
+
   const collectionUri =
-    (cfg && cfg.collection && cfg.collection.uri) ||
-    process.env.CANOPY_COLLECTION_URI ||
-    "";
-  if (!collectionUri) return { searchRecords: [] };
+    (cfg && cfg.collection) || process.env.CANOPY_COLLECTION_URI || "";
+  if (!collectionUri) return {searchRecords: []};
+
+  const searchIndexCfg = (cfg && cfg.search && cfg.search.index) || {};
+  const metadataCfg = (searchIndexCfg && searchIndexCfg.metadata) || {};
+  const summaryCfg = (searchIndexCfg && searchIndexCfg.summary) || {};
+  const annotationsCfg = (searchIndexCfg && searchIndexCfg.annotations) || {};
+  const metadataEnabled =
+    metadataCfg && Object.prototype.hasOwnProperty.call(metadataCfg, "enabled")
+      ? resolveBoolean(metadataCfg.enabled)
+      : true;
+  const summaryEnabled =
+    summaryCfg && Object.prototype.hasOwnProperty.call(summaryCfg, "enabled")
+      ? resolveBoolean(summaryCfg.enabled)
+      : true;
+  const annotationsEnabled =
+    annotationsCfg &&
+    Object.prototype.hasOwnProperty.call(annotationsCfg, "enabled")
+      ? resolveBoolean(annotationsCfg.enabled)
+      : false;
+  const metadataIncludeAll = metadataEnabled && resolveBoolean(metadataCfg.all);
+  const metadataLabelsRaw = Array.isArray(cfg && cfg.metadata)
+    ? cfg.metadata
+    : [];
+  const metadataLabelSet = new Set(
+    metadataLabelsRaw
+      .map((label) => normalizeMetadataLabel(String(label || "")))
+      .filter(Boolean)
+  );
+  const metadataOptions = {
+    enabled:
+      metadataEnabled &&
+      (metadataIncludeAll || (metadataLabelSet && metadataLabelSet.size > 0)),
+    includeAll: metadataIncludeAll,
+    labelsSet: metadataIncludeAll ? null : metadataLabelSet,
+  };
+  const summaryOptions = {
+    enabled: summaryEnabled,
+  };
+  const annotationMotivations = new Set(
+    Array.isArray(annotationsCfg && annotationsCfg.motivation)
+      ? annotationsCfg.motivation
+          .map((m) =>
+            String(m || "")
+              .trim()
+              .toLowerCase()
+          )
+          .filter(Boolean)
+      : []
+  );
+  const annotationsOptions = {
+    enabled: annotationsEnabled,
+    motivations: annotationMotivations,
+  };
 
   // Fetch top-level collection
-  logLine("• Traversing IIIF Collection(s)", "blue", { dim: true });
-  const root = await readJsonFromUri(collectionUri, { log: true });
+  logLine("• Traversing IIIF Collection(s)", "blue", {dim: true});
+  const root = await readJsonFromUri(collectionUri, {log: true});
   if (!root) {
     logLine("IIIF: Failed to fetch collection", "red");
-    return { searchRecords: [] };
+    return {searchRecords: []};
   }
   const normalizedRoot = await normalizeToV3(root);
   // Save collection cache
@@ -682,7 +920,7 @@ async function buildIiifCollectionPages(CONFIG) {
       const col =
         typeof colLike === "object" && colLike && colLike.items
           ? colLike
-          : await readJsonFromUri(uri, { log: true });
+          : await readJsonFromUri(uri, {log: true});
       if (!col) return;
       const ncol = await normalizeToV3(col);
       const colId = String((ncol && (ncol.id || uri)) || uri);
@@ -698,7 +936,7 @@ async function buildIiifCollectionPages(CONFIG) {
         const t = String(entry.type || entry["@type"] || "").toLowerCase();
         const entryId = entry.id || entry["@id"] || "";
         if (t === "manifest") {
-          tasks.push({ id: entryId, parent: colId });
+          tasks.push({id: entryId, parent: colId});
         } else if (t === "collection") {
           await gatherFromCollection(entryId, colId);
         }
@@ -707,7 +945,7 @@ async function buildIiifCollectionPages(CONFIG) {
     } catch (_) {}
   }
   await gatherFromCollection(normalizedRoot, "");
-  if (!tasks.length) return { searchRecords: [] };
+  if (!tasks.length) return {searchRecords: []};
 
   // Split into chunks and process with limited concurrency
   const chunkSize = resolvePositiveInteger(
@@ -721,12 +959,11 @@ async function buildIiifCollectionPages(CONFIG) {
     logLine(
       `• Fetching ${tasks.length} Manifest(s) in ${chunks} chunk(s) across ${collectionsCount} Collection(s)`,
       "blue",
-      { dim: true }
+      {dim: true}
     );
   } catch (_) {}
   const iiifRecords = [];
-  const { size: thumbSize, unsafe: unsafeThumbs } =
-    resolveThumbnailPreferences();
+  const {size: thumbSize, unsafe: unsafeThumbs} = resolveThumbnailPreferences();
 
   // Compile the works layout component once per run
   const worksLayoutPath = path.join(CONTENT_DIR, "works", "_layout.mdx");
@@ -740,14 +977,12 @@ async function buildIiifCollectionPages(CONFIG) {
     WorksLayoutComp = await mdx.compileMdxToComponent(worksLayoutPath);
   } catch (err) {
     const message = err && err.message ? err.message : err;
-    throw new Error(
-      `Failed to compile content/works/_layout.mdx: ${message}`
-    );
+    throw new Error(`Failed to compile content/works/_layout.mdx: ${message}`);
   }
 
   for (let ci = 0; ci < chunks; ci++) {
     const chunk = tasks.slice(ci * chunkSize, (ci + 1) * chunkSize);
-    logLine(`• Chunk ${ci + 1}/${chunks}`, "blue", { dim: true });
+    logLine(`• Chunk ${ci + 1}/${chunks}`, "blue", {dim: true});
 
     const concurrency = resolvePositiveInteger(
       process.env.CANOPY_FETCH_CONCURRENCY,
@@ -783,7 +1018,7 @@ async function buildIiifCollectionPages(CONFIG) {
         } else if (/^https?:\/\//i.test(String(id || ""))) {
           try {
             const res = await fetch(String(id), {
-              headers: { Accept: "application/json" },
+              headers: {Accept: "application/json"},
             }).catch(() => null);
             if (res && res.ok) {
               lns.push([`↓ ${String(id)} → ${res.status}`, "yellow"]);
@@ -808,7 +1043,7 @@ async function buildIiifCollectionPages(CONFIG) {
           }
         } else if (/^file:\/\//i.test(String(id || ""))) {
           try {
-            const local = await readJsonFromUri(String(id), { log: false });
+            const local = await readJsonFromUri(String(id), {log: false});
             if (!local) {
               lns.push([`⊘ ${String(id)} → ERR`, "red"]);
               continue;
@@ -871,14 +1106,14 @@ async function buildIiifCollectionPages(CONFIG) {
           } catch (_) {
             components = {};
           }
-          const { withBase } = require("../common");
+          const {withBase} = require("../common");
           const Anchor = function A(props) {
-            let { href = "", ...rest } = props || {};
+            let {href = "", ...rest} = props || {};
             href = withBase(href);
-            return React.createElement("a", { href, ...rest }, props.children);
+            return React.createElement("a", {href, ...rest}, props.children);
           };
           // Map exported UI components into MDX and add anchor helper
-          const compMap = { ...components, a: Anchor };
+          const compMap = {...components, a: Anchor};
           let MDXProvider = null;
           try {
             const mod = await import("@mdx-js/react");
@@ -886,10 +1121,10 @@ async function buildIiifCollectionPages(CONFIG) {
           } catch (_) {
             MDXProvider = null;
           }
-          const { loadAppWrapper } = require("./mdx");
+          const {loadAppWrapper} = require("./mdx");
           const app = await loadAppWrapper();
 
-          const mdxContent = React.createElement(WorksLayoutComp, { manifest });
+          const mdxContent = React.createElement(WorksLayoutComp, {manifest});
           const siteTree = app && app.App ? mdxContent : mdxContent;
           const wrappedApp =
             app && app.App
@@ -898,7 +1133,7 @@ async function buildIiifCollectionPages(CONFIG) {
           const page = MDXProvider
             ? React.createElement(
                 MDXProvider,
-                { components: compMap },
+                {components: compMap},
                 wrappedApp
               )
             : wrappedApp;
@@ -971,7 +1206,11 @@ async function buildIiifCollectionPages(CONFIG) {
           else if (viewerRel) jsRel = viewerRel;
 
           let headExtra = head;
-          const needsReact = !!(needsHydrateViewer || needsRelated || needsHero);
+          const needsReact = !!(
+            needsHydrateViewer ||
+            needsRelated ||
+            needsHero
+          );
           let vendorTag = "";
           if (needsReact) {
             try {
@@ -1005,7 +1244,7 @@ async function buildIiifCollectionPages(CONFIG) {
           if (extraScripts.length)
             headExtra = extraScripts.join("") + headExtra;
           try {
-            const { BASE_PATH } = require("../common");
+            const {BASE_PATH} = require("../common");
             if (BASE_PATH)
               vendorTag =
                 `<script>window.CANOPY_BASE_PATH=${JSON.stringify(
@@ -1032,7 +1271,7 @@ async function buildIiifCollectionPages(CONFIG) {
           let thumbWidth = undefined;
           let thumbHeight = undefined;
           try {
-            const { getThumbnail } = require("../iiif/thumbnail");
+            const {getThumbnail} = require("../iiif/thumbnail");
             const t = await getThumbnail(manifest, thumbSize, unsafeThumbs);
             if (t && t.url) {
               thumbUrl = String(t.url);
@@ -1057,6 +1296,33 @@ async function buildIiifCollectionPages(CONFIG) {
               }
             }
           } catch (_) {}
+          let metadataValues = [];
+          let summaryValue = "";
+          let annotationValue = "";
+          if (metadataOptions && metadataOptions.enabled) {
+            try {
+              metadataValues = extractMetadataValues(manifest, metadataOptions);
+            } catch (_) {
+              metadataValues = [];
+            }
+          }
+          if (summaryOptions && summaryOptions.enabled) {
+            try {
+              summaryValue = extractSummaryValues(manifest);
+            } catch (_) {
+              summaryValue = "";
+            }
+          }
+          if (annotationsOptions && annotationsOptions.enabled) {
+            try {
+              annotationValue = extractAnnotationText(
+                manifest,
+                annotationsOptions
+              );
+            } catch (_) {
+              annotationValue = "";
+            }
+          }
           iiifRecords.push({
             id: String(manifest.id || id),
             title,
@@ -1067,6 +1333,16 @@ async function buildIiifCollectionPages(CONFIG) {
               typeof thumbWidth === "number" ? thumbWidth : undefined,
             thumbnailHeight:
               typeof thumbHeight === "number" ? thumbHeight : undefined,
+            searchMetadataValues:
+              metadataValues && metadataValues.length
+                ? metadataValues
+                : undefined,
+            searchSummary:
+              summaryValue && summaryValue.length ? summaryValue : undefined,
+            searchAnnotation:
+              annotationValue && annotationValue.length
+                ? annotationValue
+                : undefined,
           });
         } catch (e) {
           lns.push([
@@ -1079,12 +1355,12 @@ async function buildIiifCollectionPages(CONFIG) {
       }
     }
     const workers = Array.from(
-      { length: Math.min(concurrency, chunk.length) },
+      {length: Math.min(concurrency, chunk.length)},
       () => worker()
     );
     await Promise.all(workers);
   }
-  return { iiifRecords };
+  return {iiifRecords};
 }
 
 module.exports = {
@@ -1101,7 +1377,7 @@ module.exports = {
 // Debug: list collections cache after traversal
 try {
   if (process.env.CANOPY_IIIF_DEBUG === "1") {
-    const { logLine } = require("./log");
+    const {logLine} = require("./log");
     try {
       const files = fs.existsSync(IIIF_CACHE_COLLECTIONS_DIR)
         ? fs
@@ -1113,7 +1389,7 @@ try {
         `IIIF: cache/collections (end): ${files.length} file(s)` +
           (head ? ` [${head}${files.length > 8 ? ", …" : ""}]` : ""),
         "blue",
-        { dim: true }
+        {dim: true}
       );
     } catch (_) {}
   }

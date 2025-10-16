@@ -70,6 +70,7 @@ export default function SearchPanelForm(props = {}) {
     label,
     searchPath = "/search",
     inputId: inputIdProp,
+    clearLabel = "Clear search",
   } = props || {};
 
   const text =
@@ -104,6 +105,7 @@ export default function SearchPanelForm(props = {}) {
       const target = event.target;
       if (target && typeof target.closest === "function") {
         if (target.closest("[data-canopy-search-form-trigger]")) return;
+        if (target.closest("[data-canopy-search-form-clear]")) return;
       }
       event.preventDefault();
       focusInput();
@@ -120,9 +122,23 @@ export default function SearchPanelForm(props = {}) {
   }, []);
 
   const handleInputChange = React.useCallback((event) => {
-    const nextHasValue = Boolean(event?.target?.value && event.target.value.trim());
+    const nextHasValue = Boolean(
+      event?.target?.value && event.target.value.trim()
+    );
     setHasValue(nextHasValue);
   }, []);
+
+  const handleClear = React.useCallback((event) => {}, []);
+
+  const handleClearKey = React.useCallback(
+    (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        handleClear(event);
+      }
+    },
+    [handleClear]
+  );
 
   return (
     <form
@@ -133,13 +149,9 @@ export default function SearchPanelForm(props = {}) {
       spellCheck="false"
       className="canopy-search-form canopy-search-form-shell"
       onPointerDown={handlePointerDown}
-      data-placeholder={placeholder || ""}
       data-has-value={hasValue ? "1" : "0"}
     >
-      <label
-        htmlFor={inputId}
-        className="canopy-search-form__label"
-      >
+      <label htmlFor={inputId} className="canopy-search-form__label">
         <MagnifyingGlassIcon className="canopy-search-form__icon" />
         <input
           id={inputId}
@@ -155,6 +167,19 @@ export default function SearchPanelForm(props = {}) {
           onInput={handleInputChange}
         />
       </label>
+      {hasValue ? (
+        <button
+          type="button"
+          className="canopy-search-form__clear"
+          onClick={handleClear}
+          onPointerDown={(event) => event.stopPropagation()}
+          onKeyDown={handleClearKey}
+          aria-label={clearLabel}
+          data-canopy-search-form-clear
+        >
+          ×
+        </button>
+      ) : null}
       <button
         type="submit"
         data-canopy-search-form-trigger="submit"

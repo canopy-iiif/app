@@ -10,8 +10,9 @@
 /* CSS variables */
 @layer properties {
   :root {
-    --font-sans: "DM Sans", system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
-    --font-serif: "DM Serif Display", Georgia, "Times New Roman", serif;
+    --font-sans:
+      "IBM Plex Sans", system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+    --font-serif: "Noto Serif", Georgia, "Times New Roman", serif;
     --font-mono: "ui-monospace", Menlo, Consolas, monospace;
   }
 }
@@ -21,7 +22,8 @@
 }
 @layer base {
   html {
-    font-family: var(--font-sans);
+    font-family: var(--font-serif);
     font-size: 100%;
+    font-weight: 300;
   }
 }

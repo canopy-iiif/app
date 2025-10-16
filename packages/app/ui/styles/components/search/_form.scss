@@ -38,9 +38,13 @@
     );
   }
 
-  &:focus-within::after,
-  &[data-has-value="1"]::after {
-    opacity: 0;
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+    fill: var(--color-gray-400, #b9bbc6);
+    pointer-events: none;
+    transition: fill var(--duration-fast, 150ms) var(--easing-standard, ease);
   }
 
   input[data-canopy-search-form-input] {
@@ -49,12 +53,23 @@
     outline: none;
     background: transparent;
     box-shadow: none;
-    opacity: 0;
     caret-color: transparent;
     transition: opacity var(--duration-fast, 150ms) ease;
   }
 
-  &:focus-within input[data-canopy-search-form-input],
+  &:focus-within {
+    background-color: var(--color-brand-100);
+
+    input[data-canopy-search-form-input] {
+      opacity: 1;
+      caret-color: var(--color-gray-900, #121418);
+    }
+
+    svg {
+      fill: var(--color-brand-default, #3e63dd);
+    }
+  }
+
   &[data-has-value="1"] input[data-canopy-search-form-input] {
     opacity: 1;
     caret-color: var(--color-gray-900, #121418);
@@ -103,13 +118,33 @@
   padding: var(--search-form-label-padding-y) var(--search-form-label-padding-x);
 }
 
-.canopy-search-form__icon {
-  width: 1.25rem;
-  height: 1.25rem;
-  flex-shrink: 0;
-  color: var(--color-gray-400, #b9bbc6);
-  pointer-events: none;
+.canopy-search-form__clear {
+  border: 0;
+  background: transparent;
+  color: rgba(100, 116, 139, 0.9);
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: 0 0.25rem;
+  margin-right: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
   transition: color var(--duration-fast, 150ms) var(--easing-standard, ease);
+
+  &:hover,
+  &:focus-visible {
+    color: var(--color-brand-600, #3e63dd);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-gray-100, #ffffff),
+      0 0 0 4px
+        color-mix(in srgb, var(--color-brand-500, #3e63dd) 65%, transparent);
+    border-radius: 999px;
+  }
 }
 
 .canopy-search-form__input {
@@ -136,6 +171,7 @@
   align-items: center;
   gap: 0.382rem;
   border-radius: 0.382rem;
+  margin-right: 1px;
   border: 0;
   background: var(--color-brand-default);
   color: #fff;

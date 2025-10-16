@@ -79,17 +79,99 @@ async function loadRecords() {
       try {
         const base = rootBase();
         let version = '';
+        let annotationsAssetPath = '';
         try {
           const meta = await fetch(`${base}/api/index.json`).then((r) => (r && r.ok ? r.json() : null)).catch(() => null);
           if (meta && typeof meta.version === 'string') version = meta.version;
+          const annotationsAsset =
+            meta &&
+            meta.search &&
+            meta.search.assets &&
+            meta.search.assets.annotations;
+          if (annotationsAsset && annotationsAsset.path) {
+            annotationsAssetPath = String(annotationsAsset.path);
+          }
         } catch (_) {}
         const suffix = version ? `?v=${encodeURIComponent(version)}` : '';
-        const response = await fetch(`${base}/api/search-index.json${suffix}`).catch(() => null);
-        if (!response || !response.ok) return [];
-        const json = await response.json().catch(() => []);
-        if (Array.isArray(json)) return json;
-        if (json && Array.isArray(json.records)) return json.records;
-        return [];
+        const indexUrl = `${base}/api/search-index.json${suffix}`;
+        const recordsUrl = `${base}/api/search-records.json${suffix}`;
+        const [indexRes, displayRes] = await Promise.all([
+          fetch(indexUrl).catch(() => null),
+          fetch(recordsUrl).catch(() => null),
+        ]);
+        let indexRecords = [];
+        if (indexRes && indexRes.ok) {
+          try {
+            const raw = await indexRes.json();
+            indexRecords = Array.isArray(raw)
+              ? raw
+              : raw && Array.isArray(raw.records)
+              ? raw.records
+              : [];
+          } catch (_) {
+            indexRecords = [];
+          }
+        }
+        let displayRecords = [];
+        if (displayRes && displayRes.ok) {
+          try {
+            const raw = await displayRes.json();
+            displayRecords = Array.isArray(raw)
+              ? raw
+              : raw && Array.isArray(raw.records)
+              ? raw.records
+              : [];
+          } catch (_) {
+            displayRecords = [];
+          }
+        }
+        let annotationsRecords = [];
+        if (annotationsAssetPath) {
+          try {
+            const annotationsUrl = `${base}/api/${annotationsAssetPath.replace(/^\/+/, '')}${suffix}`;
+            const annotationsRes = await fetch(annotationsUrl).catch(() => null);
+            if (annotationsRes && annotationsRes.ok) {
+              const raw = await annotationsRes.json().catch(() => []);
+              annotationsRecords = Array.isArray(raw)
+                ? raw
+                : raw && Array.isArray(raw.records)
+                ? raw.records
+                : [];
+            }
+          } catch (_) {}
+        }
+        if (!indexRecords.length && displayRecords.length) {
+          return displayRecords;
+        }
+        const displayMap = new Map();
+        displayRecords.forEach((rec) => {
+          if (!rec || typeof rec !== 'object') return;
+          const key = rec.id ? String(rec.id) : rec.href ? String(rec.href) : '';
+          if (!key) return;
+          displayMap.set(key, rec);
+        });
+        const annotationsMap = new Map();
+        annotationsRecords.forEach((rec, idx) => {
+          if (!rec || typeof rec !== 'object') return;
+          const key = rec.id ? String(rec.id) : String(idx);
+          const text = rec.annotation ? String(rec.annotation) : rec.text ? String(rec.text) : '';
+          if (!key || !text) return;
+          annotationsMap.set(key, text);
+        });
+        return indexRecords.map((rec, idx) => {
+          const key = rec && rec.id ? String(rec.id) : String(idx);
+          const display = key ? displayMap.get(key) : null;
+          const merged = { ...(display || {}), ...(rec || {}) };
+          if (!merged.id && key) merged.id = key;
+          if (!merged.href && display && display.href) merged.href = String(display.href);
+          if (!Array.isArray(merged.metadata)) {
+            const meta = Array.isArray(rec && rec.metadata) ? rec.metadata : [];
+            merged.metadata = meta;
+          }
+          if (annotationsMap.has(key) && !merged.annotation)
+            merged.annotation = annotationsMap.get(key);
+          return merged;
+        });
       } catch (_) {
         return [];
       }
@@ -129,22 +211,43 @@ function renderList(list, records, groupOrder) {
     header.style.cssText = 'padding:6px 12px;font-weight:600;color:#374151';
     list.appendChild(header);
     const entries = groups.get(key) || [];
-    entries.forEach((record, index) => {
-      const item = document.createElement('div');
+    entries.forEach((record) => {
+      const href = withBase(String(record && record.href || ''));
+      const item = document.createElement('a');
       item.setAttribute('data-canopy-item', '');
+      item.href = href;
       item.tabIndex = 0;
-      item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;outline:none;';
+      item.className = 'canopy-card canopy-card--teaser';
+      item.style.cssText = 'display:flex;gap:12px;padding:8px 12px;text-decoration:none;color:#030712;border-radius:8px;align-items:center;outline:none;';
+
       const showThumb = String(record && record.type || '') === 'work' && record && record.thumbnail;
       if (showThumb) {
+        const media = document.createElement('div');
+        media.style.cssText = 'flex:0 0 48px;height:48px;border-radius:6px;overflow:hidden;background:#f1f5f9;display:flex;align-items:center;justify-content:center;';
         const img = document.createElement('img');
         img.src = record.thumbnail;
         img.alt = '';
-        img.style.cssText = 'width:40px;height:40px;object-fit:cover;border-radius:4px';
-        item.appendChild(img);
+        img.loading = 'lazy';
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+        media.appendChild(img);
+        item.appendChild(media);
       }
-      const span = document.createElement('span');
-      span.textContent = record.title || record.href || '';
-      item.appendChild(span);
+
+      const textWrap = document.createElement('div');
+      textWrap.style.cssText = 'display:flex;flex-direction:column;gap:2px;min-width:0;';
+      const title = document.createElement('span');
+      title.textContent = record.title || record.href || '';
+      title.style.cssText = 'font-weight:600;font-size:0.95rem;line-height:1.3;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+      textWrap.appendChild(title);
+      const meta = Array.isArray(record && record.metadata) ? record.metadata : [];
+      if (meta.length) {
+        const metaLine = document.createElement('span');
+        metaLine.textContent = meta.slice(0, 2).join(' • ');
+        metaLine.style.cssText = 'font-size:0.8rem;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+        textWrap.appendChild(metaLine);
+      }
+      item.appendChild(textWrap);
+
       item.onmouseenter = () => { item.style.background = '#f8fafc'; };
       item.onmouseleave = () => { item.style.background = 'transparent'; };
       item.onfocus = () => {
@@ -152,9 +255,6 @@ function renderList(list, records, groupOrder) {
         try { item.scrollIntoView({ block: 'nearest' }); } catch (_) {}
       };
       item.onblur = () => { item.style.background = 'transparent'; };
-      item.onclick = () => {
-        try { window.location.href = withBase(String(record.href || '')); } catch (_) {}
-      };
       list.appendChild(item);
     });
   });
@@ -278,8 +378,15 @@ async function attachSearchForm(host) {
       for (let i = 0; i < records.length; i += 1) {
         const record = records[i];
         const title = String(record && record.title || '');
-        if (!title) continue;
-        if (toLower(title).includes(q)) out.push(record);
+        const parts = [toLower(title)];
+        const metadata = Array.isArray(record && record.metadata) ? record.metadata : [];
+        for (const value of metadata) {
+          parts.push(toLower(value));
+        }
+        if (record && record.summary) parts.push(toLower(record.summary));
+        if (record && record.annotation) parts.push(toLower(record.annotation));
+        const haystack = parts.join(' ');
+        if (haystack.includes(q)) out.push(record);
         if (out.length >= maxResults) break;
       }
       render(out);

@@ -2,12 +2,24 @@ html,
 body {
   margin: 0;
   padding: 0;
-  font-family: var(--font-sans);
   background: var(--color-gray-50);
   color: var(--color-gray-900);
 }
 
 main {
+}
+
+p {
+  line-height: 1.47;
+}
+
+ol,
+ul {
+  padding-left: 1.5rem;
+
+  li {
+    margin-bottom: 0.25rem;
+  }
 }
 
 a {
@@ -24,4 +36,8 @@ textarea,
 select,
 button {
   font-family: inherit;
+}
+
+::selection {
+  background-color: var(--color-brand-200);
 }

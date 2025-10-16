@@ -185,14 +185,66 @@ async function buildSearchPage() {
 function toSafeString(val, defaultValue = '') {
   try { return String(val == null ? defaultValue : val); } catch (_) { return defaultValue; }
 }
-function sanitizeRecord(r) {
+
+function sanitizeMetadataValues(list) {
+  const arr = Array.isArray(list) ? list : [];
+  const out = [];
+  const seen = new Set();
+  for (const val of arr) {
+    if (val && typeof val === 'object' && Array.isArray(val.values)) {
+      for (const v of val.values) {
+        const str = toSafeString(v, '').trim();
+        if (!str) continue;
+        const clipped = str.length > 500 ? str.slice(0, 500) + '…' : str;
+        if (seen.has(clipped)) continue;
+        seen.add(clipped);
+        out.push(clipped);
+      }
+      continue;
+    }
+    const str = toSafeString(val, '').trim();
+    if (!str) continue;
+    const clipped = str.length > 500 ? str.slice(0, 500) + '…' : str;
+    if (seen.has(clipped)) continue;
+    seen.add(clipped);
+    out.push(clipped);
+  }
+  return out;
+}
+
+function sanitizeRecordForIndex(r) {
   const title = toSafeString(r && r.title, '');
-  const hrefRaw = toSafeString(r && r.href, '');
-  const href = rootRelativeHref(hrefRaw);
   const type = toSafeString(r && r.type, 'page');
-  const thumbnail = toSafeString(r && r.thumbnail, '');
   const safeTitle = title.length > 300 ? title.slice(0, 300) + '…' : title;
-  const out = { title: safeTitle, href, type };
+  const out = { title: safeTitle, type };
+  const metadataSource =
+    (r && r.metadataValues) ||
+    (r && r.searchMetadataValues) ||
+    (r && r.search && r.search.metadata) ||
+    [];
+  const metadata = sanitizeMetadataValues(metadataSource);
+  if (metadata.length) out.metadata = metadata;
+  const summaryVal = toSafeString(
+    (r && r.summaryValue) ||
+      (r && r.searchSummary) ||
+      (r && r.search && r.search.summary),
+    ''
+  ).trim();
+  if (summaryVal) {
+    const clipped = summaryVal.length > 1000 ? summaryVal.slice(0, 1000) + '…' : summaryVal;
+    out.summary = clipped;
+  }
+  return out;
+}
+
+function sanitizeRecordForDisplay(r) {
+  const base = sanitizeRecordForIndex(r);
+  const out = { ...base };
+  if (out.metadata) delete out.metadata;
+  if (out.summary) out.summary = toSafeString(out.summary, '');
+  const hrefRaw = toSafeString(r && r.href, '');
+  out.href = rootRelativeHref(hrefRaw);
+  const thumbnail = toSafeString(r && r.thumbnail, '');
   if (thumbnail) out.thumbnail = thumbnail;
   // Preserve optional thumbnail dimensions for aspect ratio calculations in the UI
   try {
@@ -204,21 +256,68 @@ function sanitizeRecord(r) {
   return out;
 }
 
+/**
+ * Write search datasets consumed by the runtime layers.
+ *
+ * Outputs:
+ * - search-index.json: compact payload (title/href/type/metadata + stable id) for FlexSearch
+ * - search-records.json: richer display data (thumbnail/dimensions + id) for UI rendering
+ */
 async function writeSearchIndex(records) {
   const apiDir = path.join(OUT_DIR, 'api');
   ensureDirSync(apiDir);
   const idxPath = path.join(apiDir, 'search-index.json');
   const list = Array.isArray(records) ? records : [];
-  const safe = list.map(sanitizeRecord);
-  const json = JSON.stringify(safe, null, 2);
-  const approxBytes = Buffer.byteLength(json, 'utf8');
+  const indexRecords = list.map(sanitizeRecordForIndex);
+  const displayRecords = list.map(sanitizeRecordForDisplay);
+  for (let i = 0; i < indexRecords.length; i += 1) {
+    const id = String(i);
+    if (indexRecords[i]) indexRecords[i].id = id;
+    if (displayRecords[i]) displayRecords[i].id = id;
+    if (displayRecords[i] && !displayRecords[i].href) {
+      const original = list[i];
+      const href = original && original.href ? rootRelativeHref(String(original.href)) : '';
+      if (href) displayRecords[i].href = href;
+    }
+  }
+  const annotationsPath = path.join(apiDir, 'search-index-annotations.json');
+  const annotationRecords = [];
+  for (let i = 0; i < list.length; i += 1) {
+    const raw = list[i];
+    const annotationVal = toSafeString(
+      (raw && raw.annotationValue) ||
+        (raw && raw.searchAnnotation) ||
+        (raw && raw.search && raw.search.annotation),
+      ''
+    ).trim();
+    if (!annotationVal) continue;
+    annotationRecords.push({ id: String(i), annotation: annotationVal });
+  }
+
+  const indexJson = JSON.stringify(indexRecords);
+  const approxBytes = Buffer.byteLength(indexJson, 'utf8');
   if (approxBytes > 10 * 1024 * 1024) {
     console.warn('Search: index size is large (', Math.round(approxBytes / (1024 * 1024)), 'MB ). Consider narrowing sources.');
   }
-  await fsp.writeFile(idxPath, json, 'utf8');
+  await fsp.writeFile(idxPath, indexJson, 'utf8');
+
+  const displayPath = path.join(apiDir, 'search-records.json');
+  const displayJson = JSON.stringify(displayRecords);
+  const displayBytes = Buffer.byteLength(displayJson, 'utf8');
+  await fsp.writeFile(displayPath, displayJson, 'utf8');
+  let annotationsBytes = 0;
+  if (annotationRecords.length) {
+    const annotationsJson = JSON.stringify(annotationRecords);
+    annotationsBytes = Buffer.byteLength(annotationsJson, 'utf8');
+    await fsp.writeFile(annotationsPath, annotationsJson, 'utf8');
+  } else {
+    try {
+      if (fs.existsSync(annotationsPath)) await fsp.unlink(annotationsPath);
+    } catch (_) {}
+  }
   // Also write a small metadata file with a stable version hash for cache-busting and IDB keying
   try {
-    const version = crypto.createHash('sha256').update(json).digest('hex');
+    const version = crypto.createHash('sha256').update(indexJson).digest('hex');
     // Read optional search tabs order from canopy.yml
     let tabsOrder = [];
     try {
@@ -235,17 +334,25 @@ async function writeSearchIndex(records) {
     } catch (_) {}
     const meta = {
       version,
-      records: safe.length,
+      records: indexRecords.length,
       bytes: approxBytes,
       updatedAt: new Date().toISOString(),
       // Expose optional search config to the client runtime
-      search: { tabs: { order: tabsOrder } },
+      search: {
+        tabs: { order: tabsOrder },
+        assets: {
+          display: { path: 'search-records.json', bytes: displayBytes },
+          ...(annotationRecords.length
+            ? { annotations: { path: 'search-index-annotations.json', bytes: annotationsBytes } }
+            : {}),
+        },
+      },
     };
     const metaPath = path.join(apiDir, 'index.json');
     await fsp.writeFile(metaPath, JSON.stringify(meta, null, 2), 'utf8');
     try {
       const { logLine } = require('./log');
-      logLine(`✓ Search index version ${version.slice(0, 8)} (${safe.length} records)`, 'cyan');
+      logLine(`✓ Search index version ${version.slice(0, 8)} (${indexRecords.length} records)`, 'cyan');
     } catch (_) {}
     // Propagate version into IIIF cache index for a single, shared build identifier
     try {

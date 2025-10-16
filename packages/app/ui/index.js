@@ -1,5 +1,6 @@
 export { HelloWorld } from "./src/HelloWorld.jsx";
 export { default as Card } from "./src/layout/Card.jsx";
+export { default as AnnotationCard } from "./src/layout/AnnotationCard.jsx";
 export { default as Grid, GridItem } from "./src/layout/Grid.jsx";
 export { Viewer } from "./src/iiif/Viewer.jsx";
 export { Slider } from "./src/iiif/Slider.jsx";

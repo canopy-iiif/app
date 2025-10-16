@@ -4,11 +4,13 @@
   text-decoration: none;
   color: inherit;
   // light gray border
-  border: 1px solid rgb(230, 231, 234); /* slate-200 */
+  border: 1px solid var(--color-gray-200);
   border-radius: 0.5rem;
   overflow: hidden;
   transition: all 150ms cubic-bezier(0.22, 1, 0.36, 1);
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.05),
+    0 1px 3px 0 rgba(0, 0, 0, 0.05);
 
   figure {
     margin: 0;
@@ -27,9 +29,15 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      display: block;
+      display: flex;
+      justify-content: center;
+      text-align: center;
+      flex-direction: column;
       opacity: 0;
       transition: opacity 500ms cubic-bezier(0.22, 1, 0.36, 1);
+      background: var(--color-gray-100);
+      color: var(--color-gray-600);
+      font-size: 83.333%;
     }
   }
 
@@ -64,6 +72,41 @@
   &:hover,
   &:focus {
     color: var(--color-brand-default);
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.07), 0 1px 2px 0 rgba(0, 0, 0, 0.07);
+    box-shadow:
+      0 1px 2px 0 rgba(0, 0, 0, 0.07),
+      0 1px 2px 0 rgba(0, 0, 0, 0.07);
+  }
+}
+
+.canopy-annotation-card {
+  @extend .canopy-card;
+
+  padding: 1rem;
+
+  mark {
+    color: var(--color-gray-900);
+    background-color: var(--color-brand-300);
+    padding: 0.1rem 0.25rem;
+    border-radius: 0.25rem;
+    margin: 0 -0.25rem;
+
+    mark::before,
+    mark::after {
+      clip-path: inset(100%);
+      clip: rect(1px, 1px, 1px, 1px);
+      height: 1px;
+      overflow: hidden;
+      position: absolute;
+      white-space: nowrap;
+      width: 1px;
+    }
+
+    mark::before {
+      content: " [highlight start] ";
+    }
+
+    mark::after {
+      content: " [highlight end] ";
+    }
   }
 }

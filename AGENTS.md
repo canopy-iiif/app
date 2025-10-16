@@ -105,12 +105,13 @@ Goal: Allow authors to fully compose the search page via MDX, while the builder 
 - Composition: Authors place these placeholders anywhere in their MDX; the builder does not impose layout. If no layout exists, a minimal fallback page is generated.
 
 - Build steps:
-  - `writeSearchIndex(records)`: writes `site/search-index.json`. Currently fed by IIIF build (`packages/app/lib/iiif.js`) and contains items `{ id, title, href }` for each Manifest page.
+  - `writeSearchIndex(records)`: writes two artifacts under `site/api/` — `search-index.json` (compact payload for FlexSearch) and `search-records.json` (richer display data for UI components). Every entry gets a stable `id` shared across both files so runtimes can join them deterministically. Records are currently fed by the IIIF build (`packages/app/lib/iiif.js`) and augmented with MDX pages. Metadata and summary values are flattened during IIIF ingestion based on `canopy.yml` search index settings.
+  - When `search.index.annotations.enabled` is true, an additional `search-index-annotations.json` file is generated containing long-form annotation text filtered by the configured motivations. The runtime fetches this dataset on demand and merges it by `id` before indexing.
 - `ensureSearchRuntime()`: bundles `site/search.js` (React app) with FlexSearch; it loads the JSON, indexes titles, and renders the UI. It mounts into `[data-canopy-search]` (from `<Search />`) or `#search-root` if present.
   - `buildSearchPage()`: renders `content/search/_layout.mdx` (if present) with the `search` prop and wraps it with the App (`content/_app.mdx`) and MDXProvider.
 
 - Runtime behavior (site/search.js):
-  - Loads `./search-index.json` and builds a FlexSearch index (title-only, forward tokenization).
+  - Loads `./search-index.json` (compact dataset) to build a FlexSearch index (title + metadata values + flattened summary text, forward tokenization). When `search-index-annotations.json` is present it is fetched, merged by `id`, and the annotation text is appended to the FlexSearch source. Display data continues to hydrate from `./search-records.json` for thumbnails, hrefs, and other UI extras.
   - Renders a form, summary text, and a results list (with optional type filter) as a React app.
   - Initializes from `?q=` and `?type=` URL params.
   - Resolves links with base path awareness via `CANOPY_BASE_PATH`.
