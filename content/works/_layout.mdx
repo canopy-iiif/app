@@ -37,6 +37,8 @@ import {
 </section>
 ) : null}
 
+## Annotations
+
 {props.manifest?.requiredStatement ? (
 
 <section className="space-y-3">
@@ -47,6 +49,8 @@ import {
   />
 </section>
 ) : null}
+
+<Scroll iiifContent={props.manifest.id} />
 
   <section className="space-y-4">
     <h2 className="text-2xl font-semibold text-slate-900">Related Items</h2>

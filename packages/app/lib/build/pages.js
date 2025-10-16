@@ -59,7 +59,8 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}) {
     mergedProps.navigation = navData;
   }
   const { body, head } = await mdx.compileMdxFile(filePath, outPath, null, mergedProps);
-  const needsHydrateViewer = body.includes('data-canopy-viewer');
+  const needsHydrateViewer =
+    body.includes('data-canopy-viewer') || body.includes('data-canopy-scroll');
   const needsHydrateSlider = body.includes('data-canopy-slider');
   const needsSearchForm = true; // search form runtime is global
   const needsFacets = body.includes('data-canopy-related-items');

@@ -1144,7 +1144,8 @@ async function buildIiifCollectionPages(CONFIG) {
                   React.createElement(app.Head)
                 )
               : "";
-          const needsHydrateViewer = body.includes("data-canopy-viewer");
+          const needsHydrateViewer =
+            body.includes("data-canopy-viewer") || body.includes("data-canopy-scroll");
           const needsRelated = body.includes("data-canopy-related-items");
           const needsHero = body.includes("data-canopy-hero");
           const needsSearchForm = body.includes("data-canopy-search-form");

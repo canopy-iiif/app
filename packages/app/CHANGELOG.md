@@ -1,5 +1,11 @@
 # @canopy-iiif/app
 
+## 0.8.6
+
+### Patch Changes
+
+- chore: version bump (patch) via helper script.
+
 ## 0.8.5
 
 ### Patch Changes

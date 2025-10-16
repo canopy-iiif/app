@@ -20,7 +20,7 @@ search:
     summary:
       enabled: true # default: true
     annotations:
-      enabled: false # default: false
+      enabled: true # default: false
       motivation: ["commenting", "tagging"]
 theme:
   appearance: light # light OR dark

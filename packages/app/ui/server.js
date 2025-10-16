@@ -1,6 +1,7 @@
 export { HelloWorld } from "./src/HelloWorld.jsx";
 export { Viewer } from "./src/iiif/Viewer.jsx";
 export { Slider } from "./src/iiif/Slider.jsx";
+export { Scroll } from "./src/iiif/Scroll.jsx";
 // New: RelatedItems placeholder (SSR-safe)
 export { default as RelatedItems } from "./src/iiif/MdxRelatedItems.jsx";
 // SSR-only Hero (includes featured selection via helpers)

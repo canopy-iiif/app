@@ -358,6 +358,7 @@ async function ensureClientRuntime() {
   const outFile = path.join(scriptsDir, "canopy-viewer.js");
   const entry = `
     import CloverViewer from '@samvera/clover-iiif/viewer';
+    import CloverScroll from '@samvera/clover-iiif/scroll';
 
     function ready(fn) {
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn, { once: true });
@@ -373,22 +374,29 @@ async function ensureClientRuntime() {
       } catch (_) { return {}; }
     }
 
-    ready(function() {
+    function mountAll(selector, Component) {
       try {
-        const nodes = document.querySelectorAll('[data-canopy-viewer]');
-        if (!nodes || !nodes.length) return;
+        const nodes = document.querySelectorAll(selector);
+        if (!nodes || !nodes.length || !Component) return;
+        const React = (window && window.React) || null;
+        const ReactDOMClient = (window && window.ReactDOMClient) || null;
+        const createRoot = ReactDOMClient && ReactDOMClient.createRoot;
+        if (!React || !createRoot) return;
         for (const el of nodes) {
           try {
+            if (el.__canopyHydrated) continue;
             const props = parseProps(el);
-            const React = (window && window.React) || null;
-            const ReactDOMClient = (window && window.ReactDOMClient) || null;
-            const createRoot = ReactDOMClient && ReactDOMClient.createRoot;
-            if (!React || !createRoot) continue;
             const root = createRoot(el);
-            root.render(React.createElement(CloverViewer, props));
+            root.render(React.createElement(Component, props));
+            el.__canopyHydrated = true;
           } catch (_) { /* skip */ }
         }
       } catch (_) { /* no-op */ }
+    }
+
+    ready(function() {
+      mountAll('[data-canopy-viewer]', CloverViewer);
+      mountAll('[data-canopy-scroll]', CloverScroll);
     });
   `;
   const reactShim = `
