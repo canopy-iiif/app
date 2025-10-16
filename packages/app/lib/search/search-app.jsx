@@ -6,6 +6,49 @@ import {
   SearchFiltersDialog,
 } from "@canopy-iiif/app/ui";
 
+function readBasePath() {
+  const normalize = (val) => {
+    const raw = typeof val === "string" ? val.trim() : "";
+    if (!raw) return "";
+    const withLead = raw.startsWith("/") ? raw : `/${raw}`;
+    return withLead.replace(/\/+$/, "");
+  };
+  try {
+    if (typeof window !== "undefined" && window.CANOPY_BASE_PATH != null) {
+      const fromWindow = normalize(window.CANOPY_BASE_PATH);
+      if (fromWindow) return fromWindow;
+    }
+  } catch (_) {}
+  try {
+    if (typeof globalThis !== "undefined" && globalThis.CANOPY_BASE_PATH != null) {
+      const fromGlobal = normalize(globalThis.CANOPY_BASE_PATH);
+      if (fromGlobal) return fromGlobal;
+    }
+  } catch (_) {}
+  try {
+    if (typeof process !== "undefined" && process.env && process.env.CANOPY_BASE_PATH) {
+      const fromEnv = normalize(process.env.CANOPY_BASE_PATH);
+      if (fromEnv) return fromEnv;
+    }
+  } catch (_) {}
+  return "";
+}
+
+function withBasePath(href) {
+  try {
+    const raw = typeof href === "string" ? href.trim() : "";
+    if (!raw) return href;
+    if (/^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i.test(raw)) return raw;
+    if (!raw.startsWith("/")) return raw;
+    const base = readBasePath();
+    if (!base || base === "/") return raw;
+    if (raw === base || raw.startsWith(`${base}/`)) return raw;
+    return `${base}${raw}`;
+  } catch (_) {
+    return href;
+  }
+}
+
 // Lightweight IndexedDB utilities (no deps) with defensive guards
 function hasIDB() {
   try {
@@ -494,6 +537,7 @@ function createSearchStore() {
         const merged = { ...(display || {}), ...(rec || {}), __docIndex: i };
         if (!merged.id && key) merged.id = key;
         if (!merged.href && display && display.href) merged.href = String(display.href);
+        if (merged.href) merged.href = withBasePath(merged.href);
         if (!merged.title) merged.title = merged.href || "";
         if (!Array.isArray(merged.metadata)) {
           const meta = Array.isArray(rec && rec.metadata) ? rec.metadata : [];
