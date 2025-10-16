@@ -130,16 +130,19 @@ function absoluteUrl(p) {
   }
 }
 
-// Apply BASE_PATH to any absolute href/src attributes found in an HTML string.
+// Apply BASE_PATH to key URL-bearing attributes (href/src/action/formaction) in an HTML string.
 function applyBaseToHtml(html) {
   if (!BASE_PATH) return html;
   try {
     const out = String(html || '');
-    const normalizedBase = BASE_PATH.startsWith('/')
-      ? BASE_PATH.replace(/\/$/, '')
-      : `/${BASE_PATH.replace(/\/$/, '')}`;
+    const baseRaw = BASE_PATH.startsWith('/') ? BASE_PATH : `/${BASE_PATH}`;
+    const normalizedBase = baseRaw.replace(/\/$/, '');
     if (!normalizedBase || normalizedBase === '/') return out;
-    const pattern = /(href|src)=(['"])(\/(?!\/)[^'"\s]*)\2/g;
+
+    const attrPattern = '(?:href|src|action|formaction)';
+    const pathPattern = "\\/(?!\\/)[^'\"\\s<]*";
+    const pattern = new RegExp(`(${attrPattern})=(["'])((${pathPattern}))\\2`, 'g');
+
     return out.replace(pattern, (match, attr, quote, path) => {
       if (path === normalizedBase || path.startsWith(`${normalizedBase}/`)) {
         return match;
