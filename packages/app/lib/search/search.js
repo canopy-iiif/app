@@ -173,7 +173,7 @@ async function buildSearchPage() {
       }
     } catch (_) {}
     let html = htmlShell({ title: 'Search', body, cssHref: null, scriptHref: jsRel, headExtra });
-    try { html = require('./common').applyBaseToHtml(html); } catch (_) {}
+    try { html = require('../common').applyBaseToHtml(html); } catch (_) {}
     await fsp.writeFile(outPath, html, 'utf8');
     console.log('Search: Built', path.relative(process.cwd(), outPath));
   } catch (e) {
@@ -322,9 +322,10 @@ async function writeSearchIndex(records) {
     let tabsOrder = [];
     try {
       const yaml = require('js-yaml');
-      const cfgPath = require('./common').path.resolve(process.env.CANOPY_CONFIG || 'canopy.yml');
-      if (require('./common').fs.existsSync(cfgPath)) {
-        const raw = require('./common').fs.readFileSync(cfgPath, 'utf8');
+      const common = require('../common');
+      const cfgPath = common.path.resolve(process.env.CANOPY_CONFIG || 'canopy.yml');
+      if (common.fs.existsSync(cfgPath)) {
+        const raw = common.fs.readFileSync(cfgPath, 'utf8');
         const data = yaml.load(raw) || {};
         const searchCfg = data && data.search ? data.search : {};
         const tabs = searchCfg && searchCfg.tabs ? searchCfg.tabs : {};
@@ -370,7 +371,11 @@ async function writeSearchIndex(records) {
 
 // Compatibility: keep ensureResultTemplate as a no-op builder (template unused by React search)
 async function ensureResultTemplate() {
-  try { const { path } = require('./common'); const p = path.join(OUT_DIR, 'search-result.html'); await fsp.writeFile(p, '', 'utf8'); } catch (_) {}
+  try {
+    const { path } = require('../common');
+    const p = path.join(OUT_DIR, 'search-result.html');
+    await fsp.writeFile(p, '', 'utf8');
+  } catch (_) {}
 }
 
 module.exports = { ensureSearchRuntime, ensureResultTemplate, buildSearchPage, writeSearchIndex };
