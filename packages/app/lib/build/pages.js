@@ -62,6 +62,7 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}) {
   const needsHydrateViewer =
     body.includes('data-canopy-viewer') || body.includes('data-canopy-scroll');
   const needsHydrateSlider = body.includes('data-canopy-slider');
+  const needsHeroSlider = body.includes('data-canopy-hero-slider');
   const needsSearchForm = true; // search form runtime is global
   const needsFacets = body.includes('data-canopy-related-items');
   const viewerRel = needsHydrateViewer
@@ -69,6 +70,9 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}) {
     : null;
   const sliderRel = (needsHydrateSlider || needsFacets)
     ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-slider.js')).split(path.sep).join('/')
+    : null;
+  const heroRel = needsHeroSlider
+    ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-hero-slider.js')).split(path.sep).join('/')
     : null;
   const facetsRel = needsFacets
     ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-related-items.js')).split(path.sep).join('/')
@@ -81,7 +85,8 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}) {
     searchFormRel = rel;
   }
   let jsRel = null;
-  if (needsFacets && sliderRel) jsRel = sliderRel;
+  if (needsHeroSlider && heroRel) jsRel = heroRel;
+  else if (needsFacets && sliderRel) jsRel = sliderRel;
   else if (viewerRel) jsRel = viewerRel;
   else if (sliderRel) jsRel = sliderRel;
   else if (facetsRel) jsRel = facetsRel;
@@ -102,6 +107,7 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}) {
   } catch (_) {}
   let headExtra = head;
   const extraScripts = [];
+  if (heroRel && jsRel !== heroRel) extraScripts.push(`<script defer src="${heroRel}"></script>`);
   if (facetsRel && jsRel !== facetsRel) extraScripts.push(`<script defer src="${facetsRel}"></script>`);
   if (viewerRel && jsRel !== viewerRel) extraScripts.push(`<script defer src="${viewerRel}"></script>`);
   if (sliderRel && jsRel !== sliderRel) extraScripts.push(`<script defer src="${sliderRel}"></script>`);

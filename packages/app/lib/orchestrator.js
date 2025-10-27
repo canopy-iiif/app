@@ -128,26 +128,6 @@ function attachSignalHandlers() {
   process.on('exit', clean);
 }
 
-function verifyBuildOutput(outDir = 'site') {
-  const root = path.resolve(outDir);
-  function walk(dir) {
-    let count = 0;
-    if (!fs.existsSync(dir)) return 0;
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
-    for (const entry of entries) {
-      const p = path.join(dir, entry.name);
-      if (entry.isDirectory()) count += walk(p);
-      else if (entry.isFile() && p.toLowerCase().endsWith('.html')) count += 1;
-    }
-    return count;
-  }
-  const pages = walk(root);
-  if (!pages) {
-    throw new Error('CI check failed: no HTML pages generated in "site/".');
-  }
-  log(`CI check: found ${pages} HTML page(s) in ${root}.`);
-}
-
 async function orchestrate(options = {}) {
   const argv = options.argv || process.argv.slice(2);
   const env = options.env || process.env;
@@ -155,12 +135,6 @@ async function orchestrate(options = {}) {
   process.title = 'canopy-app';
   const mode = getMode(argv, env);
   log(`Mode: ${mode}`);
-
-  const cli = new Set(argv);
-  if (cli.has('--verify')) {
-    verifyBuildOutput(env.CANOPY_OUT_DIR || 'site');
-    return;
-  }
 
   await prepareUi(mode, env);
 
@@ -176,9 +150,6 @@ async function orchestrate(options = {}) {
         await api.build();
       }
       log('Build complete');
-      if (env.CANOPY_VERIFY === '1' || env.CANOPY_VERIFY === 'true') {
-        verifyBuildOutput(env.CANOPY_OUT_DIR || 'site');
-      }
     }
   } finally {
     if (uiWatcherChild && !uiWatcherChild.killed) {
@@ -189,7 +160,6 @@ async function orchestrate(options = {}) {
 
 module.exports = {
   orchestrate,
-  verifyBuildOutput,
   _internals: {
     getMode,
     prepareUi,

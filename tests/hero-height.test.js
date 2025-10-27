@@ -1,4 +1,4 @@
-const { computeHeroHeightStyle } = require('../packages/app/ui/src/iiif/hero-utils.js');
+const { computeHeroHeightStyle } = require('../packages/app/ui/src/interstitials/hero-utils.cjs');
 
 describe('Hero height style (via util)', () => {
   test('number -> px', () => {
@@ -17,4 +17,3 @@ describe('Hero height style (via util)', () => {
     expect(computeHeroHeightStyle('')).toEqual({ width: '100%', height: '360px' });
   });
 });
-

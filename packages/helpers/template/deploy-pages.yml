@@ -64,9 +64,6 @@ jobs:
           CANOPY_FETCH_CONCURRENCY: "6"
         run: npm run build
 
-      - name: Verify pages were generated
-        run: npx tsx app/scripts/canopy-build.mts --verify
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

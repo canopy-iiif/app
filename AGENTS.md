@@ -65,11 +65,12 @@ Recommended scripts in `package.json`:
 
 Available components:
 - `<Viewer iiifContent="…" />` — wraps Clover viewer; hydrates via `site/canopy-viewer.js`.
+- `<Interstitials.Hero … />` — hero interstitial that rotates featured manifests listed in `canopy.yml → featured`, pulls thumbnails from the IIIF cache, and hydrates via `site/canopy-hero-slider.js`. Supports props such as `headline`, `description`, `links`, `height`, `index`, `random`, and `background="theme" | "transparent"`.
 - `<RelatedItems top={3} iiifContent?="…" />` — facet-driven related sliders.
   - Without `iiifContent` (homepage): pick one top value per indexed facet label and render one slider per label.
   - With `iiifContent` (work pages): read the Manifest’s metadata, intersect with indexed facets, then pick one of the Manifest’s values at random for each label and render exactly one slider per label. Facets not present on the Manifest are skipped.
   - Hydration: `site/canopy-related-items.js` (builds per-label placeholders) + `site/canopy-slider.js` (mounts Clover sliders).
-- Search (composable): `<SearchForm />`, `<SearchSummary />`, `<SearchResults />`, `<SearchTotal />` — hydrate via `site/search.js` and share a single client store.
+- Search (composable): `<SearchForm />`, `<SearchSummary />`, `<SearchResults />`, `<SearchTabs />`, `<SearchTotal />` — hydrate via `site/search.js` and share a single client store.
 
 Pages that include these placeholders automatically receive the required scripts.
 
@@ -128,7 +129,6 @@ Goal: Allow authors to fully compose the search page via MDX, while the builder 
 - All helper scripts live under `packages/helpers/`.
 - Examples:
   - Release guard: `node packages/helpers/guard-publish.js`
-  - Build check: `node packages/helpers/verify-build.js`
 
 ## Package Management
 

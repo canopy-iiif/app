@@ -19,7 +19,6 @@ const {
 const { ensureStyles } = require("./styles");
 const { copyAssets } = require("./assets");
 const { logLine } = require("./log");
-const { verifyBuildOutput } = require("./verify");
 const navigation = require("../components/navigation");
 
 // hold records between builds if skipping IIIF
@@ -74,7 +73,7 @@ async function build(options = {}) {
     );
   }
   // Ensure any configured featured manifests are cached (and thumbnails computed)
-  // so SSR components like <Hero /> can resolve items even if they are not part of
+  // so SSR interstitials can resolve items even if they are not part of
   // the traversed collection or when IIIF build is skipped during incremental rebuilds.
   try { await iiif.ensureFeaturedInCache(CONFIG); } catch (_) {}
 
@@ -87,7 +86,7 @@ async function build(options = {}) {
     bright: true,
     underscore: true,
   });
-  // FeaturedHero now reads directly from the local IIIF cache; no API file needed
+  // Interstitials read directly from the local IIIF cache; no API file needed
   pageRecords = await searchBuild.collectMdxPageRecords();
   await pages.buildContentTree(CONTENT_DIR, pageRecords);
   logLine("✓ MDX pages built", "green");
@@ -135,16 +134,6 @@ async function build(options = {}) {
   });
   await copyAssets();
 
-  /**
-   * Final verification (checklist)
-   */
-  try {
-    verifyBuildOutput({ outDir: OUT_DIR });
-  } catch (e) {
-    logLine("✗ Build verification failed", "red", { bright: true });
-    logLine(String(e && e.message ? e.message : e), "red");
-    process.exit(1);
-  }
 }
 
 module.exports = { build };

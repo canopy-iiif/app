@@ -15,4 +15,3 @@ export interface OrchestratorOptions {
 }
 
 export declare function orchestrate(options?: OrchestratorOptions): Promise<void>;
-export declare function verifyBuildOutput(outDir?: string): void;

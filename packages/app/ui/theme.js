@@ -36,7 +36,10 @@ function loadSassVariableTokens() {
     }
     return {map: vars, css};
   } catch (error) {
-    debugLog("failed to compile Sass variables", error && error.message ? error.message : error);
+    debugLog(
+      "failed to compile Sass variables",
+      error && error.message ? error.message : error
+    );
     return {map: {}, css: ""};
   }
 }
@@ -126,6 +129,26 @@ function darkenHex(hex, amount = 0.15) {
   return `#${toHex(r * factor)}${toHex(g * factor)}${toHex(b * factor)}`;
 }
 
+function lightenHex(hex, amount = 0.15) {
+  if (!hex) return hex;
+  const normalized = hex.replace("#", "");
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return hex;
+  const num = parseInt(normalized, 16);
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+  const clamp = (value) => Math.max(0, Math.min(255, Math.round(value)));
+  const toHex = (value) => clamp(value).toString(16).padStart(2, "0");
+  const adjust = (value) => value + (255 - value) * amount;
+  return `#${toHex(adjust(r))}${toHex(adjust(g))}${toHex(adjust(b))}`;
+}
+
+function normalizeDarkenAmount(raw) {
+  const value = Number(raw);
+  if (!Number.isFinite(value)) return null;
+  return Math.min(0.95, Math.max(0, value));
+}
+
 function toTailwindScale(name, options = {}) {
   if (!name || !AVAILABLE.has(name)) return null;
   const appearance = normalizeAppearance(options.appearance);
@@ -133,6 +156,7 @@ function toTailwindScale(name, options = {}) {
   if (!palette) return null;
   const prefix = name;
   const scale = {};
+  const darken900Amount = normalizeDarkenAmount(options.darken900Amount);
   for (const lvl of LEVELS) {
     const radixStep = STEP_MAP[lvl];
     const key = `${prefix}${radixStep}`;
@@ -142,7 +166,11 @@ function toTailwindScale(name, options = {}) {
   }
   const darkestKey = `${prefix}${STEP_MAP["900"]}`;
   if (scale["800"] && palette[darkestKey]) {
-    scale["900"] = darkenHex(palette[darkestKey], 0.15);
+    const amount = darken900Amount != null ? darken900Amount : 0.25;
+    scale["900"] =
+      appearance === "dark"
+        ? lightenHex(palette[darkestKey], amount)
+        : darkenHex(palette[darkestKey], amount);
   }
   return scale;
 }
@@ -226,17 +254,25 @@ function loadCanopyTheme(options = {}) {
   }
 
   let grayName = normalizePaletteName(grayRequested);
-  let grayScale = grayName ? toTailwindScale(grayName, {appearance}) : null;
+  let grayScale = grayName
+    ? toTailwindScale(grayName, {appearance, darken900Amount: 0.4})
+    : null;
   let grayFallback = false;
   if (!grayScale) {
     grayFallback = true;
     grayName = DEFAULT_GRAY;
-    grayScale = toTailwindScale(DEFAULT_GRAY, {appearance});
+    grayScale = toTailwindScale(DEFAULT_GRAY, {
+      appearance,
+      darken900Amount: 0.4,
+    });
   }
 
   const sassTokens = loadSassVariableTokens();
   const dynamicVars = buildVariablesMap(accentScale, grayScale, {appearance});
-  const mergedVars = {...(sassTokens && sassTokens.map ? sassTokens.map : {}), ...dynamicVars};
+  const mergedVars = {
+    ...(sassTokens && sassTokens.map ? sassTokens.map : {}),
+    ...dynamicVars,
+  };
   const css = variablesToCss(mergedVars);
   const sassConfig = buildSassConfig(accentScale, grayScale);
 

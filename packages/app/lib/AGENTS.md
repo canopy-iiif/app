@@ -34,6 +34,11 @@ Current Focus
 - Runtime bundling: review `search/search.js` for esbuild config drift (externals, shims); list required adjustments if UI adds new hydrated components.
 - Cache hygiene: document when `.cache/mdx` vs `.cache/iiif` are pruned and add TODOs if cleanup relies on manual intervention.
 
+### Interstitial hero support
+- Featured manifests come from `canopy.yml → featured`; `lib/components/featured.js` normalizes IDs, resolves slugs from `.cache/iiif/index.json`, and surfaces thumbnails (`heroThumbnail*` when the IIIF build computed representative images).
+- `build/iiif.js` now writes `heroThumbnail`, `heroThumbnailWidth`, and `heroThumbnailHeight` alongside standard thumbnails so the UI hero can display consistent crops.
+- `build/mdx.js` → `ensureHeroRuntime()` bundles `packages/app/lib/components/hero-slider-runtime.js` to `site/scripts/canopy-hero-slider.js`; keep Swiper external and mirror any esbuild option changes in the UI workspace docs.
+
 Risks & Watchpoints
 -------------------
 - Long reruns: if `dev` mode clears `.cache/iiif` too aggressively it slows iteration; capture triggers before modifying cleanup behavior.

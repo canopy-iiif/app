@@ -5,11 +5,7 @@ async function prepareAllRuntimes() {
   const mdx = require('./mdx');
   try { await mdx.ensureClientRuntime(); } catch (_) {}
   try { if (typeof mdx.ensureSliderRuntime === 'function') await mdx.ensureSliderRuntime(); } catch (_) {}
-  try {
-    if (process.env.CANOPY_ENABLE_HERO_RUNTIME === '1' || process.env.CANOPY_ENABLE_HERO_RUNTIME === 'true') {
-      if (typeof mdx.ensureHeroRuntime === 'function') await mdx.ensureHeroRuntime();
-    }
-  } catch (_) {}
+  try { if (typeof mdx.ensureHeroRuntime === 'function') await mdx.ensureHeroRuntime(); } catch (_) {}
   try { if (typeof mdx.ensureFacetsRuntime === 'function') await mdx.ensureFacetsRuntime(); } catch (_) {}
   try { if (typeof mdx.ensureReactGlobals === 'function') await mdx.ensureReactGlobals(); } catch (_) {}
   await prepareSearchFormRuntime();

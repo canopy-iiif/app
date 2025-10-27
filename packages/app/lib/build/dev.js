@@ -1050,6 +1050,13 @@ async function dev() {
       }
     };
     attachCssWatcher();
+    const handleUiSassChange = () => {
+      attachCssWatcher();
+      scheduleTailwindRestart(
+        "[tailwind] detected @canopy-iiif/app/ui Sass change — restarting Tailwind",
+        "[tailwind] compile after UI Sass change failed"
+      );
+    };
     if (fs.existsSync(uiStylesDir)) {
       try {
         fs.watch(
@@ -1057,7 +1064,7 @@ async function dev() {
           { persistent: false, recursive: true },
           (evt, fn) => {
             try {
-              if (fn && /\.s[ac]ss$/i.test(String(fn))) attachCssWatcher();
+              if (fn && /\.s[ac]ss$/i.test(String(fn))) handleUiSassChange();
             } catch (_) {}
           }
         );
@@ -1071,7 +1078,7 @@ async function dev() {
               { persistent: false },
               (evt, fn) => {
                 try {
-                  if (fn && /\.s[ac]ss$/i.test(String(fn))) attachCssWatcher();
+                  if (fn && /\.s[ac]ss$/i.test(String(fn))) handleUiSassChange();
                 } catch (_) {}
                 scan(dir);
               }

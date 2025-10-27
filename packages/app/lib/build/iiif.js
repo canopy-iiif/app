@@ -578,7 +578,7 @@ async function saveCachedManifest(manifest, id, parentId) {
 }
 
 // Ensure any configured featured manifests are present in the local cache
-// (and have thumbnails computed) so SSR components like <Hero /> can read them.
+// (and have thumbnails computed) so interstitial heroes can read them.
 async function ensureFeaturedInCache(cfg) {
   try {
     const CONFIG = cfg || (await loadConfig());
@@ -1147,7 +1147,7 @@ async function buildIiifCollectionPages(CONFIG) {
           const needsHydrateViewer =
             body.includes("data-canopy-viewer") || body.includes("data-canopy-scroll");
           const needsRelated = body.includes("data-canopy-related-items");
-          const needsHero = body.includes("data-canopy-hero");
+          const needsHeroSlider = body.includes("data-canopy-hero-slider");
           const needsSearchForm = body.includes("data-canopy-search-form");
           const needsHydrate =
             body.includes("data-canopy-hydrate") ||
@@ -1173,11 +1173,11 @@ async function buildIiifCollectionPages(CONFIG) {
                 .split(path.sep)
                 .join("/")
             : null;
-          const heroRel = needsHero
+          const heroRel = needsHeroSlider
             ? path
                 .relative(
                   path.dirname(outPath),
-                  path.join(OUT_DIR, "scripts", "canopy-hero.js")
+                  path.join(OUT_DIR, "scripts", "canopy-hero-slider.js")
                 )
                 .split(path.sep)
                 .join("/")
@@ -1202,15 +1202,14 @@ async function buildIiifCollectionPages(CONFIG) {
             : null;
 
           let jsRel = null;
-          if (needsHero && heroRel) jsRel = heroRel;
+          if (needsHeroSlider && heroRel) jsRel = heroRel;
           else if (needsRelated && sliderRel) jsRel = sliderRel;
           else if (viewerRel) jsRel = viewerRel;
 
           let headExtra = head;
           const needsReact = !!(
             needsHydrateViewer ||
-            needsRelated ||
-            needsHero
+            needsRelated
           );
           let vendorTag = "";
           if (needsReact) {

@@ -7,7 +7,6 @@ export { Slider } from "./src/iiif/Slider.jsx";
 export { Scroll } from "./src/iiif/Scroll.jsx";
 // New: RelatedItems placeholder (new data attribute)
 export { default as RelatedItems } from "./src/iiif/MdxRelatedItems.jsx";
-// Note: Hero is SSR-only; exported from ./server.js, not the browser build.
 // Search UI (React)
 export { default as SearchResults } from "./src/search/MdxSearchResults.jsx";
 export { default as SearchSummary } from "./src/search/SearchSummary.jsx";

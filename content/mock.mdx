@@ -1,0 +1,304 @@
+---
+title: "Modern Museum Mock Layout"
+type: "page"
+---
+
+export const hero = {
+  image:
+    "https://Ennego.github.io/AccademiaMapsAll/iiif/maggimaupinromemapcambridge/c4a0d448aaa0ddd243ff184900e67fad/full/300,157/0/default.jpg",
+  href: "/works/disegno-nuovo-di-roma-moderna.html",
+};
+
+export const exhibitions = [
+  {
+    title: "Cartografie Visionarie",
+    origin: "Der Statt Rom, from Cosmographei",
+    description:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sed posuere massa, ut interdum lectus.",
+    href: "/works/der-statt-rom-from-cosmographei.html",
+    image:
+      "https://Ennego.github.io/AccademiaMapsAll/iiif/munsterromemapjacobs/757b3888f21e6a30b2780d5d598f2deb/full/300,253/0/default.jpg",
+  },
+  {
+    title: "Roma Ridisegnata",
+    origin: "Nova urbis Romae descriptio",
+    description:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus euismod nibh sed lorem porta finibus.",
+    href: "/works/nova-urbis-romae-descriptio.html",
+    image:
+      "https://Ennego.github.io/AccademiaMapsAll/iiif/duperacromemapbritishlibrary/47fdaf222a416a31e12238c107e6f72c/full/300,239/0/default.jpg",
+  },
+  {
+    title: "Novissima Cartographia",
+    origin: "Novissima urbis romae descriptio",
+    description:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla facilisi. Cras faucibus, magna vel sodales convallis.",
+    href: "/works/novissima-urbis-romae-descriptio.html",
+    image:
+      "https://Ennego.github.io/AccademiaMapsAll/iiif/florimiromemapjacobs/3775697fb2acf947389dec68e8c2ec0e/full/300,218/0/default.jpg",
+  },
+];
+
+export const galleryStories = [
+  {
+    title: "Mapping the Eternal City",
+    blurb:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus scelerisque augue a egestas fermentum.",
+    href: "/works/novissima-et-accuratissima-romae-veteris-et-novae-tabula-topographica-delineatore.html",
+    image:
+      "https://Ennego.github.io/AccademiaMapsAll/iiif/vanvianenromemapjacobs/c7379f773094dab105494d9b57f10a95/full/300,231/0/default.jpg",
+  },
+  {
+    title: "Urban Facets",
+    blurb:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse interdum neque metus, a fringilla sem rhoncus a.",
+    href: "/works/nuova-pianta-et-alzata-della-citta-di-roma.html",
+    image:
+      "https://Ennego.github.io/AccademiaMapsAll/iiif/faldaromemapbiasa/a74ab7d5e810d2883f83f04bc6674499/full/300,293/0/default.jpg",
+  },
+];
+
+export const manuscriptHighlights = [
+  {
+    title: "Archivio Manuscript One",
+    href: "/works/asrtcsvol054116130512.html",
+    image:
+      "https://MultimedialitySummerSchool.github.io/NotarialDocumentsAll/iiif/asrtcsvol054116130512/1a72ff278a39acc6b21f0e0775bf4168/full/205,300/0/default.jpg",
+  },
+  {
+    title: "Archivio Manuscript Two",
+    href: "/works/asrtcsvol054216210522.html",
+    image:
+      "https://MultimedialitySummerSchool.github.io/NotarialDocumentsAll/iiif/asrtcsvol054216210522/8b784ea06c152052097cded98d80b67d/full/210,300/0/default.jpg",
+  },
+  {
+    title: "Archivio Manuscript Three",
+    href: "/works/asrtcsvol054216210524.html",
+    image:
+      "https://MultimedialitySummerSchool.github.io/NotarialDocumentsAll/iiif/asrtcsvol054216210524/a353c9a1a99f09cb360968f4fbb52e9a/full/205,300/0/default.jpg",
+  },
+];
+
+<Interstitials.Hero
+  headline="New Vistas of the Modern Museum"
+  description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc dignissim feugiat lorem, sed dictum lorem iaculis sit amet. Integer tristique fringilla ante in aliquam. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc dignissim feugiat lorem, sed dictum lorem iaculis."
+  links={[
+    {
+      href: hero.href,
+      title: "Explore Featured Work",
+      type: "primary",
+    },
+    {
+      href: "/search.html",
+      title: "Browse the Collection",
+      type: "secondary",
+    },
+  ]}
+/>
+
+<section className="bg-white py-24">
+  <div className="mx-auto max-w-6xl space-y-12 px-6">
+    <header className="space-y-4 text-center">
+      <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+        Exhibitions
+      </p>
+      <h2 className="text-3xl font-semibold text-slate-900 sm:text-4xl">
+        Current Cartographic Narratives
+      </h2>
+      <p className="mx-auto max-w-2xl text-sm leading-relaxed text-slate-600">
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam non
+        risus eget elit aliquet rutrum. Sed sed vehicula leo, nec convallis
+        arcu.
+      </p>
+    </header>
+    <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
+      {exhibitions.map((exhibition) => (
+        <article
+          key={exhibition.title}
+          className="group h-full rounded-3xl border border-slate-200 bg-slate-50/70 shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+        >
+          <a href={exhibition.href} className="flex h-full flex-col">
+            <div className="aspect-[4/3] overflow-hidden rounded-t-3xl">
+              <img
+                src={exhibition.image}
+                alt={exhibition.origin}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
+            <div className="flex flex-1 flex-col space-y-4 px-6 py-6">
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                Gallery
+              </p>
+              <h3 className="text-2xl font-semibold text-slate-900">
+                {exhibition.title}
+              </h3>
+              <p className="flex-1 text-sm leading-relaxed text-slate-600">
+                {exhibition.description}
+              </p>
+              <span className="text-sm font-medium text-brand">
+                Discover the story →
+              </span>
+            </div>
+          </a>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<section className="bg-slate-50 py-24">
+  <div className="mx-auto flex max-w-6xl flex-col gap-12 px-6 lg:flex-row lg:items-center">
+    <div className="w-full space-y-6 lg:w-1/2">
+      <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+        Immersive Gallery
+      </p>
+      <h2 className="text-3xl font-semibold text-slate-900 sm:text-4xl">
+        A Living Atlas of the City
+      </h2>
+      <p className="text-sm leading-relaxed text-slate-600">
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec interdum,
+        risus sit amet pulvinar fringilla, orci arcu fringilla arcu, quis
+        pharetra lectus ipsum in lorem. Vestibulum ante ipsum primis in faucibus
+        orci luctus et ultrices posuere cubilia curae.
+      </p>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        {galleryStories.map((story) => (
+          <a
+            key={story.title}
+            href={story.href}
+            className="group overflow-hidden rounded-3xl bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+          >
+            <div className="aspect-[4/3] overflow-hidden">
+              <img
+                src={story.image}
+                alt={story.title}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
+            <div className="space-y-3 px-5 py-6">
+              <h3 className="text-xl font-semibold text-slate-900">
+                {story.title}
+              </h3>
+              <p className="text-sm leading-relaxed text-slate-600">
+                {story.blurb}
+              </p>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+    <div className="w-full lg:w-1/2">
+      <div className="overflow-hidden rounded-[3rem] border border-slate-200 shadow-xl">
+        <img
+          src="https://Ennego.github.io/AccademiaMapsAll/iiif/maggimaupinromemapcambridge/c4a0d448aaa0ddd243ff184900e67fad/full/300,157/0/default.jpg"
+          alt="Eternal City panorama"
+          className="h-full w-full object-cover"
+        />
+      </div>
+    </div>
+  </div>
+</section>
+
+<section className="bg-white py-24">
+  <div className="mx-auto max-w-6xl space-y-12 px-6">
+    <header className="space-y-4 text-center">
+      <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+        Research Vault
+      </p>
+      <h2 className="text-3xl font-semibold text-slate-900 sm:text-4xl">
+        Manuscript Highlights
+      </h2>
+      <p className="mx-auto max-w-2xl text-sm leading-relaxed text-slate-600">
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris pulvinar
+        quis purus non vestibulum. Sed non dictum nisl, eget molestie justo.
+      </p>
+    </header>
+    <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
+      {manuscriptHighlights.map((item) => (
+        <a
+          key={item.title}
+          href={item.href}
+          className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-slate-100/60 shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+        >
+          <div className="aspect-[3/4] overflow-hidden">
+            <img
+              src={item.image}
+              alt={item.title}
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+          <div className="space-y-3 px-5 py-6">
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+              Archive
+            </p>
+            <h3 className="text-xl font-semibold text-slate-900">
+              {item.title}
+            </h3>
+            <p className="text-sm leading-relaxed text-slate-600">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque
+              auctor sapien vel metus volutpat aliquet.
+            </p>
+            <span className="text-sm font-medium text-brand">
+              View manuscript →
+            </span>
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+
+<section
+  className="relative isolate overflow-hidden bg-slate-900 py-24 text-white"
+  style={{
+    backgroundImage:
+      "url(https://Ennego.github.io/AccademiaMapsAll/iiif/tempestaromemapnatlibrarysweden/b04ac9927ba89833d4e1821c505e17b4/full/300,140/0/default.jpg)",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+  }}
+>
+  <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-[2px]"></div>
+  <div className="relative mx-auto max-w-5xl space-y-10 px-6 text-center">
+    <p className="text-xs uppercase tracking-[0.4em] text-slate-300">
+      Plan Your Visit
+    </p>
+    <h2 className="text-3xl font-semibold sm:text-4xl">
+      Experience the Museum In Person
+    </h2>
+    <p className="mx-auto max-w-3xl text-sm leading-relaxed text-slate-200">
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque
+      convallis mollis est, ut tempus velit bibendum in. Cras eget tincidunt
+      augue. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices
+      posuere cubilia curae.
+    </p>
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+      <div className="rounded-3xl border border-white/20 bg-white/10 px-5 py-6 backdrop-blur">
+        <h3 className="text-lg font-semibold">Hours</h3>
+        <p className="mt-2 text-sm leading-relaxed text-slate-100">
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas sed
+          sem vel sapien lacinia posuere.
+        </p>
+      </div>
+      <div className="rounded-3xl border border-white/20 bg-white/10 px-5 py-6 backdrop-blur">
+        <h3 className="text-lg font-semibold">Guided Tours</h3>
+        <p className="mt-2 text-sm leading-relaxed text-slate-100">
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer at
+          sapien vitae mi lacinia imperdiet.
+        </p>
+      </div>
+      <div className="rounded-3xl border border-white/20 bg-white/10 px-5 py-6 backdrop-blur">
+        <h3 className="text-lg font-semibold">Membership</h3>
+        <p className="mt-2 text-sm leading-relaxed text-slate-100">
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras ac
+          mauris suscipit, vestibulum lorem non, suscipit velit.
+        </p>
+      </div>
+    </div>
+    <a
+      href="/content/contact.html"
+      className="inline-flex items-center justify-center rounded-full bg-white/90 px-6 py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-white"
+    >
+      Plan a Group Visit
+    </a>
+  </div>
+</section>

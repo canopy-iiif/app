@@ -152,24 +152,28 @@ Why this is cool
 
 ## Interactive Components (SSR + Hydration)
 
-Two interactive areas are available out of the box and render safely in MDX:
+Interactive components render safely in MDX and hydrate client-side:
 
-- Viewer: `<Viewer iiifContent="…" />` — wraps `@samvera/clover-iiif` and hydrates client‑side.
-- Slider: `<Slider iiifContent="…" />` — wraps Clover’s slider; hydrates client‑side via a separate bundle.
-- Search (composable): place any of these where you want on the page and they hydrate client‑side:
+- Viewer: `<Viewer iiifContent="…" />` — wraps `@samvera/clover-iiif` and hydrates client-side.
+- Interstitial hero: `<Interstitials.Hero … />` — rotates featured IIIF works declared in `canopy.yml → featured`, falling back to cached manifest thumbnails. Accepts props such as `headline`, `description`, `links`, `height`, `background="theme" | "transparent"`, `index`, and `random` to control the content and layout.
+- Slider: `<Slider iiifContent="…" />` — wraps Clover’s slider; hydrates client-side via a separate bundle.
+- Related items: `<RelatedItems top={3} iiifContent?="…" />` — facet-driven related sliders.
+  - Without `iiifContent` (e.g., homepage): picks one top value per indexed facet label and renders one slider per label.
+  - With `iiifContent` (work pages): reads the Manifest’s metadata, intersects with indexed facets, then picks one of the Manifest’s values at random for each label and renders exactly one slider per label. Facets not present on the Manifest are skipped.
+- Search (composable): place any of these where you want on the page and they hydrate client-side:
+  - `<SearchForm />` — search input + submit button wired to the shared store
   - `<SearchSummary />` — summary text (query/type aware)
   - `<SearchResults />` — results list
   - `<SearchTabs />` — type tabs (e.g., work/pages/docs)
-  - `<RelatedItems top={3} iiifContent?="…" />` — related item sliders (facet‑driven)
-    - Without `iiifContent` (e.g., homepage): picks one top value per indexed facet label and renders one slider per label.
-    - With `iiifContent` (work pages): reads the Manifest’s metadata, intersects with indexed facets, then picks one of the Manifest’s values at random for each label and renders exactly one slider per label. Facets not present on the Manifest are skipped.
+  - `<SearchTotal />` — live count of visible results
 
 How it works:
 
-- MDX is rendered on the server. Browser‑only components emit a lightweight placeholder element.
+- MDX is rendered on the server. Browser-only components emit a lightweight placeholder element.
 - The build injects `site/scripts/react-globals.js` and the relevant hydration script(s) into pages that need them.
 - On load, the hydration script finds placeholders, reads props (embedded as JSON), and mounts the React component.
   - Viewer runtime: `site/scripts/canopy-viewer.js`
+  - Interstitial hero runtime: `site/scripts/canopy-hero-slider.js` (loaded only on pages that include `<Interstitials.Hero />`)
   - Slider runtime: `site/scripts/canopy-slider.js` (loaded only on pages that include `<Slider />`)
   - Related items runtime: `site/scripts/canopy-related-items.js` (loaded only on pages that include `<RelatedItems />`)
 
@@ -177,6 +181,16 @@ Usage examples:
 
 ```
 // content/index.mdx
+<Interstitials.Hero
+  headline="Create fast & lightweight digital projects with Canopy IIIF"
+  description="Canopy IIIF is an open-source static site generator for creating discovery-focused digital scholarship and collections websites with IIIF APIs."
+  background="transparent"
+  links={[
+    { href: "/search", title: "Browse Collection", type: "primary" },
+    { href: "/about", title: "About Canopy", type: "secondary" }
+  ]}
+/>
+
 ## Demo
 <Viewer iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/…?as=iiif" />
 
@@ -237,7 +251,7 @@ Dot‑notation (future): we may also expose these as `<Search.Form />`, `<Search
 - The workflow:
   - Excludes dev‑only paths (`.git`, `node_modules`, `packages`, `.cache`, `.changeset`, internal workflows/docs).
   - Rewrites `package.json` to remove workspaces and depend on published `@canopy-iiif/lib`/`@canopy-iiif/ui` versions; sets `build`/`dev` scripts to run `node app/scripts/canopy-build.mjs`.
-  - Patches the template’s deploy workflow to include an inline “verify HTML generated” step.
+  - Streams the template’s deploy workflow without additional post-build verification to keep the deploy path lean.
 - Setup:
   - Create the `template` repo under the `canopy-iiif` org (or your chosen owner) and add a `TEMPLATE_PUSH_TOKEN` secret (PAT with repo write access) to this repo’s secrets.
   - Optionally mark `template` as a Template repository so users can click “Use this template”.

@@ -9,7 +9,6 @@ Mission
 Key Scripts
 -----------
 - `guard-publish.js`: Protects publishes by ensuring only `@canopy-iiif/app` is public and preflight checks pass.
-- `verify-build.js`: Runs post-build assertions; invoked by the root `npm run verify` script.
 - `run-changeset.js`, `version-bump.js`: Wrap Changesets commands with local conventions.
 - `template/`: Logic for preparing the GitHub Pages template repo during releases.
 

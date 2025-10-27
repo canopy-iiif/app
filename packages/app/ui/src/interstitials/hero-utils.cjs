@@ -5,4 +5,3 @@ function computeHeroHeightStyle(height) {
 }
 
 module.exports = { computeHeroHeightStyle };
-

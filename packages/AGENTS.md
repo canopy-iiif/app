@@ -31,7 +31,6 @@ Reference Commands
 ------------------
 - Full build/dev loop: `npm run build` / `npm run dev`
 - UI bundle only: `npm -w @canopy-iiif/app run ui:build`
-- Helper verification: `npm run verify`
 
 Related Docs
 ------------

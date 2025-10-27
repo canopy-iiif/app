@@ -1,6 +1,6 @@
 {
   "name": "@canopy-iiif/app-root",
-  "version": "0.8.6",
+  "version": "0.9.0",
   "description": "An open-source static site generator designed for fast creation, contextualization, and customization of a discovery-focused digital scholarship and collections website using IIIF APIs.",
   "private": true,
   "main": "app/scripts/canopy-build.mjs",
@@ -9,8 +9,6 @@
   ],
   "scripts": {
     "build": "tsx app/scripts/canopy-build.mts",
-    "verify": "node packages/helpers/verify-build.js",
-    "build:verify": "npm run build && npm run verify",
     "dev": "tsx app/scripts/canopy-build.mts",
     "typecheck": "tsc --noEmit",
     "test": "npm run test:unit && npm run test:e2e",

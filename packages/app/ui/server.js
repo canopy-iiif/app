@@ -4,9 +4,8 @@ export { Slider } from "./src/iiif/Slider.jsx";
 export { Scroll } from "./src/iiif/Scroll.jsx";
 // New: RelatedItems placeholder (SSR-safe)
 export { default as RelatedItems } from "./src/iiif/MdxRelatedItems.jsx";
-// SSR-only Hero (includes featured selection via helpers)
-export { default as Hero } from "./src/iiif/Hero.jsx";
-export { default as FeaturedHero } from "./src/iiif/FeaturedHero.jsx";
+// Hero interstitials supersede the legacy Hero component.
+export * as Interstitials from "./src/interstitials/index.js";
 export { default as SubNavigation } from "./src/layout/SubNavigation.jsx";
 
 // SSR-safe MDX placeholders (do not import browser-only UI here)

@@ -31,6 +31,11 @@ Current Focus
 - Build tooling: review `ui/scripts/build-ui.mjs` for esbuild config drift (externals, target, watch mode ergonomics) and note desired improvements.
 - Accessibility + performance: capture any known UI gaps (focus management, bundle size) and link to issues once triaged.
 
+### Interstitials
+- `src/interstitials/Hero.jsx` renders the homepage hero. It rotates featured manifests declared in `canopy.yml → featured`, accepts overrides (`item`, `index`, `random`) when authors want deterministic slides, and exposes presentation props (`headline`, `description`, `links`, `height`, `background`).
+- Runtime: `packages/app/lib/components/hero-slider-runtime.js` bundles to `site/scripts/canopy-hero-slider.js`; ensure Swiper deps stay external to avoid duplicating React.
+- Utilities: sizing logic lives in `src/interstitials/hero-utils.js` / `.cjs` with tests under `tests/hero-*.test.js`. Keep both module formats in sync when updating defaults.
+
 Risks & Watchpoints
 -------------------
 - Externals mismatch: adding a dependency without updating esbuild externals or lib shims causes runtime bundle failures.
@@ -58,6 +63,6 @@ Logbook Template
 
 Logbook
 -------
-- 2025-09-26 / chatgpt: Removed the legacy `Fallback` component, added a dedicated `FeaturedHero` wrapper, and restored an accessible `data-canopy-search-form-trigger` button inside `SearchPanel` to keep homepage verification passing.
+- 2025-09-26 / chatgpt: Deprecated the legacy hero wrappers in favour of the interstitial hero and restored an accessible `data-canopy-search-form-trigger` button inside `SearchPanel` to keep homepage verification passing.
 - 2025-09-26 / chatgpt: Upgraded Tailwind to v4, mapped the search form trigger button to `bg-brand`, and ensured template output pins the same dependency.
 - 2025-09-27 / chatgpt: Restyled the search form with scoped `.canopy-search-form-*` classes, added base-path aware form resolution, and defaulted SearchPanel grouping to `['work','docs','page']` so new MDX record types appear in the teaser tabs.

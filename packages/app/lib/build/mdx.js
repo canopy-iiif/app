@@ -113,7 +113,7 @@ async function loadUiComponents() {
     }
     let comp = (mod && typeof mod === 'object') ? mod : {};
     // Hard-require core exports; do not inject fallbacks
-    const required = ['SearchPanel', 'SearchFormModal', 'SearchResults', 'SearchSummary', 'SearchTabs', 'Viewer', 'Slider', 'RelatedItems', 'Hero', 'FeaturedHero'];
+    const required = ['SearchPanel', 'SearchFormModal', 'SearchResults', 'SearchSummary', 'SearchTabs', 'Viewer', 'Slider', 'RelatedItems', 'Interstitials'];
     const missing = required.filter((k) => !comp || !comp[k]);
     if (missing.length) {
       throw new Error('[canopy][mdx] Missing UI exports: ' + missing.join(', '));
@@ -772,67 +772,21 @@ async function ensureReactGlobals() {
   });
 }
 
-// Bundle a small runtime to hydrate <Hero /> placeholders from featured items
 async function ensureHeroRuntime() {
   let esbuild = null;
-  try { esbuild = require("../../ui/node_modules/esbuild"); } catch (_) { try { esbuild = require("esbuild"); } catch (_) {} }
-  if (!esbuild) throw new Error('Hero runtime bundling requires esbuild. Install dependencies before building.');
-  const { path } = require("../common");
+  try {
+    esbuild = require("../ui/node_modules/esbuild");
+  } catch (_) {
+    try { esbuild = require("esbuild"); } catch (_) {}
+  }
+  if (!esbuild) throw new Error('Hero slider runtime bundling requires esbuild. Install dependencies before building.');
   ensureDirSync(OUT_DIR);
   const scriptsDir = path.join(OUT_DIR, 'scripts');
   ensureDirSync(scriptsDir);
-  const outFile = path.join(scriptsDir, 'canopy-hero.js');
-  const entry = `
-    import { Hero } from '@canopy-iiif/app/ui';
-    function ready(fn){ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', fn, { once: true }); else fn(); }
-    function parseProps(el){ try{ const s=el.querySelector('script[type="application/json"]'); if(s) return JSON.parse(s.textContent||'{}'); }catch(_){ } return {}; }
-    function rootBase(){ try { var bp=(window&&window.CANOPY_BASE_PATH)?String(window.CANOPY_BASE_PATH):''; return bp && bp.endsWith('/') ? bp.slice(0,-1) : bp; } catch(_){ return ''; } }
-    async function getApiVersion(){ try{ const u=rootBase() + '/api/index.json'; const res=await fetch(u).catch(()=>null); const j=res&&res.ok?await res.json().catch(()=>null):null; return (j && j.version) || ''; }catch(_){ return ''; } }
-    async function loadFeatured(){ try { const v = await getApiVersion(); const q = v ? ('?v='+encodeURIComponent(v)) : ''; const res = await fetch(rootBase() + '/api/featured.json' + q).catch(()=>null); const j = res && res.ok ? await res.json().catch(()=>[]) : []; return Array.isArray(j) ? j : (j && j.items) || []; } catch(_){ return []; } }
-    function mount(el, rec){ try{ const React=(window&&window.React)||null; const RDC=(window&&window.ReactDOMClient)||null; const createRoot = RDC && RDC.createRoot; if(!React||!createRoot) return; const props = parseProps(el) || {}; const height = props.height || 360; const node = React.createElement(Hero, { height, item: rec }); const root=createRoot(el); root.render(node); } catch(_){} }
-    ready(async function(){ const hosts = Array.from(document.querySelectorAll('[data-canopy-hero]')); if(!hosts.length) return; const featured = await loadFeatured(); if(!featured.length) return; hosts.forEach((el, i) => { try { const p = parseProps(el) || {}; let idx = 0; if (p && typeof p.index === 'number') idx = Math.max(0, Math.min(featured.length-1, Math.floor(p.index))); else if (p && (p.random===true || p.random==='true')) idx = Math.floor(Math.random() * featured.length); const rec = featured[idx] || featured[0]; if (rec) mount(el, rec); } catch(_){} }); });
-  `;
-  const reactShim = `
-    const React = (typeof window !== 'undefined' && window.React) || {};
-    export default React;
-    export const Children = React.Children;
-    export const Component = React.Component;
-    export const Fragment = React.Fragment;
-    export const createElement = React.createElement;
-    export const cloneElement = React.cloneElement;
-    export const createContext = React.createContext;
-    export const forwardRef = React.forwardRef;
-    export const memo = React.memo;
-    export const startTransition = React.startTransition;
-    export const isValidElement = React.isValidElement;
-    export const useEffect = React.useEffect;
-    export const useLayoutEffect = React.useLayoutEffect;
-    export const useMemo = React.useMemo;
-    export const useState = React.useState;
-    export const useRef = React.useRef;
-    export const useCallback = React.useCallback;
-    export const useContext = React.useContext;
-    export const useReducer = React.useReducer;
-    export const useId = React.useId;
-  `;
-  const rdomClientShim = `
-    const RDC = (typeof window !== 'undefined' && window.ReactDOMClient) || {};
-    export default RDC;
-    export const createRoot = RDC.createRoot;
-    export const hydrateRoot = RDC.hydrateRoot;
-  `;
-  const plugin = {
-    name: 'canopy-react-shims-hero',
-    setup(build) {
-      const ns = 'canopy-shim';
-      build.onResolve({ filter: /^react$/ }, () => ({ path: 'react', namespace: ns }));
-      build.onResolve({ filter: /^react-dom\/client$/ }, () => ({ path: 'react-dom-client', namespace: ns }));
-      build.onLoad({ filter: /^react$/, namespace: ns }, () => ({ contents: reactShim, loader: 'js' }));
-      build.onLoad({ filter: /^react-dom-client$/, namespace: ns }, () => ({ contents: rdomClientShim, loader: 'js' }));
-    }
-  };
+  const outFile = path.join(scriptsDir, 'canopy-hero-slider.js');
+  const entryFile = path.join(__dirname, '..', 'components', 'hero-slider-runtime.js');
   await esbuild.build({
-    stdin: { contents: entry, resolveDir: process.cwd(), sourcefile: 'canopy-hero-entry.js', loader: 'js' },
+    entryPoints: [entryFile],
     outfile: outFile,
     platform: 'browser',
     format: 'iife',
@@ -841,8 +795,18 @@ async function ensureHeroRuntime() {
     target: ['es2018'],
     logLevel: 'silent',
     minify: true,
-    plugins: [plugin],
   });
+  try {
+    const { logLine } = require('./log');
+    let size = 0;
+    try {
+      const st = fs.statSync(outFile);
+      size = (st && st.size) || 0;
+    } catch (_) {}
+    const kb = size ? ` (${(size / 1024).toFixed(1)} KB)` : '';
+    const rel = path.relative(process.cwd(), outFile).split(path.sep).join('/');
+    logLine(`✓ Wrote ${rel}${kb}`, 'cyan');
+  } catch (_) {}
 }
 
 module.exports = {
