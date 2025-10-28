@@ -25,5 +25,6 @@
     font-family: var(--font-sans);
     font-size: 100%;
     font-weight: 300;
+    scroll-behavior: smooth;
   }
 }

@@ -50,6 +50,7 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}) {
   const pageInfo = navigation.getPageInfo(normalizedRel);
   const navData = navigation.buildNavigationForFile(normalizedRel);
   const mergedProps = { ...(extraProps || {}) };
+  const headings = mdx.extractHeadings(source);
   if (pageInfo) {
     mergedProps.page = mergedProps.page
       ? { ...pageInfo, ...mergedProps.page }
@@ -57,6 +58,11 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}) {
   }
   if (navData && !mergedProps.navigation) {
     mergedProps.navigation = navData;
+  }
+  if (headings && headings.length) {
+    mergedProps.page = mergedProps.page
+      ? { ...mergedProps.page, headings }
+      : { headings };
   }
   const { body, head } = await mdx.compileMdxFile(filePath, outPath, null, mergedProps);
   const needsHydrateViewer =

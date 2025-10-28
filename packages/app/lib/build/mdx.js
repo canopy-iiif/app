@@ -139,6 +139,50 @@ async function loadUiComponents() {
   return UI_COMPONENTS;
 }
 
+function slugifyHeading(text) {
+  try {
+    return String(text || '')
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-');
+  } catch (_) {
+    return '';
+  }
+}
+
+function extractHeadings(mdxSource) {
+  const { content } = parseFrontmatter(String(mdxSource || ''));
+  const cleaned = content.replace(/```[\s\S]*?```/g, '');
+  const headingRegex = /^ {0,3}(#{1,6})\s+(.+?)\s*$/gm;
+  const seen = new Map();
+  const headings = [];
+  let match;
+  while ((match = headingRegex.exec(cleaned))) {
+    const hashes = match[1] || '';
+    const depth = hashes.length;
+    let raw = match[2] || '';
+    let explicitId = null;
+    const idMatch = raw.match(/\s*\{#([A-Za-z0-9_-]+)\}\s*$/);
+    if (idMatch) {
+      explicitId = idMatch[1];
+      raw = raw.slice(0, raw.length - idMatch[0].length);
+    }
+    const title = raw.replace(/\<[^>]*\>/g, '').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').trim();
+    if (!title) continue;
+    const baseId = explicitId || slugifyHeading(title) || `section-${headings.length + 1}`;
+    const count = seen.get(baseId) || 0;
+    seen.set(baseId, count + 1);
+    const id = count === 0 ? baseId : `${baseId}-${count + 1}`;
+    headings.push({
+      id,
+      title,
+      depth,
+    });
+  }
+  return headings;
+}
+
 function extractTitle(mdxSource) {
   const { data, content } = parseFrontmatter(String(mdxSource || ""));
   if (data && typeof data.title === "string" && data.title.trim()) {
@@ -271,6 +315,84 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
   const mod = await import(pathToFileURL(tmpFile).href + bust);
   const MDXContent = mod.default || mod.MDXContent || mod;
   const components = await loadUiComponents();
+  const rawHeadings = Array.isArray(extraProps && extraProps.page && extraProps.page.headings)
+    ? extraProps.page.headings
+        .map((heading) => (heading ? { ...heading } : heading))
+        .filter(Boolean)
+    : [];
+  const headingQueue = rawHeadings.slice();
+  const headingIdCounts = new Map();
+  headingQueue.forEach((heading) => {
+    if (heading && heading.id) {
+      const key = String(heading.id);
+      headingIdCounts.set(key, (headingIdCounts.get(key) || 0) + 1);
+    }
+  });
+
+  function reserveHeadingId(base) {
+    const fallback = base || 'section';
+    let candidate = fallback;
+    let attempt = 1;
+    while (headingIdCounts.has(candidate)) {
+      attempt += 1;
+      candidate = `${fallback}-${attempt}`;
+    }
+    headingIdCounts.set(candidate, 1);
+    return candidate;
+  }
+
+  function extractTextFromChildren(children) {
+    if (children == null) return '';
+    if (typeof children === 'string' || typeof children === 'number') return String(children);
+    if (Array.isArray(children)) return children.map((child) => extractTextFromChildren(child)).join('');
+    if (React.isValidElement(children)) return extractTextFromChildren(children.props && children.props.children);
+    return '';
+  }
+
+  function takeHeading(level, children) {
+    if (!headingQueue.length) return null;
+    const idx = headingQueue.findIndex((item) => {
+      if (!item || typeof item !== 'object') return false;
+      const depth = typeof item.depth === 'number' ? item.depth : item.level;
+      return depth === level;
+    });
+    if (idx === -1) return null;
+    const [heading] = headingQueue.splice(idx, 1);
+    if (!heading.id) {
+      const text = heading.title || extractTextFromChildren(children);
+      const baseId = slugifyHeading(text);
+      heading.id = reserveHeadingId(baseId);
+    }
+    if (!heading.title) {
+      heading.title = extractTextFromChildren(children);
+    }
+    return heading;
+  }
+
+  function createHeadingComponent(level) {
+    const tag = `h${level}`;
+    const Base = components && components[tag] ? components[tag] : tag;
+    return function HeadingComponent(props) {
+      const heading = takeHeading(level, props && props.children);
+      const id = props && props.id ? props.id : heading && heading.id;
+      const finalProps = id ? { ...props, id } : props;
+      return React.createElement(Base, finalProps, props && props.children);
+    };
+  }
+
+  const levelsPresent = Array.from(
+    new Set(
+      headingQueue
+        .map((heading) => (heading ? heading.depth || heading.level : null))
+        .filter((level) => typeof level === 'number' && level >= 1 && level <= 6)
+    )
+  );
+  const headingComponents = levelsPresent.length
+    ? levelsPresent.reduce((acc, level) => {
+        acc[`h${level}`] = createHeadingComponent(level);
+        return acc;
+      }, {})
+    : {};
   const MDXProvider = await getMdxProvider();
   // Base path support for anchors
   const Anchor = function A(props) {
@@ -294,7 +416,7 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
     ? React.createElement(PageContext.Provider, { value: contextValue }, withLayout)
     : withLayout;
   const withApp = React.createElement(app.App, null, withContext);
-  const compMap = { ...components, a: Anchor };
+  const compMap = { ...components, ...headingComponents, a: Anchor };
   const page = MDXProvider
     ? React.createElement(MDXProvider, { components: compMap }, withApp)
     : withApp;
@@ -811,6 +933,7 @@ async function ensureHeroRuntime() {
 
 module.exports = {
   extractTitle,
+  extractHeadings,
   isReservedFile,
   parseFrontmatter,
   compileMdxFile,

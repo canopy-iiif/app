@@ -7,6 +7,7 @@ export { default as RelatedItems } from "./src/iiif/MdxRelatedItems.jsx";
 // Hero interstitials supersede the legacy Hero component.
 export * as Interstitials from "./src/interstitials/index.js";
 export { default as SubNavigation } from "./src/layout/SubNavigation.jsx";
+export { default as Layout } from "./src/layout/Layout.jsx";
 
 // SSR-safe MDX placeholders (do not import browser-only UI here)
 export { default as SearchResults } from "./src/search/MdxSearchResults.jsx";
