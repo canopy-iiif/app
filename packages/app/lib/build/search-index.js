@@ -6,11 +6,16 @@ function pagesToRecords(pageRecords) {
   const list = Array.isArray(pageRecords) ? pageRecords : [];
   return list
     .filter((p) => p && p.href && p.searchInclude)
-    .map((p) => ({
-      title: p.title || p.href,
-      href: rootRelativeHref(p.href),
-      type: p.searchType || 'page',
-    }));
+    .map((p) => {
+      const summary = typeof p.searchSummary === 'string' ? p.searchSummary.trim() : '';
+      const record = {
+        title: p.title || p.href,
+        href: rootRelativeHref(p.href),
+        type: p.searchType || 'page',
+      };
+      if (summary) record.summaryValue = summary;
+      return record;
+    });
 }
 
 function maybeMockRecords() {

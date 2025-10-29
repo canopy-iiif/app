@@ -1,6 +1,6 @@
 {
   "name": "@canopy-iiif/app",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "private": false,
   "license": "MIT",
   "author": "Mat Jordan <mat@northwestern.edu>",
@@ -19,6 +19,7 @@
     "./head": "./lib/head.js",
     "./orchestrator": {
       "types": "./types/orchestrator.d.ts",
+      "import": "./lib/orchestrator.js",
       "require": "./lib/orchestrator.js",
       "default": "./lib/orchestrator.js"
     }

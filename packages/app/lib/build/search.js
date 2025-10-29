@@ -184,6 +184,8 @@ async function collectMdxPageRecords() {
         const rel = path.relative(CONTENT_DIR, p).replace(/\.mdx$/i, '.html');
         if (base !== 'sitemap.mdx') {
           const href = rootRelativeHref(rel.split(path.sep).join('/'));
+          const plainText = mdx.extractPlainText(src);
+          const summary = plainText || '';
           const underSearch = /^search\//i.test(href) || href.toLowerCase() === 'search.html';
           let include = !underSearch;
           let resolvedType = null;
@@ -201,7 +203,13 @@ async function collectMdxPageRecords() {
             resolvedType = 'page';
           }
           const trimmedType = resolvedType && String(resolvedType).trim();
-          pages.push({ title, href, searchInclude: include && !!trimmedType, searchType: trimmedType || undefined });
+          pages.push({
+            title,
+            href,
+            searchInclude: include && !!trimmedType,
+            searchType: trimmedType || undefined,
+            searchSummary: summary,
+          });
         }
       }
     }

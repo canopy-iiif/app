@@ -44,7 +44,7 @@ function highlightSnippet(snippet, query) {
   );
 }
 
-export default function AnnotationCard({
+export default function TextCard({
   href = "#",
   title = "Untitled",
   annotation = "",

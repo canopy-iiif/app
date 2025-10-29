@@ -231,8 +231,7 @@ function sanitizeRecordForIndex(r) {
     ''
   ).trim();
   if (summaryVal) {
-    const clipped = summaryVal.length > 1000 ? summaryVal.slice(0, 1000) + '…' : summaryVal;
-    out.summary = clipped;
+    out.summary = summaryVal;
   }
   return out;
 }

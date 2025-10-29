@@ -183,6 +183,23 @@ function extractHeadings(mdxSource) {
   return headings;
 }
 
+function extractPlainText(mdxSource) {
+  let { content } = parseFrontmatter(String(mdxSource || ''));
+  if (!content) return '';
+  content = content.replace(/```[\s\S]*?```/g, ' ');
+  content = content.replace(/`{1,3}([^`]+)`{1,3}/g, '$1');
+  content = content.replace(/!\[[^\]]*\]\([^)]*\)/g, ' ');
+  content = content.replace(/\[[^\]]*\]\([^)]*\)/g, '$1');
+  content = content.replace(/<[^>]+>/g, ' ');
+  content = content.replace(/\{#([^}]+)\}/g, ' ');
+  content = content.replace(/\{\/[A-Za-z0-9_.-]+\}/g, ' ');
+  content = content.replace(/\{[^{}]*\}/g, ' ');
+  content = content.replace(/[#>*~_\-]+/g, ' ');
+  content = content.replace(/\n+/g, ' ');
+  content = content.replace(/\s+/g, ' ').trim();
+  return content;
+}
+
 function extractTitle(mdxSource) {
   const { data, content } = parseFrontmatter(String(mdxSource || ""));
   if (data && typeof data.title === "string" && data.title.trim()) {
@@ -934,6 +951,7 @@ async function ensureHeroRuntime() {
 module.exports = {
   extractTitle,
   extractHeadings,
+  extractPlainText,
   isReservedFile,
   parseFrontmatter,
   compileMdxFile,
