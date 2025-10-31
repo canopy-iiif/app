@@ -1,0 +1,47 @@
+import { Callout, Box, Colors, Radius, Scaling, accentColors, grayColors } from '@canopy-iiif/app/docs-legacy-compat';
+
+
+# Color & Visuals
+
+Implementers of Canopy IIIF can configure the color scheme and visual elements of the site by modifying the `theme` property in the `canopy.json` file. See [theme configuration options](/configuration/theme) for more information.
+
+```json copy filename="config/canopy.json" {3-9}
+{
+  "collection": "https://iiif.bodleian.ox.ac.uk/iiif/collection/hobhouse",
+  "theme": {
+    "defaultTheme": "light",
+    "accentColor": "red",
+    "grayColor": "sand",
+    "radius": "small",
+    "scaling": "100%"
+  }
+}
+```
+
+## Colors
+
+The following defined and accessible color scales are available for use in the `theme` configuration. Learn more about the colors from the [Radix UI Themes documentation](https://www.radix-ui.com/themes/docs/theme/color).
+
+### Accent Colors
+
+UI components use the accent color to highlight interactive elements. The default accent color is `indigo`.
+
+<Colors colors={accentColors} />
+
+### Gray Colors
+
+UI components use the gray color to style non-interactive elements. The default gray color is `slate`.
+
+<Colors colors={grayColors} />
+
+## Radius
+
+The `radius` property in the `theme` configuration sets the border radius for UI components. The default radius is `medium`.
+
+<Radius />
+
+## Scaling
+
+The `scaling` property in the `theme` configuration sets the scaling factor for UI components. The default scaling is `100%`.
+
+<Scaling />

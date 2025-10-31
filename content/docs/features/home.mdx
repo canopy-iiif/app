@@ -1,0 +1,139 @@
+import { Callout, Box } from '@canopy-iiif/app/docs-legacy-compat';
+
+# Home
+
+The Canopy IIIF build process automatically generates a home page for your project at `/`. This page is customizable from the `content/index.mdx` file in your collection's repository.
+
+```mdx filename=content/index.mdx
+---
+title: Canopy IIIF
+showHero: true
+showHighlighted: true
+---
+
+## About Canopy
+
+**Canopy IIIF** is a purely [IIIF](https://iiif.io/) sourced site generator using Next.js. Canopy is an experimental application that will standup a browseable and searchable digital collections style site entirely from a [IIIF Collection](https://iiif.io/api/presentation/3.0/#51-collection) and the resources it references.
+
+<ButtonWrapper>
+  <Button children="Read More" href="/about" buttonType="primary" />
+  <Button
+    children="View Code"
+    href="https://github.com/canopy-iiif/canopy-iiif"
+  />
+</ButtonWrapper>
+
+```
+
+## Features
+
+The Canopy IIIF home page is comprised of the following features:
+
+- [Hero Image](#hero-image)
+- [Custom Content](#custom-content)
+- [Highlighted Works](#highlighted-works)
+
+<Box m="9" my="6">
+  ![canopy work page](/examples/features-home-1.png)
+</Box>
+
+### Hero Image
+
+If `showHero` is `true`, a hero image is created for your collection automatically.
+
+```mdx filename=content/index.mdx {3}
+---
+title: Canopy IIIF
+showHero: true
+showHighlighted: true
+---
+
+## About Canopy
+
+```
+
+If a `featured` property is included in your collection's `config/canophy.json` file, the hero image will be generated from these manifests.
+
+```json file=config/canopy.json {4-7}
+{
+  "collection": "https://api.dc.library.northwestern.edu/api/v2/search?query=%22nez%20perce%22&as=iiif&size=125",
+  "metadata": ["Subject", "Date", "Dimensions"],
+  "featured": [
+    "https://api.dc.library.northwestern.edu/api/v2/works/cd5e1b9c-370b-40e5-b3d9-defc1d8e0777?as=iiif",
+    "https://api.dc.library.northwestern.edu/api/v2/works/14a6aa15-9e12-47a7-9617-91f430d4f47b?as=iiif"
+  ]
+}
+```
+
+If the `featured` array contains more than one Manifest, the hero image will be a slideshow with arrows pointing left
+and right that allows visitors to browse featured works. In the bottom right corner of the hero image, the label of the
+Manifest is displayed as the title of the work.
+
+If no `featured` Manifests are provided in `config/canopy.json`, the hero image will be randomly selected from the
+Manifests within the collection.
+
+### Custom Content
+
+You can easily add an abstract or other custom content to the home page beneath the hero image by modifying the contents of `content/index.mdx`.
+
+```mdx filename=content/index.mdx
+---
+title: Canopy IIIF
+showHero: true
+showHighlighted: true
+---
+
+## About Canopy
+
+**Canopy IIIF** is a purely [IIIF](https://iiif.io/) sourced site generator using Next.js. Canopy is an experimental application that will standup a browseable and searchable digital collections style site entirely from a [IIIF Collection](https://iiif.io/api/presentation/3.0/#51-collection) and the resources it references.
+
+<ButtonWrapper>
+  <Button children="Read More" href="/about" buttonType="primary" />
+  <Button
+    children="View Code"
+    href="https://github.com/canopy-iiif/canopy-iiif"
+  />
+</ButtonWrapper>
+
+```
+
+### Highlighted Works
+
+If `showHero` is set to `true`, highlighted works sliders are displayed at the bottom of the page.
+
+```mdx filename=content/index.mdx {4}
+---
+title: Canopy IIIF
+showHero: true
+showHighlighted: true
+---
+
+## About Canopy
+
+```
+
+These sliders are generated based on the values of the `metadata` array in `config/canopy.json`.
+
+```json file=config/canopy.json {3}
+{
+  "collection": "https://api.dc.library.northwestern.edu/api/v2/search?query=%22nez%20perce%22&as=iiif&size=125",
+  "metadata": ["Subject", "Date", "Dimensions"],
+  "featured": [
+    "https://api.dc.library.northwestern.edu/api/v2/works/cd5e1b9c-370b-40e5-b3d9-defc1d8e0777?as=iiif",
+    "https://api.dc.library.northwestern.edu/api/v2/works/14a6aa15-9e12-47a7-9617-91f430d4f47b?as=iiif"
+  ]
+}
+```
+
+The sliders are driven by IIIF Collections that are automatically generated during the build process. At this time,
+a IIIF Collection resource is created for each unique metadata value in the Manifests of the IIIF Collection that is
+associated with a label in the `metadata` array of `config/canopy.json`. The generated IIIF Collections contain each
+Manifest that has the value for the associated metadata label.
+
+On the home, a slider is created for each value in the `metadata` array of `confing/canopy.json`. The IIIF Collection
+that is passed to each slider is randomly selected during build time.
+
+<Callout>
+  For more information on Sliders in Canopy, see [Slider](/content/slider) and the [Create Markdown Content](/create-markdown-content)
+  guide.
+</Callout>

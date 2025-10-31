@@ -1,0 +1,33 @@
+import { Box } from '@canopy-iiif/app/docs-legacy-compat';
+
+# Search and Work Results
+
+Canopy IIIF automatically provides a route to all works in a collection at `/works`. Each Manifest in the IIIF Collection
+is represented on this page. This same template is displayed when a user searches for a term in the search bar at the
+top of the screen. This page displays labels and thumbnails for all works in the collection and are lazily loaded as
+the user scrolls down the page.
+
+## Features
+
+The search and work results page is composed of several features that are available automatically:
+
+- Results List
+- Filter
+
+<Box m="9" my="6">
+  ![canopy work results](/examples/features-search-1.png)
+</Box>
+
+### Results List
+
+The results list is a masonry layout of all works in the collection or the corresponding search results when loaded as
+search results or limited via the [Filter](#Filter). Each work is represented by a `figure` element that is made up of a
+representative thumbnail and the Manifest label. The figures are hyper linked to the corresponding work page. The list
+is lazily loaded as the user scrolls down the page.
+
+### Filter
+
+The Filter element allows a user to limit the results list to a specific set of works. The filter options are determined
+by the values of the `metadata` property in the `config/canopy.json` file. From the filter, a user can limit the results
+by one value from each metadata field. Once the user clicks _View Results_, the results list will be limited to only
+the works that match the selected filter options.

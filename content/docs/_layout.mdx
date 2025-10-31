@@ -1,3 +1,12 @@
-<Layout navigation={true} fluid={false}>
-  {props.children}
+---
+type: "docs"
+---
+
+import { MDXProvider } from '@mdx-js/react';
+import { DocsCodeBlock } from '@canopy-iiif/app/ui/server';
+
+<Layout navigation={true} fluid={true}>
+  <MDXProvider components={{ pre: DocsCodeBlock }}>
+    {props.children}
+  </MDXProvider>
 </Layout>

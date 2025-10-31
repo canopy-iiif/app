@@ -1,0 +1,123 @@
+import { Steps, Callout, Box } from '@canopy-iiif/app/docs-legacy-compat';
+
+# Set up a Collection with Tropy and Tropiiify
+
+Canopy IIIF generates a browseable and searchable static site for digital collections and exhibits using a single IIIF Collection. If you're starting from scratch, you may not have a IIIF Collection, IIIF Manifests, or a IIIF Image server online. This guide will walk you through the process of starting from zero and leveraging [Tropy](https://tropy.org/), [Tropiiify](https://github.com/arkalab/tropiiify), and GitHub Pages with Canopy to deploy a full digital collection site.
+
+<Callout>
+  This guide is heavily inspired by previous blog posts by
+  [Raffaele Messuti](https://literarymachin.es/iiif-tropy-canopy/) and
+  [Shawn Graham](https://electricarchaeology.ca/2024/07/25/make-your-tropy-collection-and-annotations-available-with-canopy/).
+  For more advanced applications of Tropy with Canopy, be sure to read these posts.
+</Callout>
+
+<Callout type="info">
+    In addition to Canopy, this guide requires a [GitHub account](https://github.com/),
+    [Tropy software]((https://tropy.org/)), and the [Tropiiify plugin](https://github.com/arkalab/tropiiify).
+    All of these additional requirements are free to use.
+</Callout>
+
+## Use Case
+
+  You are a digital scholar with many images on your personal computer that are not available in an existing IIIF
+  repository online, and you would like to build a new digital scholarship site with these materials.
+
+## Implementation
+
+<Steps>
+
+### Create a Repository in GitHub to Act as an Image Server
+
+Once we've described and arranged the images for your project, they will need to be hosted in GitHub.
+To do this, let's create a new GitHub repository and configure it to serve your images.
+
+* Navigate to [Create New Repository](https://github.com/new).
+* Choose the account you want to own your site in the **Owner** dropdown. This is usually yourself.
+* Give your repository a name that makes sense for your project. (e.g. *images-for-canopy-project*)
+* Make sure to check the radio button next to **Public** so that the images will be publicly available.
+* Click **Create Repository**.
+
+### Arrange and Describe your Works in Tropy
+
+Now that you have a place to store your images, we need to arrange them into works and describe those works
+so they are meaningful to others. To do this, we are going to use Tropy.
+
+1. Download and install [Tropy](https://tropy.org/) on your computer.
+2. Once installed, let's add a few images. If your images are compound works or books, you can arrange them as so. Follow the [Tropy Docs](https://docs.tropy.org/) for more details.
+3. As you describe your new works, make sure you use the **Tropy Generic** metadata template so that your metadata gets mapped to the manifest.
+4. In the *identifier* field, be sure to use a unique string for each work.
+
+### Export Your Images and Works as IIIF
+
+To get our new works to IIIF, we need to install Tropiiify. This plugin handles a lot of the complex pieces of a Canopy
+site including: creating static IIIF image API responses with tiling, splitting the images into Tiles, generating your
+manifests, and ultimately a IIIF collection object.
+
+1. Download the latest release of the [plugin](https://github.com/martimpassos/tropiiify/releases/latest).
+2. In Tropy, navigate to *Preferences… > Plugins* and click Install Plugin to select the downloaded ZIP file.
+3. Configure your IIIF by clicking the *Settings* button in *Preferences > Plugins*.
+4. Set the `Name` value to what you want your export action to be called. This value will show up in the *File > Export menu* (e.g. Export IIIF).
+5. Set the `Collection Name` to what you want your Canopy project to be called.
+6. Set `IIIF base id` to the name of your GitHub Pages site. This will include the repository name and the account you added the repository to like so: `https://{GitHubAccountName}.github.io/{RepositoryName}` (e.g. https://markpbaggett.github.io/tropy-static-iiif)
+7. For now, choose *Tropy Generic* in `Item Template` to use the default mapping of metadata.
+8. Highlight all your works and click *File > Export* and the value you entered in the `Name` field in step four above.
+9. Choose where you want to export your files on your machine.
+
+<Callout type="info">
+    It is possible to modify metadata templates to work with Tropiiify. See the [Tropiiify docs](https://github.com/arkalab/tropiiify) for more details.
+</Callout>
+
+### Add Your Files to to GitHub
+
+Now that we have all your images, image server responses, manifests, and collection, we need to get them
+into your GitHub repository. There are many ways to approach this, but one easy solution is:
+
+1. On the command line, add and commit with git all the files you just exported.  The export stores all files in a directory called `iiif`. Make sure the root of your repository is this and not its parent that you exported it into.GitHub
+2. Push your existing repository by copying and pasting all the instructions beneathe **…or push an existing repository from the command line** in your GitHub repository to the command line and press "Return".
+
+### Enable the Repository to be your Image Server
+
+Now that you have a repository with all your data, we need to configure it so that it will function as an image
+server.
+
+* In your new GitHub repository, click the **Settings** button.
+* Click the **Pages** tab.
+* Under **Build and deployment**, select **deploy from a branch**
+* Under **Branch**, make sure it is set to ‘main’ and ‘/(root)’
+* Click save.
+
+<Callout type="info">
+    Github repos have a maximum file size of 5GB.  If you exceed this amount, you can add additional repositories
+    to serve sections of your site.
+</Callout>
+
+###  Setup Your Canopy Project to Use This Collection
+
+Now that all your files are ready, we can setup a new Canopy project to use them.  To do that:
+
+* Follow the instructions in [this guide](https://canopy-iiif.github.io/docs/deploy-to-github-pages) to set up a new Canopy site in GitHub Pages.
+* In your `config/canopy.json`file in your new Canopy instance, set the `collection` value to `https://{GitHubAccount}.github.io/{RepositoryYouCreatedInStep1}/index.json`
+
+```json {2-3}
+{
+  "collection": "https://markpbaggett.github.io/canopy-tropy-example/index.json",
+  "devCollection": "https://markpbaggett.github.io/canopy-tropy-example/index.json",
+  "metadata": ["Date"],
+  "label": { "none": ["Tropiiify Example Site"] },
+  "summary": {
+    "none": ["An Example Site using Tropiiify"]
+  },
+  "theme": {
+    "defaultTheme": "light",
+    "accentColor": "red",
+    "grayColor": "mauve",
+    "radius": "small",
+    "scaling": "100%"
+  }
+}
+```
+
+* The site will now build and be available online at the address described in step 5 of the **Deploy to GitHub Pages**  guide in 5 to 10 minutes.
+
+
+</Steps>

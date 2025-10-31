@@ -1,0 +1,54 @@
+import { Steps, Callout, Box } from '@canopy-iiif/app/docs-legacy-compat';
+
+# Use RAMP as your Default Viewer
+
+Canopy IIIF comes preconfigured to use either the [CloverIIIF](https://samvera-labs.github.io/clover-iiif) or [RAMP](https://ramp.avalonmediasystem.org/) viewers. This guide will explain how to use RAMP instead of CloverIIIF as the viewer for your collections.
+
+<Callout type="info">
+    Currently, Canopy has no method of determining the work type of a IIIF work. Since RAMP is designed for Audio Visual
+     content only, RAMP should only be used when all of the content is audio or video works.
+</Callout>
+
+## Use Case
+
+You are a curator who wants to create a digital exhibit on a collection of audio visual content. The manifests that
+represent each work include structures and ranges and you want to be able to display these to your users.
+
+## Implementation
+
+<Steps>
+
+### Modify Config to Use an A/V Collection
+
+Select a IIIF Collection that contains only A/V works and modify your `canopy.json` file to use it.
+
+```json filename="config/canopy.json" copy
+{
+  "collection": "https://digital.lib.utk.edu/assemble/collection/collections/rfta",
+  "metadata": ["Place", "Date", "Subject"]
+}
+```
+
+### Add a Components Section to Your Config
+
+Add a new components section to your canopy.json file.
+
+```json filename="config/canopy.json" copy {4-6}
+{
+  "collection": "https://digital.lib.utk.edu/assemble/collection/collections/rfta",
+  "metadata": ["Place", "Date", "Subject"]
+  "components": {
+    "viewer": "ramp"
+  }
+}
+```
+
+### View and Navigate Works in the RAMP Viewer
+
+Once your site has been updated and it is finished rebuilding, navigate to a work to explore it with RAMP.
+
+<Box m="9" my="6">
+  ![A Thumbnail of RAMP as the Component Viewer](/examples/ramp-as-viewer.png)
+</Box>
+
+</Steps>

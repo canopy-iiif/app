@@ -1,0 +1,103 @@
+import { Callout } from '@canopy-iiif/app/docs-legacy-compat';
+
+# Map
+
+A map route can be enabled to provide geographic discovery of works. This feature builds markers from geographic point features found in [navPlace](https://iiif.io/api/extension/navplace/) properties at the Manifest level. For implementation, Canopy IIIF uses [Leaflet](https://leafletjs.com/) to render the map.
+
+**Note:** Currently, only `navPlace` properties found at the Manifest level are displayed. Also, only Features of `type` **Point** are displayed.
+
+<Callout type="info">
+  See the **[Enable a Map with navPlace](/enable-a-map-with-navPlace)** for a
+  step-by-step guide.
+</Callout>
+
+## Properties
+
+The `map` property is an object that contains the configuration for the `/map` route and its components.
+
+| Property        | Type      | Description                                                                                                                |
+| --------------- | --------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `enabled`       | `boolean` | Boolean value to enable or disable the `/map` route. The default value is `false`.                                         |
+| `defaultBounds` | `Array`   | The `defaultBounds` property defines the coordinates of the initial view of the map.                                       |
+| `icon`          | `Object`  | The `icon` property defines the icon used to represent each marker on the map.                                             |
+| `tileLayers`    | `Array`   | The map's tile layers are also configured here, giving users the ability to choose and customize layers for their project. |
+
+### enabled
+
+Boolean value to enable or disable the `/map` route. The default value is `false`. To enable this option, set the option to `true`.
+
+```json
+"enabled": true
+```
+
+### defaultBounds
+
+The `defaultBounds` property defines the coordinates of the initial view of the map. This property is an array of
+arrays of longitude and latitude coordinates. Unless there are no markers found within the manifests of the
+overarching collection, this property will be ignored.
+
+```json
+"defaultBounds": [[51.505, -0.09]]
+```
+
+### icon
+
+The `icon` property defines the icon used to represent each marker on the map. The `iconUrl` property is the path to
+the image file used as the icon. The `iconSize` property is an array of the width and height of the icon in pixels.
+The `iconAnchor` property is an array of the x and y coordinates of the icon's anchor point in pixels. These values
+are used to position the icon relative to its marker's coordinates.
+
+```json copy
+"icon": {
+  "iconUrl": "images/marker-icon.png",
+  "iconSize": [24, 36],
+  "iconAnchor": [12, 36]
+}
+```
+
+### tileLayers
+
+The map's tile layers are also configured here, giving users the ability to choose and customize layers for their project. Additional services, such as MapBox, can be easily integrated following this pattern. Each tile layer defined here will appear as an option in the layer control of the map. The name property defines the text next to the radio button. The url property is the link to the tile layer. Finally, the attribution property defines the text that appears at the bottom of the map in case the tile layer requires any specific attribution on use. The first tile layer in the array will be used as the default map.
+
+```json copy
+"tileLayers": [
+  {
+    "name": "OpenStreetMap",
+    "url": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    "attribution": "&copy; OpenStreetMap contributors"
+  },
+  {
+    "name": "OpenTopoMap",
+    "url": "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+    "attribution": "&copy; OpenStreetMap contributors"
+  }
+]
+```
+
+## Example Map Configuration
+
+In this example, we have a IIIF Collection with Manifests having `navPlace` properties. The configuration enables the `/map` route and uses an Open Street Map tile layer.
+
+```json copy filename="config/canopy.json" {5-20}
+{
+  "collection": "https://digital.lib.utk.edu/assemble/collection/gsmrc/wcc",
+  "featured": ["  https://digital.lib.utk.edu/assemble/manifest/wcc/269"],
+  "metadata": ["Place", "Date", "Subject"],
+  "map": {
+    "enabled": true,
+    "defaultBounds": [[51.505, -0.09]],
+    "icon": {
+      "iconUrl": "images/marker-icon.png",
+      "iconSize": [24, 36],
+      "iconAnchor": [12, 36]
+    },
+    "tileLayers": [
+      {
+        "name": "OpenStreetMap",
+        "url": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "attribution": "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors"
+      }
+    ]
+  }
+}
+```

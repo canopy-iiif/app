@@ -1,0 +1,49 @@
+---
+title: Layout
+description: "Overview of the docs layout wrapper and its configuration."
+
+---
+
+# Layout
+
+The docs area is wrapped with the `<Layout>` component from `@canopy-iiif/app/ui/server`. It arranges the page into three distinct regions (sidebar navigation, main content, and optional on-page table of contents) and wires up global navigation metadata during build time.
+
+```mdx filename="content/docs/_layout.mdx"
+---
+type: "docs"
+---
+
+<Layout navigation={true} fluid={true}>
+  {props.children}
+</Layout>
+```
+
+## Core props
+
+- **`navigation`**: toggles the left-hand sidebar that renders your section menu. Set it to `false` when you want a full-width document without navigation.
+- **`sidebar`**: accepts a React node or render function to replace the default sidebar. `null` keeps the auto-generated navigation.
+- **`contentNavigation`**: enables the right-hand table of contents generated from Markdown headings (`##` and deeper). Disable it when a page is short or when you want to hide the toc.
+- **`fluid`**: switches the content container from a centered max-width layout to full-width gutters (useful for wide screenshots or tables).
+- **Class name props** (`className`, `contentClassName`, `sidebarClassName`, `contentNavigationClassName`): allow fine-grained styling hooks when additional spacing or typography tweaks are required.
+
+## Page context
+
+During the MDX build, heading data and navigation metadata are injected into the page context. `<Layout>` reads that context to:
+
+- Build the section navigation (`content/docs/_meta.json`, plus any `_meta.json` files found deeper in the directory tree).
+- Generate the table of contents from Markdown headings.
+- Prefill component props such as `pageTitle` for downstream components like `<ContentNavigation />`.
+
+Because the layout receives its configuration at build time, individual MDX files can stay lean—compose Markdown, set front matter (`title`, `navigation`, etc.), and let the wrapper render the chrome.
+
+## Customising per section
+
+If a section needs a different layout treatment, create or edit the relevant `_layout.mdx` file and pass custom props:
+
+```mdx filename="content/docs/features/_layout.mdx"
+<Layout fluid={false} navigation sidebarClassName="md:max-w-xs" contentNavigation={false}>
+  {props.children}
+</Layout>
+```
+
+Pair these overrides with `_meta.json` files in the same directory to drive the section menu. See [Navigation](./navigation) for details on how the metadata files map to the sidebar.

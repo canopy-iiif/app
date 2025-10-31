@@ -1,0 +1,228 @@
+import { Callout, Steps, Box } from '@canopy-iiif/app/docs-legacy-compat';
+
+# Get Started
+
+Have a project in mind? Let's get started! This guide will walk you through the process of creating a basic Canopy IIIF project using a readily provided IIIF Collection.
+
+## Use Case
+
+You are on a team at a university library seeking to create a digital exhibit for a [Korean Literary](https://content.lib.washington.edu/koreanweb/index.html)
+collection in your digital repository that is provided as a [IIIF Collection](https://digitalcollections.lib.washington.edu/iiif/2/korean/manifest.json). You want to create
+a discovery focused web site that allows users to search and browse the collection.
+
+## Implementation
+
+<Steps>
+
+### Create a project
+
+#### Using a Github template
+
+<Callout>
+  This method requires a [GitHub account](https://github.com/); however, it
+  should be easier to follow for users of Canopy without a developer
+  environment.
+</Callout>
+
+1. Navigate to the [Canopy IIIF repository](https://github.com/canopy-iiif/canopy-iiif) in GitHub
+2. Click the _"Use this template"_ button
+3. Click the _"Create a new repository"_ button
+4. Select the account you want to own the repository
+5. Enter a repository name and optional description
+6. Click the _"Create repository"_ button
+
+#### Using `git clone`
+
+1. In your terminal, navigate to the a working directory where you want to create your project
+2. Clone the `canopy-iiif/canopy-iiif` repository OR your Canopy repository instance
+
+```sh copy
+cd ~/Projects
+git clone git@github.com:canopy-iiif/canopy-iiif.git
+```
+
+### Install dependencies
+
+Navigate to your new project directory and install dependencies.
+
+```sh copy
+cd canopy-iiif
+npm install
+```
+
+### Create configuration file
+
+Copy the sample configuration file and update `collection`, `featured`, and `metadata` properties.
+
+```sh copy
+cp config/canopy.sample.json config/canopy.json
+```
+
+In this example we will use the [Korean Literary Collection](https://digitalcollections.lib.washington.edu/digital/collection/korean) IIIF Collection URL provided by University of Washington Libraries.
+
+- **`collection`** is the IIIF Collection URI to be used as the root of your Canopy IIIF site
+- **`featured`** array is a list of Manifest URIs that will be promoted thoughout your Canopy IIIF site
+- **`metadata`** array is a list of metadata labels that **match** string values in your Manifest URI metadata entries to be used for discovery purposes
+
+<Callout type="info">
+  See [Configuration](/configuration) for detailed documentation.
+</Callout>
+
+```json copy filename="config/canopy.json"
+{
+  "collection": "https://digitalcollections.lib.washington.edu/iiif/2/korean/manifest.json",
+  "featured": [
+    "https://cdm16786.contentdm.oclc.org/iiif/korean:138/manifest.json"
+  ],
+  "metadata": ["Author", "Place of Publication"]
+}
+```
+
+### Ready to go!
+
+<Callout>
+  If you are using GitHub, you can skip this step and run Canopy without a
+  developer environment directly using GitHub Pages.
+</Callout>
+
+Now that you have a project and configuration set, you can run Canopy IIIF.
+
+```sh copy
+npm run dev
+```
+
+#### Build process
+
+The build process may take a few minutes depending on the size of your IIIF Collection and provider response times. A Collection of ~100 items should build in 30 seconds or less.
+
+1. **Building** - Canopy retrieves the source IIIF Collection
+2. **Create Manifest listing** - Canopy retrives all IIIF Manifests in the Collection
+3. **Create facets as IIIF Collections** - Canopy anaylzes the Manifests and creates IIIF Collections for each unique metadata label and value
+4. **Build search entries** - Canopy is creates search entries for each Manifest from descriptive metadta
+5. **Ready 🚀** - Canopy is ready to go!
+
+```bash
+Building Canopy from IIIF Collection...
+https://digitalcollections.lib.washington.edu/iiif/2/korean/manifest.json
+
+Creating Manifest listing...
+Aggregating 135 Manifest(s) in 14 chunk(s)...
+
+Chunk (1/14)
+✓ https://cdm16786.contentdm.oclc.org/iiif/korean:560/manifest.json ➜ 200
+✓ https://cdm16786.contentdm.oclc.org/iiif/korean:1494/manifest.json ➜ 200
+✓ https://cdm16786.contentdm.oclc.org/iiif/korean:678/manifest.json ➜ 200
+✓ https://cdm16786.contentdm.oclc.org/iiif/korean:983/manifest.json ➜ 200
+✓ https://cdm16786.contentdm.oclc.org/iiif/korean:138/manifest.json ➜ 200
+✓ https://cdm16786.contentdm.oclc.org/iiif/korean:314/manifest.json ➜ 200
+✓ https://cdm16786.contentdm.oclc.org/iiif/korean:1105/manifest.json ➜ 200
+✓ https://cdm16786.contentdm.oclc.org/iiif/korean:498/manifest.json ➜ 200
+✓ https://cdm16786.contentdm.oclc.org/iiif/korean:839/manifest.json ➜ 200
+✓ https://cdm16786.contentdm.oclc.org/iiif/korean:1363/manifest.json ➜ 200
+
+## build continues...
+
+Chunk (14/14)
+✓ https://cdm16786.contentdm.oclc.org/iiif/korean:28181/manifest.json ➜ 200
+✓ https://cdm16786.contentdm.oclc.org/iiif/korean:27749/manifest.json ➜ 200
+✓ https://cdm16786.contentdm.oclc.org/iiif/korean:28140/manifest.json ➜ 200
+✓ https://cdm16786.contentdm.oclc.org/iiif/korean:28280/manifest.json ➜ 200
+✓ https://cdm16786.contentdm.oclc.org/iiif/korean:27976/manifest.json ➜ 200
+
+135/135 Manifests(s) retrieved successfully.
+
+Creating facets as IIIF Collections...
+↓ /api/facet/author/unidentified.json
+↓ /api/facet/author/kim-tong-in.json
+↓ /api/facet/author/chng-chi-yong-chong-chi-yong.json
+↓ /api/facet/author/yi-tae-jun.json
+↓ /api/facet/author/an-hoe-nam.json
+↓ /api/facet/author/im-hak-su.json
+
+## build continues...
+
+Building search entries...
+
+...Ready 🚀
+
+▲ Next.js 13.5.4
+- Local:        http://localhost:5001
+- Environments: .env
+```
+
+### Browse your site
+
+In your browser, navigate to http://localhost:5001 to view your Canopy IIIF site.
+
+#### Home page
+
+Content on the home page is geared towards discovery of your IIIF Collection. The home page will render a hero component for featured Manifests and a slider components for defined metadata labels and their most common values.
+
+<Box m="9" my="6">
+  ![canopy home page](/examples/korean-literary-home.png)
+</Box>
+
+#### Search page
+
+All Manifests in your IIIF Collection are now represented as results at the **/search** route. In addition to full text search, results are filterable by defined metadata labels and available values. In the example _Korean Literary Collection_, there are 135 items available for search. A query for **_poems_** returns 43 results.
+
+<Box m="9" my="6">
+  ![canopy search results for poems](/examples/korean-literary-search.png)
+</Box>
+
+#### Work page
+
+All Manifests in your IIIF Collection are now available as statically generated pages with a **/work/slug-generated-from-label** pattern. Each work represents a single Manifest, its descriptive metadata, and various other IIIF properties. [Clover IIIF](https://samvera-labs.github.io/clover-iiif/) is the defacto deep-zoom and A/V capable viewer in Canopy IIIF but other IIIF viewers can be easily configured.
+
+<Box m="9" my="6">
+  ![canopy work page for single result](/examples/korean-literary-work.png)
+</Box>
+
+### Try Alternate IIIF Collections
+
+A great way to visualize the agility of Canopy IIIF is to experiment with alternate IIIF Collections. Try copying one or all of the following `config/canopy.json` configurations to your project and re-running the build process.
+
+#### Commedia dell'Arte
+
+- [View Collection](https://dc.library.northwestern.edu/collections/c373ecd2-2c45-45f2-9f9e-52dc244870bd)
+- _Provided by Northwestern University_
+
+```json copy filename="config/canopy.json"
+{
+  "collection": "https://api.dc.library.northwestern.edu/api/v2/search?query=collection.id:%22c373ecd2-2c45-45f2-9f9e-52dc244870bd%22&as=iiif",
+  "featured": [
+    "https://api.dc.library.northwestern.edu/api/v2/works/a037a4fb-add4-40af-8add-9a02e5573471?as=iiif"
+  ],
+  "metadata": ["Subject", "Date"]
+}
+```
+
+#### Calahan Family Postcards
+
+- [View Collection](https://digital.lib.utk.edu/collections/islandora/object/collections%3Acalahan)
+- Provided by the University of Tennessee
+
+```json copy filename="config/canopy.json"
+{
+  "collection": "https://digital.lib.utk.edu/assemble/collection/collections/calahan",
+  "featured": ["https://digital.lib.utk.edu/assemble/manifest/calahan/10"],
+  "metadata": ["Description", "Subject"]
+}
+```
+
+#### Pacific Northwest Sheet Music Collection
+
+- [View Collection](https://digitalcollections.lib.washington.edu/digital/collection/sm/search)
+- Provided by the University of Washington
+
+```json copy filename="config/canopy.json"
+{
+  "collection": "https://cdm16786.contentdm.oclc.org/iiif/2/sm/manifest.json",
+  "featured": [
+    "https://cdm16786.contentdm.oclc.org/iiif/2/sm:49/manifest.json"
+  ],
+  "metadata": ["Composer", "Genre", "Date of Publication"]
+}
+```
+
+</Steps>

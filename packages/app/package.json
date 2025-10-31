@@ -22,7 +22,8 @@
       "import": "./lib/orchestrator.js",
       "require": "./lib/orchestrator.js",
       "default": "./lib/orchestrator.js"
-    }
+    },
+    "./docs-legacy-compat": "./docs-legacy-compat.mjs"
   },
   "files": [
     "lib/**",

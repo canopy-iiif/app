@@ -1,0 +1,18 @@
+# Viewer
+
+When creating content for Canopy, you can use the `Viewer` component to embed a deep-zoom and A/V capable IIIF Viewer into your content. The integrated IIIF Viewer is the [Clover IIIF](https://samvera-labs.github.io/clover-iiif/) Viewer component
+
+## Properties
+
+| Property      | Type     | Required | Description                                     |
+| ------------- | -------- | -------- | ----------------------------------------------- |
+| `iiifContent` | `string` | `true`   | IIIF Manifest or Collection URI to be rendered. |
+
+- This resource may OR may not be part of the IIIF Collection used in your Canopy project.
+- The `Viewer` will render both IIIF Manifests and IIIF Collections.
+
+## Usage
+
+```mdx copy
+<Viewer iiifContent="https://manifests.collections.yale.edu/ycba/obj/702" />
+```

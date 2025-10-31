@@ -1,0 +1,149 @@
+import { Image } from '@canopy-iiif/app/docs-legacy-compat';
+
+# Image
+
+Use the `<Image>` component to insert a pan-zoom capable Image into your content. The component can reference a static image URL such as a `.jpg` or a IIIF Image API endpoint.
+
+## Properties
+
+| Property       | Type                                                                    | Required | Description                                                                                |
+| -------------- | ----------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------ |
+| `height`       | [CSS `height`](https://developer.mozilla.org/en-US/docs/Web/CSS/height) | `true`   | Height of the Image canvas                                                                 |
+| `isTiledImage` | `boolean`                                                               | `false`  | Default as `false`. If `true`, the image using tiles served from a IIIF Image API endpoint |
+| `label`        | `string`                                                                | `false`  | Label of image for captioning and accessibility purposes                                   |
+| `src`          | `string`                                                                | `true`   | URL reference for image `.jpg` or IIIF Image API endpoint, ex: `*.info.json`               |
+
+- This resource may OR may not be part of the IIIF Collection used in your Canopy project.
+- Width of the image will be 100% of the containing element.
+
+## Usage
+
+Image component is rendered as a `figure` element with a `figcaption` element for the label. The `figure` is an OpenSeadragon viewer that allows for pan-zoom capabilities.
+
+### Pan-zoom using a simple image (`.jpg`, `.png`, etc.)
+
+```mdx copy
+<Image
+  height="500px"
+  label="Emiliano Zapata, 1914 by Agustín Casasola. Public Domain."
+  src="https://upload.wikimedia.org/wikipedia/commons/9/99/Emiliano_Zapata4.jpg"
+/>
+```
+
+<figure style={{ margin: "var(--space-6) 0" }}>
+  <div
+    style={{
+      backgroundColor: "var(--gray-3)",
+      height: "500px",
+      position: "relative",
+      zIndex: "0",
+    }}
+  >
+    <Image
+      height="500px"
+      label="Emiliano Zapata, 1914 by Agustín Casasola. Public Domain."
+      src="https://upload.wikimedia.org/wikipedia/commons/9/99/Emiliano_Zapata4.jpg"
+    />
+  </div>
+  <figcaption
+    style={{
+      padding: "var(--space-3) 0",
+      fontSize: "var(--font-size-3)",
+      fontWeight: "500",
+    }}
+  >
+    <span>Emiliano Zapata, 1914 by Agustín Casasola. Public Domain.</span>
+  </figcaption>
+</figure>
+
+### Pan-zoom using tiles from a IIIF Image API endpoint
+
+This method is useful for large images that are served as tiles from a IIIF Image API endpoint. Note that the `src` property is the IIIF Image API endpoint URL and the `isTiledImage` property is set to `true`.
+
+```mdx copy
+<Image
+  isTiledImage={true}
+  height="500px"
+  label="The Summons, 1856 by Emanuel Leutze. Harvard Art Museums."
+  src="https://ids.lib.harvard.edu/ids/iiif/9013118"
+/>
+```
+
+<figure style={{ margin: "var(--space-6) 0" }}>
+  <div
+    style={{
+      backgroundColor: "var(--gray-3)",
+      height: "500px",
+      position: "relative",
+      zIndex: "0",
+    }}
+  >
+    <Image
+      isTiledImage={true}
+      height="500px"
+      label="The Summons, 1856 by Emanuel Leutze. Harvard Art Museums."
+      src="https://ids.lib.harvard.edu/ids/iiif/9013118"
+    />
+  </div>
+  <figcaption
+    style={{
+      padding: "var(--space-3) 0",
+      fontSize: "var(--font-size-3)",
+      fontWeight: "500",
+    }}
+  >
+    <span>The Summons, 1856 by Emanuel Leutze. Harvard Art Museums.</span>
+  </figcaption>
+</figure>
+
+### Pan-zoom using a specific region of a IIIF Image API endpoint
+
+In some cases, you may want to display a specific region of a IIIF Image API endpoint. This can be done by adding the `region` property to the `src` URL. The `region` property is formatted as `x,y,w,h`, where `x` and `y` are the coordinates of the top-left corner of the region, and `w` and `h` are the width and height of the region.
+
+To find the region coordinates:
+
+1. Navigate to the [IIIF Crop tool](https://ncsu-libraries.github.io/iiif-crop-tool/) created by NC State University Libraries.
+2. Input the IIIF Image API endpoint URL in the `Image URL` field, for example: `https://ids.lib.harvard.edu/ids/iiif/9013118`.
+3. Draw a rectangle around the region you want to display.
+4. Copy the generated URL and use this as the `src` value.
+
+In this example, the region of `188,650,914,712` is generated for the URL https://ids.lib.harvard.edu/ids/iiif/9013118/188,650,914,712/full/0/default.jpg.
+
+```mdx copy
+<Image
+  height="500px"
+  label="In the foreground of The Summons by Emanuel Leutze, a black-clad, masked figure emerges from behind a decorative screen to present a coin to a startled man in a red tunic, whose defensive posture and alarmed expression underscore the dramatic tension of the unexpected encounter."
+  src="https://ids.lib.harvard.edu/ids/iiif/9013118/188,650,914,712/full/0/default.jpg"
+/>
+```
+
+<figure style={{ margin: "var(--space-6) 0" }}>
+  <div
+    style={{
+      backgroundColor: "var(--gray-3)",
+      height: "500px",
+      position: "relative",
+      zIndex: "0",
+    }}
+  >
+    <Image
+      height="500px"
+      label="In the foreground of The Summons by Emanuel Leutze, a black-clad, masked figure emerges from behind a decorative screen to present a coin to a startled man in a red tunic, whose defensive posture and alarmed expression underscore the dramatic tension of the unexpected encounter."
+      src="https://ids.lib.harvard.edu/ids/iiif/9013118/188,650,914,712/full/0/default.jpg"
+    />
+  </div>
+  <figcaption
+    style={{
+      padding: "var(--space-3) 0",
+      fontSize: "var(--font-size-3)",
+      fontWeight: "500",
+    }}
+  >
+    <span>
+      In the foreground of The Summons by Emanuel Leutze, a black-clad, masked
+      figure emerges from behind a decorative screen to present a coin to a
+      startled man in a red tunic, whose defensive posture and alarmed
+      expression underscore the dramatic tension of the unexpected encounter.
+    </span>
+  </figcaption>
+</figure>

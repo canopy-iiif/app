@@ -1,0 +1,101 @@
+import { Steps, Callout } from '@canopy-iiif/app/docs-legacy-compat';
+
+# Deploy to GitHub Pages
+
+Canopy IIIF is designed to be deployed as a statically generated website. Static sites are a great option for many projects, as they are fast, secure, and easy to deploy and maintain. This guide will walk you through the process of deploying project as a static website using GitHub Pages using the incorporated GitHub Actions in Canopy to automate the build and deployment process.
+
+<Callout type="info">
+  Requires a [GitHub](https://github.com/) account.{" "}
+</Callout>
+
+## Use Case
+
+    You are a graduate student researching the American painter Beauford Delaney
+    and you would like to easily create and host a digital scholarship project
+    analyzing items in your institution's digital collections.
+
+## Implementation
+
+<Steps>
+
+### Create your template repository
+
+- Navigate to the [Canopy IIIF](https://github.com/canopy-iiif/canopy-iiif) repository
+- Click the **Use this template** dropdown and then select **Create a new repository**
+- Under **Owner**, select the GitHub account or organization (if applicable) that you want to own the repository
+- Enter a **Repository name** for your new Canopy IIIF project, ex: `delaney-project`
+- Click the **Create repository** button
+
+![create new repository from use template](/examples/use-template.png)
+
+### Adjust workflow permissons
+
+- Once the repository is created, open the **Settings** tab
+- Open the **Actions** dropdown under _Code and automation_ and select **General** .
+- Select **Read and write permissions** option under _Workflow permissions_ and **Save**. This allows the GitHub
+  workflow to run and the static Canopy output to be deployed to a new branch.
+
+![adjust workflow Permissions](/examples/workflow-permissions.png)
+
+### Modify environmmental variables
+
+- Next, find the `.env` file in your repository and open it for editing
+- Modify `NEXT_PUBLIC_URL` to reflect your GitHub username, ex: `https://markpbaggett.github.io`
+- Modify `NEXT_PUBLIC_BASE_PATH` to reflect the name of your new repository , ex: `/delaney-project`
+- Commit the changed `.env` file
+
+The `.env` file should follow a format similar to the following:
+
+```sh filename=".env" copy
+NEXT_PUBLIC_URL="https://{GITHUB_USERNAME}.github.io"
+NEXT_PUBLIC_BASE_PATH="/{GITHUB_REPOSITORY_NAME}"
+```
+
+In this example, we are using the GitHub username `markpbaggett` and the repository name `delaney-project`.
+
+```sh filename=".env" copy
+NEXT_PUBLIC_URL="https://markpbaggett.github.io"
+NEXT_PUBLIC_BASE_PATH="/delaney-project"
+```
+
+After committing the new `.env` file, a pre-configured [GitHub Actions workflow](https://docs.github.com/en/actions/using-workflows/about-workflows) will run.
+
+<Callout type="info">
+  If you're interested in learning more about the GitHub Actions workflow, you
+  can view the [workflow
+  file](https://github.com/canopy-iiif/canopy-iiif/blob/main/.github/workflows/gh-pages.deploy.yml)
+  in the Canopy IIIF repository.
+</Callout>
+
+Once the action has run successfully, the action indicator should update to a check mark and a new branch **gh-pages** will be created with an output of your static site.
+
+### Watch the build
+
+- Once the **gh-pages** branch exists, press the **Settings** tab
+- Under _Code and automation_, press **Pages**
+- In the _Build and deployment_ section, select **gh-pages** from the **Branch** dropdown
+- Leave `/(root)` set from the **Folder** dropdown
+- Click **Save**
+
+![Set gh-pages in Settings](/examples/set-gh-pages.png)
+
+### Validate the URL
+
+<Callout type="info">
+  **Tip**: Find the URL in the GitHub **Settings** tab, by viewing **Pages**
+  under _Code and automation_.
+</Callout>
+
+Now your Canopy site will be active at a URL derived from values you defined in the `NEXT_PUBLIC_URL` and `NEXT_PUBLIC_BASE_PATH` settings.
+
+```sh
+https://[NEXT_PUBLIC_URL][NEXT_PUBLIC_BASE_PATH]
+```
+
+The example values above would result in the following URL:
+
+```sh
+https://markpbaggett.github.io/delaney-project
+```
+
+</Steps>

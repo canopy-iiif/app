@@ -1,0 +1,37 @@
+import { Cards, Card } from '@canopy-iiif/app/docs-legacy-compat';
+
+# Features
+
+On build, Canopy IIIF will generate a static site from a IIIF Collection.
+
+## Automatic Pages and Routes
+
+Canopy IIIF will automatically generate pages and routes for the following:
+
+<Cards>
+  <Card title="Home" href="/features/home" />
+  <Card title="Search" href="/features/search" />
+  <Card title="Works" href="/features/works" />
+  <Card title="Metadata" href="/features/metadata" />
+</Cards>
+
+### Guides
+
+- [Customize the Search Index](/customize-the-search-index)
+
+## Custom Pages
+
+Implementers can add custom pages with Markdown content in the their `content` directory. An `about` route at `content/about` is created as a usable example route.
+
+For more information regarding creation of new content, see the [Content](/content) documentation.
+
+<Cards>
+  <Card title="Content" href="/content" />
+  <Card title="Markdown" href="/content/markdown" />
+  <Card title="Navigation" href="/content/navigation" />
+</Cards>
+
+### Guides
+
+- [Create Markdown Content](/create-markdown-content)
+- [Create Navigation Routes](/create-navigation-routes)

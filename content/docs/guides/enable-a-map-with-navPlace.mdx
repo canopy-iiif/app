@@ -1,0 +1,223 @@
+import { Steps, Callout, Box } from '@canopy-iiif/app/docs-legacy-compat';
+
+# Enable a Map with navPlace Properties
+
+Canopy IIIF allows users to explore the underlying collection through an interactive map. When activated, this component displays a map featuring markers representing each point **Feature** within the [navPlace](https://iiif.io/api/extension/navplace/) properties found throughout the Manifests of the overarching collection. This guide will walk you through the process of enabling the Map component in Canopy IIIF.
+
+<Callout>
+  The Map component is populated by Manifests with a `navPlace` property. For
+  more information, see the [IIIF `navPlace`
+  extension](https://iiif.io/api/extension/navplace/) specification.
+</Callout>
+
+## Use Case
+
+    You are a digital scholar with geospatial point data and you would like to enable
+    the Map component to create additional access points for Manifests in your IIIF Collection.
+
+    You would like to customize the map component by:
+    - using a topographic map as the default tile layer with a street map as an optional additional layer
+    - using a custom icon for the markers
+
+## Implementation
+
+<Steps>
+
+### Create a new Canopy IIIF Project
+
+Select a IIIF Collection with geospatial point data and configure a Canopy IIIF project. In this example we will use the [William Cox Cochran Photograph](https://digital.lib.utk.edu/assemble/collection/gsmrc/wcc) IIIF Collection.
+
+```json filename="config/canopy.json" copy
+{
+  "collection": "https://digital.lib.utk.edu/assemble/collection/gsmrc/wcc",
+  "featured": ["https://digital.lib.utk.edu/assemble/manifest/wcc/269"],
+  "metadata": ["Place", "Date", "Subject"]
+}
+```
+
+### Add navPlace Properties to the Manifests in your collection
+
+<Callout type="info">
+  Currently, Canopy only leverages the `navPlace` properties found in Manifests
+  with `geometry` properties of type `Point`.
+</Callout>
+
+Before the `/map` component is enabled, add `navPlace` properties to Manifests in your source IIIF Collection.
+
+- In accordance with the [specification](https://iiif.io/api/extension/navplace/#31-linked-data-context), **include** the `navPlace` extension to the Linked Data Context of each manifest by adding
+  `https://iiif.io/api/extension/navplace/context.json` to the `@context` property before
+  `http://iiif.io/api/presentation/3/context.json`.
+
+```json {2}
+"@context": [
+  "https://iiif.io/api/extension/navplace/context.json",
+  "http://iiif.io/api/presentation/3/context.json"
+]
+```
+
+- **Add** the `navPlace` property to each manifest with a `FeatureCollection` and at least one `Feature` of type `Point`.
+  Each `Feature` should include a `label` property that will be used as the text for the corresponding marker. The
+  `coordinates` array should include the longitude and latitude coordinates of the `Feature` with the longitude
+  appearing first.
+
+```json {9-13,17-20}
+"navPlace": {
+  "id": "https://digital.lib.utk.edu/notdereferenceable/featurecollection//1",
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "id": "https://digital.lib.utk.edu/notdereferenceable/feature/1",
+      "type": "Feature",
+      "properties": {
+        "label": {
+          "en": [
+            "Summit of Pine Mt. Chilhowee Range Blount Co. Tenn. -- Pine Mountain"
+          ]
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -83.91907,
+          35.59647
+        ]
+      }
+    }
+  ]
+}
+```
+
+Following the above step, the Manifest for [Summit of Pine Mt. Chilhowee Range Blount Co. Tenn.](https://digital.lib.utk.edu/assemble/manifest/wcc/271) has the additional context for the navPlace extension and the added `navPlace` property defined.
+
+### Enable the Map Component
+
+- **Add** the `map` property to your configuration and update `map.enabled` to `true`.
+
+```json filename="config/canopy.json" {6} copy
+{
+  "collection": "https://digital.lib.utk.edu/assemble/collection/gsmrc/wcc",
+  "featured": ["  https://digital.lib.utk.edu/assemble/manifest/wcc/269"],
+  "metadata": ["Place", "Date", "Subject"],
+  "map": {
+    "enabled": true,
+    "defaultBounds": [[51.505, -0.09]],
+    "icon": {
+      "iconUrl": "images/marker-icon.png",
+      "iconSize": [24, 36],
+      "iconAnchor": [12, 36]
+    },
+    "tileLayers": [
+      {
+        "name": "OpenStreetMap",
+        "url": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "attribution": "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors"
+      }
+    ]
+  }
+}
+```
+
+### Modify Tile Layers
+
+- **Modify** the `map.tileLayers` property by adding the `OpenTopMap` layer to the top of the array.
+
+```json filename="config/canopy.json" {13-24} copy
+{
+  "collection": "https://digital.lib.utk.edu/assemble/collection/gsmrc/wcc",
+  "featured": ["  https://digital.lib.utk.edu/assemble/manifest/wcc/269"],
+  "metadata": ["Place", "Date", "Subject"],
+  "map": {
+    "enabled": true,
+    "defaultBounds": [[51.505, -0.09]],
+    "icon": {
+      "iconUrl": "images/marker-icon.png",
+      "iconSize": [24, 36],
+      "iconAnchor": [12, 36]
+    },
+    "tileLayers": [
+      {
+        "name": "OpenTopoMap",
+        "url": "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+        "attribution": "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors"
+      },
+      {
+        "name": "OpenStreetMap",
+        "url": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "attribution": "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors"
+      }
+    ]
+  }
+}
+```
+
+### Modify the Marker Icon
+
+- Replace the `map.icon.iconUrl` property with the path to your custom icon. This can be a remote resource that is served from
+  another website or a local resource that is served from your `public/images` directory in Canopy.
+- If the size of your icon is different than the default size of `24px` by `36px`, modify the `map.icon.iconSize`.
+- Similarly, if the anchor point of your icon is different than the default anchor point of `12px` by `36px`, modify
+  the point of the icon which will correspond to marker's location in `map.icon.iconAnchor.`
+
+```json filename="config/canopy.json" {8-12} copy
+{
+  "collection": "https://digital.lib.utk.edu/assemble/collection/gsmrc/wcc",
+  "featured": ["  https://digital.lib.utk.edu/assemble/manifest/wcc/269"],
+  "metadata": ["Place", "Date", "Subject"],
+  "map": {
+    "enabled": true,
+    "defaultBounds": [[51.505, -0.09]],
+    "icon": {
+      "iconUrl": "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png",
+      "iconSize": [24, 36],
+      "iconAnchor": [12, 36]
+    },
+    "tileLayers": [
+      {
+        "name": "OpenTopoMap",
+        "url": "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+        "attribution": "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors"
+      },
+      {
+        "name": "OpenStreetMap",
+        "url": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "attribution": "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors"
+      }
+    ]
+  }
+}
+```
+
+### Add the Map Route to your Navigation
+
+Add the `map` route to your `content/_meta.json` file so that it appears in the Navigation bar.
+
+```json copy filename="content/_meta.json" {10-13}
+[
+  {
+    "path": "/works",
+    "text": "Works"
+  },
+  {
+    "path": "/metadata",
+    "text": "Metadata"
+  },
+  {
+    "path": "/map",
+    "text": "Map"
+  },
+  {
+    "path": "/about",
+    "text": "About"
+  }
+]
+```
+
+### Validate the Map customizations
+
+- In your browser navigate to the `/map` route to view the Map component.
+- Each Manifest with a `navPlace` property will be represented by a marker on the map.
+- Tile layers can be toggled from the layer options in the corner of the map.
+
+![Set gh-pages in Settings](/examples/wcc-map-example.png)
+
+</Steps>

@@ -28,3 +28,6 @@ export {
   RequiredStatement,
   Summary,
 } from "./src/iiif/ManifestPrimitives.jsx";
+
+// Docs helpers
+export { default as DocsCodeBlock } from "./src/docs/CodeBlock.jsx";

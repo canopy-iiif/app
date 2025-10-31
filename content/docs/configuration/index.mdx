@@ -1,0 +1,143 @@
+import { Callout, Cards, Card } from '@canopy-iiif/app/docs-legacy-compat';
+
+# Configuration
+
+Canopy reads its project settings from `canopy.yml` in the repository root (override with `CANOPY_CONFIG=/path/to/file.yml`). The YAML file keeps content authors in plain text while letting the build pipeline drive IIIF ingestion, search, and theming.
+
+<Callout>
+  See the **[Get Started guide](/get-started)** for creating a project scaffold before editing `canopy.yml`.
+</Callout>
+
+<Cards>
+  <Card title="Collection" href="#collection" />
+  <Card title="Search" href="/configuration/search" />
+  <Card title="Theme" href="/configuration/theme" />
+  <Card title="Map" href="/configuration/map" />
+  <Card title="Locale" href="/configuration/locale" />
+</Cards>
+
+## Quick start
+
+```yaml filename="canopy.yml"
+collection: https://example.org/iiif/collection/root
+metadata: ["Subject", "Creator"]
+featured:
+  [
+    "https://example.org/iiif/manifest/alpha",
+    "https://example.org/iiif/manifest/bravo",
+  ]
+search:
+  tabs:
+    order: ["work", "page"]
+  index:
+    metadata:
+      enabled: true
+      all: false
+    summary:
+      enabled: true
+    annotations:
+      enabled: false
+site:
+  baseUrl: https://example.org/canopy
+theme:
+  accentColor: indigo
+  grayColor: slate
+  appearance: light
+```
+
+## collection
+
+- **Required.** Absolute IIIF Collection URI that powers the build.
+- Must match the `id` field of the source Collection.
+- Override via `CANOPY_COLLECTION_URI` when scripting builds without touching `canopy.yml`.
+
+## metadata (facets)
+
+- Optional array of manifest metadata labels (case-sensitive) to facet on.
+- Drives highlighted sliders, the Metadata page, related-items queries, and generated IIIF facet collections (`/api/facet/**`).
+- Set to an empty array to disable faceting while keeping the key in place.
+
+## featured
+
+- Optional array of IIIF Manifest URIs surfaced in the homepage hero and other "featured" placements.
+- URIs must exist in the source Collection. Canopy normalises query strings to avoid duplicate entries when caches are reused.
+
+## site.baseUrl
+
+```yaml
+site:
+  baseUrl: https://example.org/canopy
+```
+
+- Optional. Provide an absolute origin (with optional path prefix) so generated IIIF collections and canonical links resolve correctly.
+- If omitted, Canopy falls back to `CANOPY_BASE_URL`, the Pages deployment context, or `http://localhost:5001` in dev.
+
+## search configuration (overview)
+
+The `search` block refines FlexSearch behaviour and UI tabs.
+
+```yaml
+search:
+  tabs:
+    order: ["work", "page", "examples"]
+  index:
+    metadata:
+      enabled: true
+      all: false
+    summary:
+      enabled: true
+    annotations:
+      enabled: false
+      motivation: ["commenting", "tagging"]
+```
+
+- **`tabs.order`** — optional array that reorders the search result tabs. Unknown values are ignored; missing values fall back to the default `work` tab.
+- **`index.metadata.enabled`** — toggle metadata fields in the FlexSearch index. When `all: true`, every manifest metadata item is indexed; otherwise only labels listed in `metadata` are used.
+- **`index.summary.enabled`** — include manifest summaries in the index payload.
+- **`index.annotations.enabled`** — opt into indexing external annotation text; combine with `motivation` to limit which motivations count.
+
+See the dedicated [Search configuration page](/configuration/search) for advanced options and examples.
+
+## theme
+
+```yaml
+theme:
+  accentColor: indigo
+  grayColor: slate
+  appearance: dark
+```
+
+- `accentColor` / `grayColor` map to Radix UI color families (`indigo`, `cyan`, `sand`, etc.).
+- `appearance` switches between the light and dark Radix ramps. Defaults to `light`.
+- Configure additional theme details on the [Theme page](/configuration/theme).
+
+## Complete example
+
+```yaml filename="canopy.yml"
+collection: https://api.dc.library.northwestern.edu/api/v2/collections/cd92fb8d-76a7-4c15-8f34-44f30866b7f4?as=iiif
+metadata: ["Subject", "Genre"]
+featured:
+  [
+    "https://api.dc.library.northwestern.edu/api/v2/works/f2adabc0-497f-4284-b969-5829971fa2a2?as=iiif",
+    "https://api.dc.library.northwestern.edu/api/v2/works/6f336d7c-fb8a-4c15-8f34-44f30866b7f4?as=iiif",
+    "https://api.dc.library.northwestern.edu/api/v2/works/e1d27060-c8d7-4863-a120-7dced701d6be?as=iiif",
+  ]
+search:
+  tabs:
+    order: ["work", "page", "examples"]
+  index:
+    metadata:
+      enabled: true
+      all: false
+    summary:
+      enabled: true
+    annotations:
+      enabled: false
+      motivation: ["commenting", "tagging"]
+site:
+  baseUrl: https://canopy-iiif.github.io/canopy-iiif
+theme:
+  accentColor: indigo
+  grayColor: slate
+  appearance: light
+```

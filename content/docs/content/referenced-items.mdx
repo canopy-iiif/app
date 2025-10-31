@@ -1,0 +1,25 @@
+import { Callout } from '@canopy-iiif/app/docs-legacy-compat';
+
+# Referenced Items
+
+The `ReferencedItems` component is used in conjunection with `referencedManifests` front matter key to easily render a grid of `Card` components. The referenced items must be Manifests within the IIIF Collection used in your Canopy project.
+
+<Callout type="info">
+  See the Front Matter section in [Markdown
+  documentation](/content/markdown#front-matter) for more information.
+</Callout>
+
+## Usage
+
+```mdx copy {4-7, 10}
+---
+title: "January 1955 Correspondence"
+navigation: "correspondence"
+referencedManifests:
+  - https://api.dc.library.northwestern.edu/api/v2/works/46de2c91-3a29-4525-939e-ee17073f3a7e?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/bb968afb-7857-46bd-9392-d8617a93cc9f?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/14b8212b-7c49-431b-ad04-e4cd5cce6416?as=iiif
+---
+
+<ReferencedItems />
+```

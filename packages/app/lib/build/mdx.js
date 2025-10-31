@@ -11,6 +11,42 @@ const {
   ensureDirSync,
   withBase,
 } = require("../common");
+
+const EXTRA_REMARK_PLUGINS = (() => {
+  try {
+    const absPath = path.resolve(process.cwd(), "packages/helpers/docs/remark-code-meta.js");
+    if (fs.existsSync(absPath)) {
+      const plugin = require(absPath);
+      if (typeof plugin === "function") return [plugin];
+    }
+  } catch (_) {}
+  return [];
+})();
+
+function buildCompileOptions(overrides = {}) {
+  const base = {
+    jsx: false,
+    development: false,
+    providerImportSource: "@mdx-js/react",
+    jsxImportSource: "react",
+    format: "mdx",
+  };
+  const remarkPlugins = [];
+  if (overrides && Array.isArray(overrides.remarkPlugins)) {
+    remarkPlugins.push(...overrides.remarkPlugins);
+  }
+  if (EXTRA_REMARK_PLUGINS.length) {
+    remarkPlugins.push(...EXTRA_REMARK_PLUGINS);
+  }
+  if (remarkPlugins.length) {
+    base.remarkPlugins = remarkPlugins;
+  }
+  if (overrides && typeof overrides === "object") {
+    const { remarkPlugins: _omit, ...rest } = overrides;
+    Object.assign(base, rest);
+  }
+  return base;
+}
 const yaml = require("js-yaml");
 const { getPageContext } = require("../page-context");
 
@@ -255,15 +291,7 @@ async function loadAppWrapper() {
   const { compile } = await import("@mdx-js/mdx");
   const raw = await fsp.readFile(appPath, "utf8");
   const { content: source } = parseFrontmatter(raw);
-  let code = String(
-    await compile(source, {
-      jsx: false,
-      development: false,
-      providerImportSource: "@mdx-js/react",
-      jsxImportSource: "react",
-      format: "mdx",
-    })
-  );
+  let code = String(await compile(source, buildCompileOptions()));
   // MDX v3 default export (MDXContent) does not forward external children.
   // When present, expose the underlying layout function as __MDXLayout for wrapping.
   if (
@@ -307,13 +335,7 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
   const { compile } = await import("@mdx-js/mdx");
   const raw = await fsp.readFile(filePath, "utf8");
   const { content: source } = parseFrontmatter(raw);
-  const compiled = await compile(source, {
-    jsx: false,
-    development: false,
-    providerImportSource: "@mdx-js/react",
-    jsxImportSource: "react",
-    format: "mdx",
-  });
+  const compiled = await compile(source, buildCompileOptions());
   const code = String(compiled);
   ensureDirSync(CACHE_DIR);
   const relCacheName =
@@ -449,13 +471,7 @@ async function compileMdxToComponent(filePath) {
   const { compile } = await import("@mdx-js/mdx");
   const raw = await fsp.readFile(filePath, "utf8");
   const { content: source } = parseFrontmatter(raw);
-  const compiled = await compile(source, {
-    jsx: false,
-    development: false,
-    providerImportSource: "@mdx-js/react",
-    jsxImportSource: "react",
-    format: "mdx",
-  });
+  const compiled = await compile(source, buildCompileOptions());
   const code = String(compiled);
   ensureDirSync(CACHE_DIR);
   const relCacheName =

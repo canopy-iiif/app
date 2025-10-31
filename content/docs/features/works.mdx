@@ -1,0 +1,326 @@
+import { Callout, Box } from '@canopy-iiif/app/docs-legacy-compat';
+
+# Works
+
+For each Manifest in your source IIIF Colllection, Canopy automatically generates a unique route that serves as the work page for that item as `/works/${slugified-manifest-label}`. The contents of the Manifest are parsed and utilized to automatically generate all the features of the work page.
+
+<Callout>
+  For more information about the pattern Canopy uses for converting a label to URL slug, see the [slugify](https://www.npmjs.com/package/slugify) npm package.
+</Callout>
+
+<Callout type="info">
+  If the label of the Manifest is not unique, Canopy will append a unique identifier to the end of the slug to ensure each work page has a unique route.
+</Callout>
+
+## Features
+
+The work page is composed of several features that are generated automatically based on the contents of the Manifest:
+
+- [IIIF Viewer](#iiif-viewer)
+- [Metadata and Required Statements](#metadata-and-required-statements)
+- [Referenced Content](#referenced-content)
+- [Related Works](#related-works)
+
+<Box m="9" my="6">
+  ![canopy work page](/examples/creating-markdown-content-referenced-item-2.png)
+</Box>
+
+### IIIF Viewer
+
+At the top of the work page is a IIIF [Viewer](/content/viewer). Currently, Canopy leverages the [Clover IIIF Viewer component](https://samvera-labs.github.io/clover-iiif/) to display deep zoomable images, A/V resources, and multi-canvased works. The original IIIF Manifest that the work page is generated from is passed to Clover so that it can display the work accordingly.
+
+```jsx
+<Viewer iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/19efac1e-5e79-471c-89c2-a60a775562ce?as=iiif" />
+```
+
+### Metadata and Required Statements
+
+Descriptive properties from the IIIF Manifest are displayed directly underneath the viewer.
+
+The `label` of the Manifest is displayed prominently as the title of the work.
+
+```json filename="https://api.dc.library.northwestern.edu/api/v2/works/19efac1e-5e79-471c-89c2-a60a775562ce?as=iiif" {5}
+{
+  ...
+  "label": {
+      "none": [
+        "Raven Blanket - Nez Percé"
+      ]
+    },
+  ...
+}
+```
+
+If a `summary` is present in the Manifest, its values are displayed as the work's description.
+
+```json filename="https://api.dc.library.northwestern.edu/api/v2/works/19efac1e-5e79-471c-89c2-a60a775562ce?as=iiif" {5}
+{
+  ...
+  "summary": {
+      "none": [
+        "written, illustrated, and published by Edward S. Curtis ; edited by Frederick Webb Hodge ; foreword by Theodore Roosevelt ; field research conducted under the patronage of J. Pierpont Morgan. ; Original photogravures produced in Boston by John Andrew & Son from 1899-1910."
+      ]
+  },
+  ...
+}
+```
+
+Next, each JSON object in the `metadata` and `requiredStatement` properties of the Manifest are displayed in a list of definitions.
+If the metadata label is listed in the `metadata` property inside the `canopy.json` file, the value will link to search
+results of all other works within the collection that also contain the subject and unique value.
+
+```json
+{
+  ...
+  "metadata": [
+    {
+      "label": {
+        "none": [
+          "Alternate Title"
+        ]
+      },
+      "value": {
+        "none": [
+          "Portfolio 8. The Nez Perces. Wallawalla. Umatilla. Cayuse. The Chinookan tribes"
+        ]
+      }
+    },
+    {
+      "label": {
+        "none": [
+          "Contributor"
+        ]
+      },
+      "value": {
+        "none": [
+          "Curtis, Edward S., 1868-1952 (Author)",
+          "Curtis, Edward S., 1868-1952 (Illustrator)",
+          "Curtis, Edward S., 1868-1952 (Publisher)",
+          "Hodge, Frederick Webb, 1864-1956 (Editor)",
+          "Roosevelt, Theodore, 1858-1919 (Author of introduction, etc.)",
+          "Morgan, J. Pierpont (John Pierpont), 1837-1913 (Patron)",
+          "John Andrew & Son (Printmaker)",
+          "Plimpton Press (Publisher)"
+        ]
+      }
+    },
+    {
+      "label": {
+        "none": [
+          "Cultural Context"
+        ]
+      },
+      "value": {
+        "none": [
+          "Content on this site is drawn from a historical source which includes materials that may contain offensive images or language reflecting the nature of Settler Colonialism in America. Such materials should be viewed in the context of the time and place in which they were created. The images and text in this site are presented as specific, original artifacts recording the attitudes, perspectives and beliefs of a different era. Northwestern University does not endorse the views expressed in this collection which may contain images and text offensive to some researchers."
+        ]
+      }
+    },
+    {
+      "label": {
+        "none": [
+          "Date"
+        ]
+      },
+      "value": {
+        "none": [
+          "1910"
+        ]
+      }
+    },
+    {
+      "label": {
+        "none": [
+          "Department"
+        ]
+      },
+      "value": {
+        "none": [
+          "Charles Deering McCormick Library of Special Collections"
+        ]
+      }
+    },
+    {
+      "label": {
+        "none": [
+          "Dimensions"
+        ]
+      },
+      "value": {
+        "none": [
+          "46 x 32 cm [plate size]"
+        ]
+      }
+    },
+    {
+      "label": {
+        "none": [
+          "Genre"
+        ]
+      },
+      "value": {
+        "none": [
+          "photomechanical prints",
+          "photogravures (prints)"
+        ]
+      }
+    },
+    {
+      "label": {
+        "none": [
+          "Last Modified"
+        ]
+      },
+      "value": {
+        "none": [
+          "2023-04-24T19:18:51.891873Z"
+        ]
+      }
+    },
+    {
+      "label": {
+        "none": [
+          "Language"
+        ]
+      },
+      "value": {
+        "none": [
+          "English"
+        ]
+      }
+    },
+    {
+      "label": {
+        "none": [
+          "Location"
+        ]
+      },
+      "value": {
+        "none": [
+          "Washington (State)--Seattle",
+          "Massachusetts--Norwood"
+        ]
+      }
+    },
+    {
+      "label": {
+        "none": [
+          "Materials"
+        ]
+      },
+      "value": {
+        "none": [
+          "1 photogravure : brown ink"
+        ]
+      }
+    },
+    {
+      "label": {
+        "none": [
+          "Rights Statement"
+        ]
+      },
+      "value": {
+        "none": [
+          "No Copyright - United States"
+        ]
+      }
+    },
+    {
+      "label": {
+        "none": [
+          "Series"
+        ]
+      },
+      "value": {
+        "none": [
+          "Edward S. Curtis's The North American Indian--Portfolio 8. The Nez Perces. Wallawalla. Umatilla. Cayuse. The Chinookan tribes"
+        ]
+      }
+    },
+    {
+      "label": {
+        "none": [
+          "Source"
+        ]
+      },
+      "value": {
+        "none": [
+          "The North American Indian (1907-1930) v.08, The Nez Perces. Wallawalla. Umatilla. Cayuse. The Chinookan tribes ([Seattle] : E.S. Curtis ; [Cambridge, Mass. : The University Press], 1911), plate no. 259"
+        ]
+      }
+    },
+    {
+      "label": {
+        "none": [
+          "Subject"
+        ]
+      },
+      "value": {
+        "none": [
+          "Nez Percé Indians",
+          "Walla Walla Indians",
+          "Umatilla Indians",
+          "Cayuse Indians",
+          "Chinookan Indians",
+          "Tlakluit Indians"
+        ]
+      }
+    },
+    {
+      "label": {
+        "none": [
+          "Technique"
+        ]
+      },
+      "value": {
+        "none": [
+          "photomechanical processes",
+          "photogravure (process)"
+        ]
+      }
+    }
+  ],
+  ...
+}
+```
+
+Finally, a link to the IIIF Manifest is displayed so that the item can be easily reused.
+
+### Referenced Content
+
+If the Manifest has been included in a `referencedManifests` section of any custom content page, a link to the custom
+content will be generated and displayed in the **Content Referencing This Work** section.
+
+```mdx {5-7}
+---
+title: "January 1955 Correspondence"
+navigation: "correspondence"
+referencedManifests:
+  - https://api.dc.library.northwestern.edu/api/v2/works/46de2c91-3a29-4525-939e-ee17073f3a7e?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/bb968afb-7857-46bd-9392-d8617a93cc9f?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/14b8212b-7c49-431b-ad04-e4cd5cce6416?as=iiif
+---
+```
+
+<Callout>
+  To learn more about referencing manifests in custom content pages, see the
+  [Create Markdown Content](/create-markdown-content#reference-collection-items) guide.
+</Callout>
+
+### Related Works
+
+Finally, the Related Works sections is displayed. This section is generated automatically by Canopy and is based on the
+contents of the `metadata` property in `canopy.json`. For each label, Canopy creates a [Slider](/content/slider)
+component based on a random value associated with it in the Manifest's `metadata` property. This label
+and value has a corresponding IIIF Collection Manifest that is generated during the build process that includes all
+manifests in the collection that have the same label and value.
+
+```mdx
+<Slider iiifContent="/api/facet/creator/david-alfaro-siqueiros " />
+```
+
+<Callout>
+  To learn more about reusing automatically generated collections like this in custom content pages, see the
+  [Leveraging Metadata Collections](/leverage-metadata-collections) guide.
+</Callout>

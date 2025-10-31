@@ -1,0 +1,72 @@
+---
+title: Navigation
+description: "How layout metadata drives primary and section menus."
+---
+
+# Navigation
+
+`<Layout>` reads navigation metadata from the `content/` directory so authors can manage menus in plain JSON alongside their MDX files.
+
+## Primary navigation (`content/_meta.json`)
+
+Add a `_meta.json` file at the root of `content/` to control the links in the global header. Each entry must include a route (`path`) and the label to display (`text`). The order of the array controls the rendered order.
+
+```json filename="content/_meta.json"
+[
+  {"path": "/works", "text": "Works"},
+  {"path": "/docs", "text": "Docs"},
+  {"path": "/about", "text": "About"}
+]
+```
+
+Paths map to MDX files (`/content/about/index.mdx` → `/about`) or to pages implemented under `src/pages/` (`/works`, `/metadata`, etc.).
+
+## Section navigation (`content/<section>/_meta.json`)
+
+Directories that contain their own `_meta.json` receive a sidebar when `navigation={true}` on the wrapping `<Layout>`. Define the relative routes you want to expose within that section.
+
+```json filename="content/docs/_meta.json"
+[
+  {"path": "/docs", "text": "Overview"},
+  {"path": "/docs/layout", "text": "Layout"},
+  {"path": "/docs/layout/navigation", "text": "Navigation"}
+]
+```
+
+Each linked MDX file should declare a matching `navigation` frontmatter value so the layout knows which menu to render:
+
+```mdx filename="content/docs/layout/index.mdx"
+---
+title: Layout
+description: "How the docs shell renders navigation and headings."
+navigation: "docs"
+---
+```
+
+## Directory structure example
+
+```
+content/
+├── _meta.json
+├── docs/
+│   ├── _layout.mdx
+│   ├── _meta.json
+│   ├── index.mdx
+│   └── layout/
+│       ├── _meta.json
+│       ├── index.mdx
+│       └── navigation.mdx
+└── about/
+    ├── _meta.json
+    └── index.mdx
+```
+
+With this setup:
+
+- The global header renders the `content/_meta.json` links.
+- Visiting `/docs/layout/navigation` shows the docs sidebar provided by `content/docs/_meta.json`.
+- The layout automatically highlights the active entry based on the current path.
+
+## Table of contents from headings
+
+When `contentNavigation` is left enabled, `<Layout>` builds an on-page table of contents using level-two headings (`##`) and deeper. Keep heading text descriptive; the generated IDs are used both for deep links and for the right-hand toc column.

@@ -1,0 +1,174 @@
+import { Callout } from '@canopy-iiif/app/docs-legacy-compat';
+
+# Search
+
+Canopy IIIF utilizes [FlexSearch](https://github.com/nextapps-de/flexsearch) for fast in-memory indexing and provides options for users to customize their search experience. By default Canopy will index Manifest all `label` and any defined `metadata` properties. Users can optionally index the `summary` property.
+
+<Callout type="info">
+  See the **[Customize the Search Index](/customize-the-search-index)** for a
+  step-by-step guide.
+</Callout>
+
+## Properties
+
+Search is customized in the Canopy configuration at `config/canopy.json` using the optional `search` property. If `search` is not defined, the default configuration is used.
+
+| Property     | Type      | Description                       |
+| :----------- | :-------- | :-------------------------------- |
+| `enabled`    | `boolean` | Whether or not to enable search.  |
+| `flexSearch` | `Object`  | FlexSearch configuration options. |
+| `index`      | `Object`  | Indexing option for Manifests.    |
+
+### enabled
+
+Boolean value to enable or disable search indexing. Default is `true`.
+
+```json
+"enabled": true
+```
+
+### flexSearch
+
+Users may customize their [FlexSearch configuration](https://github.com/nextapps-de/flexsearch#options) using `search.flexSearch` to fit the source Collection and its Manifest `label`, `metadata`, and `summary` properties. Customizations range from defining language-specific options such as `charset` and `stemmer`, as well as scoring options like `resolution` and `depth`.
+
+```json
+"flexSearch": {
+  "charset": "latin:extra",
+  "optimize": true,
+  "tokenize": "strict",
+  "bidirectional": false,
+  "document": {
+    "index": [
+      {
+        "field": "label",
+        "tokenize": "full",
+        "resolution": 9,
+        "depth": 3,
+        "bidirectional": true
+      },
+      {
+        "field": "metadata",
+        "resolution": 2
+      },
+      {
+        "field": "summary",
+        "resolution": 1
+      }
+    ]
+  }
+}
+```
+
+### index
+
+Implementers can define the properties of their Manifests that are indexed. Canopy IIIF indexes the `label` property on the Manifest by default. Users can also index the `metadata` and `summary` properties.
+
+The `metadata` property is indexed by default for [configured metadata labels](/docs/configuration#metadata). Furthermore, all `metadata` values may be indexed OR you may specify only the properties that are specified in `config/canopy.json` by modifying `search.index.metadata.all`.
+
+The `summary` property is not indexed by default. To enable indexing of the `summary` property, set `search.index.summary.enabled` to `true`.
+
+```json
+"index": {
+  "metadata": {
+    "enabled": true,
+    "all": false
+  },
+  "summary": {
+    "enabled": false
+  }
+}
+```
+
+## Default Search Configuration
+
+The default configuration used if `search` is not defined in `config/canopy.json`.
+
+```json copy
+"search": {
+  "enabled": true,
+  "flexSearch": {
+    "charset": "latin:extra",
+    "optimize": true,
+    "tokenize": "strict",
+    "bidirectional": false,
+    "document": {
+      "index": [
+        {
+          "field": "label",
+          "tokenize": "full",
+          "resolution": 9,
+          "depth": 3,
+          "bidirectional": true
+        },
+        {
+          "field": "metadata",
+          "resolution": 2
+        },
+        {
+          "field": "summary",
+          "resolution": 1
+        }
+      ]
+    }
+  },
+  "index": {
+    "metadata": {
+      "enabled": true,
+      "all": false
+    },
+    "summary": {
+      "enabled": false
+    }
+  }
+}
+```
+
+## Example Search Configuration
+
+The following example shows a configuration. You must fully define the `search` property when customizing the search options.
+
+In this example, we provide a source IIIF Collection having Manifests with robust summary properties. With this, we are choosing to customize the FlexSearch configuration by increasing the `resolution` of the `summary` property to 5 and then we are enabling indexing of the `summary` property.
+
+```json filename="config/canopy.json" copy {26, 37}
+{
+  "collection": "https://api.dc.library.northwestern.edu/api/v2/collections/c373ecd2-2c45-45f2-9f9e-52dc244870bd?as=iiif",
+  "metadata": ["Dimensions", "Materials"],
+  "search": {
+    "enabled": true,
+    "flexSearch": {
+      "charset": "latin:extra",
+      "optimize": true,
+      "tokenize": "strict",
+      "bidirectional": false,
+      "document": {
+        "index": [
+          {
+            "field": "label",
+            "tokenize": "full",
+            "resolution": 9,
+            "depth": 3,
+            "bidirectional": true
+          },
+          {
+            "field": "metadata",
+            "resolution": 2
+          },
+          {
+            "field": "summary",
+            "resolution": 5
+          }
+        ]
+      }
+    },
+    "index": {
+      "metadata": {
+        "enabled": true,
+        "all": false
+      },
+      "summary": {
+        "enabled": true
+      }
+    }
+  }
+}
+```

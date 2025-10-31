@@ -1,0 +1,89 @@
+import { Tabs, Box } from '@canopy-iiif/app/docs-legacy-compat';
+
+# Markdown
+
+Canopy IIIF `content` pages are authored using Markdown in `.mdx` files.
+
+## Elements
+
+Common [Markdown elements](https://daringfireball.net/projects/markdown/syntax) are supported for use in Canopy IIIF content. Canopy will automatically transform content created in Markdown to HTML.
+
+```mdx copy filename="content/iranian-cinema.mdx"
+# Iranian Cinema
+
+## Overview
+
+Iranian cinema, also known as Persian cinema, stands out for its unique blend of artistry, storytelling, and cultural representation. It has gained significant international acclaim, especially for its poetic narrative style and sociocultural themes. Iranian cinema is a vibrant and influential part of the global film landscape, known for its poignant storytelling, artistic innovation, and cultural depth.
+
+## Characteristics
+
+- **Humanistic Approach**: Many films focus on everyday life and human relationships, reflecting broader societal issues.
+- **Artistic Storytelling**: Iranian cinema is renowned for its poetic, metaphorical narrative style.
+- **Minimalism**: There's often an emphasis on simplicity in both visual and narrative elements.
+
+## International Recognition
+
+Iranian films have been celebrated at major international film festivals, including Cannes, Venice, and Berlin. Numerous awards have been won, highlighting the global impact of Iranian cinematic art.
+```
+
+## Front Matter
+
+At the top of each Markdown file, you can add front matter to provide additional information about the page. Front matter is written in YAML, and must be surrounded by `---` on either side.
+
+```mdx
+---
+title: "Title in Front Matter"
+---
+```
+
+### Content Pages
+
+All new content pages created in the `content` directory can have the following front matter:
+
+#### title
+
+The title of the page. This will be used in the HTML `<title>` and associated `<meta>` tags.
+
+#### decription
+
+The description of the page. This will be used in the HTML `<head>` for associated `<meta>` tags.
+
+#### navigation
+
+The navigation menu for the page. This should be the relative directory path for the page. For example, if the page is in `content/correspondence/`, the navigation should be `correspondence`.
+
+#### referencedManifests
+
+A list of IIIF Manifests URIs that are referenced in the content of the page. These Manifests MUST be a part of source IIIF Collection used for your Canopy project. These will create a link between the `/work` page and the current content page.
+
+```mdx
+---
+title: "January 1955 Correspondence"
+description: "Seven letters of Amanda Ira Aldridge and Mihailo Kovačević"
+navigation: "correspondence"
+referencedManifests:
+  - https://api.dc.library.northwestern.edu/api/v2/works/46de2c91-3a29-4525-939e-ee17073f3a7e?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/bb968afb-7857-46bd-9392-d8617a93cc9f?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/14b8212b-7c49-431b-ad04-e4cd5cce6416?as=iiif
+---
+```
+
+### Home Page
+
+The home page at `content/index.mdx` is a special content page with distinct front matter keys in addition to `title`.
+
+#### showHero
+
+A boolean value that determines whether or not the hero image for featued Manifests should be shown on the home page. This renders above the Markdown content.
+
+#### showHighlighted
+
+A boolean value that determines whether or metadata sliders for highlighted items should be shown on the home page. This renders below the Markdown content if `showHero` is `true`
+
+```mdx
+---
+title: Amanda Ira Aldridge Correspondences
+showHero: true
+showHighlighted: true
+---
+```
