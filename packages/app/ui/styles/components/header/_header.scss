@@ -1,10 +1,160 @@
 @layer components {
   .canopy-header {
+    position: relative;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    gap: 1.618rem;
-    padding: 0.618rem 1rem;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
     background: var(--color-gray-50);
+  }
+
+  .canopy-header__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 0 0 auto;
+    min-width: 0;
+  }
+
+  .canopy-header__menu {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--color-gray-200, #e2e8f0);
+    background: rgba(255, 255, 255, 0.8);
+    color: var(--color-gray-800, #1f2937);
+    transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+  }
+
+  .canopy-header__menu:hover,
+  .canopy-header__menu:focus-visible {
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--color-gray-900, #0f172a);
+    outline: none;
+  }
+
+  .canopy-header__menu-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .canopy-header__desktop-search {
+    display: none;
+    flex: 1 1 20rem;
+    min-width: 0;
+  }
+
+  .canopy-header__desktop-search [data-canopy-search-form] {
+    width: 100%;
+  }
+
+  .canopy-header__desktop-nav {
+    display: none;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1rem;
+  }
+
+  .canopy-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+    flex: 0 0 auto;
+  }
+
+  .canopy-header__icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--color-gray-200, #e2e8f0);
+    background: rgba(255, 255, 255, 0.8);
+    color: var(--color-gray-800, #1f2937);
+    transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+  }
+
+  .canopy-header__icon-button:hover,
+  .canopy-header__icon-button:focus-visible {
+    background: rgba(255, 255, 255, 1);
+    color: var(--color-gray-900, #0f172a);
+    outline: none;
+  }
+
+  .canopy-header__search-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .canopy-header__search-trigger {
+    order: 0;
+  }
+  .canopy-header__menu {
+    order: 1;
+  }
+
+  .canopy-modal--search .canopy-modal__panel {
+    width: min(100%, 40rem);
+  }
+
+  .canopy-modal--search .canopy-modal__body--search {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .canopy-modal--search [data-canopy-search-form] {
+    width: 100%;
+  }
+
+  .canopy-modal--search .canopy-search-teaser {
+    position: static;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    max-height: clamp(20rem, 60vh, 32rem);
+    padding: 0;
+    display: block;
+  }
+
+  .canopy-modal--search .canopy-search-teaser > #cplist {
+    padding: 0.25rem 0;
+  }
+
+  @media (min-width: 48rem) {
+    .canopy-header {
+      gap: 1.25rem;
+    }
+
+    .canopy-header__menu {
+      display: none;
+    }
+
+    .canopy-header__desktop-search {
+      display: block;
+    }
+
+    .canopy-header__desktop-nav {
+      display: flex;
+      margin-left: 1.5rem;
+    }
+
+    .canopy-header__actions {
+      margin-left: auto;
+      gap: 0.75rem;
+    }
+
+    .canopy-header__search-trigger {
+      display: none;
+    }
+
+    .canopy-modal--search {
+      display: none !important;
+    }
   }
 }

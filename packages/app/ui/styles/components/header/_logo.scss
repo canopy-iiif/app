@@ -7,14 +7,15 @@ a.canopy-logo {
   font-family: var(--font-serif);
   color: var(--color-gray-default) !important;
   letter-spacing: -0.025em;
+  line-height: 1;
 
   &:hover {
     text-decoration: none;
   }
 
   svg {
-    height: 1.618rem;
-    margin-bottom: -1px;
+    height: 1.65rem;
+    display: block;
 
     circle.canopy-logo-backlight {
       fill: var(--color-brand-900);

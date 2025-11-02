@@ -1,4 +1,5 @@
 import React from "react";
+import CanopyModal from "../layout/CanopyModal.jsx";
 
 function toArray(input) {
   if (!input) return [];
@@ -134,8 +135,11 @@ export default function SearchFiltersDialog(props = {}) {
     selected = {},
     onToggle,
     onClear,
-    title = "Filters",
+    title,
     subtitle = "Refine results by metadata",
+    brandLabel = "Canopy IIIF",
+    brandHref = "/",
+    logo: SiteLogo,
   } = props;
 
   const selectedMap = normalizeSelected(selected);
@@ -144,77 +148,87 @@ export default function SearchFiltersDialog(props = {}) {
     0
   );
 
+  React.useEffect(() => {
+    if (!open) return undefined;
+    if (typeof document === "undefined") return undefined;
+    const body = document.body;
+    const root = document.documentElement;
+    const prevBody = body ? body.style.overflow : "";
+    const prevRoot = root ? root.style.overflow : "";
+    if (body) body.style.overflow = "hidden";
+    if (root) root.style.overflow = "hidden";
+    return () => {
+      if (body) body.style.overflow = prevBody;
+      if (root) root.style.overflow = prevRoot;
+    };
+  }, [open]);
+
   if (!open) return null;
 
+  const brandId = "canopy-modal-filters-label";
+  const subtitleText = subtitle != null ? subtitle : title;
+
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      className="canopy-search-filters-overlay"
-      onClick={(event) => {
-        if (event.target === event.currentTarget && onOpenChange)
-          onOpenChange(false);
-      }}
+    <CanopyModal
+      id="canopy-modal-filters"
+      variant="filters"
+      open
+      labelledBy={brandId}
+      label={brandLabel}
+      logo={SiteLogo}
+      href={brandHref}
+      closeLabel="Close filters"
+      onClose={() => onOpenChange && onOpenChange(false)}
+      onBackgroundClick={() => onOpenChange && onOpenChange(false)}
+      bodyClassName="canopy-modal__body--filters"
     >
-      <div className="canopy-search-filters">
-        <header className="canopy-search-filters__header">
-          <div>
-            <h2 className="canopy-search-filters__title">{title}</h2>
-            <p className="canopy-search-filters__subtitle">{subtitle}</p>
+      {subtitleText ? (
+        <p className="canopy-search-filters__subtitle">{subtitleText}</p>
+      ) : null}
+      <div className="canopy-search-filters__body">
+        {Array.isArray(facets) && facets.length ? (
+          <div className="canopy-search-filters__facets">
+            {facets.map((facet) => (
+              <FacetSection
+                key={facet.slug || facet.label}
+                facet={facet}
+                selected={selectedMap}
+                onToggle={onToggle}
+              />
+            ))}
           </div>
+        ) : (
+          <p className="canopy-search-filters__empty">
+            No filters are available for this collection.
+          </p>
+        )}
+      </div>
+      <footer className="canopy-search-filters__footer">
+        <div>
+          {activeCount
+            ? `${activeCount} filter${activeCount === 1 ? '' : 's'} applied`
+            : 'No filters applied'}
+        </div>
+        <div className="canopy-search-filters__footer-actions">
+          <button
+            type="button"
+            onClick={() => {
+              if (onClear) onClear();
+            }}
+            disabled={!activeCount}
+            className="canopy-search-filters__button canopy-search-filters__button--secondary"
+          >
+            Clear all
+          </button>
           <button
             type="button"
             onClick={() => onOpenChange && onOpenChange(false)}
-            className="canopy-search-filters__close"
+            className="canopy-search-filters__button canopy-search-filters__button--primary"
           >
-            Close
+            Done
           </button>
-        </header>
-        <div className="canopy-search-filters__body">
-          {Array.isArray(facets) && facets.length ? (
-            <div className="canopy-search-filters__facets">
-              {facets.map((facet) => (
-                <FacetSection
-                  key={facet.slug || facet.label}
-                  facet={facet}
-                  selected={selectedMap}
-                  onToggle={onToggle}
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="canopy-search-filters__empty">
-              No filters are available for this collection.
-            </p>
-          )}
         </div>
-        <footer className="canopy-search-filters__footer">
-          <div>
-            {activeCount
-              ? `${activeCount} filter${activeCount === 1 ? "" : "s"} applied`
-              : "No filters applied"}
-          </div>
-          <div className="canopy-search-filters__footer-actions">
-            <button
-              type="button"
-              onClick={() => {
-                if (onClear) onClear();
-              }}
-              disabled={!activeCount}
-              className="canopy-search-filters__button canopy-search-filters__button--secondary"
-            >
-              Clear all
-            </button>
-            <button
-              type="button"
-              onClick={() => onOpenChange && onOpenChange(false)}
-              className="canopy-search-filters__button canopy-search-filters__button--primary"
-            >
-              Done
-            </button>
-          </div>
-        </footer>
-      </div>
-    </div>
+      </footer>
+    </CanopyModal>
   );
 }

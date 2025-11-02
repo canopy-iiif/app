@@ -8,6 +8,9 @@ export { default as RelatedItems } from "./src/iiif/MdxRelatedItems.jsx";
 export * as Interstitials from "./src/interstitials/index.js";
 export { default as SubNavigation } from "./src/layout/SubNavigation.jsx";
 export { default as Layout } from "./src/layout/Layout.jsx";
+export { default as CanopyHeader } from "./src/layout/CanopyHeader.jsx";
+export { default as CanopyBrand } from "./src/layout/CanopyBrand.jsx";
+export { default as CanopyModal } from "./src/layout/CanopyModal.jsx";
 
 // SSR-safe MDX placeholders (do not import browser-only UI here)
 export { default as SearchResults } from "./src/search/MdxSearchResults.jsx";
