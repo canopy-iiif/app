@@ -912,7 +912,10 @@ async function buildIiifCollectionPages(CONFIG) {
   };
   async function gatherFromCollection(colLike, parentId) {
     try {
-      // Resolve uri/id
+      // Resolve the URI we were asked to fetch. Some providers (e.g. Internet Archive)
+      // return paged collections where the JSON payload's `id` does not match the
+      // URI that served it. We rely on the requested URI as the stable, unique key
+      // so pagination continues even when `id` flips back to the root collection.
       const uri =
         typeof colLike === "string"
           ? colLike
@@ -923,12 +926,19 @@ async function buildIiifCollectionPages(CONFIG) {
           : await readJsonFromUri(uri, {log: true});
       if (!col) return;
       const ncol = await normalizeToV3(col);
-      const colId = String((ncol && (ncol.id || uri)) || uri);
-      const nid = norm(colId);
-      if (visitedCollections.has(nid)) return; // avoid cycles
-      visitedCollections.add(nid);
+      const reportedId = String(
+        (ncol && (ncol.id || ncol["@id"])) ||
+          (typeof colLike === "object" &&
+            (colLike.id || colLike["@id"])) ||
+          ""
+      );
+      const effectiveId = String(uri || reportedId || "");
+      const collectionKey = effectiveId || reportedId || uri || "";
+      const visitKey = norm(collectionKey) || collectionKey;
+      if (visitedCollections.has(visitKey)) return; // avoid cycles
+      visitedCollections.add(visitKey);
       try {
-        await saveCachedCollection(ncol, colId, parentId || "");
+        await saveCachedCollection(ncol, collectionKey, parentId || "");
       } catch (_) {}
       const itemsArr = Array.isArray(ncol.items) ? ncol.items : [];
       for (const entry of itemsArr) {
@@ -936,9 +946,9 @@ async function buildIiifCollectionPages(CONFIG) {
         const t = String(entry.type || entry["@type"] || "").toLowerCase();
         const entryId = entry.id || entry["@id"] || "";
         if (t === "manifest") {
-          tasks.push({id: entryId, parent: colId});
+          tasks.push({id: entryId, parent: collectionKey});
         } else if (t === "collection") {
-          await gatherFromCollection(entryId, colId);
+          await gatherFromCollection(entryId, collectionKey);
         }
       }
       // Traverse strictly by parent/child hierarchy (Presentation 3): items → Manifest or Collection
