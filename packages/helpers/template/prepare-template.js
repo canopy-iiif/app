@@ -68,6 +68,18 @@ function applyTemplateOverrides() {
   if (fs.existsSync(templateContentDir) && fs.statSync(templateContentDir).isDirectory()) {
     copyDirContents(templateContentDir, path.join(distRoot, 'content'));
   }
+
+  const contributingPath = path.join(distRoot, 'CONTRIBUTING.md');
+  rmrf(contributingPath);
+
+  const tsconfigPath = path.join(distRoot, 'tsconfig.json');
+  rmrf(tsconfigPath);
+
+  const templateReadme = path.join(templateRoot, 'README.md');
+  if (fs.existsSync(templateReadme)) {
+    const destReadme = path.join(distRoot, 'README.md');
+    fs.copyFileSync(templateReadme, destReadme);
+  }
 }
 
 function rewritePackageJson(appVersion) {
@@ -88,25 +100,34 @@ function rewritePackageJson(appVersion) {
     dev: 'tsx app/scripts/canopy-build.mts',
   };
   j.devDependencies = j.devDependencies || {};
-  delete j.devDependencies['@changesets/cli'];
-  delete j.devDependencies.jest;
-  delete j.devDependencies['@playwright/test'];
-  delete j.devDependencies.husky;
-  delete j.devDependencies.eslint;
-  delete j.devDependencies['eslint-config-prettier'];
-  delete j.devDependencies['eslint-import-resolver-typescript'];
-  delete j.devDependencies['eslint-plugin-import'];
-  delete j.devDependencies['eslint-plugin-react'];
-  delete j.devDependencies['eslint-plugin-react-hooks'];
-  delete j.devDependencies.prettier;
-  delete j.devDependencies['@typescript-eslint/eslint-plugin'];
-  delete j.devDependencies['@typescript-eslint/parser'];
-  delete j.devDependencies['typescript-eslint'];
-  j.devDependencies.tsx = j.devDependencies.tsx || '^4.19.1';
-  j.devDependencies.typescript = j.devDependencies.typescript || '^5.9.3';
-  j.devDependencies['@types/node'] = j.devDependencies['@types/node'] || '^24.6.2';
-  j.devDependencies.tailwindcss = j.devDependencies.tailwindcss || '^4.1.13';
-  // No longer include @tailwindcss/typography by default
+  const devDeps = {};
+  const setDevDep = (name, fallback) => {
+    const existing = j.devDependencies[name] || (j.dependencies && j.dependencies[name]) || null;
+    devDeps[name] = existing || fallback;
+  };
+
+  setDevDep('@tailwindcss/cli', '^4.1.13');
+  setDevDep('tailwindcss', '^4.1.13');
+  setDevDep('tsx', '^4.19.1');
+
+  const reactVersion =
+    (j.dependencies && j.dependencies.react) ||
+    (j.devDependencies && j.devDependencies.react) ||
+    '^19.0.0';
+  const reactDomVersion =
+    (j.dependencies && j.dependencies['react-dom']) ||
+    (j.devDependencies && j.devDependencies['react-dom']) ||
+    '^19.0.0';
+
+  if (!j.dependencies) j.dependencies = {};
+  j.dependencies.react = reactVersion;
+  j.dependencies['react-dom'] = reactDomVersion;
+
+  delete j.devDependencies.react;
+  delete j.devDependencies['react-dom'];
+
+  j.devDependencies = devDeps;
+
   fs.writeFileSync(p, JSON.stringify(j, null, 2));
 }
 
