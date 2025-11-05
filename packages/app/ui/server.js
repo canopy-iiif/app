@@ -9,6 +9,7 @@ export * as Interstitials from "./src/interstitials/index.js";
 export { default as SubNavigation } from "./src/layout/SubNavigation.jsx";
 export { default as Layout } from "./src/layout/Layout.jsx";
 export { default as CanopyHeader } from "./src/layout/CanopyHeader.jsx";
+export { default as CanopyFooter } from "./src/layout/CanopyFooter.jsx";
 export { default as CanopyBrand } from "./src/layout/CanopyBrand.jsx";
 export { default as CanopyModal } from "./src/layout/CanopyModal.jsx";
 

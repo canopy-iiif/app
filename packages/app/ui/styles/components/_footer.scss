@@ -1,0 +1,30 @@
+@layer components {
+  .canopy-footer {
+    border-top: 1px solid var(--color-gray-200, #e2e8f0);
+    background: var(--color-gray-25, #f8fafc);
+    color: var(--color-gray-600, #475569);
+  }
+
+  .canopy-footer__inner {
+    margin: 0 auto;
+    width: 100%;
+    max-width: 72rem;
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  .canopy-footer__inner > * {
+    margin: 0;
+  }
+
+  @media (min-width: 48rem) {
+    .canopy-footer__inner {
+      padding: 2rem 1.5rem;
+    }
+  }
+}

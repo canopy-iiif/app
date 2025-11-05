@@ -62,6 +62,7 @@ module.exports = {
     }),
   ],
   safelist: [
-    // Add dynamic classes here if needed
+    'canopy-footer',
+    'canopy-footer__inner',
   ],
 };

@@ -9,6 +9,24 @@ function mkdirp(p) {
   fs.mkdirSync(p, { recursive: true });
 }
 
+function copyDirContents(src, dest) {
+  if (!fs.existsSync(src)) return;
+  const entries = fs.readdirSync(src, { withFileTypes: true });
+  mkdirp(dest);
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      copyDirContents(srcPath, destPath);
+      continue;
+    }
+    if (entry.isFile()) {
+      mkdirp(path.dirname(destPath));
+      fs.copyFileSync(srcPath, destPath);
+    }
+  }
+}
+
 function copyRepoToTemplate() {
   const excludes = [
     '.git',
@@ -30,6 +48,26 @@ function copyRepoToTemplate() {
   for (const e of excludes) { args.push('--exclude', e); }
   args.push('./', 'dist-template/');
   execFileSync('rsync', args, { stdio: 'inherit' });
+}
+
+function applyTemplateOverrides() {
+  const distRoot = path.join('dist-template');
+  const templateRoot = __dirname;
+
+  const templateAppPath = path.join(templateRoot, '_app.mdx');
+  if (fs.existsSync(templateAppPath)) {
+    const destAppPath = path.join(distRoot, 'content', '_app.mdx');
+    mkdirp(path.dirname(destAppPath));
+    fs.copyFileSync(templateAppPath, destAppPath);
+  }
+
+  const docsDir = path.join(distRoot, 'content', 'docs');
+  rmrf(docsDir);
+
+  const templateContentDir = path.join(templateRoot, 'content');
+  if (fs.existsSync(templateContentDir)) {
+    copyDirContents(templateContentDir, path.join(distRoot, 'content'));
+  }
 }
 
 function rewritePackageJson(appVersion) {
@@ -116,6 +154,7 @@ function main() {
   rmrf('dist-template');
   mkdirp('dist-template');
   copyRepoToTemplate();
+  applyTemplateOverrides();
   rewritePackageJson(appVersion);
   const writeTemplateDeploy = require('./write-template-deploy');
   writeTemplateDeploy();

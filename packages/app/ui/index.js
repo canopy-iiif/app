@@ -3,6 +3,7 @@ export { default as Card } from "./src/layout/Card.jsx";
 export { default as TextCard } from "./src/layout/TextCard.jsx";
 export { default as Grid, GridItem } from "./src/layout/Grid.jsx";
 export { default as CanopyHeader } from "./src/layout/CanopyHeader.jsx";
+export { default as CanopyFooter } from "./src/layout/CanopyFooter.jsx";
 export { default as CanopyBrand } from "./src/layout/CanopyBrand.jsx";
 export { default as CanopyModal } from "./src/layout/CanopyModal.jsx";
 export { Viewer } from "./src/iiif/Viewer.jsx";
