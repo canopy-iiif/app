@@ -54,6 +54,14 @@ function applyTemplateOverrides() {
   const distRoot = path.join('dist-template');
   const templateRoot = __dirname;
 
+  const templateContentDir = path.join(templateRoot, 'content');
+  const distContentDir = path.join(distRoot, 'content');
+  rmrf(distContentDir);
+  mkdirp(distContentDir);
+  if (fs.existsSync(templateContentDir) && fs.statSync(templateContentDir).isDirectory()) {
+    copyDirContents(templateContentDir, distContentDir);
+  }
+
   const templateAppPath = path.join(templateRoot, '_app.mdx');
   if (fs.existsSync(templateAppPath)) {
     const destAppPath = path.join(distRoot, 'content', '_app.mdx');
@@ -63,11 +71,6 @@ function applyTemplateOverrides() {
 
   const docsDir = path.join(distRoot, 'content', 'docs');
   rmrf(docsDir);
-
-  const templateContentDir = path.join(templateRoot, 'content');
-  if (fs.existsSync(templateContentDir) && fs.statSync(templateContentDir).isDirectory()) {
-    copyDirContents(templateContentDir, path.join(distRoot, 'content'));
-  }
 
   const contributingPath = path.join(distRoot, 'CONTRIBUTING.md');
   rmrf(contributingPath);
@@ -102,13 +105,36 @@ function rewritePackageJson(appVersion) {
   j.devDependencies = j.devDependencies || {};
   const devDeps = {};
   const setDevDep = (name, fallback) => {
-    const existing = j.devDependencies[name] || (j.dependencies && j.dependencies[name]) || null;
-    devDeps[name] = existing || fallback;
+    const existing =
+      (j.devDependencies && j.devDependencies[name]) ||
+      (j.dependencies && j.dependencies[name]) ||
+      null;
+    if (existing) {
+      devDeps[name] = existing;
+    } else if (fallback) {
+      devDeps[name] = fallback;
+    }
   };
 
   setDevDep('@tailwindcss/cli', '^4.1.13');
   setDevDep('tailwindcss', '^4.1.13');
   setDevDep('tsx', '^4.19.1');
+
+  const setDependency = (name, fallback) => {
+    const existing =
+      (j.dependencies && j.dependencies[name]) ||
+      (j.devDependencies && j.devDependencies[name]) ||
+      null;
+    if (!j.dependencies) j.dependencies = {};
+    if (existing) {
+      j.dependencies[name] = existing;
+    } else if (fallback) {
+      j.dependencies[name] = fallback;
+    }
+    if (j.devDependencies) delete j.devDependencies[name];
+  };
+
+  setDependency('esbuild', '^0.21.4');
 
   const reactVersion =
     (j.dependencies && j.dependencies.react) ||
@@ -146,19 +172,23 @@ function writeTailwindFiles() {
     return false;
   }
 
-  const copiedConfig = copyIfExists('tailwind.config.js');
+  const copiedConfig = copyIfExists('tailwind.config.ts');
   const copiedCss = copyIfExists('index.css');
 
   if (!copiedConfig) {
-    const fallbackCfg = `module.exports = {
+    const fallbackCfg = `import type { Config } from 'tailwindcss';
+
+const config: Config = {
   presets: [require('@canopy-iiif/app/ui/canopy-iiif-preset')],
   content: [
     require.resolve('@canopy-iiif/app/ui'),
   ],
   plugins: [require('@canopy-iiif/app/ui/canopy-iiif-plugin')],
 };
+
+export default config;
 `;
-    fs.writeFileSync(path.join(stylesDir, 'tailwind.config.js'), fallbackCfg, 'utf8');
+    fs.writeFileSync(path.join(stylesDir, 'tailwind.config.ts'), fallbackCfg, 'utf8');
   }
 
   if (!copiedCss) {
