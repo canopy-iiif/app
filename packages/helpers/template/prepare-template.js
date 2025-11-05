@@ -65,7 +65,7 @@ function applyTemplateOverrides() {
   rmrf(docsDir);
 
   const templateContentDir = path.join(templateRoot, 'content');
-  if (fs.existsSync(templateContentDir)) {
+  if (fs.existsSync(templateContentDir) && fs.statSync(templateContentDir).isDirectory()) {
     copyDirContents(templateContentDir, path.join(distRoot, 'content'));
   }
 }
