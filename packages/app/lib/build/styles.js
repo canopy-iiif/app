@@ -20,12 +20,14 @@ async function ensureStyles() {
     path.join(root, "tailwind.config.js"),
     path.join(root, "tailwind.config.cjs"),
     path.join(root, "tailwind.config.mjs"),
+    path.join(root, "tailwind.config.mts"),
     path.join(root, "tailwind.config.ts"),
   ];
   const twConfigsApp = [
     path.join(appStylesDir, "tailwind.config.js"),
     path.join(appStylesDir, "tailwind.config.cjs"),
     path.join(appStylesDir, "tailwind.config.mjs"),
+    path.join(appStylesDir, "tailwind.config.mts"),
     path.join(appStylesDir, "tailwind.config.ts"),
   ];
   let configPath = [...twConfigsApp, ...twConfigsRoot].find((p) => {

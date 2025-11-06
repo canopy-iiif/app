@@ -172,23 +172,25 @@ function writeTailwindFiles() {
     return false;
   }
 
-  const copiedConfig = copyIfExists('tailwind.config.ts');
+  const copiedConfig =
+    copyIfExists('tailwind.config.mts') || copyIfExists('tailwind.config.ts');
   const copiedCss = copyIfExists('index.css');
 
   if (!copiedConfig) {
-    const fallbackCfg = `import type { Config } from 'tailwindcss';
+    const fallbackCfg = `import { createRequire } from 'node:module';
+import type { Config } from 'tailwindcss';
+
+const require = createRequire(import.meta.url);
 
 const config: Config = {
   presets: [require('@canopy-iiif/app/ui/canopy-iiif-preset')],
-  content: [
-    require.resolve('@canopy-iiif/app/ui'),
-  ],
+  content: [require.resolve('@canopy-iiif/app/ui')],
   plugins: [require('@canopy-iiif/app/ui/canopy-iiif-plugin')],
 };
 
 export default config;
 `;
-    fs.writeFileSync(path.join(stylesDir, 'tailwind.config.ts'), fallbackCfg, 'utf8');
+    fs.writeFileSync(path.join(stylesDir, 'tailwind.config.mts'), fallbackCfg, 'utf8');
   }
 
   if (!copiedCss) {
