@@ -1,9 +1,39 @@
-# Welcome to Canopy IIIF
+<Interstitials.Hero
+  headline="Shape this Canopy IIIF template into your own project"
+  description="This starter is yours to configure, add context to, and publish a collection that fits your project."
+  background="theme"
+  random={true}
+  links={[
+    {
+      href: "/docs/getting-started",
+      title: "Read Guide",
+      type: "primary",
+    },
+    {
+      href: "https://github.com/canopy-iiif/app",
+      title: "View Docs",
+      type: "secondary",
+    },
+  ]}
+/>
 
-This starter keeps things simple so you can focus on your collection.
+<div className="mx-auto max-w-content w-full px-4 py-6 space-y-4">
+## Getting started
 
-- Update `canopy.yml` with the IIIF collection you want to publish.
-- Author pages inside the `content/` directory using MDX.
-- Run `npm run dev` to preview changes and `npm run build` to publish static files in `site/`.
+Canopy IIIF is an open-source static site generator designed for IIIF collections. This template is ready for your collection, context, and publishing.
 
-Need guidance? The getting started guide at https://canopy-iiif.github.io/docs/getting-started/ walks through every step.
+### Point to your collection
+
+- Open `canopy.yml` and set `collection` to the IIIF Collection you want to feature.
+- Review `metadata` and `featured` entries—adjust them to suit the facets and works you want to highlight.
+
+### Tune layouts and pages
+
+- Customize `content/index.mdx`, `content/about/`, and add new folders under `content/` for exhibits or guides.
+- Modify `content/works/_layout.mdx` to control how individual manifests render.
+- Update `content/_app.mdx` to adjust site-wide structure.
+- Browse the component catalog and usage patterns in the docs to extend the narrative beyond default manifests.
+
+<RelatedItems top={3} />
+
+</div>
