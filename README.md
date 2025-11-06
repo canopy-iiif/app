@@ -60,11 +60,14 @@ Canopy ships a small Tailwind preset and plugin so you can opt into sensible def
 - Preset (tokens + plugin): `@canopy-iiif/app/ui/canopy-iiif-preset`
 - Plugin (component CSS only): `@canopy-iiif/app/ui/canopy-iiif-plugin`
 
-Defaults (recommended) — enabled in `app/styles/tailwind.config.ts`:
+Defaults (recommended) — enabled in `app/styles/tailwind.config.mts`:
 
 ```ts
-// app/styles/tailwind.config.ts
+// app/styles/tailwind.config.mts
+import { createRequire } from 'node:module';
 import type { Config } from 'tailwindcss';
+
+const require = createRequire(import.meta.url);
 
 const config: Config = {
   presets: [require('@canopy-iiif/app/ui/canopy-iiif-preset')],

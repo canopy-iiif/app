@@ -3,7 +3,6 @@ const fsp = fs.promises;
 const path = require("path");
 const { spawn, spawnSync } = require("child_process");
 const http = require("http");
-const url = require("url");
 const {
   CONTENT_DIR,
   OUT_DIR,
@@ -558,8 +557,14 @@ function startServer() {
   onCssChange = () => broadcast("css");
 
   const server = http.createServer((req, res) => {
-    const parsed = url.parse(req.url || "/");
-    let pathname = decodeURI(parsed.pathname || "/");
+    const origin = `http://${req.headers.host || `localhost:${PORT}`}`;
+    let parsedUrl;
+    try {
+      parsedUrl = new URL(req.url || "/", origin);
+    } catch (_) {
+      parsedUrl = new URL("/", origin);
+    }
+    let pathname = decodeURI(parsedUrl.pathname || "/");
     // Serve dev toast assets and config
     if (pathname === "/__livereload-config") {
       res.writeHead(200, {
@@ -801,12 +806,14 @@ async function dev() {
       "tailwind.config.js",
       "tailwind.config.cjs",
       "tailwind.config.mjs",
+      "tailwind.config.mts",
       "tailwind.config.ts",
     ].map((n) => path.join(root, n));
     const twConfigsApp = [
       "tailwind.config.js",
       "tailwind.config.cjs",
       "tailwind.config.mjs",
+      "tailwind.config.mts",
       "tailwind.config.ts",
     ].map((n) => path.join(appStylesDir, n));
     const configPath = [...twConfigsApp, ...twConfigsRoot].find((p) => {
@@ -818,7 +825,7 @@ async function dev() {
     });
     if (!configPath) {
       throw new Error(
-        "[tailwind] Missing Tailwind config. Expected app/styles/tailwind.config.{js,cjs,mjs,ts} or a root-level Tailwind config."
+        "[tailwind] Missing Tailwind config. Expected app/styles/tailwind.config.{js,cjs,mjs,mts,ts} or a root-level Tailwind config."
       );
     }
     const inputCandidates = [

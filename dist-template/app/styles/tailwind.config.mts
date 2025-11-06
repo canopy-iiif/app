@@ -1,7 +1,12 @@
-import path from 'path';
+import path from 'node:path';
 import plugin from 'tailwindcss/plugin';
 import type { Config } from 'tailwindcss';
 import { loadCanopyTheme } from '@canopy-iiif/app/ui/theme';
+import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
+
+const require = createRequire(import.meta.url);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 if (process.env.CANOPY_DEBUG_THEME) {
   console.log('[tailwind-config] loaded');
@@ -43,14 +48,19 @@ const tailwindConfig = {
   },
   plugins: [
     require('@canopy-iiif/app/ui/canopy-iiif-plugin'),
-    plugin(({ addBase }) => {
+    plugin(({ addBase, postcss }) => {
       if (!canopyTokensCss || !canopyTokensCss.trim()) {
+        return;
+      }
+      if (!postcss || typeof postcss.parse !== 'function') {
+        if (process.env.CANOPY_DEBUG_THEME) {
+          console.warn('[tailwind-config] postcss parser unavailable; skipping token injection');
+        }
         return;
       }
       if (process.env.CANOPY_DEBUG_THEME) {
         console.log('[tailwind-config] injecting theme tokens');
       }
-      const postcss: typeof import('postcss') = require('postcss');
       addBase(postcss.parse(canopyTokensCss) as unknown as any);
     }),
   ],
