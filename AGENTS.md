@@ -175,8 +175,8 @@ Goal: Allow authors to fully compose the search page via MDX, while the builder 
 - Strategy: releases are published via Changesets; only after a successful publish does the workflow prepare and force‑push a clean template to `canopy-iiif/template`.
 - Trigger: `.github/workflows/release-and-template.yml` runs on `push` to `main` (and can be dispatched manually). It uses `changesets/action` to publish and exposes whether a release occurred; the template push runs only when a publish happened.
 -- What it does:
-  - Copies the repo into `dist-template/`, excluding dev‑only paths (e.g., `.git`, `node_modules`, `packages`, `.cache`, `.changeset`, template workflows, agent docs).
-  - Rewrites `dist-template/package.json` to remove workspaces, swap `workspace:*` deps for published versions of `@canopy-iiif/lib` and `@canopy-iiif/ui`, and set `build`/`dev` scripts to run `node app/scripts/canopy-build.mjs`.
+  - Copies the repo into a disposable staging directory (default `.template-build/`, override with `TEMPLATE_OUT_DIR`), excluding dev-only paths (e.g., `.git`, `node_modules`, `packages`, `.cache`, `.changeset`, template workflows, agent docs).
+  - Rewrites `package.json` inside the staging directory to remove workspaces, swap `workspace:*` deps for published versions of `@canopy-iiif/lib` and `@canopy-iiif/ui`, and set `build`/`dev` scripts to run `node app/scripts/canopy-build.mjs`.
   - Patches the Pages deploy workflow in the template to inline the build verify step (no helpers package there).
   - Force‑pushes the result to `main` of `${OWNER}/template` (org: `canopy-iiif`).
 - Template expectations:

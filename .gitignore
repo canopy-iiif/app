@@ -3,6 +3,7 @@ node_modules/
 
 # canopy specific
 site/
+.template-build/
 
 # remove this if you would like to commit the cache
 .cache

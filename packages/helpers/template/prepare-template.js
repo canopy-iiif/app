@@ -2,6 +2,11 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
+const OUTPUT_ROOT = path.resolve(
+  process.cwd(),
+  process.env.TEMPLATE_OUT_DIR || '.template-build'
+);
+
 function rmrf(p) {
   try { fs.rmSync(p, { recursive: true, force: true }); } catch (_) {}
 }
@@ -42,16 +47,20 @@ function copyRepoToTemplate() {
     '.github/workflows/retarget-pr-base.yml',
     '.github/workflows/release-and-template.yml',
     '.github/workflows/test.yml',
-    'dist-template',
   ];
+  const relativeOutput = path.relative(process.cwd(), OUTPUT_ROOT);
+  if (relativeOutput && !relativeOutput.startsWith('..')) {
+    excludes.push(relativeOutput);
+  }
   const args = ['-a', '--delete'];
   for (const e of excludes) { args.push('--exclude', e); }
-  args.push('./', 'dist-template/');
+  const destArg = path.join(OUTPUT_ROOT, '');
+  args.push('./', destArg.endsWith(path.sep) ? destArg : `${destArg}${path.sep}`);
   execFileSync('rsync', args, { stdio: 'inherit' });
 }
 
 function applyTemplateOverrides() {
-  const distRoot = path.join('dist-template');
+  const distRoot = OUTPUT_ROOT;
   const templateRoot = __dirname;
 
   const templateContentDir = path.join(templateRoot, 'content');
@@ -86,7 +95,7 @@ function applyTemplateOverrides() {
 }
 
 function rewritePackageJson(appVersion) {
-  const p = path.join('dist-template', 'package.json');
+  const p = path.join(OUTPUT_ROOT, 'package.json');
   const j = JSON.parse(fs.readFileSync(p, 'utf8'));
   const vApp = appVersion || '';
   if (j.dependencies) {
@@ -158,8 +167,8 @@ function rewritePackageJson(appVersion) {
 }
 
 function writeTailwindFiles() {
-  const stylesDir = path.join('dist-template', 'app', 'styles');
-  const srcStylesDir = path.join(__dirname, '..', '..', '..', 'app', 'styles');
+  const stylesDir = path.join(OUTPUT_ROOT, 'app', 'styles');
+  const srcStylesDir = path.join(process.cwd(), 'app', 'styles');
   mkdirp(stylesDir);
 
   function copyIfExists(filename) {
@@ -204,13 +213,13 @@ export default config;
 
 function main() {
   const appVersion = process.env.APP_VERSION || '';
-  rmrf('dist-template');
-  mkdirp('dist-template');
+  rmrf(OUTPUT_ROOT);
+  mkdirp(OUTPUT_ROOT);
   copyRepoToTemplate();
   applyTemplateOverrides();
   rewritePackageJson(appVersion);
   const writeTemplateDeploy = require('./write-template-deploy');
-  writeTemplateDeploy();
+  writeTemplateDeploy(OUTPUT_ROOT);
   writeTailwindFiles();
 }
 

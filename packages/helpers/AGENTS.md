@@ -18,6 +18,7 @@ Invariants
 - Helper scripts should remain Node-compatible without bundling; avoid ESM unless necessary and document runtime requirements.
 - Any script that mutates the filesystem must log its intent and respect workspace boundaries.
 - Template builds omit this workspace entirely; whenever helpers change behaviour that affects release automation, document the expected template output (e.g., updated `package.json` rewrites, workflow patches).
+- Template staging writes to `.template-build/` by default (override with `TEMPLATE_OUT_DIR`); keep this path gitignored and disposable.
 
 Active Cleanup Goals
 --------------------

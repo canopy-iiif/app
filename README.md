@@ -256,9 +256,10 @@ Dot‑notation (future): we may also expose these as `<Search.Form />`, `<Search
 - This repository (`app`) maintains a separate template repository (`template`).
 - On push to `main`, `.github/workflows/release-and-template.yml` publishes packages and, when a publish occurs, builds a clean template and force‑pushes it to `canopy-iiif/template` (branch `main`).
 - The workflow:
-  - Excludes dev‑only paths (`.git`, `node_modules`, `packages`, `.cache`, `.changeset`, internal workflows/docs).
+  - Excludes dev-only paths (`.git`, `node_modules`, `packages`, `.cache`, `.changeset`, internal workflows/docs).
   - Rewrites `package.json` to remove workspaces and depend on published `@canopy-iiif/lib`/`@canopy-iiif/ui` versions; sets `build`/`dev` scripts to run `node app/scripts/canopy-build.mjs`.
   - Streams the template’s deploy workflow without additional post-build verification to keep the deploy path lean.
+  - Stages the generated template into `.template-build/` (override with `TEMPLATE_OUT_DIR`) so nothing checked into this repo needs to stay in sync with the published template.
 - Setup:
   - Create the `template` repo under the `canopy-iiif` org (or your chosen owner) and add a `TEMPLATE_PUSH_TOKEN` secret (PAT with repo write access) to this repo’s secrets.
   - Optionally mark `template` as a Template repository so users can click “Use this template”.
