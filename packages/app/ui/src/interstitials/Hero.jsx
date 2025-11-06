@@ -1,6 +1,8 @@
 import React from "react";
 import helpers from "../../../lib/components/featured.js";
 import {computeHeroHeightStyle} from "./hero-utils.js";
+import Button from "../layout/Button.jsx";
+import ButtonWrapper from "../layout/ButtonWrapper.jsx";
 
 const basePath = (() => {
   try {
@@ -52,7 +54,8 @@ function normalizeLinks(links) {
       const title = link.title ? String(link.title) : "";
       if (!href || !title) return null;
       const type = link.type === "secondary" ? "secondary" : "primary";
-      return {href, title, type};
+      const target = link.target ? String(link.target) : undefined;
+      return {href, title, type, target};
     })
     .filter(Boolean);
 }
@@ -279,21 +282,17 @@ export default function Hero({
         </p>
       ) : null}
       {overlayLinks.length ? (
-        <div className="canopy-interstitial__actions">
+        <ButtonWrapper className="canopy-interstitial__actions">
           {overlayLinks.map((link) => (
-            <a
+            <Button
               key={`${link.href}-${link.title}`}
               href={link.href}
-              className={
-                link.type === "secondary"
-                  ? "canopy-button canopy-button--secondary"
-                  : "canopy-button canopy-button--primary"
-              }
-            >
-              {link.title}
-            </a>
+              label={link.title}
+              variant={link.type}
+              target={link.target}
+            />
           ))}
-        </div>
+        </ButtonWrapper>
       ) : null}
     </>
   );

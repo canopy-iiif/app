@@ -12,6 +12,9 @@ export { default as CanopyHeader } from "./src/layout/CanopyHeader.jsx";
 export { default as CanopyFooter } from "./src/layout/CanopyFooter.jsx";
 export { default as CanopyBrand } from "./src/layout/CanopyBrand.jsx";
 export { default as CanopyModal } from "./src/layout/CanopyModal.jsx";
+export { default as Container } from "./src/layout/Container.jsx";
+export { default as Button } from "./src/layout/Button.jsx";
+export { default as ButtonWrapper } from "./src/layout/ButtonWrapper.jsx";
 
 // SSR-safe MDX placeholders (do not import browser-only UI here)
 export { default as SearchResults } from "./src/search/MdxSearchResults.jsx";
@@ -35,3 +38,4 @@ export {
 
 // Docs helpers
 export { default as DocsCodeBlock } from "./src/docs/CodeBlock.jsx";
+export { default as DocsMarkdownTable } from "./src/docs/MarkdownTable.jsx";

@@ -2,6 +2,9 @@ export { HelloWorld } from "./src/HelloWorld.jsx";
 export { default as Card } from "./src/layout/Card.jsx";
 export { default as TextCard } from "./src/layout/TextCard.jsx";
 export { default as Grid, GridItem } from "./src/layout/Grid.jsx";
+export { default as Container } from "./src/layout/Container.jsx";
+export { default as Button } from "./src/layout/Button.jsx";
+export { default as ButtonWrapper } from "./src/layout/ButtonWrapper.jsx";
 export { default as CanopyHeader } from "./src/layout/CanopyHeader.jsx";
 export { default as CanopyFooter } from "./src/layout/CanopyFooter.jsx";
 export { default as CanopyBrand } from "./src/layout/CanopyBrand.jsx";
@@ -26,3 +29,4 @@ export { default as SearchFormModal } from "./src/search-form/MdxSearchFormModal
 export { default as SearchPanel } from "./src/search/SearchPanel.jsx";
 export { default as SearchPanelForm } from "./src/search/SearchPanelForm.jsx";
 export { default as SearchPanelTeaserResults } from "./src/search/SearchPanelTeaserResults.jsx";
+export { default as DocsMarkdownTable } from "./src/docs/MarkdownTable.jsx";

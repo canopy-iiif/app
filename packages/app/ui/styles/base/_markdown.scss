@@ -1,0 +1,43 @@
+.markdown-table__frame {
+  width: 100%;
+  margin: 1.618rem 0 2.618rem;
+}
+
+.markdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+
+  th,
+  td {
+    border: 1px solid var(--color-gray-400);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th {
+    font-size: 0.8333rem;
+    font-weight: 300;
+    letter-spacing: -0.0125em;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+
+  tbody {
+    box-shadow: 5px 5px 11px rgba(0, 0, 0, 0.05);
+
+    tr {
+      &:nth-child(even) {
+        background-color: var(--color-gray-200);
+      }
+    }
+  }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    color: var(--color-gray-900);
+  }
+}

@@ -11,6 +11,14 @@ const {
   ensureDirSync,
   withBase,
 } = require("../common");
+let remarkGfm = null;
+try {
+  const mod = require("remark-gfm");
+  const plugin = mod && (typeof mod === "function" ? mod : mod.default);
+  remarkGfm = typeof plugin === "function" ? plugin : null;
+} catch (_) {
+  remarkGfm = null;
+}
 
 const EXTRA_REMARK_PLUGINS = (() => {
   try {
@@ -32,6 +40,9 @@ function buildCompileOptions(overrides = {}) {
     format: "mdx",
   };
   const remarkPlugins = [];
+  if (remarkGfm) {
+    remarkPlugins.push(remarkGfm);
+  }
   if (overrides && Array.isArray(overrides.remarkPlugins)) {
     remarkPlugins.push(...overrides.remarkPlugins);
   }

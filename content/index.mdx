@@ -17,16 +17,22 @@
   ]}
 />
 
-<div className="mx-auto max-w-content w-full px-4 py-6 space-y-4">
+<Container>
+
 ## What is Canopy IIIF?
 
 Canopy _“makes easy”_ the creation of digital exhibits for libraries, archives, and museums by providing user-experience focused components that bring IIIF resources to life. For digital humanists and scholars, Canopy provides a straightforward method to curate works from multiple sources and provide additional perspectives and aboutness beyond the included descriptive metadata. The decentralized, interoperable, and linked-data attributes of the IIIF APIs empower Canopy to provide smaller institutions with a streamlined front-end platform, neatly sidestepping the monolithic complexities often associated with conventional digital asset management systems.
 
-<div className="mt-4 space-x-2 space-y-2">
-  <a href="/docs/getting-started">Get Started</a>
-  <a href="/docs">Read Docs</a>
-  <a href="https://github.com/canopy-iiif">View Code</a>
-</div>
+<ButtonWrapper>
+  <Button href="/docs/getting-started" label="Get Started" />
+  <Button href="/docs" label="Read Docs" variant="secondary" />
+  <Button
+    href="https://github.com/canopy-iiif"
+    label="View Code"
+    variant="secondary"
+    target="_blank"
+  />
+</ButtonWrapper>
 
 - Builds static digital collection sites directly from IIIF Collections.
 - Generates one page for each IIIF Manifest.
@@ -38,6 +44,6 @@ Canopy _“makes easy”_ the creation of digital exhibits for libraries, archiv
 
 ## Highlighted Items
 
-<RelatedItems top={3} />
+<RelatedItems />
 
-</div>
+</Container>

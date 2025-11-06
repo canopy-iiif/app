@@ -1,6 +1,6 @@
 {
   "name": "@canopy-iiif/app",
-  "version": "0.9.13",
+  "version": "0.9.14",
   "private": false,
   "license": "MIT",
   "author": "Mat Jordan <mat@northwestern.edu>",
@@ -44,6 +44,7 @@
     "@mdx-js/react": "^3.1.0",
     "charm": "^1.0.2",
     "js-yaml": "^4.1.0",
+    "remark-gfm": "^4.0.0",
     "react-masonry-css": "^1.0.16",
     "sass": "^1.77.0",
     "slugify": "^1.6.6"

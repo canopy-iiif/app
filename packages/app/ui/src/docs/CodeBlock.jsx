@@ -111,7 +111,7 @@ export default function DocsCodeBlock(props = {}) {
     borderRadius: "12px",
     overflow: "hidden",
     margin: "1.5rem 0",
-    background: "var(--color-brand-100, #e0f2ff)",
+    background: "var(--color-brand-100)",
     fontFamily: "var(--font-mono)",
     fontSize: "0.85rem",
   };
@@ -122,14 +122,15 @@ export default function DocsCodeBlock(props = {}) {
     justifyContent: "space-between",
     padding: "1rem 1.25rem",
     fontWeight: 700,
-    background: "var(--color-brand-200, #dbeafe)",
+    background: "var(--color-brand-100)",
+    borderBottom: "1px solid var(--color-brand-200)",
     color: "var(--color-brand-900)",
   };
 
   const preStyle = {
     margin: 0,
-    background: "var(--color-brand-100, #e0f2ff)",
-    color: "var(--color-brand-800, #1f2d5c)",
+    background: "var(--color-brand-100)",
+    color: "var(--color-brand-800)",
     lineHeight: 1.55,
     padding: "1rem 0",
     overflowX: "auto",
