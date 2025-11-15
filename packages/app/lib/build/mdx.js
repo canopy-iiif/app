@@ -525,6 +525,7 @@ async function ensureClientRuntime() {
   const entry = `
     import CloverViewer from '@samvera/clover-iiif/viewer';
     import CloverScroll from '@samvera/clover-iiif/scroll';
+    import CloverImage from '@samvera/clover-iiif/image';
 
     function ready(fn) {
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn, { once: true });
@@ -563,6 +564,7 @@ async function ensureClientRuntime() {
     ready(function() {
       mountAll('[data-canopy-viewer]', CloverViewer);
       mountAll('[data-canopy-scroll]', CloverScroll);
+      mountAll('[data-canopy-image]', CloverImage);
     });
   `;
   const reactShim = `

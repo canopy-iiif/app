@@ -1,7 +1,7 @@
-import React from 'react';
-import SearchPanel from '../search/SearchPanel.jsx';
-import CanopyBrand from './CanopyBrand.jsx';
-import CanopyModal from './CanopyModal.jsx';
+import React from "react";
+import SearchPanel from "../search/SearchPanel.jsx";
+import CanopyBrand from "./CanopyBrand.jsx";
+import CanopyModal from "./CanopyModal.jsx";
 
 function HeaderScript() {
   const code = `
@@ -206,17 +206,19 @@ function HeaderScript() {
 
 function ensureArray(navLinks) {
   if (!Array.isArray(navLinks)) return [];
-  return navLinks.filter((link) => link && typeof link === 'object' && typeof link.href === 'string');
+  return navLinks.filter(
+    (link) => link && typeof link === "object" && typeof link.href === "string"
+  );
 }
 
 export default function CanopyHeader(props = {}) {
   const {
     navigation: navLinksProp,
-    searchLabel = 'Search',
-    searchHotkey = 'mod+k',
-    searchPlaceholder = 'Search…',
-    brandHref = '/',
-    title = 'Canopy IIIF',
+    searchLabel = "Search",
+    searchHotkey = "mod+k",
+    searchPlaceholder = "Search…",
+    brandHref = "/",
+    title = "Canopy IIIF",
     logo: SiteLogo,
   } = props;
 
@@ -224,7 +226,11 @@ export default function CanopyHeader(props = {}) {
 
   return (
     <>
-      <header className="canopy-header" data-mobile-nav="closed" data-mobile-search="closed">
+      <header
+        className="canopy-header"
+        data-mobile-nav="closed"
+        data-mobile-search="closed"
+      >
         <div className="canopy-header__brand">
           <CanopyBrand
             label={title}
@@ -235,10 +241,17 @@ export default function CanopyHeader(props = {}) {
         </div>
 
         <div className="canopy-header__desktop-search">
-          <SearchPanel label={searchLabel} hotkey={searchHotkey} placeholder={searchPlaceholder} />
+          <SearchPanel
+            label={searchLabel}
+            hotkey={searchHotkey}
+            placeholder={searchPlaceholder}
+          />
         </div>
 
-        <nav className="canopy-nav-links canopy-header__desktop-nav" aria-label="Primary navigation">
+        <nav
+          className="canopy-nav-links canopy-header__desktop-nav"
+          aria-label="Primary navigation"
+        >
           {navLinks.map((link) => (
             <a key={link.href} href={link.href}>
               {link.label || link.href}
@@ -263,7 +276,11 @@ export default function CanopyHeader(props = {}) {
               strokeWidth="1.5"
               className="canopy-header__search-icon"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-3.8-3.8M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="m21 21-3.8-3.8M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
+              />
             </svg>
           </button>
           <button
@@ -282,7 +299,11 @@ export default function CanopyHeader(props = {}) {
               stroke="currentColor"
               className="canopy-header__menu-icon"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+              />
             </svg>
           </button>
         </div>
@@ -298,7 +319,10 @@ export default function CanopyHeader(props = {}) {
         closeLabel="Close navigation"
         closeDataAttr="nav"
       >
-        <nav className="canopy-nav-links canopy-modal__nav" aria-label="Primary navigation">
+        <nav
+          className="canopy-nav-links canopy-modal__nav"
+          aria-label="Primary navigation"
+        >
           {navLinks.map((link) => (
             <a key={link.href} href={link.href}>
               {link.label || link.href}
@@ -318,7 +342,11 @@ export default function CanopyHeader(props = {}) {
         closeDataAttr="search"
         bodyClassName="canopy-modal__body--search"
       >
-        <SearchPanel label={searchLabel} hotkey={searchHotkey} placeholder={searchPlaceholder} />
+        <SearchPanel
+          label={searchLabel}
+          hotkey={searchHotkey}
+          placeholder={searchPlaceholder}
+        />
       </CanopyModal>
 
       <HeaderScript />

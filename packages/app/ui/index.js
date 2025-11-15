@@ -12,6 +12,7 @@ export { default as CanopyModal } from "./src/layout/CanopyModal.jsx";
 export { Viewer } from "./src/iiif/Viewer.jsx";
 export { Slider } from "./src/iiif/Slider.jsx";
 export { Scroll } from "./src/iiif/Scroll.jsx";
+export { Image } from "./src/iiif/Image.jsx";
 // New: RelatedItems placeholder (new data attribute)
 export { default as RelatedItems } from "./src/iiif/MdxRelatedItems.jsx";
 // Search UI (React)

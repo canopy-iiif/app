@@ -162,6 +162,7 @@ Why this is cool
 Interactive components render safely in MDX and hydrate client-side:
 
 - Viewer: `<Viewer iiifContent="…" />` — wraps `@samvera/clover-iiif` and hydrates client-side.
+- Image: `<Image iiifContent="…" />` — wraps `@samvera/clover-iiif/image` to display a single IIIF resource with client-side hydration.
 - Interstitial hero: `<Interstitials.Hero … />` — rotates featured IIIF works declared in `canopy.yml → featured`, falling back to cached manifest thumbnails. Accepts props such as `headline`, `description`, `links`, `height`, `background="theme" | "transparent"`, `index`, and `random` to control the content and layout.
 - Slider: `<Slider iiifContent="…" />` — wraps Clover’s slider; hydrates client-side via a separate bundle.
 - Related items: `<RelatedItems top={3} iiifContent?="…" />` — facet-driven related sliders.

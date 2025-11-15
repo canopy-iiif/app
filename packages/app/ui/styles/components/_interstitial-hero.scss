@@ -3,6 +3,9 @@
   width: 100%;
   isolation: isolate;
   margin-bottom: 2.618rem;
+  margin-top: -5rem;
+  z-index: 0;
+  padding-top: 5rem;
 
   &--hero {
     --hero-height: 520px;
@@ -107,7 +110,7 @@
 
     @media (min-width: 64rem) {
       .canopy-interstitial__body .canopy-interstitial__headline {
-        font-size: 3rem;
+        font-size: 2.618rem;
       }
     }
   }
@@ -178,7 +181,7 @@
     height: 100%;
     flex: 1 1 auto;
     overflow: hidden;
-    border-radius: clamp(1.5rem, 2vw, 2rem);
+    border-radius: 0.75rem;
   }
 
   &__media--static {
@@ -239,9 +242,6 @@
   &__description {
     margin: 0;
     max-width: 42rem;
-    font-size: 1rem;
-    line-height: 1.7;
-    color: color-mix(in srgb, currentColor 82%, transparent);
   }
 
   &__actions {
@@ -396,11 +396,11 @@
   }
 
   .canopy-interstitial__headline {
-    font-size: 3rem;
+    font-size: 2.618rem;
   }
 
   .canopy-interstitial__description {
-    font-size: 1.0625rem;
+    font-size: 1rem;
   }
 }
 

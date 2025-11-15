@@ -5,7 +5,8 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem 1rem;
-    background: var(--color-gray-50);
+    background: trabsparent;
+    z-index: 1;
   }
 
   .canopy-header__brand {
@@ -26,7 +27,10 @@
     border: 1px solid var(--color-gray-200, #e2e8f0);
     background: rgba(255, 255, 255, 0.8);
     color: var(--color-gray-800, #1f2937);
-    transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+    transition:
+      background 150ms ease,
+      color 150ms ease,
+      border-color 150ms ease;
   }
 
   .canopy-header__menu:hover,
@@ -76,7 +80,10 @@
     border: 1px solid var(--color-gray-200, #e2e8f0);
     background: rgba(255, 255, 255, 0.8);
     color: var(--color-gray-800, #1f2937);
-    transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+    transition:
+      background 150ms ease,
+      color 150ms ease,
+      border-color 150ms ease;
   }
 
   .canopy-header__icon-button:hover,

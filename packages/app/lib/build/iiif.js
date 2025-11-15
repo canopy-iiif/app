@@ -1155,7 +1155,9 @@ async function buildIiifCollectionPages(CONFIG) {
                 )
               : "";
           const needsHydrateViewer =
-            body.includes("data-canopy-viewer") || body.includes("data-canopy-scroll");
+            body.includes("data-canopy-viewer") ||
+            body.includes("data-canopy-scroll") ||
+            body.includes("data-canopy-image");
           const needsRelated = body.includes("data-canopy-related-items");
           const needsHeroSlider = body.includes("data-canopy-hero-slider");
           const needsSearchForm = body.includes("data-canopy-search-form");

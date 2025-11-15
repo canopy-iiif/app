@@ -185,11 +185,7 @@ export default function SearchPanelForm(props = {}) {
         data-canopy-search-form-trigger="submit"
         className="canopy-search-form__submit"
       >
-        <span>{text}</span>
-        <span aria-hidden className="canopy-search-form__shortcut">
-          <span>⌘</span>
-          <span>K</span>
-        </span>
+        {text}
       </button>
     </form>
   );

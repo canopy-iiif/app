@@ -2,6 +2,7 @@ export { HelloWorld } from "./src/HelloWorld.jsx";
 export { Viewer } from "./src/iiif/Viewer.jsx";
 export { Slider } from "./src/iiif/Slider.jsx";
 export { Scroll } from "./src/iiif/Scroll.jsx";
+export { Image } from "./src/iiif/Image.jsx";
 // New: RelatedItems placeholder (SSR-safe)
 export { default as RelatedItems } from "./src/iiif/MdxRelatedItems.jsx";
 // Hero interstitials supersede the legacy Hero component.
