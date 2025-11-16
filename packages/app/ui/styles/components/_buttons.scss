@@ -30,7 +30,7 @@
     border: 1px solid
       color-mix(in srgb, var(--color-gray-400, #94a3b8) 60%, transparent);
     color: color-mix(in srgb, var(--color-gray-900, #0f172a) 92%, transparent);
-    background-color: transparent;
+    background-color: var(--color-gray-50);
 
     &:hover,
     &:focus-visible {
