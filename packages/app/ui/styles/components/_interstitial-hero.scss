@@ -9,14 +9,16 @@
 
   &--hero {
     --hero-height: 520px;
-    --hero-bg-start: var(--color-brand-100);
+    --hero-bg-start: var(--color-gray-50);
+    --hero-bg-mid: var(--color-brand-100);
     --hero-bg-end: var(--color-brand-200);
     --hero-dot-bg: var(--color-brand-300);
     --hero-dot-active-bg: var(--color-brand-700);
 
     background: linear-gradient(
-      135deg,
-      var(--hero-bg-start) 0%,
+      173deg,
+      var(--hero-bg-start) 5rem,
+      var(--hero-bg-mid) 61.8%,
       var(--hero-bg-end) 100%
     );
     min-height: var(--hero-height);
