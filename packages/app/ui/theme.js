@@ -183,7 +183,7 @@ function buildVariablesMap(brandScale, grayScale, options = {}) {
       const value = brandScale[lvl];
       if (value) vars[`--color-brand-${lvl}`] = value;
     }
-    if (brandScale["600"]) vars["--color-brand-default"] = brandScale["600"];
+    if (brandScale["700"]) vars["--color-brand-default"] = brandScale["700"];
   }
   if (grayScale) {
     for (const lvl of LEVELS) {
@@ -194,8 +194,8 @@ function buildVariablesMap(brandScale, grayScale, options = {}) {
     if (grayScale["600"]) vars["--color-gray-muted"] = grayScale["600"];
   }
   if (brandScale && grayScale) {
-    if (brandScale["600"])
-      vars["--colors-accent"] = `${brandScale["600"]} !important`;
+    if (brandScale["700"])
+      vars["--colors-accent"] = `${brandScale["700"]} !important`;
     if (brandScale["800"])
       vars["--colors-accentAlt"] = `${brandScale["800"]} !important`;
     if (brandScale["400"])

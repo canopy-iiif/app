@@ -10,15 +10,16 @@ main {
 }
 
 p {
-  line-height: 1.55;
+  line-height: 1.618;
+  margin-bottom: 1.618rem;
 }
 
 ol,
 ul {
-  padding-left: 1.5rem;
+  padding-left: 1.618rem;
 
   li {
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.382rem;
   }
 }
 

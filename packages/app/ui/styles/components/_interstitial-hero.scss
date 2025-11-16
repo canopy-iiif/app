@@ -9,9 +9,8 @@
 
   &--hero {
     --hero-height: 520px;
-    --hero-bg-start: var(--color-brand-50);
+    --hero-bg-start: var(--color-brand-100);
     --hero-bg-end: var(--color-brand-200);
-    --hero-caption-link: var(--color-brand-700);
     --hero-dot-bg: var(--color-brand-300);
     --hero-dot-active-bg: var(--color-brand-700);
 
@@ -236,7 +235,7 @@
     font-size: 2rem;
     font-weight: 600;
     line-height: 1.08;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.025em;
   }
 
   &__description {
@@ -254,19 +253,15 @@
   &__caption {
     position: absolute;
     bottom: 1.75rem;
+    font-weight: 600;
     right: 2rem;
     z-index: 3;
-    font-size: 0.8333rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--hero-caption-color);
   }
 
   &__caption--static {
     position: static;
     margin: 1.5rem auto 0;
     text-align: center;
-    color: var(--hero-caption-color);
   }
 
   &__caption-link {

@@ -29,16 +29,16 @@
   &--secondary {
     border: 1px solid
       color-mix(in srgb, var(--color-gray-400, #94a3b8) 60%, transparent);
-    color: color-mix(
-      in srgb,
-      var(--color-gray-900, #0f172a) 92%,
-      transparent
-    );
+    color: color-mix(in srgb, var(--color-gray-900, #0f172a) 92%, transparent);
     background-color: transparent;
 
     &:hover,
     &:focus-visible {
-      border-color: color-mix(in srgb, var(--color-brand-400, #818cf8) 65%, transparent);
+      border-color: color-mix(
+        in srgb,
+        var(--color-brand-400, #818cf8) 65%,
+        transparent
+      );
       background-color: color-mix(
         in srgb,
         var(--color-brand-200, #c7d2fe) 25%,
@@ -54,4 +54,5 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
+  padding: 1rem 0;
 }
