@@ -1,17 +1,12 @@
-collection: https://api.dc.library.northwestern.edu/api/v2/collections/cd92fb8d-76a7-4e72-be0f-78a5839caa89?as=iiif
-metadata: ["Subject", "Genre"]
+collection: https://api.dc.library.northwestern.edu/api/v2/collections/94536627-cfdf-413c-852b-0cb16d986da3?as=iiif
+metadata: ["Subject", "Language", "Genre"]
 featured:
   [
-    "https://api.dc.library.northwestern.edu/api/v2/works/f2adabc0-497f-4284-b969-5829971fa2a2?as=iiif",
-    "https://api.dc.library.northwestern.edu/api/v2/works/6f336d7c-fb8a-4c15-8f34-44f30866b7f4?as=iiif",
-    "https://api.dc.library.northwestern.edu/api/v2/works/e1d27060-c8d7-4863-a120-7dced701d6be?as=iiif",
+    "https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif",
+    "https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif",
+    "https://api.dc.library.northwestern.edu/api/v2/works/ef94f857-1993-4dad-8104-7d34ca0fb62a?as=iiif",
+    "https://api.dc.library.northwestern.edu/api/v2/works/e0d60273-e64c-49d8-99dc-d1af8f4c6266?as=iiif",
   ]
-# collection: https://ennego.github.io/AccademiaCollectionsAll/index.json
-# metadata: ["Date", "Notary", "Key terms"]
-# featured:
-#   [
-#     "https://MultimedialitySummerSchool.github.io/NotarialDocumentsAll/iiif/asrtcsvol054116130512/manifest.json",
-#   ]
 search:
   tabs:
     order: ["work", "page", "examples"]
