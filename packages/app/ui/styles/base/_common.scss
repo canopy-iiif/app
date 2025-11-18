@@ -1,44 +1,45 @@
-html,
-body {
-  margin: 0;
-  padding: 0;
-  background: var(--color-gray-50);
-  color: var(--color-gray-900);
-}
-
-main {
-}
-
-p {
-  line-height: 1.618;
-  margin-bottom: 1.618rem;
-}
-
-ol,
-ul {
-  padding-left: 1.618rem;
-
-  li {
-    margin-bottom: 0.382rem;
+@layer base {
+  html {
+    margin: 0;
+    padding: 0;
   }
-}
 
-a {
-  text-decoration: none;
-  color: var(--color-brand-default);
-
-  &:hover {
-    text-decoration: underline;
+  body {
+    background: var(--color-gray-50);
+    color: var(--color-gray-900);
   }
-}
 
-input,
-textarea,
-select,
-button {
-  font-family: inherit;
-}
+  p {
+    line-height: 1.618;
+    margin-bottom: 1.618rem;
+  }
 
-::selection {
-  background-color: var(--color-brand-200);
+  ol,
+  ul {
+    padding-left: 1.618rem;
+
+    li {
+      margin-bottom: 0.382rem;
+    }
+  }
+
+  a {
+    text-decoration: none;
+    color: var(--color-brand-default);
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font-family: inherit;
+  }
+
+  ::selection {
+    background-color: var(--color-brand-200);
+  }
 }

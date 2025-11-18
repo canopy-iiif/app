@@ -10,21 +10,43 @@
 /* CSS variables */
 @layer properties {
   :root {
-    --font-sans: "Inter", system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+    --font-sans: system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
     --font-serif: "Fraunces", Georgia, "Times New Roman", serif;
     --font-mono: "ui-monospace", Menlo, Consolas, monospace;
   }
 }
 
-/* Example component layer overrides */
-@layer components {
+@utility font-display {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  font-variation-settings: "WONK" 1;
 }
+
 @layer base {
   html {
-    font-family: var(--font-sans);
+    font-family: var(--font-serif);
     font-optical-sizing: auto;
     font-size: 105%;
-    font-weight: 400;
+    font-weight: 300;
     scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--color-gray-50);
+    color: var(--color-gray-900);
+  }
+
+  h1,
+  h2 {
+    @apply font-display;
+  }
+}
+
+/* Example component layer override */
+@layer components {
+  .canopy-logo,
+  .canopy-interstitial__headline {
+    @apply font-display;
   }
 }

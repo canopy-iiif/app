@@ -1,44 +1,43 @@
-a.canopy-logo {
-  display: flex;
-  align-items: center;
-  gap: 0.618rem;
-  font-weight: 600;
-  font-size: 1.382rem;
-  font-family: var(--font-serif);
-  color: var(--color-gray-default) !important;
-  letter-spacing: -0.025em;
-  line-height: 1;
+@layer components {
+  .canopy-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.618rem;
+    font-size: 1.382rem;
+    color: var(--color-gray-default) !important;
+    line-height: 1;
 
-  &:hover {
-    text-decoration: none;
+    &:hover {
+      text-decoration: none;
+    }
+
+    svg {
+      height: 1.65rem;
+      display: block;
+
+      circle.canopy-logo-backlight {
+        fill: var(--color-brand-900);
+        color: var(--color-brand-900);
+      }
+
+      path.canopy-logo-overlay {
+        fill: var(--color-brand-default);
+        color: var(--color-brand-default);
+      }
+    }
   }
 
-  svg {
-    height: 1.65rem;
-    display: block;
+  html.dark .canopy-logo {
+    svg {
+      circle.canopy-logo-backlight {
+        fill: var(--color-brand-200) !important;
+        color: var(--color-brand-200) !important;
+      }
 
-    circle.canopy-logo-backlight {
-      fill: var(--color-brand-900);
-      color: var(--color-brand-900);
-    }
-
-    path.canopy-logo-overlay {
-      fill: var(--color-brand-default);
-      color: var(--color-brand-default);
-    }
-  }
-}
-
-html.dark a.canopy-logo {
-  svg {
-    circle.canopy-logo-backlight {
-      fill: var(--color-brand-200) !important;
-      color: var(--color-brand-200) !important;
-    }
-
-    path.canopy-logo-overlay {
-      fill: var(--color-brand-500) !important;
-      color: var(--color-brand-500) !important;
+      path.canopy-logo-overlay {
+        fill: var(--color-brand-500) !important;
+        color: var(--color-brand-500) !important;
+      }
     }
   }
 }
