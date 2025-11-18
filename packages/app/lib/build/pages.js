@@ -82,6 +82,9 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}) {
   const heroRel = needsHeroSlider
     ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-hero-slider.js')).split(path.sep).join('/')
     : null;
+  const heroCssRel = needsHeroSlider
+    ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-hero-slider.css')).split(path.sep).join('/')
+    : null;
   const facetsRel = needsFacets
     ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-related-items.js')).split(path.sep).join('/')
     : null;
@@ -120,6 +123,17 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}) {
   if (viewerRel && jsRel !== viewerRel) extraScripts.push(`<script defer src="${viewerRel}"></script>`);
   if (sliderRel && jsRel !== sliderRel) extraScripts.push(`<script defer src="${sliderRel}"></script>`);
   if (searchFormRel && jsRel !== searchFormRel) extraScripts.push(`<script defer src="${searchFormRel}"></script>`);
+  const extraStyles = [];
+  if (heroCssRel) {
+    let rel = heroCssRel;
+    try {
+      const heroCssAbs = path.join(OUT_DIR, 'scripts', 'canopy-hero-slider.css');
+      const st = fs.statSync(heroCssAbs);
+      rel += `?v=${Math.floor(st.mtimeMs || Date.now())}`;
+    } catch (_) {}
+    extraStyles.push(`<link rel="stylesheet" href="${rel}">`);
+  }
+  if (extraStyles.length) headExtra = extraStyles.join('') + headExtra;
   if (extraScripts.length) headExtra = extraScripts.join('') + headExtra;
   const html = htmlShell({ title, body, cssHref: null, scriptHref: jsRel, headExtra: vendorTag + headExtra });
   const { applyBaseToHtml } = require('../common');

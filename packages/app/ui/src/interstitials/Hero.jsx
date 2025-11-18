@@ -4,6 +4,8 @@ import {computeHeroHeightStyle} from "./hero-utils.js";
 import Button from "../layout/Button.jsx";
 import ButtonWrapper from "../layout/ButtonWrapper.jsx";
 
+const HERO_DEFAULT_SIZES_ATTR = "(min-width: 1024px) 1280px, 100vw";
+
 const basePath = (() => {
   try {
     const raw =
@@ -90,6 +92,7 @@ export default function Hero({
   item,
   index,
   random = true,
+  transition = 'fade',
   headline,
   description,
   links = [],
@@ -181,6 +184,16 @@ export default function Hero({
     .filter(Boolean)
     .join(" ");
 
+  const normalizedTransition = (() => {
+    try {
+      const raw = transition == null ? '' : String(transition);
+      const normalized = raw.trim().toLowerCase();
+      return normalized === 'slide' ? 'slide' : 'fade';
+    } catch (_) {
+      return 'fade';
+    }
+  })();
+
   const renderSlide = (
     slide,
     idx,
@@ -196,6 +209,21 @@ export default function Hero({
       .filter(Boolean)
       .join(" ");
 
+    const buildImageProps = (className) => {
+      if (!slide.thumbnail) return null;
+      const props = {
+        src: slide.thumbnail,
+        alt: "",
+        "aria-hidden": true,
+        className,
+        loading: idx === 0 ? "eager" : "lazy",
+      };
+      if (slide.srcset) props.srcSet = slide.srcset;
+      if (slide.srcset)
+        props.sizes = slide.sizes || HERO_DEFAULT_SIZES_ATTR;
+      return props;
+    };
+
     if (isStaticCaption) {
       return (
         <div className="swiper-slide" key={safeHref || idx}>
@@ -203,11 +231,9 @@ export default function Hero({
             {slide.thumbnail ? (
               <div className="canopy-interstitial__media-frame">
                 <img
-                  src={slide.thumbnail}
-                  alt=""
-                  aria-hidden="true"
-                  className="canopy-interstitial__media canopy-interstitial__media--static"
-                  loading={idx === 0 ? "eager" : "lazy"}
+                  {...buildImageProps(
+                    "canopy-interstitial__media canopy-interstitial__media--static"
+                  )}
                 />
               </div>
             ) : null}
@@ -228,11 +254,7 @@ export default function Hero({
         <article className={paneClassName}>
           {slide.thumbnail ? (
             <img
-              src={slide.thumbnail}
-              alt=""
-              aria-hidden="true"
-              className="canopy-interstitial__media"
-              loading={idx === 0 ? "eager" : "lazy"}
+              {...buildImageProps("canopy-interstitial__media")}
             />
           ) : null}
           {showVeil ? (
@@ -303,6 +325,7 @@ export default function Hero({
     <section
       className={containerClassName}
       data-canopy-hero-slider="1"
+      data-transition={normalizedTransition}
       style={heroStyles}
       {...cleanedProps}
     >

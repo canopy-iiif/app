@@ -1,416 +1,406 @@
-@layer components {
-  .canopy-interstitial {
-    position: relative;
-    width: 100%;
-    isolation: isolate;
-    margin-bottom: 2.618rem;
-    margin-top: -5rem;
-    z-index: 0;
-    padding-top: 5rem;
+.canopy-interstitial {
+  position: relative;
+  width: 100%;
+  isolation: isolate;
+  margin-bottom: 2.618rem;
+  margin-top: -5rem;
+  z-index: 0;
+  padding-top: 5rem;
 
-    &--hero {
-      --hero-height: 520px;
-      --hero-bg-start: var(--color-gray-50);
-      --hero-bg-mid: var(--color-brand-100);
-      --hero-bg-end: var(--color-brand-200);
-      --hero-dot-bg: var(--color-brand-300);
-      --hero-dot-active-bg: var(--color-brand-700);
+  &--hero {
+    --hero-height: 520px;
+    --hero-bg-start: var(--color-gray-50);
+    --hero-bg-mid: var(--color-brand-100);
+    --hero-bg-end: var(--color-brand-200);
+    --hero-dot-bg: var(--color-brand-300);
+    --hero-dot-active-bg: var(--color-brand-700);
 
-      background: linear-gradient(
-        173deg,
-        var(--hero-bg-start) 5rem,
-        var(--hero-bg-mid) 61.8%,
-        var(--hero-bg-end) 100%
-      );
-      min-height: var(--hero-height);
+    background: linear-gradient(
+      173deg,
+      var(--hero-bg-start) 5rem,
+      var(--hero-bg-mid) 61.8%,
+      var(--hero-bg-end) 100%
+    );
+    min-height: var(--hero-height);
 
-      .canopy-interstitial__overlay,
-      .canopy-interstitial__pane::before,
-      .canopy-interstitial__pane::after,
-      .canopy-interstitial__veil {
-        display: none;
-      }
-
-      .canopy-interstitial__layout {
-        display: flex;
-        flex-direction: column;
-        min-height: var(--hero-height);
-        width: 100%;
-        overflow: hidden;
-      }
-
-      .canopy-interstitial__panel {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: clamp(2.5rem, 5vw, 4rem) clamp(2rem, 4vw, 3.5rem);
-        box-sizing: border-box;
-        min-width: 0;
-        background: transparent;
-      }
-
-      .canopy-interstitial__body {
-        align-items: flex-start;
-        text-align: left;
-        width: 100%;
-        max-width: none;
-        margin: 0;
-        gap: 1.5rem;
-      }
-
-      .canopy-interstitial__actions {
-        justify-content: flex-start;
-      }
-
-      .canopy-interstitial__media-group {
-        flex: 1;
-        position: relative;
-        min-height: var(--hero-height);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: clamp(1.5rem, 4vw, 3rem);
-        box-sizing: border-box;
-        min-width: 0;
-        overflow: hidden;
-        background: transparent;
-      }
-
-      .canopy-interstitial__caption {
-        position: static;
-        margin: 1.5rem auto 0;
-        padding: 0 0.5rem;
-        text-align: center;
-      }
-
-      .canopy-interstitial__panel,
-      .canopy-interstitial__media-group {
-        width: 50%;
-      }
-
-      .canopy-interstitial__pagination {
-        position: static;
-        transform: none;
-        justify-content: center;
-        margin-top: 1.618rem;
-        padding-bottom: 2px;
-      }
-
-      @media (max-width: 63.9375rem) {
-        .canopy-interstitial__panel,
-        .canopy-interstitial__media-group {
-          width: 100%;
-        }
-      }
-
-      @media (min-width: 48rem) {
-        .canopy-interstitial__layout {
-          flex-direction: row;
-        }
-      }
-
-      @media (min-width: 64rem) {
-        .canopy-interstitial__body .canopy-interstitial__headline {
-          font-size: 2.618rem;
-        }
-      }
-    }
-
-    &__slider {
-      position: relative;
-      width: 100%;
-      min-height: var(--hero-height);
-      overflow: hidden;
-    }
-
-    &__slider .swiper-wrapper {
-      display: flex;
-      transition-property: transform;
-    }
-
-    &__slider .swiper-slide {
-      width: 100%;
-      flex-shrink: 0;
-      display: flex;
-      justify-content: center;
-      align-items: stretch;
-    }
-
-    &__pane {
-      position: relative;
-      width: 100%;
-      min-height: var(--hero-height);
-      overflow: hidden;
-      background-color: color-mix(
-        in srgb,
-        var(--hero-bg-start) 65%,
-        transparent
-      );
-    }
-
-    &__pane::before,
-    &__pane::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      z-index: 1;
+    .canopy-interstitial__overlay,
+    .canopy-interstitial__pane::before,
+    .canopy-interstitial__pane::after,
+    .canopy-interstitial__veil {
       display: none;
     }
 
-    &__pane--flat::before,
-    &__pane--flat::after {
-      display: none;
-    }
-
-    &__pane--static {
+    .canopy-interstitial__layout {
       display: flex;
       flex-direction: column;
-      height: var(--hero-height);
-      background-color: transparent;
-    }
-
-    &__media {
-      position: absolute;
-      inset: 0;
+      min-height: var(--hero-height);
       width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center;
-      z-index: 0;
-    }
-
-    &__media-frame {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      flex: 1 1 auto;
       overflow: hidden;
-      border-radius: 0.75rem;
     }
 
-    &__media--static {
-      position: static;
-      display: block;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center;
-    }
-
-    &__veil {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      z-index: 2;
-      display: none;
-    }
-
-    &__overlay {
-      pointer-events: none;
-      position: absolute;
-      inset: 0;
-      z-index: 6;
+    .canopy-interstitial__panel {
+      flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 4rem 1.75rem;
-      background: linear-gradient(
-        135deg,
-        color-mix(in srgb, var(--hero-bg-start) 85%, transparent) 0%,
-        color-mix(in srgb, var(--hero-bg-end) 70%, transparent) 100%
-      );
+      padding: clamp(2.5rem, 5vw, 4rem) clamp(2rem, 4vw, 3.5rem);
+      box-sizing: border-box;
+      min-width: 0;
+      background: transparent;
     }
 
-    &__body {
-      position: relative;
-      z-index: 3;
-      max-width: 48rem;
-      margin: 0 auto;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    .canopy-interstitial__body {
+      align-items: flex-start;
+      text-align: left;
+      width: 100%;
+      max-width: none;
+      margin: 0;
       gap: 1.5rem;
-      text-align: center;
-      pointer-events: auto;
     }
 
-    &__headline {
-      margin: 0;
-      font-size: 2rem;
-      line-height: 1.08;
+    .canopy-interstitial__actions {
+      justify-content: flex-start;
     }
 
-    &__description {
-      margin: 0;
-      max-width: 42rem;
-    }
-
-    &__actions {
+    .canopy-interstitial__media-group {
+      flex: 1;
+      position: relative;
+      min-height: var(--hero-height);
       display: flex;
-      flex-wrap: wrap;
+      align-items: center;
       justify-content: center;
-      gap: 0.75rem;
+      padding: clamp(1.5rem, 4vw, 3rem);
+      box-sizing: border-box;
+      min-width: 0;
+      overflow: hidden;
+      background: transparent;
     }
 
-    &__caption {
-      position: absolute;
-      bottom: 1.75rem;
-      font-weight: 600;
-      right: 2rem;
-      z-index: 3;
-    }
-
-    &__caption--static {
+    .canopy-interstitial__caption {
       position: static;
       margin: 1.5rem auto 0;
+      padding: 0 0.5rem;
       text-align: center;
     }
 
-    &__caption-link {
-      color: var(--hero-caption-link);
-      text-decoration: underline;
-      text-underline-offset: 0.35em;
-      text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
-      transition:
-        color 0.2s ease,
-        text-decoration-color 0.2s ease;
+    .canopy-interstitial__panel,
+    .canopy-interstitial__media-group {
+      width: 50%;
+    }
 
-      &:hover,
-      &:focus-visible {
-        color: var(--hero-caption-link);
-        text-decoration-color: color-mix(
-          in srgb,
-          currentColor 55%,
-          transparent
-        );
+    .canopy-interstitial__pagination {
+      position: static;
+      transform: none;
+      justify-content: center;
+      margin-top: 1.618rem;
+      padding-bottom: 2px;
+    }
+
+    @media (max-width: 63.9375rem) {
+      .canopy-interstitial__panel,
+      .canopy-interstitial__media-group {
+        width: 100%;
       }
     }
 
-    &__nav {
-      position: absolute;
-      inset: 0;
-      z-index: 4;
+    @media (min-width: 48rem) {
+      .canopy-interstitial__layout {
+        flex-direction: row;
+      }
     }
 
-    &__nav-btn {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 2.75rem;
-      height: 2.75rem;
-      border-radius: 9999px;
-      border: 1px solid
-        color-mix(in srgb, var(--color-gray-400, #94a3b8) 55%, transparent);
-      background-color: color-mix(
-        in srgb,
-        var(--color-gray-100, #f1f5f9) 65%,
-        transparent
-      );
-      backdrop-filter: blur(6px);
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      transition:
-        background-color 0.2s ease,
-        border-color 0.2s ease,
-        color 0.2s ease;
-      color: var(--colors-primary);
+    @media (min-width: 64rem) {
+      .canopy-interstitial__body .canopy-interstitial__headline {
+        font-size: 2.618rem;
+      }
+    }
+  }
+
+  &__slider {
+    position: relative;
+    width: 100%;
+    min-height: var(--hero-height);
+    overflow: hidden;
+  }
+
+  &__slider .swiper-wrapper {
+    display: flex;
+    transition-property: transform;
+  }
+
+  &__slider .swiper-slide {
+    width: 100%;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+  }
+
+  &__pane {
+    position: relative;
+    width: 100%;
+    min-height: var(--hero-height);
+    overflow: hidden;
+    background-color: color-mix(in srgb, var(--hero-bg-start) 65%, transparent);
+  }
+
+  &__pane::before,
+  &__pane::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    display: none;
+  }
+
+  &__pane--flat::before,
+  &__pane--flat::after {
+    display: none;
+  }
+
+  &__pane--static {
+    display: flex;
+    flex-direction: column;
+    height: var(--hero-height);
+    background-color: transparent;
+  }
+
+  &__media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    z-index: 0;
+  }
+
+  &__media-frame {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    flex: 1 1 auto;
+    overflow: hidden;
+    border-radius: 0.75rem;
+  }
+
+  &__media--static {
+    position: static;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  &__veil {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+    display: none;
+  }
+
+  &__overlay {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 1.75rem;
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--hero-bg-start) 85%, transparent) 0%,
+      color-mix(in srgb, var(--hero-bg-end) 70%, transparent) 100%
+    );
+  }
+
+  &__body {
+    position: relative;
+    z-index: 3;
+    max-width: 48rem;
+    margin: 0 auto;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    text-align: center;
+    pointer-events: auto;
+  }
+
+  &__headline {
+    margin: 0;
+    font-size: 2rem;
+    line-height: 1.08;
+  }
+
+  &__description {
+    margin: 0;
+    max-width: 42rem;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+
+  &__caption {
+    position: absolute;
+    bottom: 1.75rem;
+    font-weight: 600;
+    right: 2rem;
+    z-index: 3;
+  }
+
+  &__caption--static {
+    position: static;
+    margin: 1.5rem auto 0;
+    text-align: center;
+  }
+
+  &__caption-link {
+    color: var(--hero-caption-link);
+    text-decoration: underline;
+    text-underline-offset: 0.35em;
+    text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+    transition:
+      color 0.2s ease,
+      text-decoration-color 0.2s ease;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--hero-caption-link);
+      text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
+    }
+  }
+
+  &__nav {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+  }
+
+  &__nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 9999px;
+    border: 1px solid
+      color-mix(in srgb, var(--color-gray-400, #94a3b8) 55%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--color-gray-100, #f1f5f9) 65%,
+      transparent
+    );
+    backdrop-filter: blur(6px);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease;
+    color: var(--colors-primary);
+
+    &::after {
+      content: "";
+      border: solid currentColor;
+      border-width: 0 2px 2px 0;
+      display: inline-block;
+      padding: 7px;
+      transform: rotate(135deg);
+    }
+
+    &--prev {
+      left: 1.5rem;
+    }
+
+    &--next {
+      right: 1.5rem;
 
       &::after {
-        content: "";
-        border: solid currentColor;
-        border-width: 0 2px 2px 0;
-        display: inline-block;
-        padding: 7px;
-        transform: rotate(135deg);
-      }
-
-      &--prev {
-        left: 1.5rem;
-      }
-
-      &--next {
-        right: 1.5rem;
-
-        &::after {
-          transform: rotate(-45deg);
-        }
-      }
-
-      &:hover,
-      &:focus-visible {
-        background-color: color-mix(
-          in srgb,
-          var(--color-brand-200) 55%,
-          transparent
-        );
-        border-color: color-mix(
-          in srgb,
-          var(--color-brand-400, #818cf8) 70%,
-          transparent
-        );
-        color: var(--color-brand-700, #4338ca);
+        transform: rotate(-45deg);
       }
     }
 
-    &__pagination {
-      position: absolute;
-      z-index: 4;
-      bottom: 1rem;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 0.4rem;
-    }
-
-    &__pagination .swiper-pagination-bullet {
-      display: inline-block;
-      width: 0.45rem;
-      height: 0.45rem;
-      border-radius: 9999px;
-      background-color: var(--hero-dot-bg);
-      opacity: 1;
-      transition:
-        transform 0.2s ease,
-        background-color 0.2s ease;
-    }
-
-    &__pagination .swiper-pagination-bullet-active {
-      transform: scale(1.35);
-      background-color: var(--hero-dot-active-bg);
+    &:hover,
+    &:focus-visible {
+      background-color: color-mix(
+        in srgb,
+        var(--color-brand-200) 55%,
+        transparent
+      );
+      border-color: color-mix(
+        in srgb,
+        var(--color-brand-400, #818cf8) 70%,
+        transparent
+      );
+      color: var(--color-brand-700, #4338ca);
     }
   }
 
-  .canopy-interstitial--hero.canopy-interstitial--bg-transparent {
-    background: none;
+  &__pagination {
+    position: absolute;
+    z-index: 4;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.4rem;
   }
 
-  .canopy-interstitial--hero.canopy-interstitial--bg-transparent
-    .canopy-interstitial__overlay {
-    background: none;
+  &__pagination .swiper-pagination-bullet {
+    display: inline-block;
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 9999px;
+    background-color: var(--hero-dot-bg);
+    opacity: 1;
+    transition:
+      transform 0.2s ease,
+      background-color 0.2s ease;
   }
 
-  @media (min-width: 40rem) {
-    .canopy-interstitial__body {
-      padding-inline: 2.75rem;
-    }
+  &__pagination .swiper-pagination-bullet-active {
+    transform: scale(1.35);
+    background-color: var(--hero-dot-active-bg);
+  }
+}
 
-    .canopy-interstitial__headline {
-      font-size: 2.618rem;
-    }
+.canopy-interstitial--hero.canopy-interstitial--bg-transparent {
+  background: none;
+}
 
-    .canopy-interstitial__description {
-      font-size: 1rem;
-    }
+.canopy-interstitial--hero.canopy-interstitial--bg-transparent
+  .canopy-interstitial__overlay {
+  background: none;
+}
+
+@media (min-width: 40rem) {
+  .canopy-interstitial__body {
+    padding-inline: 2.75rem;
   }
 
-  @media (min-width: 64rem) {
-    .canopy-interstitial__body {
-      padding-inline: 4rem;
-    }
+  .canopy-interstitial__headline {
+    font-size: 2.618rem;
+  }
+
+  .canopy-interstitial__description {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .canopy-interstitial__body {
+    padding-inline: 4rem;
   }
 }

@@ -1,8 +1,9 @@
 import Swiper from 'swiper';
-import { Navigation, Pagination, Autoplay } from 'swiper/modules';
+import { Navigation, Pagination, Autoplay, EffectFade } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
+import 'swiper/css/effect-fade';
 
 function ready(fn) {
   if (typeof document === 'undefined') return;
@@ -20,12 +21,18 @@ function initSlider(host) {
   const prev = host.querySelector('.canopy-interstitial__nav-btn--prev');
   const next = host.querySelector('.canopy-interstitial__nav-btn--next');
   const pagination = host.querySelector('.canopy-interstitial__pagination');
+  const transitionAttr = (host.getAttribute && host.getAttribute('data-transition')) || 'fade';
+  const transition = transitionAttr && transitionAttr.toLowerCase() === 'slide' ? 'slide' : 'fade';
 
   try {
+    const baseModules = [Navigation, Pagination, Autoplay];
+    if (transition === 'fade') baseModules.push(EffectFade);
     const swiperInstance = new Swiper(slider, {
-      modules: [Navigation, Pagination, Autoplay],
+      modules: baseModules,
       loop: true,
       slidesPerView: 1,
+      effect: transition,
+      fadeEffect: transition === 'fade' ? { crossFade: true } : undefined,
       navigation: {
         prevEl: prev || undefined,
         nextEl: next || undefined,

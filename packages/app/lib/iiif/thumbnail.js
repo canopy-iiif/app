@@ -183,15 +183,41 @@ function selectServiceQuality(candidate) {
   return 'default';
 }
 
-function buildIiifImageUrlFromService(service, preferredSize = 800) {
-  const normalized = normalizeImageServiceCandidate(service);
-  if (!normalized || !isIiifImageService(normalized)) return '';
-  const baseId = normalizeServiceBaseId(normalized.id);
+function buildIiifImageUrlFromNormalizedService(service, preferredSize = 800) {
+  if (!service || !isIiifImageService(service)) return '';
+  const baseId = normalizeServiceBaseId(service.id);
   if (!baseId) return '';
   const size = preferredSize && preferredSize > 0 ? preferredSize : 800;
-  const quality = selectServiceQuality(normalized);
-  const format = selectServiceFormat(normalized);
+  const quality = selectServiceQuality(service);
+  const format = selectServiceFormat(service);
   return `${baseId}/full/!${size},${size}/0/${quality}.${format}`;
+}
+
+function buildIiifImageUrlFromService(service, preferredSize = 800) {
+  const normalized = normalizeImageServiceCandidate(service);
+  if (!normalized) return '';
+  return buildIiifImageUrlFromNormalizedService(normalized, preferredSize);
+}
+
+function buildIiifImageSrcset(service, steps = [360, 640, 960, 1280, 1600]) {
+  const normalized = normalizeImageServiceCandidate(service);
+  if (!normalized || !isIiifImageService(normalized)) return '';
+  const uniqueSteps = Array.from(
+    new Set(
+      (Array.isArray(steps) ? steps : [])
+        .map((value) => Number(value) || 0)
+        .filter((value) => value > 0)
+        .sort((a, b) => a - b)
+    )
+  );
+  if (!uniqueSteps.length) return '';
+  const entries = uniqueSteps
+    .map((width) => {
+      const url = buildIiifImageUrlFromNormalizedService(normalized, width);
+      return url ? `${url} ${width}w` : '';
+    })
+    .filter(Boolean);
+  return entries.join(', ');
 }
 
 async function getRepresentativeImage(resource, preferredSize = 1200, unsafe = false) {
@@ -314,4 +340,5 @@ module.exports = {
   getThumbnailUrl,
   buildIiifImageUrlFromService,
   findPrimaryCanvasImage,
+  buildIiifImageSrcset,
 };

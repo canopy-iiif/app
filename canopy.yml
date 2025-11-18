@@ -2,8 +2,8 @@ collection: https://api.dc.library.northwestern.edu/api/v2/collections/94536627-
 metadata: ["Subject", "Language", "Genre"]
 featured:
   [
-    "https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif",
     "https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif",
+    "https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif",
     "https://api.dc.library.northwestern.edu/api/v2/works/ef94f857-1993-4dad-8104-7d34ca0fb62a?as=iiif",
     "https://api.dc.library.northwestern.edu/api/v2/works/e0d60273-e64c-49d8-99dc-d1af8f4c6266?as=iiif",
   ]

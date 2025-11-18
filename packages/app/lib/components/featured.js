@@ -117,6 +117,12 @@ function readFeaturedFromCacheSync() {
         } else if (typeof entry.thumbnailHeight === 'number') {
           rec.thumbnailHeight = entry.thumbnailHeight;
         }
+        if (entry && entry.heroThumbnailSrcset) {
+          rec.srcset = String(entry.heroThumbnailSrcset);
+        }
+        if (entry && entry.heroThumbnailSizes) {
+          rec.sizes = String(entry.heroThumbnailSizes);
+        }
       } else {
         if (entry && entry.thumbnail) rec.thumbnail = String(entry.thumbnail);
         if (entry && typeof entry.thumbnailWidth === 'number') rec.thumbnailWidth = entry.thumbnailWidth;

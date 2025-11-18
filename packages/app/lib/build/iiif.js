@@ -591,10 +591,12 @@ async function ensureFeaturedInCache(cfg) {
       getRepresentativeImage,
       buildIiifImageUrlFromService,
       findPrimaryCanvasImage,
+      buildIiifImageSrcset,
     } = require("../iiif/thumbnail");
     const {size: thumbSize, unsafe: unsafeThumbs} =
       resolveThumbnailPreferences();
     const HERO_THUMBNAIL_SIZE = 800;
+    const HERO_IMAGE_SIZES_ATTR = "(min-width: 1024px) 1280px, 100vw";
     for (const rawId of featured) {
       const id = normalizeIiifId(String(rawId || ""));
       if (!id) continue;
@@ -664,6 +666,7 @@ async function ensureFeaturedInCache(cfg) {
             heroService,
             HERO_THUMBNAIL_SIZE
           );
+          const heroSrcset = buildIiifImageSrcset(heroService);
           const heroFallbackId = (() => {
             if (canvasImage && canvasImage.id) return String(canvasImage.id);
             if (heroRep && heroRep.id) return String(heroRep.id);
@@ -692,6 +695,21 @@ async function ensureFeaturedInCache(cfg) {
             if (entry.heroThumbnail !== nextHero) {
               entry.heroThumbnail = nextHero;
               touched = true;
+            }
+            if (heroSrcset) {
+              if (entry.heroThumbnailSrcset !== heroSrcset) touched = true;
+              entry.heroThumbnailSrcset = heroSrcset;
+              if (entry.heroThumbnailSizes !== HERO_IMAGE_SIZES_ATTR) touched = true;
+              entry.heroThumbnailSizes = HERO_IMAGE_SIZES_ATTR;
+            } else {
+              if (entry.heroThumbnailSrcset !== undefined) {
+                delete entry.heroThumbnailSrcset;
+                touched = true;
+              }
+              if (entry.heroThumbnailSizes !== undefined) {
+                delete entry.heroThumbnailSizes;
+                touched = true;
+              }
             }
             if (typeof heroWidth === "number") {
               if (entry.heroThumbnailWidth !== heroWidth) touched = true;
