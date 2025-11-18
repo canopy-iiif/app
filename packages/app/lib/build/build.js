@@ -76,6 +76,7 @@ async function build(options = {}) {
   // so SSR interstitials can resolve items even if they are not part of
   // the traversed collection or when IIIF build is skipped during incremental rebuilds.
   try { await iiif.ensureFeaturedInCache(CONFIG); } catch (_) {}
+  try { await iiif.rebuildManifestIndexFromCache(); } catch (_) {}
 
   /**
    * Build contextual MDX content from the content directory.

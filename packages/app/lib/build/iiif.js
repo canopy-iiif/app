@@ -15,6 +15,13 @@ const {
 } = require("../common");
 const mdx = require("./mdx");
 const {log, logLine, logResponse} = require("./log");
+const {
+  getThumbnail,
+  getRepresentativeImage,
+  buildIiifImageUrlFromService,
+  findPrimaryCanvasImage,
+  buildIiifImageSrcset,
+} = require("../iiif/thumbnail");
 
 const IIIF_CACHE_DIR = path.resolve(".cache/iiif");
 const IIIF_CACHE_MANIFESTS_DIR = path.join(IIIF_CACHE_DIR, "manifests");
@@ -35,6 +42,8 @@ const IIIF_CACHE_INDEX_MANIFESTS = path.join(
 const DEFAULT_THUMBNAIL_SIZE = 400;
 const DEFAULT_CHUNK_SIZE = 20;
 const DEFAULT_FETCH_CONCURRENCY = 5;
+const HERO_THUMBNAIL_SIZE = 800;
+const HERO_IMAGE_SIZES_ATTR = "(min-width: 1024px) 1280px, 100vw";
 
 function resolvePositiveInteger(value, fallback) {
   const num = Number(value);
@@ -96,6 +105,20 @@ function normalizeMetadataLabel(label) {
   if (typeof label !== "string") return "";
   const trimmed = label.trim().replace(/[:\s]+$/g, "");
   return trimmed.toLowerCase();
+}
+
+function resolveParentFromPartOf(resource) {
+  try {
+    const partOf = resource && resource.partOf;
+    if (!partOf) return "";
+    const arr = Array.isArray(partOf) ? partOf : [partOf];
+    for (const entry of arr) {
+      if (!entry) continue;
+      const id = entry.id || entry["@id"];
+      if (id) return String(id);
+    }
+  } catch (_) {}
+  return "";
 }
 
 function extractSummaryValues(manifest) {
@@ -586,17 +609,8 @@ async function ensureFeaturedInCache(cfg) {
       ? CONFIG.featured
       : [];
     if (!featured.length) return;
-    const {
-      getThumbnail,
-      getRepresentativeImage,
-      buildIiifImageUrlFromService,
-      findPrimaryCanvasImage,
-      buildIiifImageSrcset,
-    } = require("../iiif/thumbnail");
     const {size: thumbSize, unsafe: unsafeThumbs} =
       resolveThumbnailPreferences();
-    const HERO_THUMBNAIL_SIZE = 800;
-    const HERO_IMAGE_SIZES_ATTR = "(min-width: 1024px) 1280px, 100vw";
     for (const rawId of featured) {
       const id = normalizeIiifId(String(rawId || ""));
       if (!id) continue;
@@ -862,6 +876,158 @@ async function saveCachedCollection(collection, id, parentId) {
     else index.byId.push(entry);
     await saveManifestIndex(index);
   } catch (_) {}
+}
+
+async function rebuildManifestIndexFromCache() {
+  try {
+    const previous = await loadManifestIndex();
+    const previousEntries = Array.isArray(previous.byId) ? previous.byId : [];
+    const priorMap = new Map();
+    for (const entry of previousEntries) {
+      if (!entry || !entry.id) continue;
+      const type = entry.type || "Manifest";
+      const key = `${type}:${normalizeIiifId(entry.id)}`;
+      priorMap.set(key, entry);
+    }
+    const nextIndex = {
+      byId: [],
+      collection: previous.collection || null,
+    };
+    const collectionFiles = fs.existsSync(IIIF_CACHE_COLLECTIONS_DIR)
+      ? (await fsp.readdir(IIIF_CACHE_COLLECTIONS_DIR))
+          .filter((name) => name && name.toLowerCase().endsWith(".json"))
+          .sort()
+      : [];
+    const manifestFiles = fs.existsSync(IIIF_CACHE_MANIFESTS_DIR)
+      ? (await fsp.readdir(IIIF_CACHE_MANIFESTS_DIR))
+          .filter((name) => name && name.toLowerCase().endsWith(".json"))
+          .sort()
+      : [];
+    const {size: thumbSize, unsafe: unsafeThumbs} =
+      resolveThumbnailPreferences();
+
+    for (const name of collectionFiles) {
+      const slug = name.replace(/\.json$/i, "");
+      const fp = path.join(IIIF_CACHE_COLLECTIONS_DIR, name);
+      let data = null;
+      try {
+        data = await readJson(fp);
+      } catch (_) {
+        data = null;
+      }
+      if (!data) continue;
+      const id = data.id || data["@id"];
+      if (!id) continue;
+      const nid = normalizeIiifId(String(id));
+      const key = `Collection:${nid}`;
+      const fallback = priorMap.get(key) || {};
+      const parent = resolveParentFromPartOf(data) || fallback.parent || "";
+      nextIndex.byId.push({
+        id: String(nid),
+        type: "Collection",
+        slug,
+        parent,
+      });
+    }
+
+    for (const name of manifestFiles) {
+      const slug = name.replace(/\.json$/i, "");
+      const fp = path.join(IIIF_CACHE_MANIFESTS_DIR, name);
+      let manifest = null;
+      try {
+        manifest = await readJson(fp);
+      } catch (_) {
+        manifest = null;
+      }
+      if (!manifest) continue;
+      const id = manifest.id || manifest["@id"];
+      if (!id) continue;
+      const nid = normalizeIiifId(String(id));
+      MEMO_ID_TO_SLUG.set(String(id), slug);
+      const key = `Manifest:${nid}`;
+      const fallback = priorMap.get(key) || {};
+      const parent = resolveParentFromPartOf(manifest) || fallback.parent || "";
+      const entry = {
+        id: String(nid),
+        type: "Manifest",
+        slug,
+        parent,
+      };
+      try {
+        const thumb = await getThumbnail(manifest, thumbSize, unsafeThumbs);
+        if (thumb && thumb.url) {
+          entry.thumbnail = String(thumb.url);
+          if (typeof thumb.width === "number") entry.thumbnailWidth = thumb.width;
+          if (typeof thumb.height === "number") entry.thumbnailHeight = thumb.height;
+        }
+      } catch (_) {}
+      try {
+        const heroSource = (() => {
+          if (manifest && manifest.thumbnail) {
+            const clone = {...manifest};
+            try {
+              delete clone.thumbnail;
+            } catch (_) {
+              clone.thumbnail = undefined;
+            }
+            return clone;
+          }
+          return manifest;
+        })();
+        const heroRep = await getRepresentativeImage(
+          heroSource || manifest,
+          HERO_THUMBNAIL_SIZE,
+          true
+        );
+        const canvasImage = findPrimaryCanvasImage(manifest);
+        const heroService =
+          (canvasImage && canvasImage.service) ||
+          (heroRep && heroRep.service);
+        const preferredHero = buildIiifImageUrlFromService(
+          heroService,
+          HERO_THUMBNAIL_SIZE
+        );
+        const heroFallbackId = (() => {
+          if (canvasImage && canvasImage.id) return String(canvasImage.id);
+          if (heroRep && heroRep.id) return String(heroRep.id);
+          return "";
+        })();
+        const heroWidth = (() => {
+          if (canvasImage && typeof canvasImage.width === "number")
+            return canvasImage.width;
+          if (heroRep && typeof heroRep.width === "number") return heroRep.width;
+          return undefined;
+        })();
+        const heroHeight = (() => {
+          if (canvasImage && typeof canvasImage.height === "number")
+            return canvasImage.height;
+          if (heroRep && typeof heroRep.height === "number")
+            return heroRep.height;
+          return undefined;
+        })();
+        if (preferredHero || heroFallbackId) {
+          entry.heroThumbnail = preferredHero || heroFallbackId;
+          if (typeof heroWidth === "number") entry.heroThumbnailWidth = heroWidth;
+          if (typeof heroHeight === "number") entry.heroThumbnailHeight = heroHeight;
+          const heroSrcset = buildIiifImageSrcset(heroService);
+          if (heroSrcset) {
+            entry.heroThumbnailSrcset = heroSrcset;
+            entry.heroThumbnailSizes = HERO_IMAGE_SIZES_ATTR;
+          }
+        }
+      } catch (_) {}
+      nextIndex.byId.push(entry);
+    }
+
+    await saveManifestIndex(nextIndex);
+    try {
+      logLine("✓ Rebuilt IIIF cache index", "cyan");
+    } catch (_) {}
+  } catch (err) {
+    try {
+      logLine("! Skipped IIIF index rebuild", "yellow");
+    } catch (_) {}
+  }
 }
 
 async function loadConfig() {
@@ -1337,7 +1503,6 @@ async function buildIiifCollectionPages(CONFIG) {
           let thumbWidth = undefined;
           let thumbHeight = undefined;
           try {
-            const {getThumbnail} = require("../iiif/thumbnail");
             const t = await getThumbnail(manifest, thumbSize, unsafeThumbs);
             if (t && t.url) {
               thumbUrl = String(t.url);
@@ -1438,6 +1603,7 @@ module.exports = {
   loadCachedManifestById,
   saveCachedManifest,
   ensureFeaturedInCache,
+  rebuildManifestIndexFromCache,
 };
 
 // Debug: list collections cache after traversal
