@@ -586,10 +586,15 @@ async function ensureFeaturedInCache(cfg) {
       ? CONFIG.featured
       : [];
     if (!featured.length) return;
-    const {getThumbnail, getRepresentativeImage} = require("../iiif/thumbnail");
+    const {
+      getThumbnail,
+      getRepresentativeImage,
+      buildIiifImageUrlFromService,
+      findPrimaryCanvasImage,
+    } = require("../iiif/thumbnail");
     const {size: thumbSize, unsafe: unsafeThumbs} =
       resolveThumbnailPreferences();
-    const HERO_THUMBNAIL_SIZE = 1200;
+    const HERO_THUMBNAIL_SIZE = 800;
     for (const rawId of featured) {
       const id = normalizeIiifId(String(rawId || ""));
       if (!id) continue;
@@ -651,22 +656,53 @@ async function ensureFeaturedInCache(cfg) {
             HERO_THUMBNAIL_SIZE,
             true
           );
-          if (heroRep && heroRep.id) {
-            const nextHero = String(heroRep.id);
+          const canvasImage = findPrimaryCanvasImage(manifest);
+          const heroService =
+            (canvasImage && canvasImage.service) ||
+            (heroRep && heroRep.service);
+          const preferredHeroThumbnail = buildIiifImageUrlFromService(
+            heroService,
+            HERO_THUMBNAIL_SIZE
+          );
+          const heroFallbackId = (() => {
+            if (canvasImage && canvasImage.id) return String(canvasImage.id);
+            if (heroRep && heroRep.id) return String(heroRep.id);
+            return "";
+          })();
+          const heroWidth = (() => {
+            if (canvasImage && typeof canvasImage.width === "number") {
+              return canvasImage.width;
+            }
+            if (heroRep && typeof heroRep.width === "number") {
+              return heroRep.width;
+            }
+            return undefined;
+          })();
+          const heroHeight = (() => {
+            if (canvasImage && typeof canvasImage.height === "number") {
+              return canvasImage.height;
+            }
+            if (heroRep && typeof heroRep.height === "number") {
+              return heroRep.height;
+            }
+            return undefined;
+          })();
+          if (preferredHeroThumbnail || heroFallbackId) {
+            const nextHero = preferredHeroThumbnail || heroFallbackId;
             if (entry.heroThumbnail !== nextHero) {
               entry.heroThumbnail = nextHero;
               touched = true;
             }
-            if (typeof heroRep.width === "number") {
-              if (entry.heroThumbnailWidth !== heroRep.width) touched = true;
-              entry.heroThumbnailWidth = heroRep.width;
+            if (typeof heroWidth === "number") {
+              if (entry.heroThumbnailWidth !== heroWidth) touched = true;
+              entry.heroThumbnailWidth = heroWidth;
             } else if (entry.heroThumbnailWidth !== undefined) {
               delete entry.heroThumbnailWidth;
               touched = true;
             }
-            if (typeof heroRep.height === "number") {
-              if (entry.heroThumbnailHeight !== heroRep.height) touched = true;
-              entry.heroThumbnailHeight = heroRep.height;
+            if (typeof heroHeight === "number") {
+              if (entry.heroThumbnailHeight !== heroHeight) touched = true;
+              entry.heroThumbnailHeight = heroHeight;
             } else if (entry.heroThumbnailHeight !== undefined) {
               delete entry.heroThumbnailHeight;
               touched = true;
