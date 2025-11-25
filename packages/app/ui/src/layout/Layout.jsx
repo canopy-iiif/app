@@ -1,16 +1,17 @@
-import React from 'react';
-import navigationHelpers from '../../../lib/components/navigation.js';
-import SubNavigation from './SubNavigation.jsx';
-import ContentNavigation from './ContentNavigation.jsx';
+import React from "react";
+import navigationHelpers from "../../../lib/components/navigation.js";
+import SubNavigation from "./SubNavigation.jsx";
+import ContentNavigation from "./ContentNavigation.jsx";
 
 function buildHeadingTree(headings) {
   if (!Array.isArray(headings) || !headings.length) return [];
   const root = [];
   const stack = [];
   headings.forEach((heading) => {
-    if (!heading || typeof heading !== 'object') return;
-    const depth = typeof heading.depth === 'number' ? heading.depth : heading.level;
-    if (typeof depth !== 'number' || depth < 2) return;
+    if (!heading || typeof heading !== "object") return;
+    const depth =
+      typeof heading.depth === "number" ? heading.depth : heading.level;
+    if (typeof depth !== "number" || depth < 2) return;
     const entry = {
       id: heading.id || heading.slug || heading.title,
       title: heading.title || heading.text || heading.id,
@@ -34,7 +35,7 @@ function buildNavigationAside(sidebar, className) {
   if (!sidebar) {
     return <SubNavigation className={className} />;
   }
-  if (typeof sidebar === 'function') {
+  if (typeof sidebar === "function") {
     return React.createElement(sidebar);
   }
   return sidebar;
@@ -46,14 +47,14 @@ export default function Layout({
   navigation = true,
   fluid = false,
   contentNavigation = true,
-  className = '',
-  contentClassName = '',
-  sidebarClassName = '',
-  contentNavigationClassName = '',
+  className = "",
+  contentClassName = "",
+  sidebarClassName = "",
+  contentNavigationClassName = "",
   ...rest
 }) {
   const PageContext =
-    navigationHelpers && typeof navigationHelpers.getPageContext === 'function'
+    navigationHelpers && typeof navigationHelpers.getPageContext === "function"
       ? navigationHelpers.getPageContext()
       : null;
   const context = PageContext ? React.useContext(PageContext) : null;
@@ -88,48 +89,48 @@ export default function Layout({
 
   const gridClass = (() => {
     if (showLeftColumn && hasContentNavigation) {
-      return 'md:grid md:grid-cols-[17rem_minmax(0,1fr)_14rem] md:items-start md:gap-10';
+      return "md:grid md:grid-cols-[17rem_minmax(0,1fr)_14rem] md:items-start md:gap-10";
     }
     if (showLeftColumn) {
-      return 'md:grid md:grid-cols-[17rem_minmax(0,1fr)] md:items-start md:gap-10';
+      return "md:grid md:grid-cols-[17rem_minmax(0,1fr)] md:items-start md:gap-10";
     }
     if (hasContentNavigation) {
-      return 'md:grid md:grid-cols-[minmax(0,1fr)_14rem] md:items-start md:gap-10';
+      return "md:grid md:grid-cols-[minmax(0,1fr)_14rem] md:items-start md:gap-10";
     }
-    return '';
+    return "";
   })();
 
   const containerClassName = [
-    'w-full py-6 getting-started-layout',
+    "w-full py-6 getting-started-layout",
     gridClass,
-    fluid ? 'px-4 md:px-8 lg:px-12' : 'mx-auto max-w-content px-4',
+    fluid ? "px-4 md:px-8 lg:px-12" : "mx-auto max-w-content px-4",
     className,
   ]
     .filter(Boolean)
-    .join(' ');
+    .join(" ");
 
   const leftAsideClassName = [
-    'mt-8 md:mt-0 md:order-1 md:sticky md:top-24 md:max-h-[calc(100vh-6rem)] md:overflow-y-auto text-sm text-slate-600',
+    "mt-8 md:mt-0 md:order-1 md:sticky md:top-24 md:max-h-[calc(100vh-6rem)] md:overflow-y-auto text-slate-600",
     sidebarClassName,
   ]
     .filter(Boolean)
-    .join(' ');
+    .join(" ");
 
-  const contentOrderClass = showLeftColumn ? 'md:order-2' : hasContentNavigation ? 'md:order-1' : '';
-  const contentClassNames = [
-    'space-y-6',
-    contentOrderClass,
-    contentClassName,
-  ]
+  const contentOrderClass = showLeftColumn
+    ? "md:order-2"
+    : hasContentNavigation
+      ? "md:order-1"
+      : "";
+  const contentClassNames = ["space-y-6", contentOrderClass, contentClassName]
     .filter(Boolean)
-    .join(' ');
+    .join(" ");
 
   const contentNavigationAsideClassName = [
-    'hidden md:block md:order-3 mt-8 md:mt-0 md:sticky md:top-24 md:max-h-[calc(100vh-6rem)] md:overflow-y-auto text-sm text-slate-600',
+    "hidden md:block md:order-3 mt-8 md:mt-0 md:sticky md:top-24 md:max-h-[calc(100vh-6rem)] md:overflow-y-auto text-slate-600",
     contentNavigationClassName,
   ]
     .filter(Boolean)
-    .join(' ');
+    .join(" ");
 
   const sidebarNode = showLeftColumn
     ? buildNavigationAside(sidebar, sidebarClassName)

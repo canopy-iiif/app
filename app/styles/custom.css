@@ -1,0 +1,10 @@
+/** 
+ * Example custom color variables
+ * @see https://canopy-iiif.github.io/app/docs/theming/tailwind#custom
+ */
+
+/* @theme {
+  --color-northwestern-purple: #4e2a84;
+  --color-brand-700: var(--color-northwestern-purple);
+  --color-brand-default: var(--color-northwestern-purple);
+} */

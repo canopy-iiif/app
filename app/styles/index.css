@@ -1,35 +1,22 @@
-@config "./tailwind.config.mts";
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@import "tailwindcss/theme";
+@import "tailwindcss";
 @import "@canopy-iiif/app/ui/styles/index.css";
+@import "./custom.css";
 
-/* CSS variables */
-@layer properties {
-  :root {
-    --font-sans: system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
-    --font-serif: "Fraunces", Georgia, "Times New Roman", serif;
-    --font-mono: "ui-monospace", Menlo, Consolas, monospace;
-  }
+@theme {
+  --font-sans: system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-mono: "ui-monospace", Menlo, Consolas, monospace;
 }
 
-@utility font-display {
-  font-family: var(--font-serif);
-  font-weight: 600;
-  letter-spacing: -0.025em;
-  font-variation-settings: "WONK" 1;
+@utility max-w-content {
+  max-width: 1080px;
 }
 
 @layer base {
   html {
     font-family: var(--font-serif);
-    font-optical-sizing: auto;
     font-size: 105%;
     font-weight: 300;
-    scroll-behavior: smooth;
   }
 
   body {
@@ -38,15 +25,11 @@
   }
 
   h1,
-  h2 {
-    @apply font-display;
-  }
-}
-
-/* Example component layer override */
-@layer components {
-  .canopy-logo,
-  .canopy-interstitial__headline {
-    @apply font-display;
+  h2,
+  .canopy-logo {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    font-variation-settings: "WONK" 100;
   }
 }

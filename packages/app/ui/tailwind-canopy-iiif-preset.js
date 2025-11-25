@@ -13,7 +13,7 @@ function compileVarsCss() {
   const theme = loadCanopyTheme();
   if (theme && theme.css) {
     if (process.env.CANOPY_DEBUG_THEME) {
-      console.log('[preset] using theme css');
+      console.log("[preset] using theme css");
     }
     return theme.css;
   }
@@ -58,19 +58,6 @@ module.exports = {
           800: "var(--color-gray-800)",
           900: "var(--color-gray-900)",
         },
-        slate: {
-          DEFAULT: "var(--color-gray-default)",
-          50: "var(--color-gray-50)",
-          100: "var(--color-gray-100)",
-          200: "var(--color-gray-200)",
-          300: "var(--color-gray-300)",
-          400: "var(--color-gray-400)",
-          500: "var(--color-gray-500)",
-          600: "var(--color-gray-600)",
-          700: "var(--color-gray-700)",
-          800: "var(--color-gray-800)",
-          900: "var(--color-gray-900)",
-        },
         muted: "var(--color-gray-muted)",
         white: "#ffffff",
         black: "#000000",
@@ -79,6 +66,10 @@ module.exports = {
         mono: ["var(--font-mono)"],
         sans: ["var(--font-sans)"],
         serif: ["var(--font-serif)"],
+      },
+      maxWidth: {
+        content: "var(--max-w-content)",
+        wide: "var(--max-w-wide)",
       },
       fontSize: {
         xs: ["var(--font-size-xs)", {lineHeight: "var(--line-height-xs)"}],
@@ -97,7 +88,6 @@ module.exports = {
         DEFAULT: "var(--radius-default)",
         md: "var(--radius-md)",
       },
-      maxWidth: {content: "var(--max-w-content)", wide: "var(--max-w-wide)"},
       boxShadow: {
         sm: "var(--shadow-sm)",
         DEFAULT: "var(--shadow)",

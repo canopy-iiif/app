@@ -816,17 +816,30 @@ async function dev() {
       "tailwind.config.mts",
       "tailwind.config.ts",
     ].map((n) => path.join(appStylesDir, n));
-    const configPath = [...twConfigsApp, ...twConfigsRoot].find((p) => {
+    let configPath = [...twConfigsApp, ...twConfigsRoot].find((p) => {
       try {
         return fs.existsSync(p);
       } catch (_) {
         return false;
       }
     });
+    const fallbackConfig = (() => {
+      try {
+        return require.resolve("@canopy-iiif/app/ui/tailwind-default-config");
+      } catch (_) {
+        return null;
+      }
+    })();
     if (!configPath) {
-      throw new Error(
-        "[tailwind] Missing Tailwind config. Expected app/styles/tailwind.config.{js,cjs,mjs,mts,ts} or a root-level Tailwind config."
-      );
+      configPath = fallbackConfig;
+      if (configPath) {
+        console.log(
+          "[tailwind] no local config found — using the built-in Canopy config"
+        );
+      }
+    }
+    if (!configPath) {
+      throw new Error("[tailwind] Unable to resolve a Tailwind config file.");
     }
     const inputCandidates = [
       path.join(appStylesDir, "index.css"),

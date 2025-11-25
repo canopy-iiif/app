@@ -60,37 +60,28 @@ Canopy ships a small Tailwind preset and plugin so you can opt into sensible def
 - Preset (tokens + plugin): `@canopy-iiif/app/ui/canopy-iiif-preset`
 - Plugin (component CSS only): `@canopy-iiif/app/ui/canopy-iiif-plugin`
 
-Defaults (recommended) — enabled in `app/styles/tailwind.config.mts`:
+Defaults (recommended): Canopy now ships a Tailwind config internally, so you only edit `app/styles/index.css`:
 
-```ts
-// app/styles/tailwind.config.mts
-import { createRequire } from 'node:module';
-import type { Config } from 'tailwindcss';
+```css
+/* app/styles/index.css */
+@import 'tailwindcss';
+@import '@canopy-iiif/app/ui/styles/index.css';
 
-const require = createRequire(import.meta.url);
+@theme {
+  --color-brand-500: #4f46e5;
+  --font-serif: 'Fraunces', Georgia, 'Times New Roman', serif;
+}
 
-const config: Config = {
-  presets: [require('@canopy-iiif/app/ui/canopy-iiif-preset')],
-  content: [
-    './content/**/*.{mdx,html}',
-    './site/**/*.html',
-    './packages/app/ui/**/*.{js,jsx,ts,tsx}',
-    './packages/app/lib/components/**/*.{js,jsx}',
-  ],
-  theme: { extend: {} },
-  // You can also include the plugin explicitly (already included by the preset)
-  plugins: [require('@canopy-iiif/app/ui/canopy-iiif-plugin')],
-};
-
-export default config;
+@utility font-display {
+  font-family: var(--font-serif);
+  font-weight: 600;
+}
 ```
 
-Notes
-
-- Disable Canopy’s component styles by removing the plugin line.
-- Replace the preset if you want to define your own tokens (colors/fonts/sizing) and keep only the plugin.
-- The UI components use clear, semantic selectors (e.g., `.canopy-card`). You can override these in your own Tailwind layers if desired.
-- In dev, CSS changes hot‑swap without a full page reload (Tailwind, `app/styles/**`, and the Canopy UI plugin/preset).
+- The preset (design tokens) and plugin (component CSS/utilities) are loaded automatically; just override tokens via `@theme` (or regular custom properties) when you need custom colors, fonts, radii, etc.
+- Want full control? Create your own `tailwind.config.mts` and use `defineCanopyTailwindConfig(import.meta.url, …)` from `@canopy-iiif/app/ui/tailwind-config` to opt out or add additional presets/plugins.
+- The UI components use semantic selectors (e.g., `.canopy-card`). Override them in `@layer` blocks as needed.
+- CSS changes still hot‑swap during `npm run dev` (Tailwind picks up `app/styles/**` plus the Canopy UI preset/plugin).
 
 ### Theme configuration
 

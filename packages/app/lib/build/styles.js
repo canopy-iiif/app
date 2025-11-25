@@ -39,13 +39,9 @@ async function ensureStyles() {
   });
   if (!configPath) {
     try {
-      const { CACHE_DIR } = require("../common");
-      const genDir = path.join(CACHE_DIR, "tailwind");
-      ensureDirSync(genDir);
-      const genCfg = path.join(genDir, "tailwind.config.js");
-      const cfg = `module.exports = {\n  presets: [require('@canopy-iiif/app/ui/canopy-iiif-preset')],\n  content: [\n    './content/**/*.{mdx,html}',\n    './site/**/*.html',\n    './site/**/*.js',\n    './packages/app/ui/**/*.{js,jsx,ts,tsx}',\n    './packages/app/lib/iiif/components/**/*.{js,jsx}',\n  ],\n  theme: { extend: {} },\n  plugins: [require('@canopy-iiif/app/ui/canopy-iiif-plugin')],\n};\n`;
-      fs.writeFileSync(genCfg, cfg, "utf8");
-      configPath = genCfg;
+      configPath = require.resolve(
+        "@canopy-iiif/app/ui/tailwind-default-config"
+      );
     } catch (_) {
       configPath = null;
     }
@@ -64,7 +60,7 @@ async function ensureStyles() {
       const genDir = path.join(CACHE_DIR, "tailwind");
       ensureDirSync(genDir);
       generatedInput = path.join(genDir, "index.css");
-      const css = `@tailwind base;\n@tailwind components;\n@tailwind utilities;\n`;
+      const css = `@import 'tailwindcss';\n`;
       fs.writeFileSync(generatedInput, css, "utf8");
     } catch (_) {
       generatedInput = null;

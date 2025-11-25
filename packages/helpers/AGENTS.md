@@ -36,3 +36,4 @@ Session Ritual
 Logbook
 -------
 - 2025-09-26 / chatgpt: Removed fallback behaviour from helper CLIs—`run-changeset` now requires a local @changesets/cli install and `build-tailwind` throws when the Tailwind CLI is missing or fails; template rewrite now pins Tailwind `^4.1.13`.
+- 2025-10-19 / chatgpt: Template prep no longer copies or generates `tailwind.config.*`; the template relies on the built-in Canopy Tailwind config and falls back to the CSS-first `@import 'tailwindcss';` entry when no custom stylesheet exists.

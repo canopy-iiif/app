@@ -130,15 +130,14 @@
 
   &:hover,
   &:focus-visible {
-    color: var(--color-brand-600, #3e63dd);
+    color: var(--color-brand-default);
   }
 
   &:focus-visible {
     outline: none;
     box-shadow:
       0 0 0 2px var(--color-gray-100, #ffffff),
-      0 0 0 4px
-        color-mix(in srgb, var(--color-brand-500, #3e63dd) 65%, transparent);
+      0 0 0 4px color-mix(in srgb, var(--color-brand-800) 65%, transparent);
     border-radius: 999px;
   }
 }
