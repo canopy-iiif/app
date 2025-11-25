@@ -170,19 +170,19 @@ function writeTailwindFiles() {
   const srcStylesDir = path.join(process.cwd(), 'app', 'styles');
   mkdirp(stylesDir);
 
-  function copyIfExists(filename) {
-    const src = path.join(srcStylesDir, filename);
-    const dest = path.join(stylesDir, filename);
-    if (fs.existsSync(src)) {
-      fs.copyFileSync(src, dest);
-      return true;
-    }
-    return false;
+  const entries = fs.readdirSync(srcStylesDir, { withFileTypes: true });
+  let copiedIndex = false;
+
+  for (const entry of entries) {
+    if (!entry.isFile()) continue;
+    if (!entry.name.endsWith('.css')) continue;
+    const src = path.join(srcStylesDir, entry.name);
+    const dest = path.join(stylesDir, entry.name);
+    fs.copyFileSync(src, dest);
+    if (entry.name === 'index.css') copiedIndex = true;
   }
 
-  const copiedCss = copyIfExists('index.css');
-
-  if (!copiedCss) {
+  if (!copiedIndex) {
     const fallbackCss = `@import 'tailwindcss';
 @import '@canopy-iiif/app/ui/styles/index.css';
 `;
