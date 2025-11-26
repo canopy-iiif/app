@@ -47,9 +47,11 @@ async function ensureStyles() {
     }
   }
 
-  const inputCss = fs.existsSync(customAppCss)
+  const hasAppCss = fs.existsSync(customAppCss);
+  const hasContentCss = fs.existsSync(customContentCss);
+  const inputCss = hasAppCss
     ? customAppCss
-    : fs.existsSync(customContentCss)
+    : hasContentCss
     ? customContentCss
     : null;
 
@@ -141,6 +143,8 @@ async function ensureStyles() {
     } catch (_) {}
   }
 
+  const shouldInjectTheme = !(hasAppCss && configPath);
+
   if (configPath && (inputCss || generatedInput)) {
     const ok = buildTailwindCli({
       input: inputCss || generatedInput,
@@ -149,7 +153,7 @@ async function ensureStyles() {
       minify: true,
     });
     if (ok) {
-      injectThemeTokens(dest);
+      if (shouldInjectTheme) injectThemeTokens(dest);
       return; // Tailwind compiled CSS
     }
   }
@@ -165,14 +169,14 @@ async function ensureStyles() {
   if (fs.existsSync(customAppCss)) {
     if (!isTailwindSource(customAppCss)) {
       await fsp.copyFile(customAppCss, dest);
-      injectThemeTokens(dest);
+      if (shouldInjectTheme) injectThemeTokens(dest);
       return;
     }
   }
   if (fs.existsSync(customContentCss)) {
     if (!isTailwindSource(customContentCss)) {
       await fsp.copyFile(customContentCss, dest);
-      injectThemeTokens(dest);
+      if (shouldInjectTheme) injectThemeTokens(dest);
       return;
     }
   }
