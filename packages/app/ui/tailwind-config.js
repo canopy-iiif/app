@@ -33,7 +33,11 @@ const resolveProjectRoot = (metaUrl, explicitRoot) => {
     const href = typeof metaUrl === "string" ? metaUrl : metaUrl.href;
     if (href) {
       const fromUrl = fileURLToPath(href);
-      return path.join(path.dirname(fromUrl), "..", "..");
+      const dir = path.dirname(fromUrl);
+      if (dir.includes(`${path.sep}node_modules${path.sep}`)) {
+        return process.cwd();
+      }
+      return dir;
     }
   }
   return process.cwd();

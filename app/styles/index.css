@@ -2,7 +2,7 @@
 @import "@canopy-iiif/app/ui/styles/index.css";
 @import "./custom.css";
 
-@layer properties {
+@layer theme {
   :root,
   :host {
     --font-sans: system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
