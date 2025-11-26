@@ -471,10 +471,17 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
     ? React.createElement(MDXProvider, { components: compMap }, withApp)
     : withApp;
   const body = ReactDOMServer.renderToStaticMarkup(page);
-  const head =
-    app && app.Head
-      ? ReactDOMServer.renderToStaticMarkup(React.createElement(app.Head))
-      : "";
+  let head = '';
+  if (app && app.Head) {
+    const headElement = React.createElement(app.Head, {
+      page: contextValue.page,
+      navigation: contextValue.navigation,
+    });
+    const wrappedHead = PageContext
+      ? React.createElement(PageContext.Provider, { value: contextValue }, headElement)
+      : headElement;
+    head = ReactDOMServer.renderToStaticMarkup(wrappedHead);
+  }
   return { body, head };
 }
 

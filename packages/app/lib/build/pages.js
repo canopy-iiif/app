@@ -3,6 +3,31 @@ const { log } = require('./log');
 const mdx = require('./mdx');
 const navigation = require('../components/navigation');
 
+function normalizeWhitespace(value) {
+  if (!value) return '';
+  return String(value).replace(/\s+/g, ' ').trim();
+}
+
+function truncateDescription(value, max = 240) {
+  const normalized = normalizeWhitespace(value);
+  if (!normalized) return '';
+  if (normalized.length <= max) return normalized;
+  const slice = normalized.slice(0, Math.max(0, max - 3)).trimEnd();
+  return `${slice}...`;
+}
+
+function isPlainObject(value) {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function readFrontmatterString(data, key) {
+  if (!data) return '';
+  const raw = data[key];
+  if (raw == null) return '';
+  if (typeof raw === 'string') return raw.trim();
+  return '';
+}
+
 // Cache: dir -> frontmatter data for _layout.mdx in that dir
 const LAYOUT_META = new Map();
 
@@ -50,11 +75,60 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}) {
   const pageInfo = navigation.getPageInfo(normalizedRel);
   const navData = navigation.buildNavigationForFile(normalizedRel);
   const mergedProps = { ...(extraProps || {}) };
+  const frontmatter =
+    typeof mdx.parseFrontmatter === 'function'
+      ? mdx.parseFrontmatter(source)
+      : { data: null, content: source };
+  const frontmatterData = frontmatter && isPlainObject(frontmatter.data) ? frontmatter.data : null;
+  let layoutMeta = null;
+  try {
+    layoutMeta = await getNearestDirLayoutMeta(filePath);
+  } catch (_) {
+    layoutMeta = null;
+  }
+  const directType = frontmatterData && typeof frontmatterData.type === 'string' ? frontmatterData.type.trim() : '';
+  const layoutType = layoutMeta && typeof layoutMeta.type === 'string' ? String(layoutMeta.type).trim() : '';
+  const resolvedType = directType || layoutType || (!frontmatterData ? 'page' : '');
+  const frontmatterDescription = frontmatterData && typeof frontmatterData.description === 'string'
+    ? truncateDescription(frontmatterData.description)
+    : '';
+  const extractedPlain = typeof mdx.extractPlainText === 'function'
+    ? mdx.extractPlainText(source)
+    : '';
+  const derivedDescription = truncateDescription(extractedPlain);
+  const resolvedDescription = frontmatterDescription || derivedDescription;
+  const ogImageFrontmatter =
+    readFrontmatterString(frontmatterData, 'og:image') ||
+    readFrontmatterString(frontmatterData, 'ogImage');
+  const genericImage = readFrontmatterString(frontmatterData, 'image');
+  const resolvedImage = ogImageFrontmatter || genericImage;
+  const frontmatterMeta = frontmatterData && isPlainObject(frontmatterData.meta) ? frontmatterData.meta : null;
   const headings = mdx.extractHeadings(source);
-  if (pageInfo) {
+  const basePage = pageInfo ? { ...pageInfo } : {};
+  if (title) basePage.title = title;
+  if (resolvedType) basePage.type = resolvedType;
+  if (resolvedDescription) basePage.description = resolvedDescription;
+  if (basePage.href && !basePage.url) basePage.url = basePage.href;
+  if (resolvedImage) {
+    basePage.image = resolvedImage;
+    basePage.ogImage = ogImageFrontmatter || resolvedImage;
+  }
+  const existingMeta = basePage.meta && typeof basePage.meta === 'object' ? basePage.meta : {};
+  const pageMeta = { ...existingMeta };
+  if (title) pageMeta.title = title;
+  if (resolvedDescription) pageMeta.description = resolvedDescription;
+  if (resolvedType) pageMeta.type = resolvedType;
+  if (basePage.url || basePage.href) pageMeta.url = basePage.url || basePage.href || pageMeta.url;
+  if (resolvedImage) {
+    pageMeta.image = resolvedImage;
+    if (!pageMeta.ogImage) pageMeta.ogImage = resolvedImage;
+  }
+  if (frontmatterMeta) Object.assign(pageMeta, frontmatterMeta);
+  if (Object.keys(pageMeta).length) basePage.meta = pageMeta;
+  if (Object.keys(basePage).length) {
     mergedProps.page = mergedProps.page
-      ? { ...pageInfo, ...mergedProps.page }
-      : pageInfo;
+      ? { ...basePage, ...mergedProps.page }
+      : basePage;
   }
   if (navData && !mergedProps.navigation) {
     mergedProps.navigation = navData;
@@ -116,7 +190,7 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}) {
     const { BASE_PATH } = require('../common');
     if (BASE_PATH) vendorTag = `<script>window.CANOPY_BASE_PATH=${JSON.stringify(BASE_PATH)}</script>` + vendorTag;
   } catch (_) {}
-  let headExtra = head;
+  const headSegments = [head];
   const extraScripts = [];
   if (heroRel && jsRel !== heroRel) extraScripts.push(`<script defer src="${heroRel}"></script>`);
   if (facetsRel && jsRel !== facetsRel) extraScripts.push(`<script defer src="${facetsRel}"></script>`);
@@ -133,9 +207,10 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}) {
     } catch (_) {}
     extraStyles.push(`<link rel="stylesheet" href="${rel}">`);
   }
-  if (extraStyles.length) headExtra = extraStyles.join('') + headExtra;
-  if (extraScripts.length) headExtra = extraScripts.join('') + headExtra;
-  const html = htmlShell({ title, body, cssHref: null, scriptHref: jsRel, headExtra: vendorTag + headExtra });
+  if (extraStyles.length) headSegments.push(extraStyles.join(''));
+  if (extraScripts.length) headSegments.push(extraScripts.join(''));
+  const headExtra = headSegments.join('') + vendorTag;
+  const html = htmlShell({ title, body, cssHref: null, scriptHref: jsRel, headExtra });
   const { applyBaseToHtml } = require('../common');
   return applyBaseToHtml(html);
 }

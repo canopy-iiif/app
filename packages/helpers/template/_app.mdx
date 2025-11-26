@@ -1,9 +1,10 @@
-import {Stylesheet} from "@canopy-iiif/app/head";
+import {Meta, Stylesheet} from "@canopy-iiif/app/head";
 import {CanopyHeader, CanopyFooter} from "@canopy-iiif/app/ui";
 
 export function Head() {
   return (
     <>
+      <Meta siteTitle="Canopy IIIF" />
       <Stylesheet />
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link

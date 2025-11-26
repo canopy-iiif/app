@@ -15,10 +15,13 @@ const {
 } = require("../common");
 const mdx = require("./mdx");
 const {log, logLine, logResponse} = require("./log");
+const { getPageContext } = require("../page-context");
+const PageContext = getPageContext();
 const {
   getThumbnail,
   getRepresentativeImage,
   buildIiifImageUrlFromService,
+  buildIiifImageUrlForDimensions,
   findPrimaryCanvasImage,
   buildIiifImageSrcset,
 } = require("../iiif/thumbnail");
@@ -44,6 +47,9 @@ const DEFAULT_CHUNK_SIZE = 20;
 const DEFAULT_FETCH_CONCURRENCY = 5;
 const HERO_THUMBNAIL_SIZE = 800;
 const HERO_IMAGE_SIZES_ATTR = "(min-width: 1024px) 1280px, 100vw";
+const OG_IMAGE_WIDTH = 1200;
+const OG_IMAGE_HEIGHT = 630;
+const HERO_REPRESENTATIVE_SIZE = Math.max(HERO_THUMBNAIL_SIZE, OG_IMAGE_WIDTH);
 
 function resolvePositiveInteger(value, fallback) {
   const num = Number(value);
@@ -67,6 +73,73 @@ function resolveThumbnailPreferences() {
     ),
     unsafe: resolveBoolean(process.env.CANOPY_THUMBNAILS_UNSAFE),
   };
+}
+
+async function resolveHeroMedia(manifest) {
+  if (!manifest) return null;
+  try {
+    const heroSource = (() => {
+      if (manifest && manifest.thumbnail) {
+        const clone = { ...manifest };
+        try {
+          delete clone.thumbnail;
+        } catch (_) {
+          clone.thumbnail = undefined;
+        }
+        return clone;
+      }
+      return manifest;
+    })();
+    const heroRep = await getRepresentativeImage(
+      heroSource || manifest,
+      HERO_REPRESENTATIVE_SIZE,
+      true
+    );
+    const canvasImage = findPrimaryCanvasImage(manifest);
+    const heroService =
+      (canvasImage && canvasImage.service) ||
+      (heroRep && heroRep.service);
+    const heroPreferred = buildIiifImageUrlFromService(
+      heroService,
+      HERO_THUMBNAIL_SIZE
+    );
+    const heroFallbackId = (() => {
+      if (canvasImage && canvasImage.id) return String(canvasImage.id);
+      if (heroRep && heroRep.id) return String(heroRep.id);
+      return '';
+    })();
+    const heroWidth = (() => {
+      if (canvasImage && typeof canvasImage.width === 'number')
+        return canvasImage.width;
+      if (heroRep && typeof heroRep.width === 'number') return heroRep.width;
+      return undefined;
+    })();
+    const heroHeight = (() => {
+      if (canvasImage && typeof canvasImage.height === 'number')
+        return canvasImage.height;
+      if (heroRep && typeof heroRep.height === 'number')
+        return heroRep.height;
+      return undefined;
+    })();
+    const heroSrcset = buildIiifImageSrcset(heroService);
+    const ogImage = heroService
+      ? buildIiifImageUrlForDimensions(
+          heroService,
+          OG_IMAGE_WIDTH,
+          OG_IMAGE_HEIGHT
+        )
+      : '';
+    return {
+      heroThumbnail: heroPreferred || heroFallbackId || '',
+      heroThumbnailWidth: heroWidth,
+      heroThumbnailHeight: heroHeight,
+      heroThumbnailSrcset: heroSrcset || '',
+      heroThumbnailSizes: heroSrcset ? HERO_IMAGE_SIZES_ATTR : '',
+      ogImage: ogImage || '',
+    };
+  } catch (_) {
+    return null;
+  }
 }
 
 function firstLabelString(label) {
@@ -131,6 +204,19 @@ function extractSummaryValues(manifest) {
   );
   if (!unique.length) return "";
   return unique.join(" ");
+}
+
+function normalizeSummaryText(value) {
+  if (!value) return "";
+  return String(value).replace(/\s+/g, " ").trim();
+}
+
+function truncateSummary(value, max = 240) {
+  const normalized = normalizeSummaryText(value);
+  if (!normalized) return "";
+  if (normalized.length <= max) return normalized;
+  const slice = normalized.slice(0, Math.max(0, max - 3)).trimEnd();
+  return `${slice}...`;
 }
 
 function stripHtml(value) {
@@ -655,103 +741,58 @@ async function ensureFeaturedInCache(cfg) {
         }
 
         try {
-          const heroSource = (() => {
-            if (manifest && manifest.thumbnail) {
-              const clone = {...manifest};
-              try {
-                delete clone.thumbnail;
-              } catch (_) {
-                clone.thumbnail = undefined;
-              }
-              return clone;
-            }
-            return manifest;
-          })();
-          const heroRep = await getRepresentativeImage(
-            heroSource || manifest,
-            HERO_THUMBNAIL_SIZE,
-            true
-          );
-          const canvasImage = findPrimaryCanvasImage(manifest);
-          const heroService =
-            (canvasImage && canvasImage.service) ||
-            (heroRep && heroRep.service);
-          const preferredHeroThumbnail = buildIiifImageUrlFromService(
-            heroService,
-            HERO_THUMBNAIL_SIZE
-          );
-          const heroSrcset = buildIiifImageSrcset(heroService);
-          const heroFallbackId = (() => {
-            if (canvasImage && canvasImage.id) return String(canvasImage.id);
-            if (heroRep && heroRep.id) return String(heroRep.id);
-            return "";
-          })();
-          const heroWidth = (() => {
-            if (canvasImage && typeof canvasImage.width === "number") {
-              return canvasImage.width;
-            }
-            if (heroRep && typeof heroRep.width === "number") {
-              return heroRep.width;
-            }
-            return undefined;
-          })();
-          const heroHeight = (() => {
-            if (canvasImage && typeof canvasImage.height === "number") {
-              return canvasImage.height;
-            }
-            if (heroRep && typeof heroRep.height === "number") {
-              return heroRep.height;
-            }
-            return undefined;
-          })();
-          if (preferredHeroThumbnail || heroFallbackId) {
-            const nextHero = preferredHeroThumbnail || heroFallbackId;
-            if (entry.heroThumbnail !== nextHero) {
-              entry.heroThumbnail = nextHero;
+          const heroMedia = await resolveHeroMedia(manifest);
+          if (heroMedia && heroMedia.heroThumbnail) {
+            if (entry.heroThumbnail !== heroMedia.heroThumbnail) {
+              entry.heroThumbnail = heroMedia.heroThumbnail;
               touched = true;
             }
-            if (heroSrcset) {
-              if (entry.heroThumbnailSrcset !== heroSrcset) touched = true;
-              entry.heroThumbnailSrcset = heroSrcset;
-              if (entry.heroThumbnailSizes !== HERO_IMAGE_SIZES_ATTR) touched = true;
-              entry.heroThumbnailSizes = HERO_IMAGE_SIZES_ATTR;
-            } else {
-              if (entry.heroThumbnailSrcset !== undefined) {
-                delete entry.heroThumbnailSrcset;
-                touched = true;
-              }
-              if (entry.heroThumbnailSizes !== undefined) {
-                delete entry.heroThumbnailSizes;
-                touched = true;
-              }
-            }
-            if (typeof heroWidth === "number") {
-              if (entry.heroThumbnailWidth !== heroWidth) touched = true;
-              entry.heroThumbnailWidth = heroWidth;
-            } else if (entry.heroThumbnailWidth !== undefined) {
-              delete entry.heroThumbnailWidth;
+          } else if (entry.heroThumbnail !== undefined) {
+            delete entry.heroThumbnail;
+            touched = true;
+          }
+          if (heroMedia && typeof heroMedia.heroThumbnailWidth === "number") {
+            if (entry.heroThumbnailWidth !== heroMedia.heroThumbnailWidth)
               touched = true;
-            }
-            if (typeof heroHeight === "number") {
-              if (entry.heroThumbnailHeight !== heroHeight) touched = true;
-              entry.heroThumbnailHeight = heroHeight;
-            } else if (entry.heroThumbnailHeight !== undefined) {
-              delete entry.heroThumbnailHeight;
+            entry.heroThumbnailWidth = heroMedia.heroThumbnailWidth;
+          } else if (entry.heroThumbnailWidth !== undefined) {
+            delete entry.heroThumbnailWidth;
+            touched = true;
+          }
+          if (heroMedia && typeof heroMedia.heroThumbnailHeight === "number") {
+            if (entry.heroThumbnailHeight !== heroMedia.heroThumbnailHeight)
               touched = true;
-            }
+            entry.heroThumbnailHeight = heroMedia.heroThumbnailHeight;
+          } else if (entry.heroThumbnailHeight !== undefined) {
+            delete entry.heroThumbnailHeight;
+            touched = true;
+          }
+          if (heroMedia && heroMedia.heroThumbnailSrcset) {
+            if (entry.heroThumbnailSrcset !== heroMedia.heroThumbnailSrcset)
+              touched = true;
+            entry.heroThumbnailSrcset = heroMedia.heroThumbnailSrcset;
+            if (entry.heroThumbnailSizes !== HERO_IMAGE_SIZES_ATTR) touched = true;
+            entry.heroThumbnailSizes = HERO_IMAGE_SIZES_ATTR;
           } else {
-            if (entry.heroThumbnail !== undefined) {
-              delete entry.heroThumbnail;
+            if (entry.heroThumbnailSrcset !== undefined) {
+              delete entry.heroThumbnailSrcset;
               touched = true;
             }
-            if (entry.heroThumbnailWidth !== undefined) {
-              delete entry.heroThumbnailWidth;
+            if (entry.heroThumbnailSizes !== undefined) {
+              delete entry.heroThumbnailSizes;
               touched = true;
             }
-            if (entry.heroThumbnailHeight !== undefined) {
-              delete entry.heroThumbnailHeight;
-              touched = true;
-            }
+          }
+          if (heroMedia && heroMedia.ogImage) {
+            if (entry.ogImage !== heroMedia.ogImage) touched = true;
+            entry.ogImage = heroMedia.ogImage;
+            entry.ogImageWidth = OG_IMAGE_WIDTH;
+            entry.ogImageHeight = OG_IMAGE_HEIGHT;
+          } else if (entry.ogImage !== undefined) {
+            delete entry.ogImage;
+            delete entry.ogImageWidth;
+            delete entry.ogImageHeight;
+            touched = true;
           }
         } catch (_) {}
 
@@ -962,57 +1003,21 @@ async function rebuildManifestIndexFromCache() {
         }
       } catch (_) {}
       try {
-        const heroSource = (() => {
-          if (manifest && manifest.thumbnail) {
-            const clone = {...manifest};
-            try {
-              delete clone.thumbnail;
-            } catch (_) {
-              clone.thumbnail = undefined;
-            }
-            return clone;
-          }
-          return manifest;
-        })();
-        const heroRep = await getRepresentativeImage(
-          heroSource || manifest,
-          HERO_THUMBNAIL_SIZE,
-          true
-        );
-        const canvasImage = findPrimaryCanvasImage(manifest);
-        const heroService =
-          (canvasImage && canvasImage.service) ||
-          (heroRep && heroRep.service);
-        const preferredHero = buildIiifImageUrlFromService(
-          heroService,
-          HERO_THUMBNAIL_SIZE
-        );
-        const heroFallbackId = (() => {
-          if (canvasImage && canvasImage.id) return String(canvasImage.id);
-          if (heroRep && heroRep.id) return String(heroRep.id);
-          return "";
-        })();
-        const heroWidth = (() => {
-          if (canvasImage && typeof canvasImage.width === "number")
-            return canvasImage.width;
-          if (heroRep && typeof heroRep.width === "number") return heroRep.width;
-          return undefined;
-        })();
-        const heroHeight = (() => {
-          if (canvasImage && typeof canvasImage.height === "number")
-            return canvasImage.height;
-          if (heroRep && typeof heroRep.height === "number")
-            return heroRep.height;
-          return undefined;
-        })();
-        if (preferredHero || heroFallbackId) {
-          entry.heroThumbnail = preferredHero || heroFallbackId;
-          if (typeof heroWidth === "number") entry.heroThumbnailWidth = heroWidth;
-          if (typeof heroHeight === "number") entry.heroThumbnailHeight = heroHeight;
-          const heroSrcset = buildIiifImageSrcset(heroService);
-          if (heroSrcset) {
-            entry.heroThumbnailSrcset = heroSrcset;
+        const heroMedia = await resolveHeroMedia(manifest);
+        if (heroMedia && heroMedia.heroThumbnail) {
+          entry.heroThumbnail = heroMedia.heroThumbnail;
+          if (typeof heroMedia.heroThumbnailWidth === "number")
+            entry.heroThumbnailWidth = heroMedia.heroThumbnailWidth;
+          if (typeof heroMedia.heroThumbnailHeight === "number")
+            entry.heroThumbnailHeight = heroMedia.heroThumbnailHeight;
+          if (heroMedia.heroThumbnailSrcset) {
+            entry.heroThumbnailSrcset = heroMedia.heroThumbnailSrcset;
             entry.heroThumbnailSizes = HERO_IMAGE_SIZES_ATTR;
+          }
+          if (heroMedia.ogImage) {
+            entry.ogImage = heroMedia.ogImage;
+            entry.ogImageWidth = OG_IMAGE_WIDTH;
+            entry.ogImageHeight = OG_IMAGE_HEIGHT;
           }
         }
       } catch (_) {}
@@ -1297,6 +1302,13 @@ async function buildIiifCollectionPages(CONFIG) {
         if (!manifest) continue;
         manifest = await normalizeToV3(manifest);
         const title = firstLabelString(manifest.label);
+        let summaryRaw = '';
+        try {
+          summaryRaw = extractSummaryValues(manifest);
+        } catch (_) {
+          summaryRaw = '';
+        }
+        const summaryForMeta = truncateSummary(summaryRaw || title);
         const baseSlug =
           slugify(title || "untitled", {
             lower: true,
@@ -1354,26 +1366,74 @@ async function buildIiifCollectionPages(CONFIG) {
           const {loadAppWrapper} = require("./mdx");
           const app = await loadAppWrapper();
 
+          let heroMedia = null;
+          try {
+            heroMedia = await resolveHeroMedia(manifest);
+          } catch (_) {
+            heroMedia = null;
+          }
+          const normalizedHref = href.split(path.sep).join("/");
+          const pageHref = rootRelativeHref(normalizedHref);
+          const pageDescription = summaryForMeta || title;
+          const pageDetails = {
+            title,
+            href: pageHref,
+            url: pageHref,
+            slug,
+            type: "work",
+            description: pageDescription,
+            meta: {
+              title,
+              description: pageDescription,
+              type: "work",
+              url: pageHref,
+            },
+          };
+          const ogImageForPage = heroMedia && heroMedia.ogImage ? heroMedia.ogImage : '';
+          if (ogImageForPage) {
+            pageDetails.image = ogImageForPage;
+            pageDetails.ogImage = ogImageForPage;
+            pageDetails.meta.image = ogImageForPage;
+            pageDetails.meta.ogImage = ogImageForPage;
+          }
+          const pageContextValue = { navigation: null, page: pageDetails };
           const mdxContent = React.createElement(WorksLayoutComp, {manifest});
-          const siteTree = app && app.App ? mdxContent : mdxContent;
+          const siteTree = mdxContent;
           const wrappedApp =
             app && app.App
               ? React.createElement(app.App, null, siteTree)
               : siteTree;
+          const withContext =
+            PageContext && pageContextValue
+              ? React.createElement(
+                  PageContext.Provider,
+                  { value: pageContextValue },
+                  wrappedApp
+                )
+              : wrappedApp;
           const page = MDXProvider
             ? React.createElement(
                 MDXProvider,
                 {components: compMap},
-                wrappedApp
+                withContext
               )
-            : wrappedApp;
+            : withContext;
           const body = ReactDOMServer.renderToStaticMarkup(page);
-          const head =
-            app && app.Head
-              ? ReactDOMServer.renderToStaticMarkup(
-                  React.createElement(app.Head)
+          let head = "";
+          if (app && app.Head) {
+            const headElement = React.createElement(app.Head, {
+              page: pageContextValue.page,
+              navigation: null,
+            });
+            const wrappedHead = PageContext
+              ? React.createElement(
+                  PageContext.Provider,
+                  { value: pageContextValue },
+                  headElement
                 )
-              : "";
+              : headElement;
+            head = ReactDOMServer.renderToStaticMarkup(wrappedHead);
+          }
           const needsHydrateViewer =
             body.includes("data-canopy-viewer") ||
             body.includes("data-canopy-scroll") ||
@@ -1438,7 +1498,7 @@ async function buildIiifCollectionPages(CONFIG) {
           else if (needsRelated && sliderRel) jsRel = sliderRel;
           else if (viewerRel) jsRel = viewerRel;
 
-          let headExtra = head;
+          const headSegments = [head];
           const needsReact = !!(
             needsHydrateViewer ||
             needsRelated
@@ -1474,7 +1534,7 @@ async function buildIiifCollectionPages(CONFIG) {
           if (searchFormRel && jsRel !== searchFormRel)
             extraScripts.push(`<script defer src="${searchFormRel}"></script>`);
           if (extraScripts.length)
-            headExtra = extraScripts.join("") + headExtra;
+            headSegments.push(extraScripts.join(""));
           try {
             const {BASE_PATH} = require("../common");
             if (BASE_PATH)
@@ -1484,12 +1544,13 @@ async function buildIiifCollectionPages(CONFIG) {
                 )}</script>` + vendorTag;
           } catch (_) {}
           let pageBody = body;
+          const headExtra = headSegments.join("") + vendorTag;
           let html = htmlShell({
             title,
             body: pageBody,
             cssHref: null,
             scriptHref: jsRel,
-            headExtra: vendorTag + headExtra,
+            headExtra,
           });
           try {
             html = require("../common").applyBaseToHtml(html);
@@ -1516,14 +1577,38 @@ async function buildIiifCollectionPages(CONFIG) {
                     e.id === String(manifest.id || id) &&
                     e.type === "Manifest"
                 );
-                if (entry) {
-                  entry.thumbnail = String(thumbUrl);
-                  if (typeof thumbWidth === "number")
-                    entry.thumbnailWidth = thumbWidth;
-                  if (typeof thumbHeight === "number")
-                    entry.thumbnailHeight = thumbHeight;
-                  await saveManifestIndex(idx);
+              if (entry) {
+                entry.thumbnail = String(thumbUrl);
+                if (typeof thumbWidth === "number")
+                  entry.thumbnailWidth = thumbWidth;
+                if (typeof thumbHeight === "number")
+                  entry.thumbnailHeight = thumbHeight;
+                if (heroMedia && heroMedia.heroThumbnail) {
+                  entry.heroThumbnail = heroMedia.heroThumbnail;
+                  if (typeof heroMedia.heroThumbnailWidth === "number")
+                    entry.heroThumbnailWidth = heroMedia.heroThumbnailWidth;
+                  if (typeof heroMedia.heroThumbnailHeight === "number")
+                    entry.heroThumbnailHeight = heroMedia.heroThumbnailHeight;
+                  if (heroMedia.heroThumbnailSrcset) {
+                    entry.heroThumbnailSrcset = heroMedia.heroThumbnailSrcset;
+                    entry.heroThumbnailSizes = HERO_IMAGE_SIZES_ATTR;
+                  }
                 }
+                if (heroMedia && heroMedia.ogImage) {
+                  entry.ogImage = heroMedia.ogImage;
+                  entry.ogImageWidth = OG_IMAGE_WIDTH;
+                  entry.ogImageHeight = OG_IMAGE_HEIGHT;
+                } else {
+                  try {
+                    if (entry.ogImage !== undefined) delete entry.ogImage;
+                    if (entry.ogImageWidth !== undefined)
+                      delete entry.ogImageWidth;
+                    if (entry.ogImageHeight !== undefined)
+                      delete entry.ogImageHeight;
+                  } catch (_) {}
+                }
+                await saveManifestIndex(idx);
+              }
               }
             }
           } catch (_) {}
@@ -1538,11 +1623,7 @@ async function buildIiifCollectionPages(CONFIG) {
             }
           }
           if (summaryOptions && summaryOptions.enabled) {
-            try {
-              summaryValue = extractSummaryValues(manifest);
-            } catch (_) {
-              summaryValue = "";
-            }
+            summaryValue = summaryRaw || "";
           }
           if (annotationsOptions && annotationsOptions.enabled) {
             try {

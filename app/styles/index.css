@@ -3,7 +3,8 @@
 @import "./custom.css";
 
 @layer properties {
-  :root {
+  :root,
+  :host {
     --font-sans: system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
     --font-serif: "Fraunces", Georgia, "Times New Roman", serif;
     --font-mono: "ui-monospace", Menlo, Consolas, monospace;

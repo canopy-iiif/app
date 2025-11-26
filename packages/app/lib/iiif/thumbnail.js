@@ -199,6 +199,18 @@ function buildIiifImageUrlFromService(service, preferredSize = 800) {
   return buildIiifImageUrlFromNormalizedService(normalized, preferredSize);
 }
 
+function buildIiifImageUrlForDimensions(service, width = 1200, height = 630) {
+  const normalized = normalizeImageServiceCandidate(service);
+  if (!normalized || !isIiifImageService(normalized)) return '';
+  const baseId = normalizeServiceBaseId(normalized.id);
+  if (!baseId) return '';
+  const safeWidth = Math.max(1, Math.floor(Number(width) || 0));
+  const safeHeight = Math.max(1, Math.floor(Number(height) || 0));
+  const quality = selectServiceQuality(normalized);
+  const format = selectServiceFormat(normalized);
+  return `${baseId}/full/!${safeWidth},${safeHeight}/0/${quality}.${format}`;
+}
+
 function buildIiifImageSrcset(service, steps = [360, 640, 960, 1280, 1600]) {
   const normalized = normalizeImageServiceCandidate(service);
   if (!normalized || !isIiifImageService(normalized)) return '';
@@ -339,6 +351,7 @@ module.exports = {
   getThumbnail,
   getThumbnailUrl,
   buildIiifImageUrlFromService,
+  buildIiifImageUrlForDimensions,
   findPrimaryCanvasImage,
   buildIiifImageSrcset,
 };

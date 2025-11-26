@@ -70,7 +70,9 @@ function htmlShell({ title, body, cssHref, scriptHref, headExtra }) {
   const cssTag = cssHref ? `<link rel="stylesheet" href="${cssHref}">` : '';
   const appearance = resolveThemeAppearance();
   const htmlClass = appearance === 'dark' ? ' class="dark"' : '';
-  return `<!doctype html><html lang="en"${htmlClass}><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>${title}</title>${extra}${cssTag}${scriptTag}</head><body>${body}</body></html>`;
+  const hasCustomTitle = /<title\b/i.test(extra);
+  const titleTag = hasCustomTitle ? '' : `<title>${title}</title>`;
+  return `<!doctype html><html lang="en"${htmlClass}><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>${titleTag}${extra}${cssTag}${scriptTag}</head><body>${body}</body></html>`;
 }
 
 function withBase(href) {
