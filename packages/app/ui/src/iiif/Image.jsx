@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 
 // SSR-safe wrapper around Clover's image component. The module relies on the DOM
 // during import, so we lazy-load it in the browser and render a placeholder on the
@@ -33,13 +33,34 @@ export const Image = (props) => {
     } catch (_) {
       json = "{}";
     }
+
+    const {
+      height = `600px`,
+      backgroundColor = `var(--color-gray-200)`,
+      caption,
+    } = props || {};
+
     return (
-      <div data-canopy-image="1" className="not-prose">
-        <script
-          type="application/json"
-          dangerouslySetInnerHTML={{ __html: json }}
-        />
-      </div>
+      <figure
+        style={{
+          margin: `1.618rem 0 2.618rem`,
+        }}
+      >
+        <div
+          data-canopy-image="1"
+          style={{
+            height,
+            backgroundColor,
+            borderRadius: `0.25rem`,
+          }}
+        >
+          <script
+            type="application/json"
+            dangerouslySetInnerHTML={{__html: json}}
+          />
+        </div>
+        {caption && <figcaption>{caption}</figcaption>}
+      </figure>
     );
   }
 
