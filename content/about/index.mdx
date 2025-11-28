@@ -9,9 +9,39 @@ image: https://iiif.dc.library.northwestern.edu/iiif/3/138a94b0-175a-4152-98c7-d
 Using a single [IIIF Presentation Collection](https://iiif.io/api/presentation/3.0/#overview-collection) as a data source, Canopy IIIF (Canopy) generates a browseable, searchable, customizable, and contextually-driven static site using Next.js without duplicating content.
 
 <Image
-  src="https://iiif.dc.library.northwestern.edu/iiif/3/138a94b0-175a-4152-98c7-df58661ce7d5/950,520,7100,4740/!1200,630/0/default.jpg"
+  src="https://iiif.dc.library.northwestern.edu/iiif/3/138a94b0-175a-4152-98c7-df58661ce7d5"
+  isTiledImage={true}
   alt="Canopy IIIF example screenshot"
   caption="Canopy IIIF example screenshot"
+  annotations={[
+        {
+          annotation: {
+            id: "https://iiif.dc.library.northwestern.edu/iiif/3/f7409acd-e3f9-496a-b733-81f46d4ffa4f/annotation/0",
+            type: "Annotation",
+            motivation: ["tagging"],
+            body: [
+              {
+                id: "https://iiif.dc.library.northwestern.edu/iiif/3/f7409acd-e3f9-496a-b733-81f46d4ffa4f/annotation/0/body/0",
+                type: "TextualBody",
+                value: "Five individuals traveling.",
+              },
+            ],
+            target: {
+              type: "SpecificResource",
+              source: {
+                id: "https://iiif.dc.library.northwestern.edu/iiif/3/f7409acd-e3f9-496a-b733-81f46d4ffa4f/canvas/1",
+                type: "Canvas",
+              },
+              selector: {
+                type: "FragmentSelector",
+                value: "xywh=1900,4050,1500,1000",
+              },
+            },
+          },
+          targetIndex: 0,
+        }
+      ]}
+
 />
 
 ## Use Cases
