@@ -1,8 +1,13 @@
 .canopy-layout {
+  --canopy-layout-sidebar-width: 13rem;
+  --canopy-layout-content-nav-width: 14rem;
+  --canopy-layout-row-gap: clamp(1.25rem, 3vw, 3rem);
+  --canopy-layout-column-gap: clamp(1.25rem, 3vw, 3rem);
   display: grid;
   width: 100%;
-  padding: 1.618rem;
-  gap: clamp(1.5rem, 3vw, 3rem);
+  padding: clamp(1rem, 2vw, 2.5rem);
+  row-gap: var(--canopy-layout-row-gap);
+  column-gap: var(--canopy-layout-column-gap);
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
 }
@@ -26,16 +31,39 @@
   position: relative;
 }
 
+.canopy-layout__content-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+.canopy-layout--content-nav-collapsed {
+  --canopy-layout-content-nav-width: 0;
+}
+
+.canopy-layout__content-nav.is-collapsed {
+  align-items: flex-end;
+  width: 0;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  margin-left: calc(-1 * var(--canopy-layout-column-gap));
+}
+
 @media (min-width: 70rem) {
   .canopy-layout--with-sidebar {
-    grid-template-columns: 16rem minmax(0, 1fr);
+    grid-template-columns: var(--canopy-layout-sidebar-width) minmax(0, 1fr);
   }
 
   .canopy-layout--with-content-nav:not(.canopy-layout--with-sidebar) {
-    grid-template-columns: minmax(0, 1fr) 14rem;
+    grid-template-columns: minmax(0, 1fr) var(--canopy-layout-content-nav-width);
   }
 
   .canopy-layout--with-sidebar.canopy-layout--with-content-nav {
-    grid-template-columns: 16rem minmax(0, 1fr) 14rem;
+    grid-template-columns:
+      var(--canopy-layout-sidebar-width)
+      minmax(0, 1fr)
+      var(--canopy-layout-content-nav-width);
   }
 }

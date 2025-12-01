@@ -25,7 +25,11 @@ export default function ContentNavigation({
 
   if ((!items || !items.length) && !headingId) return null;
 
-  const combinedClassName = ['canopy-sub-navigation canopy-content-navigation', className]
+  const combinedClassName = [
+    'canopy-sub-navigation canopy-content-navigation',
+    'canopy-content-navigation--collapsed',
+    className,
+  ]
     .filter(Boolean)
     .join(' ');
 
@@ -225,7 +229,8 @@ export default function ContentNavigation({
     [handleAnchorClick, activeId, getSavedDepth]
   );
 
-  const nestedItems = renderNodes(items);
+  const nestedItems = React.useMemo(() => renderNodes(items), [items, renderNodes]);
+
   const topLink = headingId
     ? (
         <li className="canopy-sub-navigation__item" data-depth={0}>
@@ -250,7 +255,26 @@ export default function ContentNavigation({
     : null;
 
   return (
-    <nav className={combinedClassName} style={style} aria-label={navLabel}>
+    <nav
+      className={combinedClassName}
+      style={style}
+      aria-label={navLabel}
+      data-canopy-content-nav="true"
+    >
+      <button
+        type="button"
+        className="canopy-content-navigation__toggle"
+        aria-expanded="false"
+        aria-label="Show section navigation"
+        title="Show section navigation"
+        data-canopy-content-nav-toggle="true"
+        data-show-label="Show"
+        data-hide-label="Hide"
+        data-show-full-label="Show section navigation"
+        data-hide-full-label="Hide section navigation"
+      >
+        Show
+      </button>
       <ul className="canopy-sub-navigation__list" role="list">
         {topLink || nestedItems}
       </ul>

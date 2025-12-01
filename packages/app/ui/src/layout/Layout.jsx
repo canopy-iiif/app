@@ -41,6 +41,108 @@ function buildNavigationAside(sidebar, className) {
   return sidebar;
 }
 
+function ContentNavigationScript() {
+  const code = `
+(function () {
+  if (typeof window === 'undefined') return;
+  if (window.__CANOPY_CONTENT_NAV_READY__) return;
+  window.__CANOPY_CONTENT_NAV_READY__ = true;
+  var STORAGE_KEY = 'canopy_content_nav_collapsed';
+  var storage = null;
+  try {
+    storage = window.localStorage;
+  } catch (error) {
+    storage = null;
+  }
+
+  function setStored(value) {
+    if (!storage) return;
+    try {
+      if (value == null) {
+        storage.removeItem(STORAGE_KEY);
+      } else {
+        storage.setItem(STORAGE_KEY, value);
+      }
+    } catch (error) {}
+  }
+
+  function getStored() {
+    if (!storage) return null;
+    try {
+      return storage.getItem(STORAGE_KEY);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function ready(fn) {
+    if (!fn) return;
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', fn, { once: true });
+    } else {
+      fn();
+    }
+  }
+
+  function applyState(root, collapsed) {
+    if (!root) return;
+    var isCollapsed = !!collapsed;
+    root.classList.toggle('is-collapsed', isCollapsed);
+    var layout = root.closest('.canopy-layout');
+    if (layout) layout.classList.toggle('canopy-layout--content-nav-collapsed', isCollapsed);
+    var nav = root.querySelector('[data-canopy-content-nav]');
+    if (nav) nav.classList.toggle('canopy-content-navigation--collapsed', isCollapsed);
+    var toggle = root.querySelector('[data-canopy-content-nav-toggle]');
+    if (toggle) {
+      var showLabel = toggle.getAttribute('data-show-label') || 'Show';
+      var hideLabel = toggle.getAttribute('data-hide-label') || 'Hide';
+      var showFull = toggle.getAttribute('data-show-full-label') || 'Show section navigation';
+      var hideFull = toggle.getAttribute('data-hide-full-label') || 'Hide section navigation';
+      toggle.textContent = isCollapsed ? showLabel : hideLabel;
+      toggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+      toggle.setAttribute('aria-label', isCollapsed ? showFull : hideFull);
+      toggle.setAttribute('title', isCollapsed ? showFull : hideFull);
+    }
+  }
+
+  ready(function () {
+    var roots = Array.prototype.slice.call(
+      document.querySelectorAll('[data-canopy-content-nav-root]')
+    );
+    if (!roots.length) return;
+    var stored = getStored();
+    var collapsed = true;
+    if (stored === '0' || stored === 'false') {
+      collapsed = false;
+    } else if (stored === '1' || stored === 'true') {
+      collapsed = true;
+    }
+
+    function sync(next) {
+      collapsed = !!next;
+      roots.forEach(function (root) {
+        applyState(root, collapsed);
+      });
+      setStored(collapsed ? '1' : '0');
+    }
+
+    sync(collapsed);
+
+    roots.forEach(function (root) {
+      var toggle = root.querySelector('[data-canopy-content-nav-toggle]');
+      if (!toggle) return;
+      toggle.addEventListener('click', function (event) {
+        event.preventDefault();
+        sync(!collapsed);
+      });
+    });
+  });
+})();
+  `;
+
+  return <script dangerouslySetInnerHTML={{ __html: code }} />;
+}
+
 export default function Layout({
   children,
   sidebar,
@@ -91,8 +193,10 @@ export default function Layout({
     const classes = ["canopy-layout"];
     classes.push(fluid ? "canopy-layout--fluid" : "canopy-layout--fixed");
     if (showLeftColumn) classes.push("canopy-layout--with-sidebar");
-    if (hasContentNavigation)
+    if (hasContentNavigation) {
       classes.push("canopy-layout--with-content-nav");
+      classes.push("canopy-layout--content-nav-collapsed");
+    }
     if (className) classes.push(className);
     return classes.join(" ");
   })();
@@ -107,6 +211,7 @@ export default function Layout({
 
   const contentNavigationAsideClassName = [
     "canopy-layout__content-nav",
+    "is-collapsed",
     contentNavigationClassName,
   ]
     .filter(Boolean)
@@ -123,14 +228,22 @@ export default function Layout({
       ) : null}
       <div className={contentClassNames}>{children}</div>
       {hasContentNavigation ? (
-        <aside className={contentNavigationAsideClassName}>
-          <ContentNavigation
-            items={headingTree}
-            heading={contentHeading || undefined}
-            headingId={headingAnchorId || undefined}
-            pageTitle={context && context.page ? context.page.title : undefined}
-          />
-        </aside>
+        <>
+          <aside
+            className={contentNavigationAsideClassName}
+            data-canopy-content-nav-root="true"
+          >
+            <ContentNavigation
+              items={headingTree}
+              heading={contentHeading || undefined}
+              headingId={headingAnchorId || undefined}
+              pageTitle={
+                context && context.page ? context.page.title : undefined
+              }
+            />
+          </aside>
+          <ContentNavigationScript />
+        </>
       ) : null}
     </div>
   );
