@@ -1,9 +1,14 @@
 import React from 'react';
 
 const SCROLL_OFFSET_REM = 1.618;
+const MAX_HEADING_DEPTH = 3;
 
 function depthIndex(depth) {
   return Math.max(0, Math.min(5, (depth || 1) - 1));
+}
+
+function resolveDepth(value, fallback = 1) {
+  return Math.max(1, typeof value === 'number' ? value : fallback);
 }
 
 export default function ContentNavigation({
@@ -54,7 +59,11 @@ export default function ContentNavigation({
         const id = String(node.id);
         if (seen.has(id)) return;
         seen.add(id);
-        const depth = node.depth || node.level || getSavedDepth(id, 2);
+        const depth = resolveDepth(
+          typeof node.depth === 'number' ? node.depth : node.level,
+          getSavedDepth(id, 2)
+        );
+        if (depth > MAX_HEADING_DEPTH) return;
         entries.push({ id, depth });
         if (node.children && node.children.length) pushNodes(node.children);
       });
@@ -183,9 +192,14 @@ export default function ContentNavigation({
       return nodes.map((node) => {
         if (!node) return null;
         const id = node.id ? String(node.id) : '';
-        const depth = node.depth || node.level || getSavedDepth(id, 2);
+        const depth = resolveDepth(
+          typeof node.depth === 'number' ? node.depth : node.level,
+          getSavedDepth(id, 2)
+        );
+        if (depth > MAX_HEADING_DEPTH) return null;
         const idx = depthIndex(depth);
         const isActive = id && activeId === id;
+        const childNodes = depth < MAX_HEADING_DEPTH ? renderNodes(node.children) : null;
         return (
           <li key={id || node.title} className="canopy-sub-navigation__item" data-depth={idx}>
             <a
@@ -196,12 +210,12 @@ export default function ContentNavigation({
             >
               {node.title}
             </a>
-            {node.children && node.children.length ? (
+            {childNodes ? (
               <ul
                 className="canopy-sub-navigation__list canopy-sub-navigation__list--nested"
                 role="list"
               >
-                {renderNodes(node.children)}
+                {childNodes}
               </ul>
             ) : null}
           </li>

@@ -4,7 +4,7 @@
 
 .canopy-sub-navigation__heading {
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.618rem;
 }
 
 .canopy-sub-navigation__list {
@@ -21,8 +21,8 @@
 
 .canopy-sub-navigation__link {
   display: block;
-  padding: 0.35rem 0.5rem;
-  border-radius: 0.375rem;
+  padding: 0.382rem 0.618;
+  border-radius: 0.382rem;
   color: inherit;
   text-decoration: none;
   cursor: pointer;
@@ -37,40 +37,26 @@
 
 .canopy-sub-navigation__link.is-label {
   cursor: default;
-  color: var(--color-gray-600, #52525b);
+  color: var(--color-gray-600);
 }
 
 .canopy-sub-navigation__link.is-active {
-  color: var(--color-gray-900, #1d4ed8);
+  color: var(--color-gray-900);
   font-weight: 600;
 }
 
 .canopy-sub-navigation__list--nested {
-  margin: 0.35rem 0 0.35rem 0.5rem;
-  padding-left: 0.5rem;
-  border-left: 1px solid var(--color-gray-100, #e4e4e7);
+  margin: 0.382rem 0 0.382rem 0.618rem;
+  padding-left: 0.618rem;
+  border-left: 1px solid var(--color-gray-200);
 }
 
 .canopy-sub-navigation__link.depth-0 {
-  padding-left: 0.25rem;
+  padding-left: 0.382rem;
 }
 
-.canopy-sub-navigation__link.depth-1 {
-  padding-left: calc(0.25rem);
-}
-
+.canopy-sub-navigation__link.depth-1,
 .canopy-sub-navigation__link.depth-2 {
-  padding-left: calc(0.25rem * 2);
-}
-
-.canopy-sub-navigation__link.depth-3 {
-  padding-left: calc(0.25rem * 3);
-}
-
-.canopy-sub-navigation__link.depth-4 {
-  padding-left: calc(0.25rem * 4);
-}
-
-.canopy-sub-navigation__link.depth-5 {
-  padding-left: calc(0.25rem * 5);
+  padding-left: calc(0.382rem);
+  font-size: 0.9222rem;
 }

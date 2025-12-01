@@ -1,8 +1,7 @@
 @layer components {
   .canopy-footer {
-    border-top: 1px solid var(--color-gray-200, #e2e8f0);
-    background: var(--color-gray-25, #f8fafc);
-    color: var(--color-gray-600, #475569);
+    border-top: 1px solid var(--color-gray-200);
+    color: var(--color-gray-500);
   }
 
   .canopy-footer__inner {

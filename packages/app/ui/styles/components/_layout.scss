@@ -1,43 +1,41 @@
-.getting-started-layout {
+.canopy-layout {
   display: grid;
   width: 100%;
-  padding: 0 1.5rem 3rem;
+  padding: 1.618rem;
   gap: clamp(1.5rem, 3vw, 3rem);
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
 }
 
-.getting-started-layout--fixed {
+.canopy-layout--fixed {
   margin-left: auto;
   margin-right: auto;
   max-width: 1280px;
 }
 
-.getting-started-layout--fluid {
+.canopy-layout--fluid {
   max-width: none;
 }
 
-.getting-started-layout__content {
+.canopy-layout__content {
   min-width: 0;
 }
 
-.getting-started-layout__sidebar,
-.getting-started-layout__content-nav {
+.canopy-layout__sidebar,
+.canopy-layout__content-nav {
   position: relative;
 }
 
 @media (min-width: 70rem) {
-  .getting-started-layout--with-sidebar {
+  .canopy-layout--with-sidebar {
     grid-template-columns: 16rem minmax(0, 1fr);
   }
 
-  .getting-started-layout--with-content-nav:not(
-      .getting-started-layout--with-sidebar
-    ) {
+  .canopy-layout--with-content-nav:not(.canopy-layout--with-sidebar) {
     grid-template-columns: minmax(0, 1fr) 14rem;
   }
 
-  .getting-started-layout--with-sidebar.getting-started-layout--with-content-nav {
+  .canopy-layout--with-sidebar.canopy-layout--with-content-nav {
     grid-template-columns: 16rem minmax(0, 1fr) 14rem;
   }
 }

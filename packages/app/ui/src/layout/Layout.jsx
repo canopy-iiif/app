@@ -88,35 +88,25 @@ export default function Layout({
     headingTree.length > 0;
 
   const containerClassName = (() => {
-    const classes = ["getting-started-layout"];
-    classes.push(
-      fluid
-        ? "getting-started-layout--fluid"
-        : "getting-started-layout--fixed"
-    );
-    if (showLeftColumn) classes.push("getting-started-layout--with-sidebar");
+    const classes = ["canopy-layout"];
+    classes.push(fluid ? "canopy-layout--fluid" : "canopy-layout--fixed");
+    if (showLeftColumn) classes.push("canopy-layout--with-sidebar");
     if (hasContentNavigation)
-      classes.push("getting-started-layout--with-content-nav");
+      classes.push("canopy-layout--with-content-nav");
     if (className) classes.push(className);
     return classes.join(" ");
   })();
 
-  const leftAsideClassName = [
-    "getting-started-layout__sidebar",
-    sidebarClassName,
-  ]
+  const leftAsideClassName = ["canopy-layout__sidebar", sidebarClassName]
     .filter(Boolean)
     .join(" ");
 
-  const contentClassNames = [
-    "getting-started-layout__content",
-    contentClassName,
-  ]
+  const contentClassNames = ["canopy-layout__content", contentClassName]
     .filter(Boolean)
     .join(" ");
 
   const contentNavigationAsideClassName = [
-    "getting-started-layout__content-nav",
+    "canopy-layout__content-nav",
     contentNavigationClassName,
   ]
     .filter(Boolean)

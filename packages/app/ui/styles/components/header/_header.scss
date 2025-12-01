@@ -3,8 +3,8 @@
     position: relative;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
+    gap: 1.618rem;
+    padding: 1rem 1.618rem;
     background: trabsparent;
     z-index: 1;
   }
@@ -68,6 +68,10 @@
     gap: 0.5rem;
     margin-left: auto;
     flex: 0 0 auto;
+  }
+
+  .canopy-header__actions:empty {
+    display: none;
   }
 
   .canopy-header__icon-button {
@@ -134,10 +138,6 @@
   }
 
   @media (min-width: 48rem) {
-    .canopy-header {
-      gap: 1.25rem;
-    }
-
     .canopy-header__menu {
       display: none;
     }
@@ -148,12 +148,10 @@
 
     .canopy-header__desktop-nav {
       display: flex;
-      margin-left: 1.5rem;
     }
 
     .canopy-header__actions {
-      margin-left: auto;
-      gap: 0.75rem;
+      display: none;
     }
 
     .canopy-header__search-trigger {
