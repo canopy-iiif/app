@@ -19,6 +19,8 @@ Invariants
 - Any script that mutates the filesystem must log its intent and respect workspace boundaries.
 - Template builds omit this workspace entirely; whenever helpers change behaviour that affects release automation, document the expected template output (e.g., updated `package.json` rewrites, workflow patches).
 - Template staging writes to `.template-build/` by default (override with `TEMPLATE_OUT_DIR`); keep this path gitignored and disposable.
+- CSS/Sass authored under `packages/app/ui/styles` must never include fallbacks inside `var()` declarations—always rely on the CSS custom property being defined upstream.
+- When authoring CSS/Sass in `packages/app/ui/styles`, never add fallback values to CSS variable references (`var(--token)` only—no `, value`).
 
 Active Cleanup Goals
 --------------------

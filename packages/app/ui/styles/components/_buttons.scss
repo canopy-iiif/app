@@ -16,23 +16,23 @@
       box-shadow 0.2s ease;
 
     &--primary {
-      background-color: var(--color-brand-default, #4f46e5);
-      color: var(--color-gray-50, #f9fafb);
+      background-color: var(--color-brand-default);
+      color: var(--color-gray-50);
       box-shadow: 0 18px 32px -22px rgba(15, 23, 42, 0.55);
 
       &:hover,
       &:focus-visible {
-        background-color: var(--color-brand-800, #4338ca);
-        color: var(--color-gray-50, #f9fafb);
+        background-color: var(--color-brand-800);
+        color: var(--color-gray-50);
       }
     }
 
     &--secondary {
       border: 1px solid
-        color-mix(in srgb, var(--color-gray-400, #94a3b8) 60%, transparent);
+        color-mix(in srgb, var(--color-gray-400) 60%, transparent);
       color: color-mix(
         in srgb,
-        var(--color-gray-900, #0f172a) 92%,
+        var(--color-gray-900) 92%,
         transparent
       );
       background-color: var(--color-gray-50);
@@ -41,15 +41,15 @@
       &:focus-visible {
         border-color: color-mix(
           in srgb,
-          var(--color-brand-400, #818cf8) 65%,
+          var(--color-brand-400) 65%,
           transparent
         );
         background-color: color-mix(
           in srgb,
-          var(--color-brand-200, #c7d2fe) 25%,
+          var(--color-brand-200) 25%,
           transparent
         );
-        color: var(--color-brand-700, #4338ca);
+        color: var(--color-brand-700);
       }
     }
   }

@@ -294,10 +294,10 @@
     height: 2.75rem;
     border-radius: 9999px;
     border: 1px solid
-      color-mix(in srgb, var(--color-gray-400, #94a3b8) 55%, transparent);
+      color-mix(in srgb, var(--color-gray-400) 55%, transparent);
     background-color: color-mix(
       in srgb,
-      var(--color-gray-100, #f1f5f9) 65%,
+      var(--color-gray-100) 65%,
       transparent
     );
     backdrop-filter: blur(6px);
@@ -341,10 +341,10 @@
       );
       border-color: color-mix(
         in srgb,
-        var(--color-brand-400, #818cf8) 70%,
+        var(--color-brand-400) 70%,
         transparent
       );
-      color: var(--color-brand-700, #4338ca);
+      color: var(--color-brand-700);
     }
   }
 

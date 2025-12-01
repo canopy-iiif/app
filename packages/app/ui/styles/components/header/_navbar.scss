@@ -7,7 +7,7 @@
   }
 
   .canopy-nav-links a {
-    color: var(--color-gray-900, #0f172a);
+    color: var(--color-gray-900);
     font-weight: 500;
     text-decoration: none;
     padding: 0.25rem 0;
@@ -16,7 +16,7 @@
 
   .canopy-nav-links a:hover,
   .canopy-nav-links a:focus-visible {
-    color: var(--color-brand-default, #3e63dd);
+    color: var(--color-brand-default);
     outline: none;
   }
 

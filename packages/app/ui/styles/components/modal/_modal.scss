@@ -24,7 +24,7 @@
     width: min(100%, 38rem);
     max-width: 38rem;
     max-height: min(90vh, 640px);
-    background: var(--color-gray-50, #f8fafc);
+    background: var(--color-gray-50);
     border-radius: 1rem;
     box-shadow: 0 28px 60px -24px rgba(15, 23, 42, 0.65);
     overflow: hidden;
@@ -56,7 +56,7 @@
     margin: 0 0 1rem;
     font-size: 1.25rem;
     font-weight: 600;
-    color: var(--color-gray-900, #0f172a);
+    color: var(--color-gray-900);
   }
 
   .canopy-modal__close {
@@ -69,9 +69,9 @@
     width: 2.5rem;
     height: 2.5rem;
     border-radius: 9999px;
-    border: 1px solid var(--color-gray-200, #e2e8f0);
+    border: 1px solid var(--color-gray-200);
     background: rgba(255, 255, 255, 0.92);
-    color: var(--color-gray-700, #334155);
+    color: var(--color-gray-700);
     cursor: pointer;
     transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
   }
@@ -79,7 +79,7 @@
   .canopy-modal__close:hover,
   .canopy-modal__close:focus-visible {
     background: rgba(248, 250, 252, 1);
-    color: var(--color-gray-900, #0f172a);
+    color: var(--color-gray-900);
     outline: none;
   }
 

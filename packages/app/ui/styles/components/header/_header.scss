@@ -24,9 +24,9 @@
     width: 2.5rem;
     height: 2.5rem;
     border-radius: 0.75rem;
-    border: 1px solid var(--color-gray-200, #e2e8f0);
+    border: 1px solid var(--color-gray-200);
     background: rgba(255, 255, 255, 0.8);
-    color: var(--color-gray-800, #1f2937);
+    color: var(--color-gray-800);
     transition:
       background 150ms ease,
       color 150ms ease,
@@ -36,7 +36,7 @@
   .canopy-header__menu:hover,
   .canopy-header__menu:focus-visible {
     background: rgba(255, 255, 255, 0.95);
-    color: var(--color-gray-900, #0f172a);
+    color: var(--color-gray-900);
     outline: none;
   }
 
@@ -81,9 +81,9 @@
     width: 2.5rem;
     height: 2.5rem;
     border-radius: 0.75rem;
-    border: 1px solid var(--color-gray-200, #e2e8f0);
+    border: 1px solid var(--color-gray-200);
     background: rgba(255, 255, 255, 0.8);
-    color: var(--color-gray-800, #1f2937);
+    color: var(--color-gray-800);
     transition:
       background 150ms ease,
       color 150ms ease,
@@ -93,7 +93,7 @@
   .canopy-header__icon-button:hover,
   .canopy-header__icon-button:focus-visible {
     background: rgba(255, 255, 255, 1);
-    color: var(--color-gray-900, #0f172a);
+    color: var(--color-gray-900);
     outline: none;
   }
 

@@ -74,7 +74,7 @@
   gap: 0.25rem;
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
-  border: 1px solid var(--color-gray-200, #e4e4e7);
+  border: 1px solid var(--color-gray-200);
   background-color: rgba(255, 255, 255, 0.9);
   color: inherit;
   font-size: 0.75rem;
@@ -90,9 +90,9 @@
 .canopy-content-navigation__toggle:hover,
 .canopy-content-navigation__toggle:focus-visible {
   background-color: rgba(255, 255, 255, 1);
-  border-color: var(--color-gray-300, #d4d4d8);
+  border-color: var(--color-gray-300);
   outline: none;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-brand-200, #c7d2fe) 60%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-brand-200) 60%, transparent);
 }
 
 .canopy-layout__content-nav.is-collapsed .canopy-content-navigation {

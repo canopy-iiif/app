@@ -2,7 +2,7 @@
   .canopy-modal--filters .canopy-modal__panel {
     width: min(100%, 48rem);
     max-height: min(90vh, 720px);
-    background: var(--color-gray-100, #ffffff);
+    background: var(--color-gray-100);
   }
 
   .canopy-modal--filters .canopy-modal__body--filters {
@@ -14,9 +14,9 @@
 
   .canopy-search-filters__subtitle {
     margin: 0 0 0.75rem;
-    font-size: var(--font-size-sm, 0.875rem);
-    line-height: var(--line-height-sm, 1.25rem);
-    color: var(--color-gray-500, #8b8d98);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-sm);
+    color: var(--color-gray-500);
   }
 
   .canopy-search-filters__body {
@@ -31,19 +31,19 @@
   }
 
   .canopy-search-filters__empty {
-    font-size: var(--font-size-sm, 0.875rem);
-    line-height: var(--line-height-sm, 1.25rem);
-    color: var(--color-gray-500, #8b8d98);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-sm);
+    color: var(--color-gray-500);
   }
 
   .canopy-search-filters__facet {
-    border: 1px solid var(--color-gray-200, #e0e1e6);
+    border: 1px solid var(--color-gray-200);
     border-radius: 0.75rem;
-    background: var(--color-gray-50, #fcfcfd);
+    background: var(--color-gray-50);
     overflow: hidden;
 
     &[open] {
-      background: var(--color-gray-100, #ffffff);
+      background: var(--color-gray-100);
     }
   }
 
@@ -53,9 +53,9 @@
     justify-content: space-between;
     gap: 0.75rem;
     padding: 0.75rem 1rem;
-    font-size: var(--font-size-sm, 0.875rem);
+    font-size: var(--font-size-sm);
     font-weight: 600;
-    color: var(--color-gray-900, #121418);
+    color: var(--color-gray-900);
     cursor: pointer;
     list-style: none;
   }
@@ -65,14 +65,14 @@
   }
 
   .canopy-search-filters__facet-count {
-    font-size: var(--font-size-xs, 0.75rem);
+    font-size: var(--font-size-xs);
     font-weight: 400;
-    color: var(--color-gray-500, #8b8d98);
+    color: var(--color-gray-500);
   }
 
   .canopy-search-filters__facet-content {
-    border-top: 1px solid var(--color-gray-200, #e0e1e6);
-    background: var(--color-gray-100, #ffffff);
+    border-top: 1px solid var(--color-gray-200);
+    background: var(--color-gray-100);
     padding: 1rem;
     max-height: 15rem;
     overflow-y: auto;
@@ -89,33 +89,33 @@
     flex: 1;
     min-width: 0;
     border-radius: 0.5rem;
-    border: 1px solid var(--color-gray-300, #cdced6);
+    border: 1px solid var(--color-gray-300);
     padding: 0.375rem 0.75rem;
-    font-size: var(--font-size-sm, 0.875rem);
-    color: var(--color-gray-700, #60646c);
-    transition: border-color var(--duration-fast, 150ms) var(--easing-standard, ease),
-      box-shadow var(--duration-fast, 150ms) var(--easing-standard, ease);
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-700);
+    transition: border-color var(--duration-fast) var(--easing-standard),
+      box-shadow var(--duration-fast) var(--easing-standard);
 
     &:focus {
       outline: none;
-      border-color: var(--color-brand-500, #3e63dd);
-      box-shadow: 0 0 0 1px var(--color-brand-500, #3e63dd);
+      border-color: var(--color-brand-500);
+      box-shadow: 0 0 0 1px var(--color-brand-500);
     }
   }
 
   .canopy-search-filters__quick-clear {
     border-radius: 0.375rem;
-    border: 1px solid var(--color-gray-200, #e0e1e6);
+    border: 1px solid var(--color-gray-200);
     padding: 0.25rem 0.5rem;
-    font-size: var(--font-size-xs, 0.75rem);
-    color: var(--color-gray-600, #80838d);
-    background: var(--color-gray-100, #ffffff);
-    transition: background-color var(--duration-fast, 150ms) var(--easing-standard, ease),
-      color var(--duration-fast, 150ms) var(--easing-standard, ease);
+    font-size: var(--font-size-xs);
+    color: var(--color-gray-600);
+    background: var(--color-gray-100);
+    transition: background-color var(--duration-fast) var(--easing-standard),
+      color var(--duration-fast) var(--easing-standard);
 
     &:hover {
-      background: var(--color-gray-100, #f0f0f3);
-      color: var(--color-gray-900, #121418);
+      background: var(--color-gray-100);
+      color: var(--color-gray-900);
     }
   }
 
@@ -126,8 +126,8 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    font-size: var(--font-size-sm, 0.875rem);
-    color: var(--color-gray-700, #60646c);
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-700);
   }
 
   .canopy-search-filters__facet-item {
@@ -141,9 +141,9 @@
     width: 1rem;
     height: 1rem;
     border-radius: 0.375rem;
-    border: 1px solid var(--color-gray-300, #cdced6);
-    color: var(--color-brand-500, #3e63dd);
-    accent-color: var(--color-brand-500, #3e63dd);
+    border: 1px solid var(--color-gray-300);
+    color: var(--color-brand-500);
+    accent-color: var(--color-brand-500);
   }
 
   .canopy-search-filters__facet-label {
@@ -154,8 +154,8 @@
   }
 
   .canopy-search-filters__facet-empty {
-    font-size: var(--font-size-sm, 0.875rem);
-    color: var(--color-gray-500, #8b8d98);
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-500);
   }
 
   .canopy-search-filters__footer {
@@ -164,7 +164,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-    border-top: 1px solid var(--color-gray-200, #e0e1e6);
+    border-top: 1px solid var(--color-gray-200);
     padding-top: 1.25rem;
   }
 
@@ -177,35 +177,35 @@
   .canopy-search-filters__button {
     border-radius: 9999px;
     padding: 0.5rem 1.25rem;
-    font-size: var(--font-size-sm, 0.875rem);
+    font-size: var(--font-size-sm);
     font-weight: 600;
     cursor: pointer;
-    transition: background-color var(--duration-fast, 150ms) var(--easing-standard, ease),
-      color var(--duration-fast, 150ms) var(--easing-standard, ease);
+    transition: background-color var(--duration-fast) var(--easing-standard),
+      color var(--duration-fast) var(--easing-standard);
   }
 
   .canopy-search-filters__button--secondary {
-    border: 1px solid var(--color-gray-300, #cdced6);
+    border: 1px solid var(--color-gray-300);
     background: transparent;
-    color: var(--color-gray-700, #60646c);
+    color: var(--color-gray-700);
   }
 
   .canopy-search-filters__button--secondary:hover,
   .canopy-search-filters__button--secondary:focus-visible {
-    background: var(--color-gray-100, #f0f0f3);
-    color: var(--color-gray-900, #121418);
+    background: var(--color-gray-100);
+    color: var(--color-gray-900);
     outline: none;
   }
 
   .canopy-search-filters__button--primary {
     border: none;
-    background: var(--color-brand-600, #3e63dd);
-    color: var(--color-gray-50, #f9fafb);
+    background: var(--color-brand-600);
+    color: var(--color-gray-50);
   }
 
   .canopy-search-filters__button--primary:hover,
   .canopy-search-filters__button--primary:focus-visible {
-    background: var(--color-brand-700, #3358d4);
+    background: var(--color-brand-700);
     outline: none;
   }
 

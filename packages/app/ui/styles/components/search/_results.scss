@@ -40,9 +40,9 @@
     align-items: center;
     gap: 0.25rem;
     padding: 0.25rem 0.5rem;
-    border: 1px solid var(--color-gray-200, #e5e7eb);
-    color: var(--color-gray-700, #374151);
-    background: var(--color-gray-100, #ffffff);
+    border: 1px solid var(--color-gray-200);
+    color: var(--color-gray-700);
+    background: var(--color-gray-100);
     border-radius: 6px;
     cursor: pointer;
   }
@@ -60,7 +60,7 @@
 
   .canopy-search-form-modal__panel {
     position: relative;
-    background: var(--color-gray-100, #ffffff);
+    background: var(--color-gray-100);
     min-width: 320px;
     max-width: 720px;
     width: 90%;
@@ -83,8 +83,8 @@
     position: absolute;
     top: 8px;
     right: 8px;
-    border: 1px solid var(--color-gray-200, #e5e7eb);
-    background: var(--color-gray-100, #ffffff);
+    border: 1px solid var(--color-gray-200);
+    background: var(--color-gray-100);
     border-radius: 6px;
     padding: 2px 6px;
     cursor: pointer;
@@ -92,13 +92,13 @@
 
   .canopy-search-form-modal__inputWrap {
     padding: 10px 12px;
-    border-bottom: 1px solid var(--color-gray-200, #e5e7eb);
+    border-bottom: 1px solid var(--color-gray-200);
   }
 
   .canopy-search-form-modal__input {
     width: 100%;
     padding: 8px 10px;
-    border: 1px solid var(--color-gray-200, #e5e7eb);
+    border: 1px solid var(--color-gray-200);
     border-radius: 6px;
     outline: none;
   }
@@ -123,9 +123,9 @@
   }
 
   .canopy-search-form-modal__title {
-    font-size: var(--font-size-sm, 0.875rem);
-    line-height: var(--line-height-sm, 1.25rem);
-    color: var(--color-gray-900, #121418);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-sm);
+    color: var(--color-gray-900);
     font-weight: 500;
   }
 }
@@ -139,8 +139,8 @@
   left: 0;
   right: 0;
   top: calc(100% + 4px);
-  background: var(--color-gray-100, #ffffff);
-  border: 1px solid var(--color-gray-200, #e5e7eb);
+  background: var(--color-gray-100);
+  border: 1px solid var(--color-gray-200);
   border-radius: 8px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
   z-index: 1000;
