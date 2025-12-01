@@ -13,7 +13,7 @@
 }
 
 @utility max-w-content {
-  max-width: 1080px;
+  max-width: 800px; /* Adjust as needed */
 }
 
 @layer base {
