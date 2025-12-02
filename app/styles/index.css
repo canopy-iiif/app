@@ -2,14 +2,11 @@
 @import "@canopy-iiif/app/ui/styles/index.css";
 @import "./custom.css";
 
-@layer theme {
-  :root,
-  :host {
-    --font-sans: system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
-    --font-serif: "Fraunces", Georgia, "Times New Roman", serif;
-    --font-mono: "ui-monospace", Menlo, Consolas, monospace;
-    --default-font-family: var(--font-serif);
-  }
+@theme {
+  --font-sans: system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-mono: "ui-monospace", Menlo, Consolas, monospace;
+  --default-font-family: var(--font-serif);
 }
 
 @utility max-w-content {
@@ -18,7 +15,7 @@
 
 @layer base {
   html {
-    font-size: 105%;
+    font-size: 110%;
     font-weight: 300;
   }
 
@@ -29,6 +26,8 @@
 
   h1,
   h2,
+  h3,
+  h4,
   .canopy-logo {
     font-family: var(--font-serif);
     font-weight: 600;

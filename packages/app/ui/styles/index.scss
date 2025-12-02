@@ -1,2 +1,10 @@
+/**
+ * Main stylesheet for the @canopy-iiif/app/ui package
+ */
 @use "./base";
 @use "./components";
+
+/**
+ * Define source files for utility classes
+ */
+@source "../dist";
