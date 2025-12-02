@@ -1,10 +1,23 @@
 import React from 'react';
 
-export default function ButtonWrapper({ className = '', children, ...rest }) {
-  const classes = ['canopy-button-group', className].filter(Boolean).join(' ');
+export default function ButtonWrapper({
+  className = '',
+  children,
+  text = '',
+  variant = 'default',
+  ...rest
+}) {
+  const variantClass =
+    variant && variant !== 'default'
+      ? `canopy-button-group--${variant}`
+      : '';
+  const classes = ['canopy-button-group', variantClass, className]
+    .filter(Boolean)
+    .join(' ');
   return (
     <div className={classes} {...rest}>
-      {children}
+      {text && <span className="canopy-button-group__text">{text}</span>}
+      <div className="canopy-button-group__actions">{children}</div>
     </div>
   );
 }

@@ -6,8 +6,8 @@
     gap: 0.35rem;
     padding: 0.55rem 1.4rem;
     border-radius: 9999px;
-    font-size: 0.9375rem;
-    font-weight: 600;
+    font-size: 0.9222rem;
+    font-weight: 300;
     text-decoration: none;
     transition:
       background-color 0.2s ease,
@@ -29,12 +29,8 @@
 
     &--secondary {
       border: 1px solid
-        color-mix(in srgb, var(--color-gray-400) 60%, transparent);
-      color: color-mix(
-        in srgb,
-        var(--color-gray-900) 92%,
-        transparent
-      );
+        color-mix(in srgb, var(--color-gray-300) 60%, transparent);
+      color: color-mix(in srgb, var(--color-gray-900) 92%, transparent);
       background-color: var(--color-gray-50);
 
       &:hover,
@@ -56,9 +52,45 @@
 
   .canopy-button-group {
     display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .canopy-button-group__text {
+    font-size: 1.38rem;
+    font-weight: 600;
+    color: var(--color-gray-900);
+    margin-bottom: 1rem;
+    letter-spacing: -0.0125em;
+  }
+
+  .canopy-button-group__actions {
+    display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.75rem;
     padding: 1rem 0;
+    width: 100%;
+  }
+
+  .canopy-button-group--interstitial {
+    width: 100%;
+    align-items: center;
+    text-align: center;
+    padding: clamp(2rem, 4vw, 3rem) clamp(1.25rem, 4vw, 4rem);
+    margin: 2rem 0;
+    border-radius: 1.25rem;
+    background: linear-gradient(
+      173deg,
+      transparent 0%,
+      var(--color-brand-200) 100%
+    );
+  }
+
+  .canopy-button-group--interstitial .canopy-button-group__actions {
+    justify-content: center;
+    padding: 0;
+    gap: 1rem;
   }
 }

@@ -6,13 +6,20 @@ image: https://iiif.dc.library.northwestern.edu/iiif/3/138a94b0-175a-4152-98c7-d
 
 # About
 
-Using a single [IIIF Presentation Collection](https://iiif.io/api/presentation/3.0/#overview-collection) as a data source, Canopy IIIF (Canopy) generates a browseable, searchable, customizable, and contextually-driven static site using Next.js without duplicating content.
+Using a single [IIIF Presentation Collection](https://iiif.io/api/presentation/3.0/#overview-collection) as a data source, Canopy IIIF (Canopy) generates a scholarly digital projects platform that transforms digital collections into an accessible, discoverable research environment. Built on modern web standards and leveraging the interoperability of IIIF, Canopy creates static sites that preserve the integrity of your metadata while providing advanced search capabilities, contextual navigation, and customizable presentation layers—all without requiring content duplication or vendor lock-in.
+
+<ButtonWrapper variant="interstitial" text="Have an idea for a project?">
+  <Button href="/docs/getting-started" label="Get started" />
+  <Button href="/docs" label="Read documentation" variant="secondary" />
+</ButtonWrapper>
+
+[Documentation](https://canopy-iiif.github.io/app/docs/) is integrated into the application and serves as both a development guide and a demonstration of Canopy's potential for digital scholarship and humanities projects. To highlight what Canopy can do, this paragraph is authored in markdown from [a simple text file](https://github.com/canopy-iiif/template/blob/main/content/about/index.mdx?plain=1) and below is an example of an `<Image>` component rendering a IIIF image resource along with an inline annotation and caption. This same image is provided by Northwestern University Libraries as a [IIIF Manifest](https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif) from their [Digital Collections platform](https://dc.library.northwestern.edu/items/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778) and [aggregated into this project](https://canopy-iiif.github.io/app/works/the-town-and-pass-of-boondi-in-rajpootana.html) as a static page during the Canopy build process.
 
 <Image
   src="https://iiif.dc.library.northwestern.edu/iiif/3/138a94b0-175a-4152-98c7-df58661ce7d5"
   isTiledImage={true}
-  alt="Canopy IIIF example screenshot"
-  caption="Canopy IIIF example screenshot"
+  alt="Painting of the The town & pass of Boondi, in Rajpootana"
+  caption="The town & pass of Boondi, in Rajpootana - Situated on a southern slope of a hill at the end of a long range, the town of Boondi was the capital of the Rajput principality of that name. The palace of the Raja is a large masonry stone building about half way up the hill, according to Grindlay, with a kind of fortification extending to the top."
   annotations={[
         {
           annotation: {
@@ -48,16 +55,6 @@ Using a single [IIIF Presentation Collection](https://iiif.io/api/presentation/3
 
 Canopy _“makes easy”_ the creation of digital exhibits for libraries, archives, and museums by providing user-experience focused components that bring IIIF resources to life. For digital humanists and scholars, Canopy provides a straightforward method to curate works from multiple sources and provide additional perspectives and aboutness beyond the included descriptive metadata. The decentralized, interoperable, and linked-data attributes of the IIIF APIs empower Canopy to provide smaller institutions with a streamlined front-end platform, neatly sidestepping the monolithic complexities often associated with conventional digital asset management systems.
 
-## Features
-
-- **easy [Markdown authoring](/about/example)** for scholarly content
-- static page generation for each Manifest in a Collection
-- customizable **full-text search** index using FlexSearch
-- automatically generated facets based on Manifest metadata
-- reusable components based on IIIF content
-
 ## Colophon
 
-Canopy IIIF was created by Mat Jordan (Northwestern University) and Mark Baggett (Texas A&M University) as means to build exhibit style digital humanities projects that extend existing digital collections using IIIF Collections and Manifests. The project name "Canopy" is inspired by the presentation, [A Tree's Strength Is Its Trunk: IIIF as Central Operational Infrastructure](https://www.cni.org/topics/standards/a-trees-strength-is-its-trunk-iiif-as-central-operational-infrastructure), delivered by M.A. Matienzo (UC Berkeley) and Esmé Cowles (Princeton University Library) at the CNI Fall 2020 Virtual Membership Meeting.
-
-Canopy IIIF uses [FlexSearch](https://github.com/nextapps-de/flexsearch) index for text search, [IIIF Presentation API 3.0](https://iiif.io/api/presentation/3.0/) delivering resource content, [Markdown as MDX](https://mdxjs.com/) for content, [TailwindCSS](https://tailwindcss.com/) used throughout for the user interface, and various community modules from [IIIF Commons](https://github.com/IIIF-Commons) and [Samvera](https://samvera.org/) supporting presentation and resource delivery.
+Canopy was created by Mat Jordan (Northwestern University) and Mark Baggett (Texas A&M University) as a means to build exhibit style digital humanities projects that extend existing digital collections using IIIF Collections and Manifests. Canopy uses [FlexSearch](https://github.com/nextapps-de/flexsearch) index for text search, [IIIF Presentation API 3.0](https://iiif.io/api/presentation/3.0/) delivering resource content, [Markdown as MDX](https://mdxjs.com/) for content, [TailwindCSS](https://tailwindcss.com/) used throughout for the user interface, and various community modules from [IIIF Commons](https://github.com/IIIF-Commons) and [Samvera](https://samvera.org/) supporting presentation and resource delivery.
