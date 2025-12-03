@@ -27,6 +27,6 @@ search:
         - commenting
         - tagging
 theme:
-  appearance: light
+  appearance: dark
   accentColor: gold
   grayColor: sand
