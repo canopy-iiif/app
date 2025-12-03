@@ -130,14 +130,15 @@ function toTailwindScale(name, options = {}) {
   const prefix = name;
   const scale = {};
   const darken900Amount = normalizeDarkenAmount(options.darken900Amount);
+  const steps = STEP_MAP;
   for (const lvl of LEVELS) {
-    const radixStep = STEP_MAP[lvl];
+    const radixStep = steps[lvl];
     const key = `${prefix}${radixStep}`;
     const value = palette[key];
     if (!value) return null;
     scale[lvl] = value;
   }
-  const darkestKey = `${prefix}${STEP_MAP["900"]}`;
+  const darkestKey = `${prefix}${steps["900"]}`;
   if (scale["800"] && palette[darkestKey]) {
     const amount = darken900Amount != null ? darken900Amount : 0.25;
     scale["900"] =

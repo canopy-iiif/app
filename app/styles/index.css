@@ -2,11 +2,14 @@
 @import "@canopy-iiif/app/ui/styles/index.css";
 @import "./custom.css";
 
-@theme {
-  --font-sans: system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
-  --font-serif: "Fraunces", Georgia, "Times New Roman", serif;
-  --font-mono: "ui-monospace", Menlo, Consolas, monospace;
-  --default-font-family: var(--font-serif);
+@layer properties {
+  :root,
+  :host {
+    --font-sans: system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+    --font-serif: "Fraunces", Georgia, "Times New Roman", serif;
+    --font-mono: "ui-monospace", Menlo, Consolas, monospace;
+    --default-font-family: var(--font-serif);
+  }
 }
 
 @utility max-w-content {

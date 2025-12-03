@@ -9,7 +9,7 @@ const {
   ASSETS_DIR,
   ensureDirSync,
 } = require("../common");
-function resolveTailwindCli() {
+  function resolveTailwindCli() {
   const bin = path.join(
     process.cwd(),
     "node_modules",
@@ -40,6 +40,14 @@ const HAS_APP_WORKSPACE = (() => {
     return false;
   }
 })();
+
+function stripTailwindThemeLayer(targetPath) {
+  try {
+    const raw = fs.readFileSync(targetPath, "utf8");
+    const cleaned = raw.replace(/@layer theme\{[\s\S]*?\}(?=@layer|$)/g, "");
+    if (cleaned !== raw) fs.writeFileSync(targetPath, cleaned, "utf8");
+  } catch (_) {}
+}
 let pendingModuleReload = false;
 let building = false;
 let buildAgain = false;
@@ -896,6 +904,7 @@ async function dev() {
       }
       throw new Error("[tailwind] Initial Tailwind build failed.");
     }
+    stripTailwindThemeLayer(outputCss);
     console.log(
       `[tailwind] initial build ok (${fileSizeKb(outputCss)} KB) →`,
       prettyPath(outputCss)
@@ -920,6 +929,7 @@ async function dev() {
       cssWatcherAttached = true;
       try {
         fs.watch(outputCss, { persistent: false }, () => {
+          stripTailwindThemeLayer(outputCss);
           if (!unmuted) {
             unmuted = true;
             console.log(
@@ -946,6 +956,7 @@ async function dev() {
         }
         throw new Error("[tailwind] On-demand Tailwind compile failed.");
       }
+      stripTailwindThemeLayer(outputCss);
       console.log(
         `[tailwind] compiled (${fileSizeKb(outputCss)} KB) →`,
         prettyPath(outputCss)

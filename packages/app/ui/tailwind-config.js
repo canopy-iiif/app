@@ -130,6 +130,8 @@ function defineCanopyTailwindConfig(metaUrlOrOptions, maybeOptions) {
     config.theme = mergeTheme(config.theme, theme);
   }
 
+  config.theme = mergeTheme(config.theme, {colors: {}});
+
   return config;
 }
 
