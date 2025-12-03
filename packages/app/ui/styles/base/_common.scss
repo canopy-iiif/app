@@ -23,7 +23,7 @@
 
   a {
     text-decoration: none;
-    color: var(--color-brand-default);
+    color: var(--color-accent-default);
 
     &:hover {
       text-decoration: underline;
@@ -38,6 +38,6 @@
   }
 
   ::selection {
-    background-color: var(--color-brand-200);
+    background-color: var(--color-accent-200);
   }
 }

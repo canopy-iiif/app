@@ -16,13 +16,13 @@
       box-shadow 0.2s ease;
 
     &--primary {
-      background-color: var(--color-brand-default);
+      background-color: var(--color-accent-default);
       color: var(--color-gray-50);
       box-shadow: 0 18px 32px -22px rgba(15, 23, 42, 0.55);
 
       &:hover,
       &:focus-visible {
-        background-color: var(--color-brand-800);
+        background-color: var(--color-accent-800);
         color: var(--color-gray-50);
       }
     }
@@ -37,15 +37,15 @@
       &:focus-visible {
         border-color: color-mix(
           in srgb,
-          var(--color-brand-400) 65%,
+          var(--color-accent-400) 65%,
           transparent
         );
         background-color: color-mix(
           in srgb,
-          var(--color-brand-200) 25%,
+          var(--color-accent-200) 25%,
           transparent
         );
-        color: var(--color-brand-700);
+        color: var(--color-accent-700);
       }
     }
   }
@@ -84,7 +84,7 @@
     background: linear-gradient(
       173deg,
       transparent 0%,
-      var(--color-brand-200) 100%
+      var(--color-accent-200) 100%
     );
   }
 

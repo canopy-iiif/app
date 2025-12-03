@@ -16,13 +16,13 @@
       display: block;
 
       circle.canopy-logo-backlight {
-        fill: var(--color-brand-900);
-        color: var(--color-brand-900);
+        fill: var(--color-accent-900);
+        color: var(--color-accent-900);
       }
 
       path.canopy-logo-overlay {
-        fill: var(--color-brand-default);
-        color: var(--color-brand-default);
+        fill: var(--color-accent-default);
+        color: var(--color-accent-default);
       }
     }
   }
@@ -30,13 +30,13 @@
   html.dark .canopy-logo {
     svg {
       circle.canopy-logo-backlight {
-        fill: var(--color-brand-200) !important;
-        color: var(--color-brand-200) !important;
+        fill: var(--color-accent-200) !important;
+        color: var(--color-accent-200) !important;
       }
 
       path.canopy-logo-overlay {
-        fill: var(--color-brand-500) !important;
-        color: var(--color-brand-500) !important;
+        fill: var(--color-accent-500) !important;
+        color: var(--color-accent-500) !important;
       }
     }
   }

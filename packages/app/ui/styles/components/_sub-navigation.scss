@@ -32,7 +32,7 @@
 }
 
 .canopy-sub-navigation__link:hover {
-  color: var(--color-brand-default);
+  color: var(--color-accent-default);
 }
 
 .canopy-sub-navigation__link.is-label {
@@ -92,7 +92,7 @@
   background-color: rgba(255, 255, 255, 1);
   border-color: var(--color-gray-300);
   outline: none;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-brand-200) 60%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent-200) 60%, transparent);
 }
 
 .canopy-layout__content-nav.is-collapsed .canopy-content-navigation {

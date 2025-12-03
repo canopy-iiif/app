@@ -10,10 +10,10 @@
   &--hero {
     --hero-height: 520px;
     --hero-bg-start: var(--color-gray-50);
-    --hero-bg-mid: var(--color-brand-100);
-    --hero-bg-end: var(--color-brand-200);
-    --hero-dot-bg: var(--color-brand-300);
-    --hero-dot-active-bg: var(--color-brand-700);
+    --hero-bg-mid: var(--color-accent-100);
+    --hero-bg-end: var(--color-accent-200);
+    --hero-dot-bg: var(--color-accent-300);
+    --hero-dot-active-bg: var(--color-accent-700);
 
     background: linear-gradient(
       173deg,
@@ -336,15 +336,15 @@
     &:focus-visible {
       background-color: color-mix(
         in srgb,
-        var(--color-brand-200) 55%,
+        var(--color-accent-200) 55%,
         transparent
       );
       border-color: color-mix(
         in srgb,
-        var(--color-brand-400) 70%,
+        var(--color-accent-400) 70%,
         transparent
       );
-      color: var(--color-brand-700);
+      color: var(--color-accent-700);
     }
   }
 

@@ -98,8 +98,8 @@
 
     &:focus {
       outline: none;
-      border-color: var(--color-brand-500);
-      box-shadow: 0 0 0 1px var(--color-brand-500);
+      border-color: var(--color-accent-500);
+      box-shadow: 0 0 0 1px var(--color-accent-500);
     }
   }
 
@@ -142,8 +142,8 @@
     height: 1rem;
     border-radius: 0.375rem;
     border: 1px solid var(--color-gray-300);
-    color: var(--color-brand-500);
-    accent-color: var(--color-brand-500);
+    color: var(--color-accent-500);
+    accent-color: var(--color-accent-500);
   }
 
   .canopy-search-filters__facet-label {
@@ -199,13 +199,13 @@
 
   .canopy-search-filters__button--primary {
     border: none;
-    background: var(--color-brand-600);
+    background: var(--color-accent-600);
     color: var(--color-gray-50);
   }
 
   .canopy-search-filters__button--primary:hover,
   .canopy-search-filters__button--primary:focus-visible {
-    background: var(--color-brand-700);
+    background: var(--color-accent-700);
     outline: none;
   }
 

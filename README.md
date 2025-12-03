@@ -68,7 +68,7 @@ Defaults (recommended): Canopy now ships a Tailwind config internally, so you on
 @import '@canopy-iiif/app/ui/styles/index.css';
 
 @theme {
-  --color-brand-500: #4f46e5;
+  --color-accent-500: #4f46e5;
   --font-serif: 'Fraunces', Georgia, 'Times New Roman', serif;
 }
 

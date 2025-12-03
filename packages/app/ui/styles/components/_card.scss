@@ -71,7 +71,7 @@
 
   &:hover,
   &:focus {
-    color: var(--color-brand-default);
+    color: var(--color-accent-default);
     box-shadow:
       0 1px 2px 0 rgba(0, 0, 0, 0.07),
       0 1px 2px 0 rgba(0, 0, 0, 0.07);
@@ -85,7 +85,7 @@
 
   mark {
     color: var(--color-gray-900);
-    background-color: var(--color-brand-300);
+    background-color: var(--color-accent-300);
     padding: 0.1rem 0.25rem;
     border-radius: 0.25rem;
     margin: 0 -0.25rem;

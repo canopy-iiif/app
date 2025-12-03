@@ -155,9 +155,9 @@ function buildVariablesMap(brandScale, grayScale, options = {}) {
   if (brandScale) {
     for (const lvl of LEVELS) {
       const value = brandScale[lvl];
-      if (value) vars[`--color-brand-${lvl}`] = value;
+      if (value) vars[`--color-accent-${lvl}`] = value;
     }
-    if (brandScale["700"]) vars["--color-brand-default"] = brandScale["700"];
+    if (brandScale["700"]) vars["--color-accent-default"] = brandScale["700"];
   }
   if (grayScale) {
     for (const lvl of LEVELS) {
@@ -271,21 +271,6 @@ function loadCanopyTheme(options = {}) {
         : null,
     },
   });
-
-  if (
-    !DEBUG_ENABLED &&
-    (accentName !== DEFAULT_ACCENT || grayName !== DEFAULT_GRAY)
-  ) {
-    try {
-      console.log("[canopy-theme]", "resolved", {
-        appearance,
-        accent: accentName,
-        accent500: accentScale && accentScale["500"],
-        gray: grayName,
-        gray500: grayScale && grayScale["500"],
-      });
-    } catch (_) {}
-  }
 
   return {
     appearance,

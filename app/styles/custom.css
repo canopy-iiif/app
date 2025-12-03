@@ -7,7 +7,7 @@
   :root,
   :host {
     --color-northwestern-purple: #4e2a84;
-    --color-brand-700: var(--color-northwestern-purple);
-    --color-brand-default: var(--color-northwestern-purple);
+    --color-accent-700: var(--color-northwestern-purple);
+    --color-accent-default: var(--color-northwestern-purple);
   }
 } */
