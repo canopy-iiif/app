@@ -99,21 +99,21 @@ When `appearance: dark` is set, Canopy pulls from the `*Dark` Radix palettes, fl
 ## IIIF Build
 
 - Layout: add `content/works/_layout.mdx` to enable IIIF work page generation. The layout receives `props.manifest` (normalized to Presentation 3).
-- Source: collection URI comes from `canopy.yml` (`collection.uri`) or `CANOPY_COLLECTION_URI` env var.
+- Source: collection URIs come from `canopy.yml` (`collection`, either a string or an array). When omitted, `CANOPY_COLLECTION_URI` can provide a single fallback URI.
 - Behavior:
   - Recursively walks the collection and subcollections, fetching Manifests.
   - Normalizes resources using `@iiif/helpers` to v3 where possible.
   - Caches fetched Manifests in `.cache/iiif/manifests/` and tracks ids/slugs in `.cache/iiif/index.json`.
   - Emits one HTML page per Manifest under `site/works/<slug>.html`.
 - Performance: tune with environment variables — `CANOPY_CHUNK_SIZE` (default `20`) and `CANOPY_FETCH_CONCURRENCY` (default `5`).
-- Cache notes: switching `collection.uri` resets the manifest cache; you can also delete `.cache/iiif/` to force a refetch.
+- Cache notes: updating the configured collection URIs resets the manifest cache; you can also delete `.cache/iiif/` to force a refetch.
 
 ### Facet Collections (from IIIF metadata)
 
 Canopy can derive new IIIF Presentation 3 Collections from a single source Collection by faceting on Manifest metadata labels you choose.
 
 - Configure labels in `canopy.yml`:
-  - `metadata: ["Date", "Subject", "Creator"]` (case-sensitive label match).
+  - `metadata:` then a YAML list (e.g., `- Date`, `- Subject`, `- Creator`). Matching is case-insensitive (`subject` and `Subject` behave the same).
 - Aggregation: during the build, Canopy scans each Manifest’s `metadata[]` and collects values (across all languages) for the configured labels.
   - Internal cache: `.cache/iiif/facets.json` (implementation detail; not served).
 - Output (IIIF-only API under `site/api/facet/**`):

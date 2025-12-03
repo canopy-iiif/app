@@ -1,25 +1,32 @@
-collection: https://api.dc.library.northwestern.edu/api/v2/collections/94536627-cfdf-413c-852b-0cb16d986da3?as=iiif
-metadata: ["Subject", "Language", "Genre"]
+collection:
+  - https://api.dc.library.northwestern.edu/api/v2/collections/7ac5769f-a1d9-4227-a350-bf8bd8b1cddc?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/collections/94536627-cfdf-413c-852b-0cb16d986da3?as=iiif
+metadata:
+  - Subject
+  - Language
+  - Genre
 featured:
-  [
-    "https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif",
-    "https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif",
-    "https://api.dc.library.northwestern.edu/api/v2/works/ef94f857-1993-4dad-8104-7d34ca0fb62a?as=iiif",
-    "https://api.dc.library.northwestern.edu/api/v2/works/e0d60273-e64c-49d8-99dc-d1af8f4c6266?as=iiif",
-  ]
+  - https://api.dc.library.northwestern.edu/api/v2/works/cdb547e9-d5c1-4c1a-9ca5-b3fad0da4915?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/e0d60273-e64c-49d8-99dc-d1af8f4c6266?as=iiif
 search:
   tabs:
-    order: ["work", "page", "examples"]
+    order:
+      - work
+      - page
+      - examples
   index:
     metadata:
-      enabled: true # default: true
-      all: false # default: false
+      enabled: true
+      all: false
     summary:
-      enabled: true # default: true
+      enabled: true
     annotations:
-      enabled: false # default: false
-      motivation: ["commenting", "tagging"]
+      enabled: false
+      motivation:
+        - commenting
+        - tagging
 theme:
-  appearance: light # light OR dark
-  accentColor: indigo # blue, purple, green, orange, red, pink, teal, ...
-  grayColor: slate # slate, gray, mauve, olive, sand, ...
+  appearance: light
+  accentColor: indigo
+  grayColor: slate

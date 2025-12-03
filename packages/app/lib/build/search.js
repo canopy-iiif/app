@@ -1,6 +1,14 @@
 const { fs, fsp, path, OUT_DIR, ensureDirSync, absoluteUrl } = require('../common');
 const slugify = require('slugify');
 
+function normalizeMetadataLabel(label) {
+  if (typeof label !== 'string') return '';
+  return label
+    .trim()
+    .replace(/[:\s]+$/g, '')
+    .toLowerCase();
+}
+
 function firstI18nString(x) {
   if (!x) return '';
   if (typeof x === 'string') return x;
@@ -17,7 +25,11 @@ async function buildFacetsForWorks(combined, labelWhitelist) {
   const facetsDir = path.resolve('.cache/iiif');
   ensureDirSync(facetsDir);
   const map = new Map(); // label -> Map(value -> Set(docIdx))
-  const labels = Array.isArray(labelWhitelist) ? labelWhitelist.map(String) : [];
+  const normalizedLabels = new Set(
+    (Array.isArray(labelWhitelist) ? labelWhitelist : [])
+      .map((label) => normalizeMetadataLabel(String(label || '')))
+      .filter(Boolean)
+  );
   if (!Array.isArray(combined)) combined = [];
   for (let i = 0; i < combined.length; i++) {
     const rec = combined[i];
@@ -37,7 +49,12 @@ async function buildFacetsForWorks(combined, labelWhitelist) {
       const label = firstI18nString(entry.label);
       const valueRaw = entry.value && (typeof entry.value === 'string' ? entry.value : firstI18nString(entry.value));
       if (!label || !valueRaw) continue;
-      if (labels.length && !labels.includes(label)) continue; // only configured labels
+      if (
+        normalizedLabels.size &&
+        !normalizedLabels.has(normalizeMetadataLabel(label))
+      ) {
+        continue; // only configured labels
+      }
       const values = [];
       try {
         if (typeof entry.value === 'string') values.push(entry.value);
@@ -79,11 +96,19 @@ async function writeFacetCollections(labelWhitelist, combined) {
   if (!fs.existsSync(facetsPath)) return;
   let facets = [];
   try { facets = JSON.parse(fs.readFileSync(facetsPath, 'utf8')) || []; } catch (_) { facets = []; }
-  const labels = new Set((Array.isArray(labelWhitelist) ? labelWhitelist : []).map(String));
+  const normalizedLabels = new Set(
+    (Array.isArray(labelWhitelist) ? labelWhitelist : [])
+      .map((label) => normalizeMetadataLabel(String(label || '')))
+      .filter(Boolean)
+  );
   const apiRoot = path.join(OUT_DIR, 'api');
   const facetRoot = path.join(apiRoot, 'facet');
   ensureDirSync(facetRoot);
-  const list = (Array.isArray(facets) ? facets : []).filter((f) => !labels.size || labels.has(String(f && f.label)));
+  const list = (Array.isArray(facets) ? facets : []).filter((f) => {
+    if (!normalizedLabels.size) return true;
+    const normalized = normalizeMetadataLabel(String((f && f.label) || ''));
+    return normalized ? normalizedLabels.has(normalized) : false;
+  });
   const labelIndexItems = [];
   for (const f of list) {
     if (!f || !f.label || !Array.isArray(f.values)) continue;

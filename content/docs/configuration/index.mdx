@@ -20,15 +20,17 @@ Canopy reads its project settings from `canopy.yml` in the repository root (over
 
 ```yaml filename="canopy.yml"
 collection: https://example.org/iiif/collection/root
-metadata: ["Subject", "Creator"]
+metadata:
+  - Subject
+  - Creator
 featured:
-  [
-    "https://example.org/iiif/manifest/alpha",
-    "https://example.org/iiif/manifest/bravo",
-  ]
+  - https://example.org/iiif/manifest/alpha
+  - https://example.org/iiif/manifest/bravo
 search:
   tabs:
-    order: ["work", "page"]
+    order:
+      - work
+      - page
   index:
     metadata:
       enabled: true
@@ -53,13 +55,14 @@ theme:
 
 ## metadata (facets)
 
-- Optional array of manifest metadata labels (case-sensitive) to facet on.
+- Optional list of manifest metadata labels (case-sensitive) to facet on.
+- Matching is case-insensitive, so `subject`, `SUBJECT`, and `Subject` are treated the same.
 - Drives highlighted sliders, the Metadata page, related-items queries, and generated IIIF facet collections (`/api/facet/**`).
 - Set to an empty array to disable faceting while keeping the key in place.
 
 ## featured
 
-- Optional array of IIIF Manifest URIs surfaced in the homepage hero and other "featured" placements.
+- Optional list of IIIF Manifest URIs surfaced in the homepage hero and other "featured" placements.
 - URIs must exist in the source Collection. Canopy normalises query strings to avoid duplicate entries when caches are reused.
 
 ## site.baseUrl
@@ -79,7 +82,10 @@ The `search` block refines FlexSearch behaviour and UI tabs.
 ```yaml
 search:
   tabs:
-    order: ["work", "page", "examples"]
+    order:
+      - work
+      - page
+      - examples
   index:
     metadata:
       enabled: true
@@ -88,10 +94,12 @@ search:
       enabled: true
     annotations:
       enabled: false
-      motivation: ["commenting", "tagging"]
+      motivation:
+        - commenting
+        - tagging
 ```
 
-- **`tabs.order`** — optional array that reorders the search result tabs. Unknown values are ignored; missing values fall back to the default `work` tab.
+- **`tabs.order`** — optional list that reorders the search result tabs. Unknown values are ignored; missing values fall back to the default `work` tab.
 - **`index.metadata.enabled`** — toggle metadata fields in the FlexSearch index. When `all: true`, every manifest metadata item is indexed; otherwise only labels listed in `metadata` are used.
 - **`index.summary.enabled`** — include manifest summaries in the index payload.
 - **`index.annotations.enabled`** — opt into indexing external annotation text; combine with `motivation` to limit which motivations count.
@@ -115,16 +123,19 @@ theme:
 
 ```yaml filename="canopy.yml"
 collection: https://api.dc.library.northwestern.edu/api/v2/collections/cd92fb8d-76a7-4c15-8f34-44f30866b7f4?as=iiif
-metadata: ["Subject", "Genre"]
+metadata:
+  - Subject
+  - Genre
 featured:
-  [
-    "https://api.dc.library.northwestern.edu/api/v2/works/f2adabc0-497f-4284-b969-5829971fa2a2?as=iiif",
-    "https://api.dc.library.northwestern.edu/api/v2/works/6f336d7c-fb8a-4c15-8f34-44f30866b7f4?as=iiif",
-    "https://api.dc.library.northwestern.edu/api/v2/works/e1d27060-c8d7-4863-a120-7dced701d6be?as=iiif",
-  ]
+  - https://api.dc.library.northwestern.edu/api/v2/works/f2adabc0-497f-4284-b969-5829971fa2a2?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/6f336d7c-fb8a-4c15-8f34-44f30866b7f4?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/e1d27060-c8d7-4863-a120-7dced701d6be?as=iiif
 search:
   tabs:
-    order: ["work", "page", "examples"]
+    order:
+      - work
+      - page
+      - examples
   index:
     metadata:
       enabled: true
@@ -133,7 +144,9 @@ search:
       enabled: true
     annotations:
       enabled: false
-      motivation: ["commenting", "tagging"]
+      motivation:
+        - commenting
+        - tagging
 site:
   baseUrl: https://canopy-iiif.github.io/canopy-iiif
 theme:

@@ -50,6 +50,7 @@ const HERO_IMAGE_SIZES_ATTR = "(min-width: 1024px) 1280px, 100vw";
 const OG_IMAGE_WIDTH = 1200;
 const OG_IMAGE_HEIGHT = 630;
 const HERO_REPRESENTATIVE_SIZE = Math.max(HERO_THUMBNAIL_SIZE, OG_IMAGE_WIDTH);
+const MAX_ENTRY_SLUG_LENGTH = 50;
 
 function resolvePositiveInteger(value, fallback) {
   const num = Number(value);
@@ -63,6 +64,64 @@ function resolveBoolean(value) {
   const normalized = String(value).trim().toLowerCase();
   if (!normalized) return false;
   return normalized === "1" || normalized === "true" || normalized === "yes";
+}
+
+function normalizeCollectionUris(value) {
+  if (value === undefined || value === null) return [];
+  const rawValues = Array.isArray(value) ? value : [value];
+  const seen = new Set();
+  const uris = [];
+  for (const entry of rawValues) {
+    if (typeof entry !== "string") continue;
+    const trimmed = entry.trim();
+    if (!trimmed || seen.has(trimmed)) continue;
+    seen.add(trimmed);
+    uris.push(trimmed);
+  }
+  return uris;
+}
+
+function clampSlugLength(slug, limit = MAX_ENTRY_SLUG_LENGTH) {
+  if (!slug) return "";
+  const max = Math.max(1, limit);
+  if (slug.length <= max) return slug;
+  const slice = slug.slice(0, max);
+  const trimmed = slice.replace(/-+$/g, "");
+  return trimmed || slice || slug.slice(0, 1);
+}
+
+function isSlugTooLong(value) {
+  return typeof value === "string" && value.length > MAX_ENTRY_SLUG_LENGTH;
+}
+
+function normalizeSlugBase(value, fallback) {
+  const safeFallback = fallback || "entry";
+  const base = typeof value === "string" ? value : String(value || "");
+  const clamped = clampSlugLength(base, MAX_ENTRY_SLUG_LENGTH);
+  if (clamped) return clamped;
+  return clampSlugLength(safeFallback, MAX_ENTRY_SLUG_LENGTH) || safeFallback;
+}
+
+function buildSlugWithSuffix(base, fallback, counter) {
+  const suffix = `-${counter}`;
+  const baseLimit = Math.max(1, MAX_ENTRY_SLUG_LENGTH - suffix.length);
+  const trimmedBase =
+    clampSlugLength(base, baseLimit) ||
+    clampSlugLength(fallback, baseLimit) ||
+    fallback.slice(0, baseLimit);
+  return `${trimmedBase}${suffix}`;
+}
+
+function normalizeStringList(value) {
+  if (value === undefined || value === null) return [];
+  const rawValues = Array.isArray(value) ? value : [value];
+  return rawValues
+    .map((entry) => {
+      if (typeof entry === "string") return entry.trim();
+      if (entry === undefined || entry === null) return "";
+      return String(entry).trim();
+    })
+    .filter(Boolean);
 }
 
 function resolveThumbnailPreferences() {
@@ -537,13 +596,15 @@ const RESERVED_SLUGS = {Manifest: new Set(), Collection: new Set()};
 function computeUniqueSlug(index, baseSlug, id, type) {
   const byId = Array.isArray(index && index.byId) ? index.byId : [];
   const normId = normalizeIiifId(String(id || ""));
+  const fallbackBase = type === "Manifest" ? "untitled" : "collection";
+  const normalizedBase = normalizeSlugBase(baseSlug || fallbackBase, fallbackBase);
   const used = new Set(
     byId
       .filter((e) => e && e.slug && e.type === type)
       .map((e) => String(e.slug))
   );
   const reserved = RESERVED_SLUGS[type] || new Set();
-  let slug = baseSlug || (type === "Manifest" ? "untitled" : "collection");
+  let slug = normalizedBase;
   let i = 1;
   for (;;) {
     const existing = byId.find(
@@ -560,7 +621,7 @@ function computeUniqueSlug(index, baseSlug, id, type) {
       reserved.add(slug);
       return slug;
     }
-    slug = `${baseSlug}-${i++}`;
+    slug = buildSlugWithSuffix(normalizedBase, fallbackBase, i++);
   }
 }
 
@@ -568,18 +629,20 @@ function ensureBaseSlugFor(index, baseSlug, id, type) {
   try {
     const byId = Array.isArray(index && index.byId) ? index.byId : [];
     const normId = normalizeIiifId(String(id || ""));
+    const fallbackBase = type === "Manifest" ? "untitled" : "collection";
+    const normalizedBase = normalizeSlugBase(baseSlug || fallbackBase, fallbackBase);
     const existingWithBase = byId.find(
-      (e) => e && e.type === type && String(e.slug) === String(baseSlug)
+      (e) => e && e.type === type && String(e.slug) === String(normalizedBase)
     );
     if (existingWithBase && normalizeIiifId(existingWithBase.id) !== normId) {
       // Reassign the existing entry to the next available suffix to free the base
       const newSlug = computeUniqueSlug(
         index,
-        baseSlug,
+        normalizedBase,
         existingWithBase.id,
         type
       );
-      if (newSlug && newSlug !== baseSlug) existingWithBase.slug = newSlug;
+      if (newSlug && newSlug !== normalizedBase) existingWithBase.slug = newSlug;
     }
   } catch (_) {}
   return baseSlug;
@@ -620,13 +683,15 @@ async function loadCachedManifestById(id) {
       );
       slug = entry && entry.slug;
     }
+    if (isSlugTooLong(slug)) slug = null;
     if (!slug) {
       // Try an on-disk scan to recover mapping if index is missing/out-of-sync
       const memo = MEMO_ID_TO_SLUG.get(String(id));
       if (memo) slug = memo;
+      if (isSlugTooLong(slug)) slug = null;
       if (!slug) {
         const found = await findSlugByIdFromDisk(id);
-        if (found) {
+        if (found && !isSlugTooLong(found)) {
           slug = found;
           MEMO_ID_TO_SLUG.set(String(id), slug);
           try {
@@ -830,6 +895,7 @@ async function loadCachedCollectionById(id) {
       );
       slug = entry && entry.slug;
     }
+    if (isSlugTooLong(slug)) slug = null;
     if (!slug) {
       // Scan collections dir if mapping missing
       try {
@@ -845,7 +911,12 @@ async function loadCachedCollectionById(id) {
                 String((obj && (obj.id || obj["@id"])) || "")
               );
               if (cid && cid === normalizeIiifId(String(id))) {
-                slug = name.replace(/\.json$/i, "");
+                const candidate = name.replace(/\.json$/i, "");
+                if (isSlugTooLong(candidate)) {
+                  slug = null;
+                  break;
+                }
+                slug = candidate;
                 // heal mapping
                 try {
                   index.byId = Array.isArray(index.byId) ? index.byId : [];
@@ -1052,9 +1123,13 @@ async function loadConfig() {
 async function buildIiifCollectionPages(CONFIG) {
   const cfg = CONFIG || (await loadConfig());
 
-  const collectionUri =
-    (cfg && cfg.collection) || process.env.CANOPY_COLLECTION_URI || "";
-  if (!collectionUri) return {searchRecords: []};
+  let collectionUris = normalizeCollectionUris(cfg && cfg.collection);
+  if (!collectionUris.length) {
+    collectionUris = normalizeCollectionUris(
+      process.env.CANOPY_COLLECTION_URI || ""
+    );
+  }
+  if (!collectionUris.length) return {searchRecords: []};
 
   const searchIndexCfg = (cfg && cfg.search && cfg.search.index) || {};
   const metadataCfg = (searchIndexCfg && searchIndexCfg.metadata) || {};
@@ -1093,37 +1168,14 @@ async function buildIiifCollectionPages(CONFIG) {
     enabled: summaryEnabled,
   };
   const annotationMotivations = new Set(
-    Array.isArray(annotationsCfg && annotationsCfg.motivation)
-      ? annotationsCfg.motivation
-          .map((m) =>
-            String(m || "")
-              .trim()
-              .toLowerCase()
-          )
-          .filter(Boolean)
-      : []
+    normalizeStringList(annotationsCfg && annotationsCfg.motivation).map((m) =>
+      m.toLowerCase()
+    )
   );
   const annotationsOptions = {
     enabled: annotationsEnabled,
     motivations: annotationMotivations,
   };
-
-  // Fetch top-level collection
-  logLine("• Traversing IIIF Collection(s)", "blue", {dim: true});
-  const root = await readJsonFromUri(collectionUri, {log: true});
-  if (!root) {
-    logLine("IIIF: Failed to fetch collection", "red");
-    return {searchRecords: []};
-  }
-  const normalizedRoot = await normalizeToV3(root);
-  // Save collection cache
-  try {
-    await saveCachedCollection(
-      normalizedRoot,
-      normalizedRoot.id || collectionUri,
-      ""
-    );
-  } catch (_) {}
 
   // Recursively traverse Collections and gather all Manifest tasks
   const tasks = [];
@@ -1179,7 +1231,27 @@ async function buildIiifCollectionPages(CONFIG) {
       // Traverse strictly by parent/child hierarchy (Presentation 3): items → Manifest or Collection
     } catch (_) {}
   }
-  await gatherFromCollection(normalizedRoot, "");
+  // Fetch each configured collection and queue manifests from all of them
+  logLine("• Traversing IIIF Collection(s)", "blue", {dim: true});
+  for (const uri of collectionUris) {
+    let root = null;
+    try {
+      root = await readJsonFromUri(uri, {log: true});
+    } catch (_) {
+      root = null;
+    }
+    if (!root) {
+      try {
+        logLine(`IIIF: Failed to fetch collection → ${uri}`, "red");
+      } catch (_) {}
+      continue;
+    }
+    const normalizedRoot = await normalizeToV3(root);
+    try {
+      await saveCachedCollection(normalizedRoot, normalizedRoot.id || uri, "");
+    } catch (_) {}
+    await gatherFromCollection(normalizedRoot, "");
+  }
   if (!tasks.length) return {searchRecords: []};
 
   // Split into chunks and process with limited concurrency
@@ -1322,6 +1394,7 @@ async function buildIiifCollectionPages(CONFIG) {
           (e) => e && e.type === "Manifest" && normalizeIiifId(e.id) === nid
         );
         let slug = mEntry && mEntry.slug;
+        if (isSlugTooLong(slug)) slug = null;
         if (!slug) {
           slug = computeUniqueSlug(idxMap, baseSlug, nid, "Manifest");
           const parentNorm = normalizeIiifId(String(it.parent || ""));
