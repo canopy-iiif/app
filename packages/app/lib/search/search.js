@@ -1,7 +1,16 @@
 const React = require('react');
 const ReactDOMServer = require('react-dom/server');
 const crypto = require('crypto');
-const { path, withBase, rootRelativeHref, ensureDirSync, OUT_DIR, htmlShell, fsp } = require('../common');
+const {
+  path,
+  withBase,
+  rootRelativeHref,
+  ensureDirSync,
+  OUT_DIR,
+  htmlShell,
+  fsp,
+  canopyBodyClassForType,
+} = require('../common');
 
 async function ensureSearchRuntime() {
   const { fs, path } = require('../common');
@@ -172,7 +181,8 @@ async function buildSearchPage() {
         headExtra = `<script>window.CANOPY_BASE_PATH=${JSON.stringify(BASE_PATH)}</script>` + headExtra;
       }
     } catch (_) {}
-    let html = htmlShell({ title: 'Search', body, cssHref: null, scriptHref: jsRel, headExtra });
+    const bodyClass = canopyBodyClassForType('search');
+    let html = htmlShell({ title: 'Search', body, cssHref: null, scriptHref: jsRel, headExtra, bodyClass });
     try { html = require('../common').applyBaseToHtml(html); } catch (_) {}
     await fsp.writeFile(outPath, html, 'utf8');
     console.log('Search: Built', path.relative(process.cwd(), outPath));

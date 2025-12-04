@@ -1,12 +1,22 @@
-import React from 'react';
+import React from "react";
 
-export default function Container({ className = '', children, ...rest }) {
-  const classes = ['mx-auto', 'max-w-content', 'w-full', 'px-6', className]
+export default function Container({
+  className = "",
+  variant = "content",
+  children,
+  ...rest
+}) {
+  const variantClass = variant === "wide" ? "max-w-wide" : "max-w-content";
+  const classes = ["mx-auto", variantClass, "w-full", className]
     .filter(Boolean)
-    .join(' ');
+    .join(" ");
 
   return (
-    <div className={classes} {...rest}>
+    <div
+      className={classes}
+      {...rest}
+      style={{...rest.style, padding: "1.618rem"}}
+    >
       {children}
     </div>
   );

@@ -12,6 +12,7 @@ const {
   ensureDirSync,
   htmlShell,
   rootRelativeHref,
+  canopyBodyClassForType,
 } = require("../common");
 const mdx = require("./mdx");
 const {log, logLine, logResponse} = require("./log");
@@ -1618,12 +1619,15 @@ async function buildIiifCollectionPages(CONFIG) {
           } catch (_) {}
           let pageBody = body;
           const headExtra = headSegments.join("") + vendorTag;
+          const pageType = (pageDetails && pageDetails.type) || "work";
+          const bodyClass = canopyBodyClassForType(pageType);
           let html = htmlShell({
             title,
             body: pageBody,
             cssHref: null,
             scriptHref: jsRel,
             headExtra,
+            bodyClass,
           });
           try {
             html = require("../common").applyBaseToHtml(html);

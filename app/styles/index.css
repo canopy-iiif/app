@@ -16,6 +16,10 @@
   max-width: 1080px;
 }
 
+@utility max-w-wide {
+  max-width: 1300px;
+}
+
 @layer base {
   html {
     font-size: 110%;
@@ -35,6 +39,5 @@
     font-family: var(--font-serif);
     font-weight: 600;
     letter-spacing: -0.025em;
-    font-variation-settings: "WONK" 100;
   }
 }

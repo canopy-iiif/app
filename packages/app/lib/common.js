@@ -64,7 +64,35 @@ async function cleanDir(dir) {
   await fsp.mkdir(dir, { recursive: true });
 }
 
-function htmlShell({ title, body, cssHref, scriptHref, headExtra }) {
+function normalizeClassList(value) {
+  if (!value) return '';
+  const list = Array.isArray(value) ? value : [value];
+  const classes = [];
+  for (const entry of list) {
+    if (!entry && entry !== 0) continue;
+    const raw = String(entry)
+      .split(/\s+/)
+      .map((segment) => segment.trim())
+      .filter(Boolean);
+    classes.push(...raw);
+  }
+  const unique = classes.filter(Boolean);
+  return unique.length ? unique.join(' ') : '';
+}
+
+function canopyBodyClassForType(type) {
+  const raw = String(type == null || type === '' ? 'page' : type)
+    .trim()
+    .toLowerCase();
+  const slug = raw
+    .replace(/[^a-z0-9_-]+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '');
+  if (!slug) return 'canopy-type-page';
+  return `canopy-type-${slug}`;
+}
+
+function htmlShell({ title, body, cssHref, scriptHref, headExtra, bodyClass }) {
   const scriptTag = scriptHref ? `<script defer src="${scriptHref}"></script>` : '';
   const extra = headExtra ? String(headExtra) : '';
   const cssTag = cssHref ? `<link rel="stylesheet" href="${cssHref}">` : '';
@@ -72,7 +100,9 @@ function htmlShell({ title, body, cssHref, scriptHref, headExtra }) {
   const htmlClass = appearance === 'dark' ? ' class="dark"' : '';
   const hasCustomTitle = /<title\b/i.test(extra);
   const titleTag = hasCustomTitle ? '' : `<title>${title}</title>`;
-  return `<!doctype html><html lang="en"${htmlClass}><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>${titleTag}${extra}${cssTag}${scriptTag}</head><body>${body}</body></html>`;
+  const bodyClassName = normalizeClassList(bodyClass);
+  const bodyAttr = bodyClassName ? ` class="${bodyClassName}"` : '';
+  return `<!doctype html><html lang="en"${htmlClass}><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>${titleTag}${extra}${cssTag}${scriptTag}</head><body${bodyAttr}>${body}</body></html>`;
 }
 
 function withBase(href) {
@@ -173,4 +203,5 @@ module.exports = {
   absoluteUrl,
   applyBaseToHtml,
   rootRelativeHref,
+  canopyBodyClassForType,
 };

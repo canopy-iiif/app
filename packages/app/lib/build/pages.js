@@ -1,4 +1,13 @@
-const { fs, fsp, path, CONTENT_DIR, OUT_DIR, ensureDirSync, htmlShell } = require('../common');
+const {
+  fs,
+  fsp,
+  path,
+  CONTENT_DIR,
+  OUT_DIR,
+  ensureDirSync,
+  htmlShell,
+  canopyBodyClassForType,
+} = require('../common');
 const { log } = require('./log');
 const mdx = require('./mdx');
 const navigation = require('../components/navigation');
@@ -210,7 +219,16 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}) {
   if (extraStyles.length) headSegments.push(extraStyles.join(''));
   if (extraScripts.length) headSegments.push(extraScripts.join(''));
   const headExtra = headSegments.join('') + vendorTag;
-  const html = htmlShell({ title, body, cssHref: null, scriptHref: jsRel, headExtra });
+  const typeForClass = resolvedType || 'page';
+  const bodyClass = canopyBodyClassForType(typeForClass);
+  const html = htmlShell({
+    title,
+    body,
+    cssHref: null,
+    scriptHref: jsRel,
+    headExtra,
+    bodyClass,
+  });
   const { applyBaseToHtml } = require('../common');
   return applyBaseToHtml(html);
 }
