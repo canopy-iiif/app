@@ -365,6 +365,18 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
   const mod = await import(pathToFileURL(tmpFile).href + bust);
   const MDXContent = mod.default || mod.MDXContent || mod;
   const components = await loadUiComponents();
+  const markdownTableComponent =
+    components &&
+    (components.MarkdownTable ||
+      components.DocsMarkdownTable ||
+      components.MarkdownTables ||
+      components.MDXMarkdownTable);
+  const codeBlockComponent =
+    components &&
+    (components.DocsCodeBlock ||
+      components.CodeBlock ||
+      components.MarkdownCodeBlock ||
+      components.MDXCodeBlock);
   const rawHeadings = Array.isArray(extraProps && extraProps.page && extraProps.page.headings)
     ? extraProps.page.headings
         .map((heading) => (heading ? { ...heading } : heading))
@@ -467,6 +479,12 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
     : withLayout;
   const withApp = React.createElement(app.App, null, withContext);
   const compMap = { ...components, ...headingComponents, a: Anchor };
+  if (markdownTableComponent && !compMap.table) {
+    compMap.table = markdownTableComponent;
+  }
+  if (codeBlockComponent && !compMap.pre) {
+    compMap.pre = codeBlockComponent;
+  }
   const page = MDXProvider
     ? React.createElement(MDXProvider, { components: compMap }, withApp)
     : withApp;
