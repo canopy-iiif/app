@@ -290,7 +290,15 @@ Finally, a link to the IIIF Manifest is displayed so that the item can be easily
 ### Referenced Content
 
 If the Manifest has been included in a `referencedManifests` section of any custom content page, a link to the custom
-content will be generated and displayed in the **Content Referencing This Work** section.
+content will be generated and displayed in the **Contextual References** section. The default layout renders this via the
+`<References />` component so individual projects can reposition or restyle the block.
+
+```mdx copy {2-4}
+<Container>
+  <h2>Contextual References</h2>
+  <References emptyLabel="This work has not been referenced yet." />
+</Container>
+```
 
 ```mdx {5-7}
 ---

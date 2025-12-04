@@ -20,6 +20,7 @@ const { ensureStyles } = require("./styles");
 const { copyAssets } = require("./assets");
 const { logLine } = require("./log");
 const navigation = require("../components/navigation");
+const referenced = require("../components/referenced");
 
 // hold records between builds if skipping IIIF
 let iiifRecordsCache = [];
@@ -42,6 +43,7 @@ async function build(options = {}) {
   logLine("• Reset MDX cache", "blue", { dim: true });
   mdx?.resetMdxCaches();
   navigation?.resetNavigationCache?.();
+  referenced?.resetReferenceIndex?.();
   if (!skipIiif) {
     await cleanDir(OUT_DIR);
     logLine(`• Cleaned output directory`, "blue", { dim: true });

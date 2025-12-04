@@ -7,6 +7,7 @@ import {
   Summary,
   Metadata,
   RequiredStatement,
+  References,
 } from "@canopy-iiif/app/ui/server";
 
 <Container variant="wide" style={{display: "flex", gap: "2.618rem"}}>
@@ -19,6 +20,7 @@ import {
       <Summary manifest={props.manifest} as="p" className="canopy-lead" />
     </header>
     <div>
+      <References />
       <Metadata manifest={props.manifest} />
       <RequiredStatement manifest={props.manifest} />
     </div>
@@ -27,4 +29,8 @@ import {
 <Container>
   <h2>Related Items</h2>
   <RelatedItems iiifContent={props.manifest.id} top={3} />
+</Container>
+<Container>
+  <h2>Contextual References</h2>
+  <References emptyLabel="This work has not been referenced yet." />
 </Container>

@@ -18,6 +18,7 @@ const mdx = require("./mdx");
 const {log, logLine, logResponse} = require("./log");
 const { getPageContext } = require("../page-context");
 const PageContext = getPageContext();
+const referenced = require("../components/referenced");
 const {
   getThumbnail,
   getRepresentativeImage,
@@ -1288,6 +1289,8 @@ async function buildIiifCollectionPages(CONFIG) {
     throw new Error(`Failed to compile content/works/_layout.mdx: ${message}`);
   }
 
+  referenced.ensureReferenceIndex();
+
   for (let ci = 0; ci < chunks; ci++) {
     const chunk = tasks.slice(ci * chunkSize, (ci + 1) * chunkSize);
     logLine(`• Chunk ${ci + 1}/${chunks}`, "blue", {dim: true});
@@ -1412,6 +1415,8 @@ async function buildIiifCollectionPages(CONFIG) {
           else idxMap.byId.push(newEntry);
           await saveManifestIndex(idxMap);
         }
+        const manifestId = manifest && manifest.id ? manifest.id : id;
+        const references = referenced.getReferencesForManifest(manifestId);
         const href = path.join("works", slug + ".html");
         const outPath = path.join(OUT_DIR, href);
         ensureDirSync(path.dirname(outPath));
@@ -1456,6 +1461,8 @@ async function buildIiifCollectionPages(CONFIG) {
             slug,
             type: "work",
             description: pageDescription,
+            manifestId,
+            referencedBy: references,
             meta: {
               title,
               description: pageDescription,
@@ -1471,7 +1478,11 @@ async function buildIiifCollectionPages(CONFIG) {
             pageDetails.meta.ogImage = ogImageForPage;
           }
           const pageContextValue = { navigation: null, page: pageDetails };
-          const mdxContent = React.createElement(WorksLayoutComp, {manifest});
+          const mdxContent = React.createElement(WorksLayoutComp, {
+            manifest,
+            references,
+            manifestId,
+          });
           const siteTree = mdxContent;
           const wrappedApp =
             app && app.App

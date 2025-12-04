@@ -1,3 +1,11 @@
+---
+title: Referenced Items
+referencedManifests:
+  - https://api.dc.library.northwestern.edu/api/v2/works/89a30426-a35a-48df-b748-27426fd3a23b?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/e4917381-b5ba-4b11-8666-f28abc4c7b2d?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/1b5b4a4e-af4e-4fe0-9984-a3f8284d53a2?as=iiif
+---
+
 import { Callout } from '@canopy-iiif/app/docs-legacy-compat';
 
 # Referenced Items
@@ -23,3 +31,26 @@ referencedManifests:
 
 <ReferencedItems />
 ```
+
+## References Component
+
+On individual work pages you can surface the contextual essays that cited the item using `<References />`. When this
+component is rendered inside `content/works/_layout.mdx` it automatically picks up the current manifest id from the page
+context. You can also point it at another manifest explicitly by passing `id`.
+
+```mdx copy {11-13}
+<Container>
+  <h2>Contextual References</h2>
+  <References emptyLabel="This work has not been referenced yet." />
+</Container>
+
+<References
+  id="https://api.dc.library.northwestern.edu/api/v2/works/46de2c91-3a29-4525-939e-ee17073f3a7e?as=iiif"
+  title="Referenced in these essays"
+  emptyLabel="No matches yet."
+/>
+```
+
+The component renders a definition list so it inherits the standard metadata styling on work pages. Override the `title`
+prop to change the `<dt>` label (defaults to “Referenced by”), and the optional `emptyLabel` to customize the fallback
+text.

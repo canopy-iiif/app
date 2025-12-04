@@ -11,6 +11,7 @@ const {
 const { log } = require('./log');
 const mdx = require('./mdx');
 const navigation = require('../components/navigation');
+const referenced = require('../components/referenced');
 
 function normalizeWhitespace(value) {
   if (!value) return '';
@@ -89,6 +90,13 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}) {
       ? mdx.parseFrontmatter(source)
       : { data: null, content: source };
   const frontmatterData = frontmatter && isPlainObject(frontmatter.data) ? frontmatter.data : null;
+  const referencedManifestIdsRaw = frontmatterData ? frontmatterData.referencedManifests : null;
+  const referencedManifestIds = referenced.normalizeReferencedManifestList(
+    referencedManifestIdsRaw
+  );
+  const referencedItems = referencedManifestIds.length
+    ? referenced.buildReferencedItems(referencedManifestIds)
+    : [];
   let layoutMeta = null;
   try {
     layoutMeta = await getNearestDirLayoutMeta(filePath);
@@ -134,10 +142,22 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}) {
   }
   if (frontmatterMeta) Object.assign(pageMeta, frontmatterMeta);
   if (Object.keys(pageMeta).length) basePage.meta = pageMeta;
+  if (referencedManifestIds.length) {
+    basePage.referencedManifests = referencedManifestIds;
+  }
+  if (referencedItems.length) {
+    basePage.referencedItems = referencedItems;
+  }
   if (Object.keys(basePage).length) {
     mergedProps.page = mergedProps.page
       ? { ...basePage, ...mergedProps.page }
       : basePage;
+  }
+  if (referencedManifestIds.length) {
+    mergedProps.referencedManifests = referencedManifestIds;
+  }
+  if (referencedItems.length) {
+    mergedProps.referencedItems = referencedItems;
   }
   if (navData && !mergedProps.navigation) {
     mergedProps.navigation = navData;

@@ -29,11 +29,12 @@ export default function Card({
   className,
   style,
   children,
+  lazy = true,
   ...rest
 }) {
   const containerRef = useRef(null);
-  const [inView, setInView] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
+  const [inView, setInView] = useState(!lazy);
+  const [imageLoaded, setImageLoaded] = useState(!lazy);
 
   /**
    * Use IntersectionObserver to detect when the card enters the viewport.
@@ -41,6 +42,7 @@ export default function Card({
    * If IntersectionObserver is not supported, default to inView=true.
    */
   useEffect(() => {
+    if (!lazy) return;
     if (!containerRef.current) return;
     if (typeof IntersectionObserver !== "function") {
       setInView(true);
@@ -69,7 +71,7 @@ export default function Card({
         obs.disconnect();
       } catch (_) {}
     };
-  }, []);
+  }, [lazy]);
 
   /**
    * Calculate aspect ratio and padding percent for responsive image container.

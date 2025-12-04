@@ -140,6 +140,10 @@ The `<ReferencedItems />` automatically outputs a grid of items that are referen
 <ReferencedItems />
 ```
 
+These references also flow back to each IIIF work page thanks to the `<References />` component that ships in the default
+`content/works/_layout.mdx`. When a work is cited anywhere in the site the "Contextual References" section appears with
+links to the relevant Markdown pages.
+
 Your page should now output a grid of items that are referenced in the front matter. Automatically, a reciprocal connection is made between the Markdown content and the items in the IIIF Collection. Users can now navigate to and from the scholarly content page and the relative `/work` page representing the Manifest.
 
 <Box m="9" my="6">

@@ -16,6 +16,8 @@ export { default as CanopyModal } from "./src/layout/CanopyModal.jsx";
 export { default as Container } from "./src/layout/Container.jsx";
 export { default as Button } from "./src/layout/Button.jsx";
 export { default as ButtonWrapper } from "./src/layout/ButtonWrapper.jsx";
+export { default as ReferencedItems } from "./src/content/ReferencedItems.jsx";
+export { default as References } from "./src/content/References.jsx";
 
 // SSR-safe MDX placeholders (do not import browser-only UI here)
 export { default as SearchResults } from "./src/search/MdxSearchResults.jsx";
