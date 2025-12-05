@@ -13,37 +13,38 @@
   }
 
   h3 {
-    margin: 0.1rem 0 0.3rem;
+    margin: 0;
     font-size: 1.125rem;
-    line-height: 1.35;
+    line-height: 1.382;
   }
 
   .canopy-article-card__url {
     font-size: 0.8333rem;
-    color: var(--color-gray-700);
+    color: var(--color-accent-800);
     margin: 0;
     text-transform: none;
   }
 
   .canopy-article-card__snippet {
-    margin: 0.2rem 0 0;
+    margin: 0.382rem 0 0;
     color: var(--color-gray-default);
     font-size: 0.9222rem;
   }
 
   .canopy-article-card__meta {
-    margin: 0.4rem 0 0;
-    padding: 0;
+    margin: 0.382rem 0;
+    padding: 0 1rem;
     list-style: none;
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
-    font-size: 0.82rem;
-    color: #70757a;
+    gap: 1.618rem;
+    font-size: 0.8333rem;
+    color: var(--color-gray-700);
   }
 
   mark {
-    background: #fff3bf;
+    // use a srgb color to avoid issues with dark mode and allow for alpha blending
+    background: color-mix(in srgb, var(--color-accent-500) 38.2%, transparent);
     color: inherit;
     padding: 0.05rem 0.25rem;
     border-radius: 0.2rem;

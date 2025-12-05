@@ -41,28 +41,20 @@ export default function References({
 
   if (!manifestId) return null;
 
+  const entries = references && references.length ? references : null;
+  if (!entries || !entries.length) return null;
+
   const containerClass = ["references", className].filter(Boolean).join(" ");
 
-  const list = references.length ? references : null;
-
-  const entries = list && list.length ? list : null;
   return (
     <dl className={containerClass} {...rest}>
       <div className="references__group">
         <dt>{title}</dt>
-        {entries
-          ? entries.map((entry) => (
-              <dd key={entry.href} className="references__item">
-                <a href={entry.href}>{entry.title || entry.href}</a>
-              </dd>
-            ))
-          : emptyLabel
-          ? (
-              <dd className="references__empty">
-                {typeof emptyLabel === "function" ? emptyLabel() : emptyLabel}
-              </dd>
-            )
-          : null}
+        {entries.map((entry) => (
+          <dd key={entry.href} className="references__item">
+            <a href={entry.href}>{entry.title || entry.href}</a>
+          </dd>
+        ))}
       </div>
     </dl>
   );

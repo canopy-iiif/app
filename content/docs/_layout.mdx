@@ -1,7 +1,7 @@
 import {MDXProvider} from "@mdx-js/react";
 import {DocsCodeBlock, DocsMarkdownTable} from "@canopy-iiif/app/ui/server";
 
-<Layout navigation={true} fluid={false}>
+<Layout navigation={true} fluid={true}>
   <MDXProvider components={{pre: DocsCodeBlock, table: DocsMarkdownTable}}>
     {props.children}
   </MDXProvider>

@@ -12,12 +12,16 @@ function buildSnippet({text = "", query = "", maxLength = 360}) {
   const safeMax = Math.max(60, Number(maxLength) || 360);
   const term = String(query || "").trim();
   if (!term)
-    return clean.length > safeMax ? clean.slice(0, safeMax).trimEnd() + "…" : clean;
+    return clean.length > safeMax
+      ? clean.slice(0, safeMax).trimEnd() + "…"
+      : clean;
   const lower = clean.toLowerCase();
   const termLower = term.toLowerCase();
   const idx = lower.indexOf(termLower);
   if (idx === -1)
-    return clean.length > safeMax ? clean.slice(0, safeMax).trimEnd() + "…" : clean;
+    return clean.length > safeMax
+      ? clean.slice(0, safeMax).trimEnd() + "…"
+      : clean;
   const padding = Math.max(0, Math.floor((safeMax - term.length) / 2));
   let start = Math.max(0, idx - padding);
   let end = start + safeMax;
@@ -41,17 +45,9 @@ function highlightTextNode(text, query, keyPrefix = "") {
   return parts.map((part, idx) => {
     if (!part) return null;
     if (part.toLowerCase() === termLower) {
-      return (
-        <mark key={`${keyPrefix}-${idx}`}>
-          {part}
-        </mark>
-      );
+      return <mark key={`${keyPrefix}-${idx}`}>{part}</mark>;
     }
-    return (
-      <React.Fragment key={`${keyPrefix}-${idx}`}>
-        {part}
-      </React.Fragment>
-    );
+    return <React.Fragment key={`${keyPrefix}-${idx}`}>{part}</React.Fragment>;
   });
 }
 
@@ -131,7 +127,9 @@ function tokenizeInlineMarkdown(input = "") {
     }
     const specials = ["**", "__", "*", "_", "`", "[", "\n"];
     const nextIndex = specials
-      .map((needle) => (needle === "\n" ? text.indexOf("\n") : text.indexOf(needle)))
+      .map((needle) =>
+        needle === "\n" ? text.indexOf("\n") : text.indexOf(needle)
+      )
       .filter((idx) => idx > 0)
       .reduce((min, idx) => (min === -1 || idx < min ? idx : min), -1);
     if (nextIndex === -1) {
@@ -150,16 +148,18 @@ function renderMarkdownTokens(tokens, query, keyPrefix = "token") {
     switch (token.type) {
       case "strong":
         return (
-          <strong key={key}>{renderMarkdownTokens(token.children || [], query, key)}</strong>
+          <strong key={key}>
+            {renderMarkdownTokens(token.children || [], query, key)}
+          </strong>
         );
       case "em":
         return (
-          <em key={key}>{renderMarkdownTokens(token.children || [], query, key)}</em>
+          <em key={key}>
+            {renderMarkdownTokens(token.children || [], query, key)}
+          </em>
         );
       case "code":
-        return (
-          <code key={key}>{token.value}</code>
-        );
+        return <code key={key}>{token.value}</code>;
       case "link":
         return (
           <a key={key} href={token.href} target="_blank" rel="noreferrer">
@@ -181,7 +181,10 @@ function renderMarkdownTokens(tokens, query, keyPrefix = "token") {
 
 function formatDisplayUrl(href = "") {
   try {
-    const url = new URL(href, href.startsWith("http") ? undefined : "http://example.com");
+    const url = new URL(
+      href,
+      href.startsWith("http") ? undefined : "http://example.com"
+    );
     if (!href.startsWith("http")) return href;
     const displayPath = url.pathname.replace(/\/$/, "");
     return `${url.host}${displayPath}${url.search}`.replace(/\/$/, "");
@@ -216,10 +219,10 @@ export default function ArticleCard({
   return (
     <a href={href} className="canopy-article-card">
       <article>
-        {displayUrl ? (
-          <p className="canopy-article-card__url">{displayUrl}</p>
-        ) : null}
         <h3>{title}</h3>
+        {displayUrl ? (
+          <span className="canopy-article-card__url">{displayUrl}</span>
+        ) : null}
         {snippet ? (
           <p className="canopy-article-card__snippet">
             {renderMarkdownTokens(snippetTokens, query)}

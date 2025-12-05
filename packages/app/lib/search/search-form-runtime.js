@@ -186,6 +186,18 @@ function groupLabel(type) {
   return type.charAt(0).toUpperCase() + type.slice(1);
 }
 
+function hidePanel(panel) {
+  if (!panel) return;
+  panel.classList.add('is-empty');
+  panel.setAttribute('hidden', 'hidden');
+}
+
+function showPanel(panel) {
+  if (!panel) return;
+  panel.classList.remove('is-empty');
+  panel.removeAttribute('hidden');
+}
+
 function getItems(list) {
   try {
     return Array.prototype.slice.call(list.querySelectorAll('[data-canopy-item]'));
@@ -196,7 +208,12 @@ function getItems(list) {
 
 function renderList(list, records, groupOrder) {
   list.innerHTML = '';
-  if (!records.length) return;
+  const panel = list.closest('[data-canopy-search-form-panel]');
+  if (!records.length) {
+    hidePanel(panel);
+    return;
+  }
+  showPanel(panel);
   const groups = new Map();
   records.forEach((record) => {
     const type = String(record && record.type || 'page');
@@ -207,8 +224,8 @@ function renderList(list, records, groupOrder) {
   const orderedKeys = [...desiredOrder.filter((key) => groups.has(key)), ...Array.from(groups.keys()).filter((key) => !desiredOrder.includes(key))];
   orderedKeys.forEach((key) => {
     const header = document.createElement('div');
+    header.className = 'canopy-search-teaser__label';
     header.textContent = groupLabel(key);
-    header.style.cssText = 'padding:6px 12px;font-weight:600;color:#374151';
     list.appendChild(header);
     const entries = groups.get(key) || [];
     entries.forEach((record) => {
@@ -217,44 +234,39 @@ function renderList(list, records, groupOrder) {
       item.setAttribute('data-canopy-item', '');
       item.href = href;
       item.tabIndex = 0;
-      item.className = 'canopy-card canopy-card--teaser';
-      item.style.cssText = 'display:flex;gap:12px;padding:8px 12px;text-decoration:none;color:#030712;border-radius:8px;align-items:center;outline:none;';
+      item.className = 'canopy-card canopy-card--teaser canopy-search-teaser__item';
 
       const showThumb = String(record && record.type || '') === 'work' && record && record.thumbnail;
       if (showThumb) {
         const media = document.createElement('div');
-        media.style.cssText = 'flex:0 0 48px;height:48px;border-radius:6px;overflow:hidden;background:#f1f5f9;display:flex;align-items:center;justify-content:center;';
+        media.className = 'canopy-search-teaser__thumb';
         const img = document.createElement('img');
         img.src = record.thumbnail;
         img.alt = '';
         img.loading = 'lazy';
-        img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+        img.className = 'canopy-search-teaser__thumb-img';
         media.appendChild(img);
         item.appendChild(media);
       }
 
       const textWrap = document.createElement('div');
-      textWrap.style.cssText = 'display:flex;flex-direction:column;gap:2px;min-width:0;';
+      textWrap.className = 'canopy-search-teaser__text';
       const title = document.createElement('span');
       title.textContent = record.title || record.href || '';
-      title.style.cssText = 'font-weight:600;font-size:0.95rem;line-height:1.3;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+      title.className = 'canopy-search-teaser__title';
       textWrap.appendChild(title);
       const meta = Array.isArray(record && record.metadata) ? record.metadata : [];
       if (meta.length) {
         const metaLine = document.createElement('span');
         metaLine.textContent = meta.slice(0, 2).join(' • ');
-        metaLine.style.cssText = 'font-size:0.8rem;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+        metaLine.className = 'canopy-search-teaser__meta';
         textWrap.appendChild(metaLine);
       }
       item.appendChild(textWrap);
 
-      item.onmouseenter = () => { item.style.background = '#f8fafc'; };
-      item.onmouseleave = () => { item.style.background = 'transparent'; };
       item.onfocus = () => {
-        item.style.background = '#eef2ff';
         try { item.scrollIntoView({ block: 'nearest' }); } catch (_) {}
       };
-      item.onblur = () => { item.style.background = 'transparent'; };
       list.appendChild(item);
     });
   });
@@ -275,15 +287,19 @@ function focusLast(list, resetTarget) {
   items[items.length - 1].focus();
 }
 
-function bindKeyboardNavigation({ input, list, panel }) {
+function bindKeyboardNavigation({ input, list, panel, ensureResults }) {
+  const ensure = () => {
+    if (typeof ensureResults === 'function') ensureResults();
+    return getItems(list).length > 0;
+  };
   input.addEventListener('keydown', (event) => {
     if (event.key === 'ArrowDown') {
       event.preventDefault();
-      panel.style.display = 'block';
+      if (!ensure()) return;
       focusFirst(list);
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
-      panel.style.display = 'block';
+      if (!ensure()) return;
       focusLast(list, input);
     }
   });
@@ -311,7 +327,7 @@ function bindKeyboardNavigation({ input, list, panel }) {
       event.preventDefault();
       try { current.click(); } catch (_) {}
     } else if (event.key === 'Escape') {
-      panel.style.display = 'none';
+      hidePanel(panel);
       try { input && input.focus && input.focus(); } catch (_) {}
     }
   });
@@ -336,7 +352,7 @@ async function attachSearchForm(host) {
     } catch (_) {}
   }
 
-  if (onSearchPage) panel.style.display = 'none';
+  if (onSearchPage) hidePanel(panel);
 
   const list = (() => {
     try { return panel.querySelector('#cplist'); } catch (_) { return null; }
@@ -357,13 +373,7 @@ async function attachSearchForm(host) {
   const records = await loadRecords();
 
   function render(items) {
-    list.innerHTML = '';
-    if (!items.length) {
-      panel.style.display = onSearchPage ? 'none' : 'block';
-      return;
-    }
     renderList(list, items, groupOrder);
-    panel.style.display = 'block';
   }
 
   function filterAndShow(query) {
@@ -371,7 +381,7 @@ async function attachSearchForm(host) {
       const q = toLower(query);
       if (!q) {
         list.innerHTML = '';
-        panel.style.display = onSearchPage ? 'none' : 'block';
+        hidePanel(panel);
         return;
       }
       const out = [];
@@ -404,18 +414,27 @@ async function attachSearchForm(host) {
     filterAndShow(input.value || '');
   });
 
-  bindKeyboardNavigation({ input, list, panel });
+  bindKeyboardNavigation({
+    input,
+    list,
+    panel,
+    ensureResults: () => {
+      if (!getItems(list).length) {
+        filterAndShow(input.value || '');
+      }
+    },
+  });
 
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
-      panel.style.display = 'none';
+      hidePanel(panel);
     }
   });
 
   document.addEventListener('mousedown', (event) => {
     try {
       if (!panel.contains(event.target) && !host.contains(event.target)) {
-        panel.style.display = 'none';
+        hidePanel(panel);
       }
     } catch (_) {}
   });
@@ -433,7 +452,6 @@ async function attachSearchForm(host) {
             try { window.dispatchEvent(new CustomEvent('canopy:search:setQuery', { detail: { hotkey: true } })); } catch (_) {}
             return;
           }
-          panel.style.display = 'block';
           if (input && input.focus) input.focus();
           filterAndShow(input && input.value || '');
         }
@@ -446,7 +464,6 @@ async function attachSearchForm(host) {
       try { window.dispatchEvent(new CustomEvent('canopy:search:setQuery', { detail: {} })); } catch (_) {}
       return;
     }
-    panel.style.display = 'block';
     if (input && input.focus) input.focus();
     filterAndShow(input && input.value || '');
   }
