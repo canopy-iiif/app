@@ -601,6 +601,8 @@ async function ensureClientRuntime() {
       } catch (_) { /* no-op */ }
     }
 
+    function seedScrollSearchInput() {}
+
     ready(function() {
       mountAll('[data-canopy-viewer]', CloverViewer);
       mountAll('[data-canopy-scroll]', CloverScroll);

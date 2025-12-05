@@ -26,11 +26,20 @@ import {
     </div>
   </div>
 </Container>
+{/* <Container>
+  <Scroll
+    iiifContent={props.manifest.id}
+    options={{
+      offset: 16,
+      figure: {
+        aspectRatio: 1,
+        display: "thumbnail",
+        width: "200px",
+      },
+    }}
+  />
+</Container> */}
 <Container>
   <h2>Related Items</h2>
   <RelatedItems iiifContent={props.manifest.id} top={3} />
-</Container>
-<Container>
-  <h2>Contextual References</h2>
-  <References emptyLabel="This work has not been referenced yet." />
 </Container>

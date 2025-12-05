@@ -15,6 +15,7 @@ function DefaultArticleTemplate({ record, query }) {
       summaryMarkdown={record.summaryMarkdown || record.summary || record.summaryValue || ''}
       metadata={metadata}
       query={query}
+      recordType={record.type}
     />
   );
 }

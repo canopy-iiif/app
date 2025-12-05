@@ -1,5 +1,24 @@
 import React, {useMemo} from "react";
 
+const DUMMY_ORIGIN = 'https://canopy.local';
+
+function appendQueryParam(href = '', key, value) {
+  try {
+    const absolute = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(href);
+    const baseHref = absolute
+      ? href
+      : `${DUMMY_ORIGIN}${href.startsWith('/') ? '' : '/'}${href}`;
+    const url = new URL(baseHref);
+    url.searchParams.set(key, value);
+    if (absolute) return url.toString();
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch (_) {
+    if (!href) return href;
+    const sep = href.includes('?') ? '&' : '?';
+    return `${href}${sep}${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+  }
+}
+
 function escapeRegExp(str = "") {
   return String(str).replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
 }
@@ -201,6 +220,7 @@ export default function ArticleCard({
   summaryMarkdown = "",
   metadata = [],
   query = "",
+  recordType = "",
 }) {
   const snippetSource = summaryMarkdown || annotation || summary;
   const snippet = useMemo(
@@ -215,9 +235,15 @@ export default function ArticleCard({
     ? metadata.map((m) => String(m || "")).filter(Boolean)
     : [];
   const displayUrl = useMemo(() => formatDisplayUrl(href), [href]);
+  const resolvedHref = useMemo(() => {
+    if (recordType === 'annotation' && query && href) {
+      return appendQueryParam(href, 'q', query);
+    }
+    return href;
+  }, [href, recordType, query]);
 
   return (
-    <a href={href} className="canopy-article-card">
+    <a href={resolvedHref} className="canopy-article-card">
       <article>
         <h3>{title}</h3>
         {displayUrl ? (
