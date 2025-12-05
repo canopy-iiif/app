@@ -247,6 +247,21 @@ function extractPlainText(mdxSource) {
   return content;
 }
 
+function extractMarkdownSummary(mdxSource) {
+  let { content } = parseFrontmatter(String(mdxSource || ''));
+  if (!content) return '';
+  content = content.replace(/^import[^\n]+$/gm, ' ');
+  content = content.replace(/^export[^\n]+$/gm, ' ');
+  content = content.replace(/```[\s\S]*?```/g, ' ');
+  content = content.replace(/<[A-Za-z][^>]*?>[\s\S]*?<\/[A-Za-z][^>]*?>/g, ' ');
+  content = content.replace(/<[A-Za-z][^>]*?\/>/g, ' ');
+  content = content.replace(/\{\/[A-Za-z0-9_.-]+\}/g, ' ');
+  content = content.replace(/\{[^{}]*\}/g, ' ');
+  content = content.replace(/^#{1,6}\s+.*$/gm, ' ');
+  content = content.replace(/\s+/g, ' ').trim();
+  return content;
+}
+
 function extractTitle(mdxSource) {
   const { data, content } = parseFrontmatter(String(mdxSource || ""));
   if (data && typeof data.title === "string" && data.title.trim()) {
@@ -1006,6 +1021,7 @@ module.exports = {
   extractTitle,
   extractHeadings,
   extractPlainText,
+  extractMarkdownSummary,
   isReservedFile,
   parseFrontmatter,
   compileMdxFile,

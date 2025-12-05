@@ -12,6 +12,7 @@ function DefaultArticleTemplate({ record, query }) {
       title={record.title || record.href || 'Untitled'}
       annotation={record.annotation}
       summary={record.summary || record.summaryValue || ''}
+      summaryMarkdown={record.summaryMarkdown || record.summary || record.summaryValue || ''}
       metadata={metadata}
       query={query}
     />

@@ -8,12 +8,17 @@ function pagesToRecords(pageRecords) {
     .filter((p) => p && p.href && p.searchInclude)
     .map((p) => {
       const summary = typeof p.searchSummary === 'string' ? p.searchSummary.trim() : '';
+      const summaryMarkdown =
+        typeof p.searchSummaryMarkdown === 'string'
+          ? p.searchSummaryMarkdown.trim()
+          : '';
       const record = {
         title: p.title || p.href,
         href: rootRelativeHref(p.href),
         type: p.searchType || 'page',
       };
       if (summary) record.summaryValue = summary;
+      if (summaryMarkdown) record.summaryMarkdown = summaryMarkdown;
       return record;
     });
 }

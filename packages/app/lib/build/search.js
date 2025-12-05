@@ -210,6 +210,7 @@ async function collectMdxPageRecords() {
         if (base !== 'sitemap.mdx') {
           const href = rootRelativeHref(rel.split(path.sep).join('/'));
           const plainText = mdx.extractPlainText(src);
+          const markdownSummary = mdx.extractMarkdownSummary(src);
           const summary = plainText || '';
           const underSearch = /^search\//i.test(href) || href.toLowerCase() === 'search.html';
           let include = !underSearch;
@@ -234,6 +235,7 @@ async function collectMdxPageRecords() {
             searchInclude: include && !!trimmedType,
             searchType: trimmedType || undefined,
             searchSummary: summary,
+            searchSummaryMarkdown: markdownSummary,
           });
         }
       }

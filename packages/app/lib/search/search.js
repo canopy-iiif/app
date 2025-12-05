@@ -354,6 +354,15 @@ function sanitizeRecordForDisplay(r) {
   const out = { ...base };
   if (out.metadata) delete out.metadata;
   if (out.summary) out.summary = toSafeString(out.summary, '');
+  const summaryMarkdown = toSafeString(
+    (r && r.summaryMarkdown) ||
+      (r && r.searchSummaryMarkdown) ||
+      (r && r.search && r.search.summaryMarkdown),
+    ''
+  ).trim();
+  if (summaryMarkdown) {
+    out.summaryMarkdown = summaryMarkdown;
+  }
   const hrefRaw = toSafeString(r && r.href, '');
   out.href = rootRelativeHref(hrefRaw);
   const thumbnail = toSafeString(r && r.thumbnail, '');
