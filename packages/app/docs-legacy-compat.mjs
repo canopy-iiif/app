@@ -14,11 +14,6 @@ export function Callout() {
 }
 
 // Nextra component
-export function Steps() {
-  return React.createElement(React.Fragment, null);
-}
-
-// Nextra component
 export function Cards() {
   return React.createElement(React.Fragment, null);
 }

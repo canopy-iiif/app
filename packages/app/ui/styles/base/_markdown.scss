@@ -1,3 +1,8 @@
+code {
+  font-family: var(--font-mono);
+  font-size: 0.922em;
+}
+
 .markdown-table__frame {
   width: 100%;
   margin: 1.618rem 0 2.618rem;
@@ -33,12 +38,6 @@
         background-color: var(--color-gray-200);
       }
     }
-  }
-
-  code {
-    font-family: var(--font-mono);
-    font-size: 0.875rem;
-    color: var(--color-gray-900);
   }
 }
 
