@@ -4,7 +4,7 @@ import {CanopyHeader, CanopyFooter} from "@canopy-iiif/app/ui";
 export function Head() {
   return (
     <>
-      <Meta siteTitle="Canopy IIIF" />
+      <Meta siteTitle="Site Title" />
       <Stylesheet />
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link
@@ -28,12 +28,12 @@ export function App({children}) {
           {href: "/search", label: "Works"},
           {href: "/about", label: "About"},
         ]}
-        title="Canopy IIIF"
+        title="Site Title"
         logo={Logo}
       />
       <main>{children}</main>
       <CanopyFooter>
-        <p>Copyright 2025 Canopy IIIF, MIT License</p>
+        <p>Copyright 2025 Site Title, MIT License. A Canopy IIIF Project.</p>
       </CanopyFooter>
     </>
   );
