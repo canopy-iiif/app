@@ -1,5 +1,11 @@
 # @canopy-iiif/app
 
+## 0.10.20
+
+### Patch Changes
+
+- chore: version bump (patch) via helper script.
+
 ## 0.10.19
 
 ### Patch Changes

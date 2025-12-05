@@ -1,0 +1,51 @@
+.canopy-article-card {
+  display: block;
+  text-decoration: none;
+  padding: 1rem 0 0.618rem;
+
+  article {
+    max-width: 65ch;
+  }
+
+  &:hover h3,
+  &:focus h3 {
+    text-decoration: underline;
+  }
+
+  h3 {
+    margin: 0.1rem 0 0.3rem;
+    font-size: 1.125rem;
+    line-height: 1.35;
+  }
+
+  .canopy-article-card__url {
+    font-size: 0.8333rem;
+    color: var(--color-gray-700);
+    margin: 0;
+    text-transform: none;
+  }
+
+  .canopy-article-card__snippet {
+    margin: 0.2rem 0 0;
+    color: var(--color-gray-default);
+    font-size: 0.9222rem;
+  }
+
+  .canopy-article-card__meta {
+    margin: 0.4rem 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    font-size: 0.82rem;
+    color: #70757a;
+  }
+
+  mark {
+    background: #fff3bf;
+    color: inherit;
+    padding: 0.05rem 0.25rem;
+    border-radius: 0.2rem;
+  }
+}

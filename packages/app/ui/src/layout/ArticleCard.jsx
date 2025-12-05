@@ -44,7 +44,18 @@ function highlightSnippet(snippet, query) {
   );
 }
 
-export default function TextCard({
+function formatDisplayUrl(href = "") {
+  try {
+    const url = new URL(href, href.startsWith("http") ? undefined : "http://example.com");
+    if (!href.startsWith("http")) return href;
+    const displayPath = url.pathname.replace(/\/$/, "");
+    return `${url.host}${displayPath}${url.search}`.replace(/\/$/, "");
+  } catch (_) {
+    return href;
+  }
+}
+
+export default function ArticleCard({
   href = "#",
   title = "Untitled",
   annotation = "",
@@ -64,25 +75,22 @@ export default function TextCard({
   const metaList = Array.isArray(metadata)
     ? metadata.map((m) => String(m || "")).filter(Boolean)
     : [];
+  const displayUrl = useMemo(() => formatDisplayUrl(href), [href]);
 
   return (
-    <a href={href}>
-      <article className="canopy-annotation-card">
+    <a href={href} className="canopy-article-card">
+      <article>
+        {displayUrl ? (
+          <p className="canopy-article-card__url">{displayUrl}</p>
+        ) : null}
         <h3>{title}</h3>
         {snippet ? (
-          <p className="mt-2 text-sm leading-relaxed text-slate-700">
-            {highlighted}
-          </p>
+          <p className="canopy-article-card__snippet">{highlighted}</p>
         ) : null}
         {metaList.length ? (
-          <ul className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
-            {metaList.slice(0, 4).map((item, idx) => (
-              <li
-                key={`${item}-${idx}`}
-                className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1"
-              >
-                {item}
-              </li>
+          <ul className="canopy-article-card__meta">
+            {metaList.slice(0, 3).map((item, idx) => (
+              <li key={`${item}-${idx}`}>{item}</li>
             ))}
           </ul>
         ) : null}

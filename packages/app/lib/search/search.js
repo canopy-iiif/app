@@ -2,18 +2,94 @@ const React = require('react');
 const ReactDOMServer = require('react-dom/server');
 const crypto = require('crypto');
 const {
+  fs,
+  fsp,
   path,
-  withBase,
+  CONTENT_DIR,
   rootRelativeHref,
   ensureDirSync,
   OUT_DIR,
   htmlShell,
-  fsp,
   canopyBodyClassForType,
 } = require('../common');
 
+const SEARCH_TEMPLATES_ALIAS = '__CANOPY_SEARCH_RESULT_TEMPLATES__';
+const SEARCH_TEMPLATES_CACHE_DIR = path.resolve('.cache/search');
+const SEARCH_TEMPLATE_FILES = [
+  { key: 'figure', filename: '_result-figure.mdx' },
+  { key: 'article', filename: '_result-article.mdx' },
+];
+
+function resolveSearchTemplatePath(filename) {
+  try {
+    const candidate = path.join(CONTENT_DIR, 'search', filename);
+    if (fs.existsSync(candidate)) return candidate;
+  } catch (_) {}
+  return null;
+}
+
+async function buildSearchTemplatesModule() {
+  ensureDirSync(SEARCH_TEMPLATES_CACHE_DIR);
+  const outPath = path.join(SEARCH_TEMPLATES_CACHE_DIR, 'result-templates-entry.js');
+  const fallback = resolveSearchTemplatePath('_result.mdx');
+  const lines = [
+    '// Auto-generated search result templates map',
+  ];
+  for (const spec of SEARCH_TEMPLATE_FILES) {
+    const templateName = `${spec.key}Template`;
+    const specific = resolveSearchTemplatePath(spec.filename);
+    const resolved = specific || fallback;
+    if (resolved) {
+      lines.push(`import ${templateName} from ${JSON.stringify(resolved)};`);
+    } else {
+      lines.push(`const ${templateName} = null;`);
+    }
+    lines.push(`export const ${spec.key} = ${templateName};`);
+  }
+  lines.push(`export default { ${SEARCH_TEMPLATE_FILES.map((spec) => spec.key).join(', ')} };`);
+  await fsp.writeFile(outPath, lines.join('\n'), 'utf8');
+  return outPath;
+}
+
+function createResultTemplatesAliasPlugin(entryPath) {
+  return {
+    name: 'canopy-search-result-templates',
+    setup(build) {
+      build.onResolve({ filter: new RegExp(`^${SEARCH_TEMPLATES_ALIAS.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`) }, () => ({
+        path: entryPath,
+      }));
+    },
+  };
+}
+
+function createSearchMdxPlugin() {
+  return {
+    name: 'canopy-search-mdx',
+    setup(build) {
+      build.onResolve({ filter: /\.mdx$/ }, (args) => ({
+        path: path.resolve(args.resolveDir, args.path),
+        namespace: 'canopy-search-mdx',
+      }));
+      build.onLoad({ filter: /.*/, namespace: 'canopy-search-mdx' }, async (args) => {
+        const { compile } = await import('@mdx-js/mdx');
+        const source = await fsp.readFile(args.path, 'utf8');
+        const compiled = await compile(source, {
+          jsx: true,
+          development: false,
+          providerImportSource: '@mdx-js/react',
+          format: 'mdx',
+        });
+        return {
+          contents: String(compiled),
+          loader: 'jsx',
+          resolveDir: path.dirname(args.path),
+        };
+      });
+    },
+  };
+}
+
 async function ensureSearchRuntime() {
-  const { fs, path } = require('../common');
   ensureDirSync(OUT_DIR);
   let esbuild = null;
   try { esbuild = require('../../ui/node_modules/esbuild'); } catch (_) { try { esbuild = require('esbuild'); } catch (_) {} }
@@ -22,6 +98,9 @@ async function ensureSearchRuntime() {
   const scriptsDir = path.join(OUT_DIR, 'scripts');
   ensureDirSync(scriptsDir);
   const outFile = path.join(scriptsDir, 'search.js');
+  const templatesEntry = await buildSearchTemplatesModule();
+  const templatesPlugin = createResultTemplatesAliasPlugin(templatesEntry);
+  const mdxPlugin = createSearchMdxPlugin();
   // Ensure a global React shim is available to reduce search.js size
   try {
     const scriptsDir = path.join(OUT_DIR, 'scripts');
@@ -93,6 +172,30 @@ async function ensureSearchRuntime() {
         ].join(''),
         loader: 'js',
       }));
+      build.onResolve({ filter: /^react\/jsx-runtime$/ }, () => ({ path: 'react/jsx-runtime', namespace: 'react-jsx-shim' }));
+      build.onResolve({ filter: /^react\/jsx-dev-runtime$/ }, () => ({ path: 'react/jsx-dev-runtime', namespace: 'react-jsx-shim' }));
+      build.onLoad({ filter: /.*/, namespace: 'react-jsx-shim' }, () => ({
+        contents: [
+          "const R = (typeof window!=='undefined' && window.React) || {};\n",
+          "const Fragment = R.Fragment || 'div';\n",
+          "const createElement = typeof R.createElement === 'function' ? R.createElement.bind(R) : null;\n",
+          "function normalizeProps(props, key){\n",
+          "  if (key !== undefined && key !== null) {\n",
+          "    props = props && typeof props === 'object' ? { ...props, key } : { key };\n",
+          "  }\n",
+          "  return props || {};\n",
+          "}\n",
+          "function jsx(type, props, key){\n",
+          "  if (!createElement) return null;\n",
+          "  return createElement(type, normalizeProps(props, key));\n",
+          "}\n",
+          "const jsxs = jsx;\n",
+          "const jsxDEV = jsx;\n",
+          "export { jsx, jsxs, jsxDEV, Fragment };\n",
+          "export default { jsx, jsxs, jsxDEV, Fragment };\n",
+        ].join(''),
+        loader: 'js',
+      }));
       build.onResolve({ filter: /^react-dom\/client$/ }, () => ({ path: 'react-dom/client', namespace: 'rdc-shim' }));
       build.onLoad({ filter: /.*/, namespace: 'rdc-shim' }, () => ({
         contents: [
@@ -124,7 +227,7 @@ async function ensureSearchRuntime() {
       sourcemap: true,
       target: ['es2018'],
       logLevel: 'silent',
-      plugins: [shimReactPlugin],
+      plugins: [shimReactPlugin, templatesPlugin, mdxPlugin],
       external: ['@samvera/clover-iiif/*'],
     };
     if (!entryExists) throw new Error('Search runtime entry missing: ' + entry);
@@ -327,8 +430,9 @@ async function writeSearchIndex(records) {
   // Also write a small metadata file with a stable version hash for cache-busting and IDB keying
   try {
     const version = crypto.createHash('sha256').update(indexJson).digest('hex');
-    // Read optional search tabs order from canopy.yml
+    // Read optional search configuration from canopy.yml
     let tabsOrder = [];
+    let resultsConfigEntries = [];
     try {
       const yaml = require('js-yaml');
       const common = require('../common');
@@ -339,24 +443,60 @@ async function writeSearchIndex(records) {
         const searchCfg = data && data.search ? data.search : {};
         const tabs = searchCfg && searchCfg.tabs ? searchCfg.tabs : {};
         const order = Array.isArray(tabs && tabs.order) ? tabs.order : [];
-        tabsOrder = order.map((s) => String(s)).filter(Boolean);
+        tabsOrder = order
+          .map((s) => String(s).trim().toLowerCase())
+          .filter(Boolean);
+        const resultsCfg =
+          searchCfg && searchCfg.results && typeof searchCfg.results === 'object'
+            ? searchCfg.results
+            : null;
+        if (resultsCfg) {
+          const entries = [];
+          Object.keys(resultsCfg).forEach((key) => {
+            if (!key) return;
+            const type = String(key).trim().toLowerCase();
+            if (!type) return;
+            if (entries.find((entry) => entry.type === type)) return;
+            const cfg = resultsCfg[key] && typeof resultsCfg[key] === 'object' ? resultsCfg[key] : {};
+            const layoutRaw = cfg && cfg.layout ? String(cfg.layout).toLowerCase() : '';
+            const resultRaw = cfg && cfg.result ? String(cfg.result).toLowerCase() : '';
+            const layout = layoutRaw === 'grid' ? 'grid' : 'list';
+            const result = resultRaw === 'figure' ? 'figure' : 'article';
+            entries.push({ type, layout, result });
+          });
+          if (entries.length) {
+            resultsConfigEntries = entries;
+            tabsOrder = entries.map((entry) => entry.type);
+          }
+        }
       }
     } catch (_) {}
+    const searchMeta = {
+      tabs: { order: tabsOrder },
+      assets: {
+        display: { path: 'search-records.json', bytes: displayBytes },
+        ...(annotationRecords.length
+          ? { annotations: { path: 'search-index-annotations.json', bytes: annotationsBytes } }
+          : {}),
+      },
+    };
+    if (resultsConfigEntries.length) {
+      const resultSettings = resultsConfigEntries.reduce((acc, entry) => {
+        acc[entry.type] = { layout: entry.layout, result: entry.result };
+        return acc;
+      }, {});
+      searchMeta.results = {
+        order: resultsConfigEntries.map((entry) => entry.type),
+        settings: resultSettings,
+      };
+    }
     const meta = {
       version,
       records: indexRecords.length,
       bytes: approxBytes,
       updatedAt: new Date().toISOString(),
       // Expose optional search config to the client runtime
-      search: {
-        tabs: { order: tabsOrder },
-        assets: {
-          display: { path: 'search-records.json', bytes: displayBytes },
-          ...(annotationRecords.length
-            ? { annotations: { path: 'search-index-annotations.json', bytes: annotationsBytes } }
-            : {}),
-        },
-      },
+      search: searchMeta,
     };
     const metaPath = path.join(apiDir, 'index.json');
     await fsp.writeFile(metaPath, JSON.stringify(meta, null, 2), 'utf8');

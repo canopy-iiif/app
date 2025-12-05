@@ -1,12 +1,8 @@
----
-type: "docs"
----
+import {MDXProvider} from "@mdx-js/react";
+import {DocsCodeBlock, DocsMarkdownTable} from "@canopy-iiif/app/ui/server";
 
-import { MDXProvider } from '@mdx-js/react';
-import { DocsCodeBlock, DocsMarkdownTable } from '@canopy-iiif/app/ui/server';
-
-<Layout navigation={true} fluid={true}>
-  <MDXProvider components={{ pre: DocsCodeBlock, table: DocsMarkdownTable }}>
+<Layout navigation={true} fluid={false}>
+  <MDXProvider components={{pre: DocsCodeBlock, table: DocsMarkdownTable}}>
     {props.children}
   </MDXProvider>
 </Layout>

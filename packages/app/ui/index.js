@@ -1,6 +1,6 @@
 export { HelloWorld } from "./src/HelloWorld.jsx";
 export { default as Card } from "./src/layout/Card.jsx";
-export { default as TextCard } from "./src/layout/TextCard.jsx";
+export { default as ArticleCard } from "./src/layout/ArticleCard.jsx";
 export { default as Grid, GridItem } from "./src/layout/Grid.jsx";
 export { default as Container } from "./src/layout/Container.jsx";
 export { default as Button } from "./src/layout/Button.jsx";

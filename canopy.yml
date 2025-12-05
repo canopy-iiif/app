@@ -10,11 +10,13 @@ featured:
   - https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif
   - https://api.dc.library.northwestern.edu/api/v2/works/e0d60273-e64c-49d8-99dc-d1af8f4c6266?as=iiif
 search:
-  tabs:
-    order:
-      - work
-      - page
-      - examples
+  results:
+    work:
+      layout: grid
+      result: figure
+    page:
+      layout: list
+      result: article
   index:
     metadata:
       enabled: true

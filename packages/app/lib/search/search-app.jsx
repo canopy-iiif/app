@@ -5,6 +5,7 @@ import {
   SearchTabsUI,
   SearchFiltersDialog,
 } from "@canopy-iiif/app/ui";
+import resultTemplates from "__CANOPY_SEARCH_RESULT_TEMPLATES__";
 
 function readBasePath() {
   const normalize = (val) => {
@@ -160,6 +161,7 @@ function createSearchStore() {
     filters: {},
     activeFilterCount: 0,
     annotationsEnabled: false,
+    resultSettings: {},
   };
   const listeners = new Set();
   function notify() {
@@ -447,24 +449,65 @@ function createSearchStore() {
       let version = "";
       let tabsOrder = [];
       let annotationsAssetPath = "";
+      let resultsOrder = [];
+      let resultLayoutMap = {};
       try {
         const meta = await fetch("./api/index.json")
           .then((r) => (r && r.ok ? r.json() : null))
           .catch(() => null);
         if (meta && typeof meta.version === "string") version = meta.version;
+        const searchMeta = meta && meta.search ? meta.search : {};
         const ord =
-          meta &&
-          meta.search &&
-          meta.search.tabs &&
-          Array.isArray(meta.search.tabs.order)
-            ? meta.search.tabs.order
+          searchMeta &&
+          searchMeta.tabs &&
+          Array.isArray(searchMeta.tabs.order)
+            ? searchMeta.tabs.order
             : [];
-        tabsOrder = ord.map((s) => String(s)).filter(Boolean);
+        tabsOrder = ord
+          .map((s) => String(s).trim().toLowerCase())
+          .filter(Boolean);
+        const resultsMeta =
+          searchMeta && searchMeta.results ? searchMeta.results : null;
+        if (resultsMeta) {
+          const rawOrder = Array.isArray(resultsMeta.order)
+            ? resultsMeta.order
+            : [];
+          const rawSettings =
+            resultsMeta.settings && typeof resultsMeta.settings === "object"
+              ? resultsMeta.settings
+              : {};
+          const normalizedOrder = [];
+          const normalizedMap = {};
+          const seenTypes = new Set();
+          const resolveEntry = (value) => {
+            const type = String(value || "")
+              .trim()
+              .toLowerCase();
+            if (!type || seenTypes.has(type)) return;
+            const cfg = rawSettings[type] || rawSettings[value] || {};
+            const layout =
+              String((cfg && cfg.layout) || "").toLowerCase() === "grid"
+                ? "grid"
+                : "list";
+            const result =
+              String((cfg && cfg.result) || "").toLowerCase() === "figure"
+                ? "figure"
+                : "article";
+            normalizedMap[type] = { layout, result };
+            normalizedOrder.push(type);
+            seenTypes.add(type);
+          };
+          rawOrder.forEach(resolveEntry);
+          Object.keys(rawSettings || {}).forEach(resolveEntry);
+          if (normalizedOrder.length) {
+            resultsOrder = normalizedOrder;
+            resultLayoutMap = normalizedMap;
+          }
+        }
         const annotationsAsset =
-          meta &&
-          meta.search &&
-          meta.search.assets &&
-          meta.search.assets.annotations;
+          searchMeta &&
+          searchMeta.assets &&
+          searchMeta.assets.annotations;
         if (annotationsAsset && annotationsAsset.path) {
           annotationsAssetPath = String(annotationsAsset.path);
         }
@@ -661,7 +704,9 @@ function createSearchStore() {
       if (annotationsRecords.length && !ts.includes("annotation"))
         ts.push("annotation");
       const order =
-        Array.isArray(tabsOrder) && tabsOrder.length
+        Array.isArray(resultsOrder) && resultsOrder.length
+          ? resultsOrder
+          : Array.isArray(tabsOrder) && tabsOrder.length
           ? tabsOrder
           : ["work", "docs", "page"];
       ts.sort((a, b) => {
@@ -693,6 +738,7 @@ function createSearchStore() {
         types: ts,
         loading: false,
         annotationsEnabled: annotationsRecords.length > 0,
+        resultSettings: resultLayoutMap,
       });
       await hydrateFacets();
     } catch (_) {
@@ -754,15 +800,30 @@ function useStore() {
 }
 
 function ResultsMount(props = {}) {
-  const {results, type, loading, query} = useStore();
+  const {results, type, loading, query, resultSettings} = useStore();
   if (loading) return <div className="text-slate-600">Loading…</div>;
-  const layout = (props && props.layout) || "grid";
+  const normalizedType = String(type || "").trim().toLowerCase();
+  const hasOverrides =
+    resultSettings && Object.keys(resultSettings || {}).length > 0;
+  const typeSettings =
+    (normalizedType && resultSettings && resultSettings[normalizedType]) || null;
+  let layout = (props && props.layout) || "grid";
+  let variant = "auto";
+  if (typeSettings) {
+    layout = typeSettings.layout || "list";
+    variant = typeSettings.result || "article";
+  } else if (hasOverrides) {
+    layout = "list";
+    variant = "article";
+  }
   return (
     <SearchResultsUI
       results={results}
       type={type}
       layout={layout}
       query={query}
+      templates={resultTemplates}
+      variant={variant}
     />
   );
 }

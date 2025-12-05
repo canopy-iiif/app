@@ -1,13 +1,54 @@
 import Grid, { GridItem } from "../layout/Grid.jsx";
-import TextCard from "../layout/TextCard.jsx";
+import ArticleCard from "../layout/ArticleCard.jsx";
 import Card from "../layout/Card.jsx";
 import React from "react";
+
+function DefaultArticleTemplate({ record, query }) {
+  if (!record) return null;
+  const metadata = Array.isArray(record.metadata) ? record.metadata : [];
+  return (
+    <ArticleCard
+      href={record.href}
+      title={record.title || record.href || 'Untitled'}
+      annotation={record.annotation}
+      summary={record.summary || record.summaryValue || ''}
+      metadata={metadata}
+      query={query}
+    />
+  );
+}
+
+function DefaultFigureTemplate({ record, thumbnailAspectRatio }) {
+  if (!record) return null;
+  const hasDims =
+    Number.isFinite(Number(record.thumbnailWidth)) &&
+    Number(record.thumbnailWidth) > 0 &&
+    Number.isFinite(Number(record.thumbnailHeight)) &&
+    Number(record.thumbnailHeight) > 0;
+  const aspect = Number.isFinite(Number(thumbnailAspectRatio)) && Number(thumbnailAspectRatio) > 0
+    ? Number(thumbnailAspectRatio)
+    : hasDims
+      ? Number(record.thumbnailWidth) / Number(record.thumbnailHeight)
+      : undefined;
+  return (
+    <Card
+      href={record.href}
+      title={record.title || record.href}
+      src={record.type === 'work' ? record.thumbnail : undefined}
+      imgWidth={record.thumbnailWidth}
+      imgHeight={record.thumbnailHeight}
+      aspectRatio={aspect}
+    />
+  );
+}
 
 export default function SearchResults({
   results = [],
   type = "all",
   layout = "grid",
   query = "",
+  templates = {},
+  variant = "auto",
 }) {
   if (!results.length) {
     return (
@@ -18,47 +59,47 @@ export default function SearchResults({
   }
 
   const normalizedType = String(type || 'all').toLowerCase();
+  const normalizedVariant =
+    variant === 'figure' || variant === 'article' ? variant : 'auto';
   const isAnnotationView = normalizedType === "annotation";
+  const FigureTemplate = templates && templates.figure ? templates.figure : DefaultFigureTemplate;
+  const ArticleTemplate = templates && templates.article ? templates.article : DefaultArticleTemplate;
+
   if (isAnnotationView) {
     return (
       <div id="search-results" className="space-y-4">
         {results.map((r, i) => {
           if (!r) return null;
-          return renderTextCard(r, r.id || i);
+          return (
+            <ArticleTemplate
+              key={r.id || i}
+              record={r}
+              query={query}
+              layout={layout}
+            />
+          );
         })}
       </div>
     );
   }
 
-  const renderTextCard = (record, key) => {
-    if (!record) return null;
-    return (
-      <TextCard
-        key={key}
-        href={record.href}
-        title={record.title || record.href || 'Untitled'}
-        annotation={record.annotation}
-        summary={record.summary || record.summaryValue || ''}
-        metadata={Array.isArray(record.metadata) ? record.metadata : []}
-        query={query}
-      />
-    );
-  };
-
   const isWorkRecord = (record) => String(record && record.type).toLowerCase() === 'work';
 
-  const shouldRenderAsTextCard = (record) =>
-    !isWorkRecord(record) || normalizedType !== 'work';
+  const shouldRenderAsArticle = (record) => {
+    if (normalizedVariant === 'article') return true;
+    if (normalizedVariant === 'figure') return false;
+    return !isWorkRecord(record) || normalizedType !== 'work';
+  };
 
   if (layout === "list") {
     return (
-      <ul id="search-results" className="space-y-3">
+      <div id="search-results" className="space-y-6">
         {results.map((r, i) => {
-          if (shouldRenderAsTextCard(r)) {
+          if (shouldRenderAsArticle(r)) {
             return (
-              <li key={i} className={`search-result ${r && r.type}`}>
-                {renderTextCard(r, i)}
-              </li>
+              <div key={i} className={`search-result ${r && r.type}`}>
+                <ArticleTemplate record={r} query={query} layout={layout} />
+              </div>
             );
           }
           const hasDims =
@@ -70,23 +111,21 @@ export default function SearchResults({
             ? Number(r.thumbnailWidth) / Number(r.thumbnailHeight)
             : undefined;
           return (
-            <li
+            <div
               key={i}
               className={`search-result ${r.type}`}
               data-thumbnail-aspect-ratio={aspect}
             >
-              <Card
-                href={r.href}
-                title={r.title || r.href}
-                src={r.type === "work" ? r.thumbnail : undefined}
-                imgWidth={r.thumbnailWidth}
-                imgHeight={r.thumbnailHeight}
-                aspectRatio={aspect}
+              <FigureTemplate
+                record={r}
+                query={query}
+                layout={layout}
+                thumbnailAspectRatio={aspect}
               />
-            </li>
+            </div>
           );
         })}
-      </ul>
+      </div>
     );
   }
 
@@ -95,10 +134,10 @@ export default function SearchResults({
     <div id="search-results">
       <Grid>
         {results.map((r, i) => {
-          if (shouldRenderAsTextCard(r)) {
+          if (shouldRenderAsArticle(r)) {
             return (
               <GridItem key={i} className={`search-result ${r && r.type}`}>
-                {renderTextCard(r, i)}
+                <ArticleTemplate record={r} query={query} layout={layout} />
               </GridItem>
             );
           }
@@ -116,13 +155,11 @@ export default function SearchResults({
               className={`search-result ${r.type}`}
               data-thumbnail-aspect-ratio={aspect}
             >
-              <Card
-                href={r.href}
-                title={r.title || r.href}
-                src={r.type === "work" ? r.thumbnail : undefined}
-                imgWidth={r.thumbnailWidth}
-                imgHeight={r.thumbnailHeight}
-                aspectRatio={aspect}
+              <FigureTemplate
+                record={r}
+                query={query}
+                layout={layout}
+                thumbnailAspectRatio={aspect}
               />
             </GridItem>
           );

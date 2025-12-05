@@ -31,3 +31,43 @@ The Filter element allows a user to limit the results list to a specific set of 
 by the values of the `metadata` property in the `config/canopy.json` file. From the filter, a user can limit the results
 by one value from each metadata field. Once the user clicks _View Results_, the results list will be limited to only
 the works that match the selected filter options.
+
+### Customize Result Layouts
+
+Search results rendered via `<SearchResults />` pull their markup from partials in
+`content/search`. Two files are evaluated automatically:
+
+- `_result-figure.mdx` — used for IIIF works rendered as figures/cards. The default
+  implementation wraps the shared `<Card />` component.
+- `_result-article.mdx` — used for textual/annotation hits (pages, docs, etc.) and
+  renders an `<ArticleCard />`.
+
+Both files receive `props.record`, `props.query`, and other metadata so they can inject
+custom semantics or additional UI. Template authors can import `Card`, `ArticleCard`, or any
+other UI components exposed by `@canopy-iiif/app/ui` to tailor the experience without
+touching the React runtime. If either partial is removed, Canopy falls back to the
+built-in defaults to keep search functional.
+
+#### Configure Layouts and Templates via `canopy.yml`
+
+The builder also reads `search.results` from `canopy.yml` to configure the tab order and the
+layout/template for each record type. Keys map to the record `type` emitted in the search
+index (e.g., `work`, `page`, or any custom type assigned via frontmatter). The order of the
+keys controls the tab order; any types omitted from the map are appended to the end using
+the default `list` + `article` fallback.
+
+```yaml copy filename="canopy.yml"
+search:
+  results:
+    work:
+      layout: grid   # options: grid | list
+      result: figure # options: figure | article
+    page:
+      layout: list
+      result: article
+```
+
+This configuration keeps works in the masonry grid with figure-based cards while forcing
+pages (or documentation types defined via frontmatter) into a list of text articles. If the
+`search.results` map is omitted the legacy behavior remains (works grid first, other types
+follow in their default order).
