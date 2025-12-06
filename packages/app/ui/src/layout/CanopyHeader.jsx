@@ -204,10 +204,72 @@ function HeaderScript() {
   );
 }
 
+const CONTEXT_KEY =
+  typeof Symbol === "function"
+    ? Symbol.for("__CANOPY_PAGE_CONTEXT__")
+    : "__CANOPY_PAGE_CONTEXT__";
+
+function getSharedRoot() {
+  if (typeof globalThis !== "undefined") return globalThis;
+  if (typeof window !== "undefined") return window;
+  if (typeof global !== "undefined") return global;
+  return null;
+}
+
+function getSafePageContext() {
+  const root = getSharedRoot();
+  if (root && root[CONTEXT_KEY]) return root[CONTEXT_KEY];
+  const ctx = React.createContext({ navigation: null, page: null });
+  if (root) root[CONTEXT_KEY] = ctx;
+  return ctx;
+}
+
 function ensureArray(navLinks) {
   if (!Array.isArray(navLinks)) return [];
   return navLinks.filter(
     (link) => link && typeof link === "object" && typeof link.href === "string"
+  );
+}
+
+function SectionNavList({ root }) {
+  if (!root || !Array.isArray(root.children) || !root.children.length) return null;
+  return (
+    <ul className="canopy-modal__section-list" role="list">
+      {root.children.map((node) => (
+        <SectionNavItem key={node.slug || node.href || node.title} node={node} depth={0} />
+      ))}
+    </ul>
+  );
+}
+
+function SectionNavItem({ node, depth }) {
+  if (!node) return null;
+  const hasChildren = Array.isArray(node.children) && node.children.length > 0;
+  const Tag = node.href ? "a" : "span";
+  const classes = [
+    "canopy-modal__section-link",
+    `depth-${Math.min(5, Math.max(0, depth + 1))}`,
+  ];
+  if (!node.href) classes.push("is-label");
+  if (node.isActive) classes.push("is-active");
+
+  return (
+    <li className="canopy-modal__section-item" data-depth={depth}>
+      <Tag
+        className={classes.join(" ")}
+        href={node.href || undefined}
+        aria-current={node.isActive ? "page" : undefined}
+      >
+        {node.title || node.slug}
+      </Tag>
+      {hasChildren ? (
+        <ul className="canopy-modal__section-list canopy-modal__section-list--nested" role="list">
+          {node.children.map((child) => (
+            <SectionNavItem key={child.slug || child.href || child.title} node={child} depth={depth + 1} />
+          ))}
+        </ul>
+      ) : null}
+    </li>
   );
 }
 
@@ -223,6 +285,29 @@ export default function CanopyHeader(props = {}) {
   } = props;
 
   const navLinks = ensureArray(navLinksProp);
+  const PageContext = getSafePageContext();
+  const context = React.useContext(PageContext);
+  const sectionNavigation =
+    context && context.navigation && context.navigation.root
+      ? context.navigation
+      : null;
+  const sectionHeading =
+    (sectionNavigation && sectionNavigation.title) ||
+    (sectionNavigation && sectionNavigation.root
+      ? sectionNavigation.root.title
+      : "");
+  const hasSectionNav = !!(
+    sectionNavigation &&
+    sectionNavigation.root &&
+    Array.isArray(sectionNavigation.root.children) &&
+    sectionNavigation.root.children.length
+  );
+  const sectionLabel = sectionHeading
+    ? `More in ${sectionHeading}`
+    : "More in this section";
+  const sectionAriaLabel = sectionHeading
+    ? `${sectionHeading} section navigation`
+    : "Section navigation";
 
   return (
     <>
@@ -329,6 +414,15 @@ export default function CanopyHeader(props = {}) {
             </a>
           ))}
         </nav>
+        {hasSectionNav ? (
+          <nav
+            className="canopy-modal__section-nav"
+            aria-label={sectionAriaLabel}
+          >
+            <div className="canopy-modal__section-label">{sectionLabel}</div>
+            <SectionNavList root={sectionNavigation.root} />
+          </nav>
+        ) : null}
       </CanopyModal>
 
       <CanopyModal

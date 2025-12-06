@@ -484,15 +484,15 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
   const withLayout = dirLayout
     ? React.createElement(dirLayout, layoutProps, contentNode)
     : contentNode;
+  const withApp = React.createElement(app.App, null, withLayout);
   const PageContext = getPageContext();
   const contextValue = {
     navigation: extraProps && extraProps.navigation ? extraProps.navigation : null,
     page: extraProps && extraProps.page ? extraProps.page : null,
   };
   const withContext = PageContext
-    ? React.createElement(PageContext.Provider, { value: contextValue }, withLayout)
-    : withLayout;
-  const withApp = React.createElement(app.App, null, withContext);
+    ? React.createElement(PageContext.Provider, { value: contextValue }, withApp)
+    : withApp;
   const compMap = { ...components, ...headingComponents, a: Anchor };
   if (markdownTableComponent && !compMap.table) {
     compMap.table = markdownTableComponent;
@@ -501,8 +501,8 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
     compMap.pre = codeBlockComponent;
   }
   const page = MDXProvider
-    ? React.createElement(MDXProvider, { components: compMap }, withApp)
-    : withApp;
+    ? React.createElement(MDXProvider, { components: compMap }, withContext)
+    : withContext;
   const body = ReactDOMServer.renderToStaticMarkup(page);
   let head = '';
   if (app && app.Head) {

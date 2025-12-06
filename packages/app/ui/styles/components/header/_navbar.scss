@@ -43,6 +43,61 @@
     font-weight: 600;
   }
 
+  .canopy-modal--nav .canopy-modal__section-nav {
+    border-top: 1px solid var(--color-gray-200);
+    padding-top: 1rem;
+  }
+
+  .canopy-modal--nav .canopy-modal__section-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-gray-500);
+    margin-bottom: 0.5rem;
+  }
+
+  .canopy-modal__section-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .canopy-modal__section-item {
+    margin: 0;
+    padding: 0;
+  }
+
+  .canopy-modal__section-link {
+    display: block;
+    padding: 0.25rem 0;
+    text-decoration: none;
+    color: var(--color-gray-900);
+    font-weight: 500;
+  }
+
+  .canopy-modal__section-link:hover,
+  .canopy-modal__section-link:focus-visible {
+    color: var(--color-accent-default);
+    outline: none;
+  }
+
+  .canopy-modal__section-link.is-active {
+    font-weight: 600;
+  }
+
+  .canopy-modal__section-link.is-label {
+    color: var(--color-gray-600);
+    font-weight: 600;
+    cursor: default;
+  }
+
+  .canopy-modal__section-list--nested {
+    margin: 0.25rem 0 0.25rem 0.75rem;
+    padding-left: 0.5rem;
+    border-left: 1px solid var(--color-gray-200);
+  }
+
   @media (max-width: 48rem) {
     .canopy-header__desktop-nav {
       display: none;
