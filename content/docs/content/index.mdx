@@ -1,57 +1,42 @@
-import { Callout, Cards, Card, Tabs, Box } from '@canopy-iiif/app/docs-legacy-compat';
-
 # Content
 
-Canopy allows for easy creation of contextual content to support and reference the automatically generated content in a IIIF Collection. For the purpose of easy content generation Canopy utilizes [MDX](https://mdxjs.com/) which _"allows you to use JSX in your markdown content."_
+Create contextual stories under `content/` using [MDX](https://mdxjs.com/) — Markdown with embedded components. Every file becomes a page during the build and can pull in IIIF resources, sliders, and cards.
 
-<Callout type="info">
-  See the **[Creating Markdown Content guide](/create-markdown-content)** for a
-  step-by-step guide illustrating basic creation of new content.
-</Callout>
+See the [Creating Markdown Content guide](/create-markdown-content) for a full walkthrough.
 
-## Markdown and Components
+## Authoring basics
 
-Content is edited in the `/content` directory at the root of your Canopy IIIF project using `.mdx` files. In addition to the standard Markdown elements, Canopy IIIF provides a number of custom components that can be used to enhance the content of your site. These components are designed to be used in conjunction with Markdown to create a variety of content.
+- Store `.mdx` files under `content/`. Nested directories become URL paths.
+- Start each file with optional YAML front matter to set titles, metadata, and referenced manifests.
+- Write Markdown as usual, then drop components such as `<Viewer />` or `<ReferencedItems />` wherever you need them.
 
-<Cards>
-  <Card title="Markdown" href="/content/markdown" />
-  <Card title="Navigation" href="/content/navigation" />
-  <Card title="Card" href="/content/card" />
-  <Card title="Image" href="/content/image" />
-  <Card title="Referenced Items" href="/content/referenced-items" />
-  <Card title="Slider" href="/content/slider" />
-  <Card title="Viewer" href="/content/viewer" />
-</Cards>
+### Example
 
-## Example Content
-
-Content page with formatted Markdown elements, front matter, and an integrated `<Viewer />` component to output a IIIF Viewer for a provided Manifest.
-
-### Sample MDX
-
-```mdx copy filename="content/about/nez-perce.mdx"
+```mdx filename="content/about/nez-perce.mdx"
 ---
 title: The Nez Percé (Nimíipuu)
-navigation: "about"
+navigation: about
+referencedManifests:
+  - https://api.dc.library.northwestern.edu/api/v2/works/14a6aa15-9e12-47a7-9617-91f430d4f47b?as=iiif
 ---
 
 # The Nez Percé (Nimíipuu)
 
-This a sample page for scholarly content with historical context relating to the [Nez Percé](https://en.wikipedia.org/wiki/Nez_Perce), also known as the Nimíipuu.
+The Nez Percé, or Nimíipuu, lived across what is now Idaho, Oregon, and Washington.
 
-## A IIIF Viewer
-
-The `<Viewer />` is a React component that takes a single property, `iiifContent`, which is the URI to the
-IIIF manifest. The component will then fetch the Manifest and render a deep-zoom viewer. The viewer is
-responsive and will resize to fit the container it is placed in. These Manifests can be part of the Canopy
-source Collection but are not limited to it.
+## Watch the work
 
 <Viewer iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/14a6aa15-9e12-47a7-9617-91f430d4f47b?as=iiif" />
+
+<ReferencedItems />
 ```
 
-### Sample Output
+## Component reference
 
-<Box m="4">
-  ![canopy content page iiif
-  viewer](/examples/creating-markdown-content-referenced-item-0.png)
-</Box>
+- [Markdown](./markdown)
+- [Card](./card)
+- [Image](./image)
+- [Slider](./slider)
+- [Viewer](./viewer)
+- [ReferencedItems](./referenced-items)
+- [References](./references)

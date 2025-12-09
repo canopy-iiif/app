@@ -13,7 +13,7 @@ Under the hood Canopy uses [FlexSearch](https://github.com/nextapps-de/flexsearc
 
 You'd like to use Canopy IIIF to create a digital exhibit featuring Arabic manuscripts. For example, the [Arabic Manuscripts from West Africa](https://dc.library.northwestern.edu/collections/59ec43f9-a96c-4314-9b44-9923790b371c) provided by Northwestern University. The [IIIF Manifest data](https://api.dc.library.northwestern.edu/api/v2/search?query=collection.id:%2259ec43f9-a96c-4314-9b44-9923790b371c%22&as=iiif) contains both Arabic script and English text in its `label` and `summary` properties.
 
-You'd like to [customize search configuration](/configuration/search) in the following three ways:
+You'd like to [customize search configuration](/configuration#search) in the following three ways:
 
 - Support the "Arabic" character set in Search (in addition to default "Latin").
 - Include text from Manifest `summary` values in search results.
@@ -119,7 +119,7 @@ Edit `config/canopy.json` and add the additional language encoding, `arabic:extr
 ### Include summary in search results
 
 <Callout type="info">
-  The [default search configuration](/configuration/search) indexes only
+  The [default search configuration](/configuration#search) indexes only
   Manifest `label` and `metadata` values.
 </Callout>
 

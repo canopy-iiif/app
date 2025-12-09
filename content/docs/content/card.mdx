@@ -1,17 +1,31 @@
 # Card
 
-Implementers using Canopy IIIF can directly reference a single IIIF Manifest by using the `Card` component. The Card will render an HTML `figure`, the `thumbnail` and a `figcaption` containing the `label` of the Manifest. Use rendered figure will link to `/work` page for the relative Manifest.
+Use `<Card>` when you need a simple linked figure: image plus caption, wrapped in an anchor. The component is layout-focused and does not fetch IIIF data on its own. Pass the URL, image, and text explicitly.
 
-## Properties
+## Props
 
-| Property      | Type     | Required | Description                  |
-| ------------- | -------- | -------- | ---------------------------- |
-| `iiifContent` | `string` | `true`   | Manifest URI to be rendered. |
+| Prop        | Type     | Required | Notes                                                    |
+| ----------- | -------- | -------- | -------------------------------------------------------- |
+| `href`      | string   | ✅       | Destination URL.                                        |
+| `title`     | string   |          | Primary caption text (rendered in `<figcaption>`).       |
+| `subtitle`  | string   |          | Optional second line of caption text.                    |
+| `src`       | string   |          | Image URL (IIIF thumbnail, static JPG, etc.).            |
+| `alt`       | string   |          | Accessible alt text (falls back to `title`).             |
+| `imgWidth` / `imgHeight` | number |          | Provide intrinsic dimensions to maintain aspect ratio. |
+| `aspectRatio` | number |          | Alternative way to lock the image ratio.                |
+| `lazy`      | boolean  |          | Defaults to `true`. Set to `false` when used in carousels. |
 
-- The referenced Manifest must be part of the IIIF Collection used in your Canopy project.
+## Example
 
-## Usage
-
-```mdx copy
-<Card iiifContent="https://manifests.collections.yale.edu/ycba/obj/702" />
+```mdx
+<Card
+  href="/works/the-town-and-pass-of-boondi-in-rajpootana.html"
+  src="https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778/thumbnail"
+  imgWidth={1024}
+  imgHeight={768}
+  title="The town & pass of Boondi, in Rajpootana"
+  subtitle="Lieutenant-Colonel Thomas Bacon, 1836"
+/>
 ```
+
+`<ReferencedItems />` renders a grid of cards automatically, so you only need to use `<Card>` directly for bespoke layouts.

@@ -1,149 +1,201 @@
-import { Image } from '@canopy-iiif/app/docs-legacy-compat';
-
 # Image
 
-Use the `<Image>` component to insert a pan-zoom capable Image into your content. The component can reference a static image URL such as a `.jpg` or a IIIF Image API endpoint.
+`<Image>` embeds a pan-zoom viewer powered by Clover. It works with both static image URLs and IIIF Image API endpoints.
 
-## Properties
+## Props
 
-| Property       | Type                                                                    | Required | Description                                                                                |
-| -------------- | ----------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------ |
-| `height`       | [CSS `height`](https://developer.mozilla.org/en-US/docs/Web/CSS/height) | `true`   | Height of the Image canvas                                                                 |
-| `isTiledImage` | `boolean`                                                               | `false`  | Default as `false`. If `true`, the image using tiles served from a IIIF Image API endpoint |
-| `label`        | `string`                                                                | `false`  | Label of image for captioning and accessibility purposes                                   |
-| `src`          | `string`                                                                | `true`   | URL reference for image `.jpg` or IIIF Image API endpoint, ex: `*.info.json`               |
+| Prop              | Type    | Required | Notes                                                               |
+| ----------------- | ------- | -------- | ------------------------------------------------------------------- |
+| `src`             | string  | ✅       | Image API endpoint or direct asset URL.                             |
+| `isTiledImage`    | boolean |          | Set to `true` for IIIF Image API endpoints so tiles load on demand. |
+| `height`          | string  |          | CSS height for the viewer area (default `600px`).                   |
+| `alt`             | string  |          | Accessible alt text.                                                |
+| `caption`         | string  |          | Optional caption rendered under the viewer.                         |
+| `backgroundColor` | string  |          | Placeholder background color while tiles load.                      |
+| `annotations`     | array   |          | Pass Clover annotation objects to highlight regions.                |
 
-- This resource may OR may not be part of the IIIF Collection used in your Canopy project.
-- Width of the image will be 100% of the containing element.
+All additional props flow to Clover’s image component. See its docs for advanced options.
 
-## Usage
+## Examples
 
-Image component is rendered as a `figure` element with a `figcaption` element for the label. The `figure` is an OpenSeadragon viewer that allows for pan-zoom capabilities.
+### Static image
 
-### Pan-zoom using a simple image (`.jpg`, `.png`, etc.)
+Use this when you have a regular JPG/PNG and want a simple pan-zoom viewer with a caption. The component handles the interaction so you only supply the URL, alt text, and optional caption.
 
-```mdx copy
 <Image
-  height="500px"
-  label="Emiliano Zapata, 1914 by Agustín Casasola. Public Domain."
-  src="https://upload.wikimedia.org/wikipedia/commons/9/99/Emiliano_Zapata4.jpg"
+  src="https://upload.wikimedia.org/wikipedia/commons/1/10/B26055943A_-_A_map_of_the_East-Indies_and_the_adjacent_countries.jpg"
+  alt="1717 map by Herman Moll illustrating early European colonial reach."
+  caption="1717 map by British cartographer Herman Moll, depicting the East Indies from the Persian frontier to New Guinea and southern Japan, including India, Ceylon, Southeast Asia, much of China, Indonesia, and the Philippines. It shows the reach of European influence and trade during a period of expanding colonial power that would continue for several centuries."
+/>
+
+```mdx
+<Image
+  src="https://upload.wikimedia.org/wikipedia/commons/1/10/B26055943A_-_A_map_of_the_East-Indies_and_the_adjacent_countries.jpg"
+  alt="1717 map by Herman Moll illustrating early European colonial reach."
+  caption="1717 map by British cartographer Herman Moll, depicting the East Indies from the Persian frontier to New Guinea and southern Japan, including India, Ceylon, Southeast Asia, much of China, Indonesia, and the Philippines. It shows the reach of European influence and trade during a period of expanding colonial power that would continue for several centuries."
 />
 ```
 
-<figure style={{ margin: "var(--space-6) 0" }}>
-  <div
-    style={{
-      backgroundColor: "var(--gray-3)",
-      height: "500px",
-      position: "relative",
-      zIndex: "0",
-    }}
-  >
-    <Image
-      height="500px"
-      label="Emiliano Zapata, 1914 by Agustín Casasola. Public Domain."
-      src="https://upload.wikimedia.org/wikipedia/commons/9/99/Emiliano_Zapata4.jpg"
-    />
-  </div>
-  <figcaption
-    style={{
-      padding: "var(--space-3) 0",
-      fontSize: "var(--font-size-3)",
-      fontWeight: "500",
-    }}
-  >
-    <span>Emiliano Zapata, 1914 by Agustín Casasola. Public Domain.</span>
-  </figcaption>
-</figure>
+### IIIF tiled image
 
-### Pan-zoom using tiles from a IIIF Image API endpoint
+Point `src` at a IIIF Image API endpoint and set `isTiledImage` so Clover fetches tiles dynamically. This keeps large images performant without pre-generating downscaled versions.
 
-This method is useful for large images that are served as tiles from a IIIF Image API endpoint. Note that the `src` property is the IIIF Image API endpoint URL and the `isTiledImage` property is set to `true`.
-
-```mdx copy
 <Image
-  isTiledImage={true}
-  height="500px"
-  label="The Summons, 1856 by Emanuel Leutze. Harvard Art Museums."
   src="https://ids.lib.harvard.edu/ids/iiif/9013118"
+  isTiledImage
+  alt="The Summons by Emanuel Leutze"
+  caption="The Summons, 1856. Harvard Art Museums."
 />
-```
 
-<figure style={{ margin: "var(--space-6) 0" }}>
-  <div
-    style={{
-      backgroundColor: "var(--gray-3)",
-      height: "500px",
-      position: "relative",
-      zIndex: "0",
-    }}
-  >
-    <Image
-      isTiledImage={true}
-      height="500px"
-      label="The Summons, 1856 by Emanuel Leutze. Harvard Art Museums."
-      src="https://ids.lib.harvard.edu/ids/iiif/9013118"
-    />
-  </div>
-  <figcaption
-    style={{
-      padding: "var(--space-3) 0",
-      fontSize: "var(--font-size-3)",
-      fontWeight: "500",
-    }}
-  >
-    <span>The Summons, 1856 by Emanuel Leutze. Harvard Art Museums.</span>
-  </figcaption>
-</figure>
-
-### Pan-zoom using a specific region of a IIIF Image API endpoint
-
-In some cases, you may want to display a specific region of a IIIF Image API endpoint. This can be done by adding the `region` property to the `src` URL. The `region` property is formatted as `x,y,w,h`, where `x` and `y` are the coordinates of the top-left corner of the region, and `w` and `h` are the width and height of the region.
-
-To find the region coordinates:
-
-1. Navigate to the [IIIF Crop tool](https://ncsu-libraries.github.io/iiif-crop-tool/) created by NC State University Libraries.
-2. Input the IIIF Image API endpoint URL in the `Image URL` field, for example: `https://ids.lib.harvard.edu/ids/iiif/9013118`.
-3. Draw a rectangle around the region you want to display.
-4. Copy the generated URL and use this as the `src` value.
-
-In this example, the region of `188,650,914,712` is generated for the URL https://ids.lib.harvard.edu/ids/iiif/9013118/188,650,914,712/full/0/default.jpg.
-
-```mdx copy
+```mdx
 <Image
-  height="500px"
-  label="In the foreground of The Summons by Emanuel Leutze, a black-clad, masked figure emerges from behind a decorative screen to present a coin to a startled man in a red tunic, whose defensive posture and alarmed expression underscore the dramatic tension of the unexpected encounter."
-  src="https://ids.lib.harvard.edu/ids/iiif/9013118/188,650,914,712/full/0/default.jpg"
+  src="https://ids.lib.harvard.edu/ids/iiif/9013118"
+  isTiledImage
+  alt="The Summons by Emanuel Leutze"
+  caption="The Summons, 1856. Harvard Art Museums."
 />
 ```
 
-<figure style={{ margin: "var(--space-6) 0" }}>
-  <div
-    style={{
-      backgroundColor: "var(--gray-3)",
-      height: "500px",
-      position: "relative",
-      zIndex: "0",
-    }}
-  >
-    <Image
-      height="500px"
-      label="In the foreground of The Summons by Emanuel Leutze, a black-clad, masked figure emerges from behind a decorative screen to present a coin to a startled man in a red tunic, whose defensive posture and alarmed expression underscore the dramatic tension of the unexpected encounter."
-      src="https://ids.lib.harvard.edu/ids/iiif/9013118/188,650,914,712/full/0/default.jpg"
-    />
-  </div>
-  <figcaption
-    style={{
-      padding: "var(--space-3) 0",
-      fontSize: "var(--font-size-3)",
-      fontWeight: "500",
-    }}
-  >
-    <span>
-      In the foreground of The Summons by Emanuel Leutze, a black-clad, masked
-      figure emerges from behind a decorative screen to present a coin to a
-      startled man in a red tunic, whose defensive posture and alarmed
-      expression underscore the dramatic tension of the unexpected encounter.
-    </span>
-  </figcaption>
-</figure>
+### IIIF region
+
+Crop down to a subsection of a IIIF image by appending the `xywh` fragment to the URL. Region URLs are great for spotlighting details inside a larger canvas.
+
+<Image
+  src="https://ids.lib.harvard.edu/ids/iiif/9013118/188,650,914,712/full/0/default.jpg"
+  alt="Detail from The Summons"
+  caption="Masked messenger approaching a startled courtier."
+/>
+
+```mdx
+<Image
+  src="https://ids.lib.harvard.edu/ids/iiif/9013118/188,650,914,712/full/0/default.jpg"
+  alt="Detail from The Summons"
+  caption="Masked messenger approaching a startled courtier."
+/>
+```
+
+### Annotations
+
+Pass a Clover-style `annotations` array to highlight one or more regions directly in the viewer. Each annotation object includes the source canvas, selector, and textual body so readers see structured callouts.
+
+<Image
+  src="https://ids.lib.harvard.edu/ids/iiif/9013118"
+  isTiledImage
+  alt="Annotated detail"
+  caption="Annotations highlight regions inside the canvas."
+  annotations={[
+    {
+      annotation: {
+        id: "https://ids.lib.harvard.edu/annotations/0",
+        type: "Annotation",
+        motivation: ["tagging"],
+        body: [
+          {
+            type: "TextualBody",
+            value: "A masked messenger approaching a startled courtier.",
+          },
+        ],
+        target: {
+          type: "SpecificResource",
+          source: {
+            id: "https://ids.lib.harvard.edu/ids/iiif/9013118/canvas/1",
+            type: "Canvas",
+          },
+          selector: {
+            type: "FragmentSelector",
+            value: "xywh=188,650,914,712",
+          },
+        },
+      },
+      targetIndex: 0,
+    },
+    {
+      annotation: {
+        id: "https://ids.lib.harvard.edu/annotations/1",
+        type: "Annotation",
+        motivation: ["tagging"],
+        body: [
+          {
+            type: "TextualBody",
+            value:
+              "Women sit at a table, conversing over tea or a meal, while one cradles an infant on her lap.",
+          },
+        ],
+        target: {
+          type: "SpecificResource",
+          source: {
+            id: "https://ids.lib.harvard.edu/ids/iiif/9013118/canvas/1",
+            type: "Canvas",
+          },
+          selector: {
+            type: "FragmentSelector",
+            value: "xywh=1160,800,544,372",
+          },
+        },
+      },
+      targetIndex: 0,
+    },
+  ]}
+/>
+
+```mdx
+<Image
+  src="https://ids.lib.harvard.edu/ids/iiif/9013118"
+  isTiledImage
+  alt="Annotated detail"
+  caption="Annotations highlight regions inside the canvas."
+  annotations={[
+    {
+      annotation: {
+        id: "https://ids.lib.harvard.edu/annotations/0",
+        type: "Annotation",
+        motivation: ["tagging"],
+        body: [
+          {
+            type: "TextualBody",
+            value: "A masked messenger approaching a startled courtier",
+          },
+        ],
+        target: {
+          type: "SpecificResource",
+          source: {
+            id: "https://ids.lib.harvard.edu/ids/iiif/9013118/canvas/1",
+            type: "Canvas",
+          },
+          selector: {
+            type: "FragmentSelector",
+            value: "xywh=188,650,914,712",
+          },
+        },
+      },
+      targetIndex: 0,
+    },
+    {
+      annotation: {
+        id: "https://ids.lib.harvard.edu/annotations/1",
+        type: "Annotation",
+        motivation: ["tagging"],
+        body: [
+          {
+            type: "TextualBody",
+            value:
+              "Women sit at a table, conversing over tea or a meal, while one cradles an infant on her lap.",
+          },
+        ],
+        target: {
+          type: "SpecificResource",
+          source: {
+            id: "https://ids.lib.harvard.edu/ids/iiif/9013118/canvas/1",
+            type: "Canvas",
+          },
+          selector: {
+            type: "FragmentSelector",
+            value: "xywh=1160,800,544,372",
+          },
+        },
+      },
+      targetIndex: 0,
+    },
+  ]}
+/>
+```

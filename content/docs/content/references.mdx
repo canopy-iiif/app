@@ -1,0 +1,37 @@
+# References
+
+`<References />` lists the essays that cite a manifest. It belongs on work layouts (`content/works/_layout.mdx`) or anywhere you want to surface backlinks to contextual pages.
+
+## How it works
+
+- When a page sets `referencedManifests`, Canopy records the relationship in `.cache/iiif/index.json`.
+- `<References />` looks up those relationships, either for the current work page or for a manifest ID you pass via `id`.
+- The component renders a definition list (`<dl>`), so it inherits the standard metadata styling on work pages.
+
+## Props
+
+| Prop        | Type   | Required | Notes                                               |
+| ----------- | ------ | -------- | --------------------------------------------------- |
+| `id`        | string |          | Manifest URI. Defaults to the work currently in view. |
+| `title`     | string |          | Heading text (defaults to `Referenced by`).         |
+| `emptyLabel`| string |          | Optional message when no essays cite this manifest. |
+| `className` | string |          | Extra class names for custom styling.               |
+
+## Example
+
+```mdx filename="content/works/_layout.mdx"
+<section>
+  <h2>Contextual references</h2>
+  <References emptyLabel="No essays cite this work yet." />
+</section>
+```
+
+To show references for any manifest (not just the one being rendered), pass `id`:
+
+```mdx
+<References
+  id="https://api.dc.library.northwestern.edu/api/v2/works/46de2c91-3a29-4525-939e-ee17073f3a7e?as=iiif"
+  title="Cited in"
+  emptyLabel="No matches yet."
+/>
+```

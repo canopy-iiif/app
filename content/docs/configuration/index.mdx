@@ -1,91 +1,57 @@
-import { Callout, Cards, Card } from '@canopy-iiif/app/docs-legacy-compat';
-
 # Configuration
 
-Canopy reads its project settings from `canopy.yml` in the repository root (override with `CANOPY_CONFIG=/path/to/file.yml`). The YAML file keeps content authors in plain text while letting the build pipeline drive IIIF ingestion, search, and theming.
-
-<Callout>
-  See the **[Get Started guide](/get-started)** for creating a project scaffold before editing `canopy.yml`.
-</Callout>
-
-<Cards>
-  <Card title="Collection" href="#collection" />
-  <Card title="Search" href="/configuration/search" />
-  <Card title="Theme" href="/configuration/theme" />
-  <Card title="Map" href="/configuration/map" />
-  <Card title="Locale" href="/configuration/locale" />
-</Cards>
+Canopy reads settings from `canopy.yml` in the repository root. Override the path with `CANOPY_CONFIG=/path/to/file.yml`. Edit the file after walking through the [Get Started guide](/get-started).
 
 ## Quick start
 
-```yaml filename="canopy.yml"
-collection: https://example.org/iiif/collection/root
+```yaml filename="canopy.yml" copy
+collection:
+  - https://example.org/iiif/collections/a
+  - https://example.org/iiif/collections/b
 metadata:
   - Subject
   - Creator
 featured:
   - https://example.org/iiif/manifest/alpha
   - https://example.org/iiif/manifest/bravo
+```
+
+## Basic configuration
+
+### collection
+
+- **Required.** Provide one URI or an array of IIIF Collection URIs.
+- URIs must match the Collection `id` values.
+- Override the entire list with `CANOPY_COLLECTION_URI` for scripted builds.
+
+### metadata (facets)
+
+- Optional list of manifest metadata labels (case-sensitive in YAML, matched case-insensitively at build time).
+- Drives related sliders, metadata callouts, and `/api/facet/**` IIIF collections.
+- Set it to an empty list to turn off facets without deleting the key.
+
+### featured
+
+- Optional list of manifest URIs for the homepage hero and other highlighted slots.
+- Entries should belong to your configured collections; Canopy normalizes IDs to avoid duplicates.
+
+## Search
+
+Search settings live in the `search` block. The build uses them to control FlexSearch indexing, result layouts, and tab order.
+
+```yaml
 search:
+  results:
+    work:
+      layout: grid
+      result: figure
+    page:
+      layout: list
+      result: article
   tabs:
     order:
       - work
       - page
-  index:
-    metadata:
-      enabled: true
-      all: false
-    summary:
-      enabled: true
-    annotations:
-      enabled: false
-site:
-  baseUrl: https://example.org/canopy
-theme:
-  accentColor: indigo
-  grayColor: slate
-  appearance: light
-```
-
-## collection
-
-- **Required.** Absolute IIIF Collection URI that powers the build.
-- Must match the `id` field of the source Collection.
-- Override via `CANOPY_COLLECTION_URI` when scripting builds without touching `canopy.yml`.
-
-## metadata (facets)
-
-- Optional list of manifest metadata labels (case-sensitive) to facet on.
-- Matching is case-insensitive, so `subject`, `SUBJECT`, and `Subject` are treated the same.
-- Drives highlighted sliders, the Metadata page, related-items queries, and generated IIIF facet collections (`/api/facet/**`).
-- Set to an empty array to disable faceting while keeping the key in place.
-
-## featured
-
-- Optional list of IIIF Manifest URIs surfaced in the homepage hero and other "featured" placements.
-- URIs must exist in the source Collection. Canopy normalises query strings to avoid duplicate entries when caches are reused.
-
-## site.baseUrl
-
-```yaml
-site:
-  baseUrl: https://example.org/canopy
-```
-
-- Optional. Provide an absolute origin (with optional path prefix) so generated IIIF collections and canonical links resolve correctly.
-- If omitted, Canopy falls back to `CANOPY_BASE_URL`, the Pages deployment context, or `http://localhost:5001` in dev.
-
-## search configuration (overview)
-
-The `search` block refines FlexSearch behaviour and UI tabs.
-
-```yaml
-search:
-  tabs:
-    order:
-      - work
-      - page
-      - examples
   index:
     metadata:
       enabled: true
@@ -99,30 +65,96 @@ search:
         - tagging
 ```
 
-- **`tabs.order`** — optional list that reorders the search result tabs. Unknown values are ignored; missing values fall back to the default `work` tab.
-- **`index.metadata.enabled`** — toggle metadata fields in the FlexSearch index. When `all: true`, every manifest metadata item is indexed; otherwise only labels listed in `metadata` are used.
-- **`index.summary.enabled`** — include manifest summaries in the index payload.
-- **`index.annotations.enabled`** — opt into indexing external annotation text; combine with `motivation` to limit which motivations count.
+### Tabs and layouts
 
-See the dedicated [Search configuration page](/configuration/search) for advanced options and examples.
+- `results.<type>` defines how each tab renders. `layout` accepts `grid` or `list`. `result` accepts `figure` or `article` and maps to the runtime templates under `packages/app/lib/search/templates/`.
+- Adding entries to `results` also fixes the tab order. If you only need to reorder existing tabs, use `tabs.order` instead.
+- Unknown tab names are ignored. Tabs without entries fall back to `work` with a grid of `figure` cards.
 
-## theme
+### Index sources
+
+- Works: every manifest pulled from your configured collections becomes a `type: 'work'` record. Metadata fields are filtered by `metadata` plus `search.index.metadata`.
+- Pages: MDX pages contribute `type: 'page'` records unless they opt out. The `search` collector honors frontmatter (`search: false`, custom `searchType`, `searchSummary`, and `searchSummaryMarkdown`). See `packages/app/lib/build/search-index.js` for the exact mapping.
+- Set `search.index.metadata.enabled` to `false` when you want the index to include only titles and summaries. Set `all: true` to index every manifest metadata entry, even if it is not listed under `metadata`.
+- `search.index.summary.enabled` defaults to `true`. Toggle it if your manifests have long summaries that you do not want to index.
+- `search.index.annotations.enabled` turns on deep annotation indexing. When enabled we write `site/api/search-index-annotations.json` and the runtime fetches it on demand. Filter motivations with the `motivation` list shown above.
+
+### Opting pages in or out
+
+Add YAML frontmatter to any MDX page to control indexing:
+
+```mdx
+---
+search: false
+---
+```
+
+Supported keys:
+
+- `search: false` removes the page from the index.
+- `searchType: docs` sets the record type so you can define a dedicated `results.docs` layout.
+- `searchSummary` or `searchSummaryMarkdown` let you write concise blurbs for the results list.
+
+### Runtime notes
+
+- The build writes three artifacts in `site/api/`: `search-index.json`, `search-records.json`, and (optionally) `search-index-annotations.json`.
+- The browser runtime (`site/search.js`) reads `site/api/index.json` to learn the tab order, layout preferences, and asset sizes before hydrating results.
+- Each result tab shares a single FlexSearch store, so layout tweaks never change the underlying index.
+
+## Theme
+
+Canopy reads a small `theme` block to pick the accent palette, gray palette, and default appearance. The values feed the Radix-driven token system and the Tailwind preset, so every component inherits the same colors.
 
 ```yaml
 theme:
-  accentColor: indigo
-  grayColor: slate
-  appearance: dark
+  accentColor: tomato
+  grayColor: sand
+  appearance: light
 ```
 
-- `accentColor` / `grayColor` map to Radix UI color families (`indigo`, `cyan`, `sand`, etc.).
-- `appearance` switches between the light and dark Radix ramps. Defaults to `light`.
-- Configure additional theme details on the [Theme page](/configuration/theme).
+- `accentColor`: Radix accent family name (`indigo`, `tomato`, `cyan`, etc.). Drives buttons, links, and highlights.
+- `grayColor`: Radix gray family name (`slate`, `sand`, `mauve`, etc.). Sets the neutral surfaces.
+- `appearance`: `light` (default) or `dark`. Controls which Radix ramp supplies the color tokens and sets `color-scheme` for the page.
 
-## Complete example
+Stick to lowercase palette names. If you omit a value, Canopy falls back to `indigo` / `slate` with a light ramp.
+
+### Extended styling
+
+Use CSS when you want bespoke typography, spacing, or component tweaks:
+
+```css
+/* app/styles/main.css */
+@theme {
+  --font-serif: "Fraunces", Georgia, serif;
+}
+
+@layer components {
+  .custom-hero {
+    border-radius: 32px;
+  }
+}
+```
+
+Tailwind already loads the Canopy preset and plugin, so the overrides above piggyback on the same build. If you need a full Tailwind config, import `defineCanopyTailwindConfig` from `@canopy-iiif/app/ui/tailwind-config` and extend it there.
+
+## Advanced configuration
+
+### site.baseUrl
+
+```yaml
+site:
+  baseUrl: https://example.org/canopy
+```
+
+- Optional absolute origin (with optional path prefix) for sitemap links, IIIF Collection ids, and canonical URLs.
+- If blank, Canopy falls back to `CANOPY_BASE_URL`, the Pages workflow origin, or `http://localhost:5001` during `npm run dev`.
+
+### Complete example
 
 ```yaml filename="canopy.yml"
-collection: https://api.dc.library.northwestern.edu/api/v2/collections/cd92fb8d-76a7-4c15-8f34-44f30866b7f4?as=iiif
+collection:
+  - https://api.dc.library.northwestern.edu/api/v2/collections/7ac5769f-a1d9-4227-a350-bf8bd8b1cddc?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/collections/94536627-cfdf-413c-852b-0cb16d986da3?as=iiif
 metadata:
   - Subject
   - Genre
@@ -131,6 +163,13 @@ featured:
   - https://api.dc.library.northwestern.edu/api/v2/works/6f336d7c-fb8a-4c15-8f34-44f30866b7f4?as=iiif
   - https://api.dc.library.northwestern.edu/api/v2/works/e1d27060-c8d7-4863-a120-7dced701d6be?as=iiif
 search:
+  results:
+    work:
+      layout: grid
+      result: figure
+    page:
+      layout: list
+      result: article
   tabs:
     order:
       - work

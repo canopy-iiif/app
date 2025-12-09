@@ -1,84 +1,47 @@
-import { Tabs, Box } from '@canopy-iiif/app/docs-legacy-compat';
-
 # Markdown
 
-Canopy IIIF `content` pages are authored using Markdown in `.mdx` files.
+Every page in `content/` is an `.mdx` file: Markdown plus JSX components. The quickest way to see everything in action is to open `content/about/markdown.mdx`, which contains headings, quotes, lists, tables, images, and footnotes. This guide recreates those patterns in smaller chunks.
 
-## Elements
+## File layout
 
-Common [Markdown elements](https://daringfireball.net/projects/markdown/syntax) are supported for use in Canopy IIIF content. Canopy will automatically transform content created in Markdown to HTML.
+- Nested folders map to URL paths (`content/guides/index.mdx` → `/guides/`).
+- `index.mdx` inside any directory becomes that directory’s landing page.
+- Run `npm run dev` to preview changes with live reload.
 
-```mdx copy filename="content/iranian-cinema.mdx"
-# Iranian Cinema
+## Supported front matter
 
-## Overview
+Add YAML at the top of each file to set metadata and opt into search or reference features. These are the keys Canopy reads today—older fields like `image` are ignored and can be deleted.
 
-Iranian cinema, also known as Persian cinema, stands out for its unique blend of artistry, storytelling, and cultural representation. It has gained significant international acclaim, especially for its poetic narrative style and sociocultural themes. Iranian cinema is a vibrant and influential part of the global film landscape, known for its poignant storytelling, artistic innovation, and cultural depth.
+| Key                   | Purpose                                                                 |
+| --------------------- | ----------------------------------------------------------------------- |
+| `title`               | Page title used for `<h1>` and `<title>`.                                |
+| `description`         | Optional blurb for `<meta name="description">`.                        |
+| `navigation`          | Section slug for the sidebar (e.g., `about`).                           |
+| `referencedManifests` | List of manifest URLs consumed by `<ReferencedItems />` / `<References />`. |
+| `search`              | When set to `false`, removes the page from the search index.            |
+| `searchType`          | Overrides the record type (e.g., `docs`).                               |
+| `searchSummary` / `searchSummaryMarkdown` | Custom blurb shown in search results.              |
 
-## Characteristics
-
-- **Humanistic Approach**: Many films focus on everyday life and human relationships, reflecting broader societal issues.
-- **Artistic Storytelling**: Iranian cinema is renowned for its poetic, metaphorical narrative style.
-- **Minimalism**: There's often an emphasis on simplicity in both visual and narrative elements.
-
-## International Recognition
-
-Iranian films have been celebrated at major international film festivals, including Cannes, Venice, and Berlin. Numerous awards have been won, highlighting the global impact of Iranian cinematic art.
-```
-
-## Front Matter
-
-At the top of each Markdown file, you can add front matter to provide additional information about the page. Front matter is written in YAML, and must be surrounded by `---` on either side.
+Example:
 
 ```mdx
 ---
-title: "Title in Front Matter"
----
-```
-
-### Content Pages
-
-All new content pages created in the `content` directory can have the following front matter:
-
-#### title
-
-The title of the page. This will be used in the HTML `<title>` and associated `<meta>` tags.
-
-#### decription
-
-The description of the page. This will be used in the HTML `<head>` for associated `<meta>` tags.
-
-#### navigation
-
-The navigation menu for the page. This should be the relative directory path for the page. For example, if the page is in `content/correspondence/`, the navigation should be `correspondence`.
-
-#### referencedManifests
-
-A list of IIIF Manifests URIs that are referenced in the content of the page. These Manifests MUST be a part of source IIIF Collection used for your Canopy project. These will create a link between the `/work` page and the current content page.
-
-```mdx
----
-title: "January 1955 Correspondence"
-description: "Seven letters of Amanda Ira Aldridge and Mihailo Kovačević"
-navigation: "correspondence"
+title: January 1955 Correspondence
+description: Seven letters between Amanda Ira Aldridge and Mihailo Kovačević
+navigation: correspondence
 referencedManifests:
   - https://api.dc.library.northwestern.edu/api/v2/works/46de2c91-3a29-4525-939e-ee17073f3a7e?as=iiif
   - https://api.dc.library.northwestern.edu/api/v2/works/bb968afb-7857-46bd-9392-d8617a93cc9f?as=iiif
-  - https://api.dc.library.northwestern.edu/api/v2/works/14b8212b-7c49-431b-ad04-e4cd5cce6416?as=iiif
+searchSummary: Letters exchanged during January 1955.
 ---
 ```
 
-### Home Page
+### Home page flags
 
-The home page at `content/index.mdx` is a special content page with distinct front matter keys in addition to `title`.
+`content/index.mdx` recognizes two more keys:
 
-#### showHero
-
-A boolean value that determines whether or not the hero image for featued Manifests should be shown on the home page. This renders above the Markdown content.
-
-#### showHighlighted
-
-A boolean value that determines whether or metadata sliders for highlighted items should be shown on the home page. This renders below the Markdown content if `showHero` is `true`
+- `showHero`: show the featured-manifest hero (`true`/`false`).
+- `showHighlighted`: render metadata sliders beneath the hero.
 
 ```mdx
 ---
@@ -87,3 +50,84 @@ showHero: true
 showHighlighted: true
 ---
 ```
+
+## Core Markdown patterns
+
+### Text, emphasis, headings
+
+```mdx
+# Heading level 1
+## Heading level 2
+Paragraphs can mix _italics_, **bold**, and `inline code` for props like `iiifContent`.
+```
+
+### Lists and blockquotes
+
+```mdx
+1. Gather manifests.
+2. Draft copy.
+3. Link to supporting resources.[^1]
+
+- Highlight takeaways.
+- Pair prose with citations.
+
+> Blockquotes surface letters, diary entries, or reviewer notes.
+```
+
+### Images
+
+```mdx
+![Stacked archival boxes](https://picsum.photos/seed/canopy-stacks/800/360)
+
+<Image
+  src="https://ids.lib.harvard.edu/ids/iiif/9013118"
+  isTiledImage
+  height="400px"
+  alt="Detail from The Summons"
+  caption="Use the Image component for pan-zoom or annotated figures."
+/>
+```
+
+### Tables and definition lists
+
+```mdx
+| Feature | Syntax        | Notes                           |
+| ------- | ------------- | ------------------------------- |
+| Tables  | `| col |`     | Align columns with separators.  |
+| Code    | ```lang ```   | Add a language hint.            |
+
+Term
+: Definition lists keep glossaries tidy.
+```
+
+### Code blocks and checklists
+
+````mdx
+```txt filename="snippet.mdx"
+<Viewer iiifContent="https://…" />
+```
+
+- [x] Document the build inputs.
+- [ ] Leave one unchecked item as a reminder.
+````
+
+### Footnotes
+
+```mdx
+Refer to prior research when needed.[^source]
+
+[^source]: Footnotes collect citations at the end of the page.
+```
+
+## Components inside Markdown
+
+Embed Canopy components inline to tie Markdown narratives back to IIIF assets:
+
+- `<Viewer />` for a full manifest experience.
+- `<Image />` for single-canvas figures.
+- `<Slider />` for curated carousels.
+- `<ReferencedItems />` / `<References />` to connect essays and works.
+
+Because MDX is just React, you can pass props directly in the markup. Keep component usage minimal when possible so the prose stays readable in raw form.
+
+[^1]: Footnotes defined later in the file display at the bottom of the rendered page.
