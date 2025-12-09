@@ -33,15 +33,7 @@ Directories that contain their own `_meta.json` receive a sidebar when `navigati
 ]
 ```
 
-Each linked MDX file should declare a matching `navigation` frontmatter value so the layout knows which menu to render:
-
-```mdx filename="content/docs/layout/index.mdx"
----
-title: Layout
-description: "How the docs shell renders navigation and headings."
-navigation: "docs"
----
-```
+`<Layout>` automatically picks the sidebar based on the current path, so you only need to maintain the `_meta.json` files—no front matter flag required.
 
 ## Directory structure example
 

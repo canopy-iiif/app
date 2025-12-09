@@ -1,13 +1,8 @@
-import { Callout, Box } from '@canopy-iiif/app/docs-legacy-compat';
-
 # Create Markdown Content
 
 Implementers of Canopy IIIF can author contextual content to support Manifest resources using formatted Markdown files. These files are stored in the `/content` directory of your project. In doing so, you can add context to items in your IIIF Collection and craft a custom experience using integrated components provided by Canopy IIIF.
 
-<Callout>
-  This guide assumes you have a Canopy IIIF project. See the [Create a
-  Project](/get-started) guide to get started.
-</Callout>
+> **Note:** This guide assumes you already cloned or scaffolded a Canopy IIIF project. Follow [Create a Project](/get-started) first if you are starting from scratch.
 
 ## Use Case
 
@@ -35,20 +30,7 @@ Your file is now accessible at the relative route `/about/nez-perce`. If running
 
 ### Update Navigation Menu
 
-- **Add** the `navigation` key to the front matter with the `about` value. In this example the `about` navigation menu is defined by the `content/about/_meta.json` file.
-
-```mdx copy filename="content/about/nez-perce.mdx"
----
-title: The Nez Percé (Nimíipuu)
-navigation: "about"
----
-
-# The Nez Percé (Nimíipuu)
-
-This a sample page for scholarly content with historical context relating to the [Nez Percé](https://en.wikipedia.org/wiki/Nez_Perce), also known as the Nimíipuu.
-```
-
-- **Edit** the `content/about/_meta.json` file and **Add** the new menu item to the array. Note that the `/about/nez-perce` path matches the relative path of the Markdown file.
+Add the new page to the section’s `_meta.json` so it appears in the sidebar. For the `about` section that file lives at `content/about/_meta.json`.
 
 ```json copy filename="content/about/_meta.json"
 [
@@ -78,7 +60,6 @@ Canopy IIIF provides a [Clover IIIF](https://samvera-labs.github.io/clover-iiif/
 ```mdx copy filename="content/about/nez-perce.mdx"
 ---
 title: The Nez Percé (Nimíipuu)
-navigation: "about"
 ---
 
 # The Nez Percé (Nimíipuu)
@@ -97,10 +78,7 @@ source Collection but are not limited to it.
 
 The IIIF viewer is now rendered at the bottom of the page. The viewer is responsive with a max-height.
 
-<Box m="9" my="6">
-  ![canopy content page iiif
-  viewer](/examples/creating-markdown-content-referenced-item-0.png)
-</Box>
+![canopy content page iiif viewer](/examples/creating-markdown-content-referenced-item-0.png)
 
 ### Reference Collection Items
 
@@ -112,7 +90,6 @@ As a digital humanist, you might have authored a series of essays in Markdown (i
 ```mdx copy filename="content/about/nez-perce.mdx"
 ---
 title: The Nez Percé (Nimíipuu)
-navigation: "about"
 referencedManifests:
   - https://api.dc.library.northwestern.edu/api/v2/works/84aec8c1-42e8-4e2c-a6b2-1c7e3790217f?as=iiif
   - https://api.dc.library.northwestern.edu/api/v2/works/19efac1e-5e79-471c-89c2-a60a775562ce?as=iiif
@@ -145,15 +122,9 @@ links to the relevant Markdown pages.
 
 Your page should now output a grid of items that are referenced in the front matter. Automatically, a reciprocal connection is made between the Markdown content and the items in the IIIF Collection. Users can now navigate to and from the scholarly content page and the relative `/work` page representing the Manifest.
 
-<Box m="9" my="6">
-  ![canopy content page referenced
-  items](/examples/creating-markdown-content-referenced-item-1.png)
-</Box>
+![canopy content page referenced items](/examples/creating-markdown-content-referenced-item-1.png)
 
-<Box m="9" my="6">
-  ![canopy work page referencing
-  content](/examples/creating-markdown-content-referenced-item-2.png)
-</Box>
+![canopy work page referencing content](/examples/creating-markdown-content-referenced-item-2.png)
 
 ### Leveraging Metadata Collections
 
@@ -182,10 +153,7 @@ Creating facets as IIIF Collections...
 <Viewer iiifContent="/api/facet/date/1905.json" />
 ```
 
-<Box m="9" my="6">
-  ![canopy content page iiif viewer for metadata
-  collection](/examples/creating-markdown-content-referenced-item-3.png)
-</Box>
+![canopy content page iiif viewer for metadata collection](/examples/creating-markdown-content-referenced-item-3.png)
 
 - Or, **Add** a `<Slider />` component as an alternative view to render a carousel of items that link to the local relative `/work` pages representing the Manifests. This component takes the same `iiifContent` property. Note that this component only supports Collection resources.
 
@@ -193,15 +161,11 @@ Creating facets as IIIF Collections...
 <Slider iiifContent="/api/facet/date/1905.json" />
 ```
 
-<Box m="9" my="6">
-  ![canopy content page iiif slider for metadata
-  collection](/examples/creating-markdown-content-referenced-item-4.png)
-</Box>
+![canopy content page iiif slider for metadata collection](/examples/creating-markdown-content-referenced-item-4.png)
 
 ```mdx copy filename="content/about/nez-perce.mdx"
 ---
 title: The Nez Percé (Nimíipuu)
-navigation: "about"
 referencedManifests:
   - https://api.dc.library.northwestern.edu/api/v2/works/84aec8c1-42e8-4e2c-a6b2-1c7e3790217f?as=iiif
   - https://api.dc.library.northwestern.edu/api/v2/works/19efac1e-5e79-471c-89c2-a60a775562ce?as=iiif

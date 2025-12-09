@@ -1,21 +1,10 @@
-import { Callout, Box } from '@canopy-iiif/app/docs-legacy-compat';
-
 # Set up a Collection with Tropy and Tropiiify
 
 Canopy IIIF generates a browseable and searchable static site for digital collections and exhibits using a single IIIF Collection. If you're starting from scratch, you may not have a IIIF Collection, IIIF Manifests, or a IIIF Image server online. This guide will walk you through the process of starting from zero and leveraging [Tropy](https://tropy.org/), [Tropiiify](https://github.com/arkalab/tropiiify), and GitHub Pages with Canopy to deploy a full digital collection site.
 
-<Callout>
-  This guide is heavily inspired by previous blog posts by
-  [Raffaele Messuti](https://literarymachin.es/iiif-tropy-canopy/) and
-  [Shawn Graham](https://electricarchaeology.ca/2024/07/25/make-your-tropy-collection-and-annotations-available-with-canopy/).
-  For more advanced applications of Tropy with Canopy, be sure to read these posts.
-</Callout>
+> **Note:** This walkthrough builds on posts by [Raffaele Messuti](https://literarymachin.es/iiif-tropy-canopy/) and [Shawn Graham](https://electricarchaeology.ca/2024/07/25/make-your-tropy-collection-and-annotations-available-with-canopy/). Read them for deeper dives.
 
-<Callout type="info">
-    In addition to Canopy, this guide requires a [GitHub account](https://github.com/),
-    [Tropy software]((https://tropy.org/)), and the [Tropiiify plugin](https://github.com/arkalab/tropiiify).
-    All of these additional requirements are free to use.
-</Callout>
+> **Prereqs:** You’ll need a free [GitHub account](https://github.com/), [Tropy](https://tropy.org/), and the [Tropiiify plugin](https://github.com/arkalab/tropiiify) installed locally.
 
 ## Use Case
 
@@ -61,9 +50,7 @@ manifests, and ultimately a IIIF collection object.
 8. Highlight all your works and click *File > Export* and the value you entered in the `Name` field in step four above.
 9. Choose where you want to export your files on your machine.
 
-<Callout type="info">
-    It is possible to modify metadata templates to work with Tropiiify. See the [Tropiiify docs](https://github.com/arkalab/tropiiify) for more details.
-</Callout>
+> **Tip:** Tropiiify can map custom metadata templates. Check the [plugin docs](https://github.com/arkalab/tropiiify) if you need to tailor fields.
 
 ### Add Your Files to to GitHub
 
@@ -84,10 +71,7 @@ server.
 * Under **Branch**, make sure it is set to ‘main’ and ‘/(root)’
 * Click save.
 
-<Callout type="info">
-    Github repos have a maximum file size of 5GB.  If you exceed this amount, you can add additional repositories
-    to serve sections of your site.
-</Callout>
+> **Tip:** GitHub repositories top out at 5 GB. If your media exceeds that, split assets across multiple repos and expose each as its own IIIF collection.
 
 ###  Setup Your Canopy Project to Use This Collection
 
@@ -116,4 +100,3 @@ Now that all your files are ready, we can setup a new Canopy project to use them
 ```
 
 * The site will now build and be available online at the address described in step 5 of the **Deploy to GitHub Pages**  guide in 5 to 10 minutes.
-

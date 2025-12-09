@@ -1,14 +1,8 @@
-import { Callout, Box } from '@canopy-iiif/app/docs-legacy-compat';
-
 # Enable a Map with navPlace Properties
 
 Canopy IIIF allows users to explore the underlying collection through an interactive map. When activated, this component displays a map featuring markers representing each point **Feature** within the [navPlace](https://iiif.io/api/extension/navplace/) properties found throughout the Manifests of the overarching collection. This guide will walk you through the process of enabling the Map component in Canopy IIIF.
 
-<Callout>
-  The Map component is populated by Manifests with a `navPlace` property. For
-  more information, see the [IIIF `navPlace`
-  extension](https://iiif.io/api/extension/navplace/) specification.
-</Callout>
+> **Note:** The map pulls from Manifest `navPlace` entries. Review the [IIIF navPlace extension](https://iiif.io/api/extension/navplace/) before enabling it.
 
 ## Use Case
 
@@ -36,10 +30,7 @@ Select a IIIF Collection with geospatial point data and configure a Canopy IIIF 
 
 ### Add navPlace Properties to the Manifests in your collection
 
-<Callout type="info">
-  Currently, Canopy only leverages the `navPlace` properties found in Manifests
-  with `geometry` properties of type `Point`.
-</Callout>
+> **Tip:** Today the map only renders `navPlace` features with `geometry.type` set to `Point`.
 
 Before the `/map` component is enabled, add `navPlace` properties to Manifests in your source IIIF Collection.
 

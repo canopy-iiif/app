@@ -1,13 +1,8 @@
-import { Callout, Box } from '@canopy-iiif/app/docs-legacy-compat';
-
 # Customize the Search Index
 
 Under the hood Canopy uses [FlexSearch](https://github.com/nextapps-de/flexsearch) to power the search index. FlexSearch is a full-text, memory efficient, search library that is fast and easy to use. It is also highly customizable. Canopy provides a number of ways to customize the search index.
 
-<Callout>
-  This guide assumes you have a Canopy IIIF project. See the [Create a
-  Project](/get-started) guide to get started.
-</Callout>
+> **Note:** This guide picks up after you create a Canopy IIIF project. Complete [Create a Project](/get-started) first if needed.
 
 ## Use Case
 
@@ -118,10 +113,7 @@ Edit `config/canopy.json` and add the additional language encoding, `arabic:extr
 
 ### Include summary in search results
 
-<Callout type="info">
-  The [default search configuration](/configuration#search) indexes only
-  Manifest `label` and `metadata` values.
-</Callout>
+> **Note:** The [default search configuration](/configuration#search) indexes only Manifest `label` and configured `metadata` values.
 
 To include Manifest `summary` values in the search index, update the `search.index.summary.enabled` to `true`.
 
@@ -261,10 +253,7 @@ Update the `config/canopy.json` file to include these labels in the `metadata` p
 }
 ```
 
-<Callout type="info">
-  **Tip**: To confirm text is being indexed for search, open the file
-  `.canopy/index.json` and verify your custom data is being added to the index.
-</Callout>
+> **Tip:** To confirm text is being indexed, open `.canopy/index.json` and verify your custom data is included in the `records` array.
 
 ### Validate search customizations
 
@@ -274,9 +263,5 @@ Verify your customizations are working by searching for:
 - A Manifest `summary` value (e.g. "Fāʼidah of Prophet Yūsuf on gaining people's love and respect.")
 - A Manifest `metadata` value (e.g. "Falke", or "Prophet Yūsuf")
 
-<Box m="9" my="6">
-  ![canopy home page](/examples/guide-search-arabic.png)
-</Box>
-<Box m="9" my="6">
-  ![canopy home page](/examples/guide-search-english.png)
-</Box>
+![Search results showing Arabic query](/examples/guide-search-arabic.png)
+![Search results showing English query](/examples/guide-search-english.png)

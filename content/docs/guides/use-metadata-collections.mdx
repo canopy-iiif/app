@@ -1,13 +1,8 @@
-import { Callout, Box } from '@canopy-iiif/app/docs-legacy-compat';
-
 # Use Metadata Collections
 
 Canopy generates new IIIF Collections based on the [metadata](/configuration#metadata) labels included in your `config/canopy.json` file. For each unique string value associated with the label across IIIF Manifests found in your project, a new IIIF Collection is created. These Collections are used to create facets across your site and are also available for reuse in custom content.
 
-<Callout>
-  This guide assumes you have a Canopy IIIF project. See the [Create a
-  Project](/get-started) guide to get started.
-</Callout>
+> **Prereq:** Start with an existing Canopy IIIF project ([Create a Project](/get-started)).
 
 ## Use Case
 
@@ -48,10 +43,7 @@ Since you need a Collection for the **Subject** label with value of _"War pensio
 
 ### Validate that the Collection was Generated
 
-<Callout type="info">
-  If you have defined `NEXT_PUBLIC_BASE_PATH` in your `.env` file, you will need
-  to include that pattern in your URI.
-</Callout>
+> **Tip:** If you set `NEXT_PUBLIC_BASE_PATH`, prepend it to the `/api/facet/...` path when fetching collections during dev.
 
 IIIF Collections are generated when your site is rebuilt or when your server is restarted. After you've added the metadata label to your `config/canopy.json` file, you should make sure your collection exists. If you are working directly in GitHub with GitHub Pages, you can commit the change and wait for the site to rebuild. If you are working locally, you will need to stop your local server:`ctrl + c` and then `npm run dev` to restart your local server.
 
@@ -59,9 +51,7 @@ Once your site is running, you can check that the IIIF Collection was generated 
 
 The pattern for the URI for your Collection will be your site's base path followed by `/api/facet/${facet.slug}/${value.slug}.json`. In this example, the Collection URI would be `/api/facet/subject/war-pensions.json`.
 
-<Box m="9" my="6">
-  ![Example Generated Collection](/examples/war-pensions-collection.png)
-</Box>
+![Example generated collection](/examples/war-pensions-collection.png)
 
 ### Add the Collection to your Custom Content
 
@@ -70,7 +60,6 @@ Now that you have confirmed the generated Collection is available, you can add i
 ```mdx filename="content/about/history.mdx" {19}
 ---
 title: History
-navigation: "about"
 ---
 
 # War Pensions
@@ -82,7 +71,4 @@ During the American Civil War, the issue of war pensions emerged as a crucial as
 <Slider iiifContent="/api/facet/subject/war-pensions.json" />
 ```
 
-<Callout type="info">
-  Read more about creating custom content in the [Create Markdown Content
-  Guide](/docs/create-markdown-content).
-</Callout>
+> **Next:** Review the [Create Markdown Content guide](/create-markdown-content) for more component patterns.

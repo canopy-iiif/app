@@ -1,19 +1,10 @@
-import { Callout, Box } from '@canopy-iiif/app/docs-legacy-compat';
-
 # Share and Reuse Content
 
 Works in a Canopy IIIF site can be shared with others via [IIIF Content State](https://iiif.io/api/content-state/1.0/). This allows content to be opened to specific views and allows content to be easily reopened in other viewers.
 
-<Callout type="info">
-  The **Share** component is compliant with IIIF Content State 1.0. For
-  more information, see the [IIIF Content State](https://iiif.io/api/content-state/1.0/)
-  API specification.
-</Callout>
+> **Note:** The Share component follows the [IIIF Content State 1.0](https://iiif.io/api/content-state/1.0/) specification so links stay portable across viewers.
 
-<Callout>
-  This guide assumes you have a Canopy IIIF project. See the [Create a
-  Project](/get-started) guide to get started.
-</Callout>
+> **Prereq:** This walkthrough assumes you already have a running Canopy IIIF project ([Create a Project](/get-started)).
 
 ## Use Case
 
@@ -28,9 +19,7 @@ In your web browser, open a link to [The North American Indian](https://canopy-i
 and click on **page 3**. With **page 3** active, click the **Share** button and the checkbox next to **page 3**.
 Clicking the checkbox signifies you want the link to open to that specific view.
 
-<Box m="9" my="6">
-  ![An Image of the Share Component in Use in Canopy](/examples/content-state.png)
-</Box>
+![Share component screenshot](/examples/content-state.png)
 
 ### Share the Link in a Social Media Post
 
@@ -49,7 +38,6 @@ of what a user is looking at, we can copy the string following `?iiif-content=` 
 ```mdx filename="content/about/history.mdx" {10}
 ---
 title: "Content State Example"
-navigation: "about"
 ---
 
 # Content State Example
@@ -59,12 +47,7 @@ This is an example of a Content State request with the Viewer Component.
 <Viewer iiifContent="JTdCJTIyJTQwY29udGV4dCUyMiUzQSUyMmh0dHAlM0ElMkYlMkZpaWlmLmlvJTJGYXBpJTJGcHJlc2VudGF0aW9uJTJGMyUyRmNvbnRleHQuanNvbiUyMiUyQyUyMmlkJTIyJTNBJTIyaHR0cHMlM0ElMkYlMkZjYW5vcHktaWlpZi5naXRodWIuaW8lMkZjYW5vcHktaWlpZiUyRndvcmtzJTJGdGhlLW5vcnRoLWFtZXJpY2FuLWluZGlhbi1iZWluZy1hLXNlcmllcy1vZi12b2x1bWVzLXBpY3R1cmluZy1hbmQtZGVzY3JpYmluZy10aGUtaW5kaWFucy1vZi10aGUtdW5pdCUyRmNvbnRlbnQtc3RhdGUlMjIlMkMlMjJ0eXBlJTIyJTNBJTIyQW5ub3RhdGlvbiUyMiUyQyUyMm1vdGl2YXRpb24lMjIlM0ElNUIlMjJjb250ZW50U3RhdGUlMjIlNUQlMkMlMjJ0YXJnZXQlMjIlM0ElN0IlMjJpZCUyMiUzQSUyMmh0dHBzJTNBJTJGJTJGYXBpLmRjLmxpYnJhcnkubm9ydGh3ZXN0ZXJuLmVkdSUyRmFwaSUyRnYyJTJGd29ya3MlMkY1ZDA3NTQxNS01MmQ1LTQ1MzAtOWQ1MC1lNmY0ODhkNjM0YzYlM0ZhcyUzRGlpaWYlMkZjYW52YXMlMkYxNiUyMiUyQyUyMnR5cGUlMjIlM0ElMjJDYW52YXMlMjIlMkMlMjJwYXJ0T2YlMjIlM0ElNUIlN0IlMjJpZCUyMiUzQSUyMmh0dHBzJTNBJTJGJTJGYXBpLmRjLmxpYnJhcnkubm9ydGh3ZXN0ZXJuLmVkdSUyRmFwaSUyRnYyJTJGd29ya3MlMkY1ZDA3NTQxNS01MmQ1LTQ1MzAtOWQ1MC1lNmY0ODhkNjM0YzYlM0ZhcyUzRGlpaWYlMjIlMkMlMjJ0eXBlJTIyJTNBJTIyTWFuaWZlc3QlMjIlN0QlNUQlN0QlN0Q" />
 ```
 
-<Callout type="info">
-  The IIIF Content State API specification uses Base 64 encoding to create a compact and URL-safe way to include
-  complex state information. For more information about this, see the
-  [Content State Encoding Section](https://iiif.io/api/content-state/1.0/#6-content-state-encoding) of the API
-  specification.
-</Callout>
+> **Why Base64?** IIIF Content State encodes JSON as Base64 so you can embed complex state in URLs. See the [encoding section](https://iiif.io/api/content-state/1.0/#6-content-state-encoding) for details.
 
 ### Add New Route to `About` Navigation
 
@@ -87,6 +70,4 @@ Open `/content/about/_meta.json` and add the link to your content to the array:
 ]
 ```
 
-<Box m="9" my="6">
-  ![Screenshot of Content State Example in Viewer](/examples/content-state-view.png)
-</Box>
+![Screenshot of Content State example in Viewer](/examples/content-state-view.png)

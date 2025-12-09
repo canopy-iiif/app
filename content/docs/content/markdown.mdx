@@ -12,15 +12,14 @@ Every page in `content/` is an `.mdx` file: Markdown plus JSX components. The qu
 
 Add YAML at the top of each file to set metadata and opt into search or reference features. These are the keys Canopy reads today—older fields like `image` are ignored and can be deleted.
 
-| Key                   | Purpose                                                                 |
-| --------------------- | ----------------------------------------------------------------------- |
-| `title`               | Page title used for `<h1>` and `<title>`.                                |
-| `description`         | Optional blurb for `<meta name="description">`.                        |
-| `navigation`          | Section slug for the sidebar (e.g., `about`).                           |
-| `referencedManifests` | List of manifest URLs consumed by `<ReferencedItems />` / `<References />`. |
-| `search`              | When set to `false`, removes the page from the search index.            |
-| `searchType`          | Overrides the record type (e.g., `docs`).                               |
-| `searchSummary` / `searchSummaryMarkdown` | Custom blurb shown in search results.              |
+| Key                                       | Purpose                                                                     |
+| ----------------------------------------- | --------------------------------------------------------------------------- |
+| `title`                                   | Page title used for `<h1>` and `<title>`.                                   |
+| `description`                             | Optional blurb for `<meta name="description">`.                             |
+| `referencedManifests`                     | List of manifest URLs consumed by `<ReferencedItems />` / `<References />`. |
+| `search`                                  | When set to `false`, removes the page from the search index.                |
+| `searchType`                              | Overrides the record type (e.g., `docs`).                                   |
+| `searchSummary` / `searchSummaryMarkdown` | Custom blurb shown in search results.                                       |
 
 Example:
 
@@ -28,7 +27,6 @@ Example:
 ---
 title: January 1955 Correspondence
 description: Seven letters between Amanda Ira Aldridge and Mihailo Kovačević
-navigation: correspondence
 referencedManifests:
   - https://api.dc.library.northwestern.edu/api/v2/works/46de2c91-3a29-4525-939e-ee17073f3a7e?as=iiif
   - https://api.dc.library.northwestern.edu/api/v2/works/bb968afb-7857-46bd-9392-d8617a93cc9f?as=iiif
@@ -57,7 +55,9 @@ showHighlighted: true
 
 ```mdx
 # Heading level 1
+
 ## Heading level 2
+
 Paragraphs can mix _italics_, **bold**, and `inline code` for props like `iiifContent`.
 ```
 
@@ -91,10 +91,10 @@ Paragraphs can mix _italics_, **bold**, and `inline code` for props like `iiifCo
 ### Tables and definition lists
 
 ```mdx
-| Feature | Syntax        | Notes                           |
-| ------- | ------------- | ------------------------------- |
-| Tables  | `| col |`     | Align columns with separators.  |
-| Code    | ```lang ```   | Add a language hint.            |
+| Feature | Syntax  | Notes                |
+| ------- | ------- | -------------------- | --- | ------------------------------ |
+| Tables  | `       | col                  | `   | Align columns with separators. |
+| Code    | `lang ` | Add a language hint. |
 
 Term
 : Definition lists keep glossaries tidy.
