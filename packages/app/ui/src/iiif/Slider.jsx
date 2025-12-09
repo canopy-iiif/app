@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 
 // SSR-safe wrapper around Clover's slider. Clover touches the DOM at import time,
 // so we dynamically import it only in the browser.
@@ -35,13 +35,13 @@ export const Slider = (props) => {
       json = "{}";
     }
     return (
-      <div data-canopy-slider="1" className="not-prose">
+      <div className="canopy-slider" data-canopy-slider="1">
         <script
           type="application/json"
-          dangerouslySetInnerHTML={{ __html: json }}
+          dangerouslySetInnerHTML={{__html: json}}
         />
       </div>
     );
   }
-  return <CloverSlider {...props} />;
+  return <CloverSlider {...props} className="canopy-slider" />;
 };

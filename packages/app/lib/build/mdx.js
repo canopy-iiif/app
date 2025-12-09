@@ -1,6 +1,6 @@
 const React = require("react");
 const ReactDOMServer = require("react-dom/server");
-const { pathToFileURL } = require("url");
+const {pathToFileURL} = require("url");
 const {
   fs,
   fsp,
@@ -22,7 +22,10 @@ try {
 
 const EXTRA_REMARK_PLUGINS = (() => {
   try {
-    const absPath = path.resolve(process.cwd(), "packages/helpers/docs/remark-code-meta.js");
+    const absPath = path.resolve(
+      process.cwd(),
+      "packages/helpers/docs/remark-code-meta.js"
+    );
     if (fs.existsSync(absPath)) {
       const plugin = require(absPath);
       if (typeof plugin === "function") return [plugin];
@@ -53,13 +56,13 @@ function buildCompileOptions(overrides = {}) {
     base.remarkPlugins = remarkPlugins;
   }
   if (overrides && typeof overrides === "object") {
-    const { remarkPlugins: _omit, ...rest } = overrides;
+    const {remarkPlugins: _omit, ...rest} = overrides;
     Object.assign(base, rest);
   }
   return base;
 }
 const yaml = require("js-yaml");
-const { getPageContext } = require("../page-context");
+const {getPageContext} = require("../page-context");
 
 function parseFrontmatter(src) {
   let input = String(src || "");
@@ -67,7 +70,7 @@ function parseFrontmatter(src) {
   if (input.charCodeAt(0) === 0xfeff) input = input.slice(1);
   // Allow a few leading blank lines before frontmatter
   const m = input.match(/^(?:\s*\r?\n)*---\s*\r?\n([\s\S]*?)\r?\n---\s*\r?\n?/);
-  if (!m) return { data: null, content: input };
+  if (!m) return {data: null, content: input};
   let data = null;
   try {
     data = yaml.load(m[1]) || null;
@@ -75,7 +78,7 @@ function parseFrontmatter(src) {
     data = null;
   }
   const content = input.slice(m[0].length);
-  return { data, content };
+  return {data, content};
 }
 
 // ESM-only in v3; load dynamically from CJS
@@ -94,130 +97,201 @@ async function getMdxProvider() {
 // Lazily load UI components from the workspace package and cache them.
 // Re-import when the built UI server bundle changes on disk.
 let UI_COMPONENTS = null;
-let UI_COMPONENTS_PATH = '';
+let UI_COMPONENTS_PATH = "";
 let UI_COMPONENTS_MTIME = 0;
-const DEBUG = process.env.CANOPY_DEBUG === '1' || process.env.CANOPY_DEBUG === 'true';
+const DEBUG =
+  process.env.CANOPY_DEBUG === "1" || process.env.CANOPY_DEBUG === "true";
 async function loadUiComponents() {
   // Do not rely on a cached mapping; re-import each time to avoid transient races.
   try {
     // Prefer the workspace dist path during dev to avoid export-map resolution issues
     let resolved = null;
     try {
-      const wsDist = path.join(process.cwd(), 'packages', 'app', 'ui', 'dist', 'server.mjs');
+      const wsDist = path.join(
+        process.cwd(),
+        "packages",
+        "app",
+        "ui",
+        "dist",
+        "server.mjs"
+      );
       if (fs.existsSync(wsDist)) resolved = wsDist;
     } catch (_) {}
     // Prefer explicit dist path to avoid export-map issues
     if (!resolved) {
-      try { resolved = require.resolve("@canopy-iiif/app/ui/dist/server.mjs"); } catch (_) {
-        try { resolved = require.resolve("@canopy-iiif/app/ui/server"); } catch (_) { resolved = null; }
+      try {
+        resolved = require.resolve("@canopy-iiif/app/ui/dist/server.mjs");
+      } catch (_) {
+        try {
+          resolved = require.resolve("@canopy-iiif/app/ui/server");
+        } catch (_) {
+          resolved = null;
+        }
       }
     }
     // Determine current mtime for change detection
-    let currentPath = resolved || '';
+    let currentPath = resolved || "";
     let currentMtime = 0;
     if (currentPath) {
-      try { const st = fs.statSync(currentPath); currentMtime = Math.floor(st.mtimeMs || 0); } catch (_) { currentMtime = 0; }
+      try {
+        const st = fs.statSync(currentPath);
+        currentMtime = Math.floor(st.mtimeMs || 0);
+      } catch (_) {
+        currentMtime = 0;
+      }
     }
     // If we have a cached module and the path/mtime have not changed, return cached
-    if (UI_COMPONENTS && UI_COMPONENTS_PATH === currentPath && UI_COMPONENTS_MTIME === currentMtime) {
+    if (
+      UI_COMPONENTS &&
+      UI_COMPONENTS_PATH === currentPath &&
+      UI_COMPONENTS_MTIME === currentMtime
+    ) {
       if (DEBUG) {
-        try { console.log('[canopy][mdx] UI components cache hit:', { path: UI_COMPONENTS_PATH, mtime: UI_COMPONENTS_MTIME }); } catch(_){}
+        try {
+          console.log("[canopy][mdx] UI components cache hit:", {
+            path: UI_COMPONENTS_PATH,
+            mtime: UI_COMPONENTS_MTIME,
+          });
+        } catch (_) {}
       }
       return UI_COMPONENTS;
     }
     let mod = null;
     let importErr = null;
     if (resolved) {
-      const { pathToFileURL } = require("url");
+      const {pathToFileURL} = require("url");
       const fileUrl = pathToFileURL(resolved).href;
       const attempts = 5;
       for (let i = 0; i < attempts && !mod; i++) {
-        const bustVal = currentMtime ? `${currentMtime}-${i}` : `${Date.now()}-${i}`;
+        const bustVal = currentMtime
+          ? `${currentMtime}-${i}`
+          : `${Date.now()}-${i}`;
         try {
           mod = await import(fileUrl + `?v=${bustVal}`);
         } catch (e) {
           importErr = e;
           if (DEBUG) {
-            try { console.warn('[canopy][mdx] ESM import failed for', resolved, '(attempt', i + 1, 'of', attempts + ')\n', e && (e.stack || e.message || String(e))); } catch(_){}
+            try {
+              console.warn(
+                "[canopy][mdx] ESM import failed for",
+                resolved,
+                "(attempt",
+                i + 1,
+                "of",
+                attempts + ")\n",
+                e && (e.stack || e.message || String(e))
+              );
+            } catch (_) {}
           }
           // Small delay to avoid watch-write race
           await new Promise((r) => setTimeout(r, 60));
         }
       }
       if (DEBUG) {
-        try { console.log('[canopy][mdx] UI components resolved', { path: resolved, mtime: currentMtime, loaded: !!mod }); } catch(_){}
+        try {
+          console.log("[canopy][mdx] UI components resolved", {
+            path: resolved,
+            mtime: currentMtime,
+            loaded: !!mod,
+          });
+        } catch (_) {}
       }
     }
     if (!mod) {
       // Try package subpath as a secondary resolution path to avoid export-map issues
       try {
-        mod = await import('@canopy-iiif/app/ui/server');
+        mod = await import("@canopy-iiif/app/ui/server");
       } catch (e2) {
         const msgA = importErr && (importErr.stack || importErr.message);
         const msgB = e2 && (e2.stack || e2.message);
-        throw new Error('Failed to load @canopy-iiif/app/ui/server. Ensure the UI package is built.\nPath import error: ' + (msgA||'') + '\nExport-map import error: ' + (msgB||''));
+        throw new Error(
+          "Failed to load @canopy-iiif/app/ui/server. Ensure the UI package is built.\nPath import error: " +
+            (msgA || "") +
+            "\nExport-map import error: " +
+            (msgB || "")
+        );
       }
     }
-    let comp = (mod && typeof mod === 'object') ? mod : {};
+    let comp = mod && typeof mod === "object" ? mod : {};
     // Hard-require core exports; do not inject fallbacks
-    const required = ['SearchPanel', 'SearchFormModal', 'SearchResults', 'SearchSummary', 'SearchTabs', 'Viewer', 'Slider', 'RelatedItems', 'Interstitials'];
+    const required = [
+      "SearchPanel",
+      "SearchFormModal",
+      "SearchResults",
+      "SearchSummary",
+      "SearchTabs",
+      "Viewer",
+      "Slider",
+      "RelatedItems",
+      "Interstitials",
+    ];
     const missing = required.filter((k) => !comp || !comp[k]);
     if (missing.length) {
-      throw new Error('[canopy][mdx] Missing UI exports: ' + missing.join(', '));
+      throw new Error(
+        "[canopy][mdx] Missing UI exports: " + missing.join(", ")
+      );
     }
     if (DEBUG) {
-      try { console.log('[canopy][mdx] UI component sources', {
-        path: currentPath,
-        mtime: currentMtime,
-        hasServerExport: !!mod,
-        hasWorkspace: typeof comp !== 'undefined',
-        SearchFormModal: !!comp.SearchFormModal,
-        Viewer: !!comp.Viewer,
-        Slider: !!comp.Slider,
-      }); } catch(_){}
+      try {
+        console.log("[canopy][mdx] UI component sources", {
+          path: currentPath,
+          mtime: currentMtime,
+          hasServerExport: !!mod,
+          hasWorkspace: typeof comp !== "undefined",
+          SearchFormModal: !!comp.SearchFormModal,
+          Viewer: !!comp.Viewer,
+          Slider: !!comp.Slider,
+        });
+      } catch (_) {}
     }
     UI_COMPONENTS = comp;
     UI_COMPONENTS_PATH = currentPath;
     UI_COMPONENTS_MTIME = currentMtime;
   } catch (e) {
-    const msg = e && (e.stack || e.message || String(e)) || 'unknown error';
-    throw new Error('[canopy][mdx] Failed to load UI components (no fallbacks): ' + msg);
+    const msg = (e && (e.stack || e.message || String(e))) || "unknown error";
+    throw new Error(
+      "[canopy][mdx] Failed to load UI components (no fallbacks): " + msg
+    );
   }
   return UI_COMPONENTS;
 }
 
 function slugifyHeading(text) {
   try {
-    return String(text || '')
+    return String(text || "")
       .toLowerCase()
       .trim()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-');
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-");
   } catch (_) {
-    return '';
+    return "";
   }
 }
 
 function extractHeadings(mdxSource) {
-  const { content } = parseFrontmatter(String(mdxSource || ''));
-  const cleaned = content.replace(/```[\s\S]*?```/g, '');
+  const {content} = parseFrontmatter(String(mdxSource || ""));
+  const cleaned = content.replace(/```[\s\S]*?```/g, "");
   const headingRegex = /^ {0,3}(#{1,6})\s+(.+?)\s*$/gm;
   const seen = new Map();
   const headings = [];
   let match;
   while ((match = headingRegex.exec(cleaned))) {
-    const hashes = match[1] || '';
+    const hashes = match[1] || "";
     const depth = hashes.length;
-    let raw = match[2] || '';
+    let raw = match[2] || "";
     let explicitId = null;
     const idMatch = raw.match(/\s*\{#([A-Za-z0-9_-]+)\}\s*$/);
     if (idMatch) {
       explicitId = idMatch[1];
       raw = raw.slice(0, raw.length - idMatch[0].length);
     }
-    const title = raw.replace(/\<[^>]*\>/g, '').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').trim();
+    const title = raw
+      .replace(/\<[^>]*\>/g, "")
+      .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+      .trim();
     if (!title) continue;
-    const baseId = explicitId || slugifyHeading(title) || `section-${headings.length + 1}`;
+    const baseId =
+      explicitId || slugifyHeading(title) || `section-${headings.length + 1}`;
     const count = seen.get(baseId) || 0;
     seen.set(baseId, count + 1);
     const id = count === 0 ? baseId : `${baseId}-${count + 1}`;
@@ -231,39 +305,39 @@ function extractHeadings(mdxSource) {
 }
 
 function extractPlainText(mdxSource) {
-  let { content } = parseFrontmatter(String(mdxSource || ''));
-  if (!content) return '';
-  content = content.replace(/```[\s\S]*?```/g, ' ');
-  content = content.replace(/`{1,3}([^`]+)`{1,3}/g, '$1');
-  content = content.replace(/!\[[^\]]*\]\([^)]*\)/g, ' ');
-  content = content.replace(/\[[^\]]*\]\([^)]*\)/g, '$1');
-  content = content.replace(/<[^>]+>/g, ' ');
-  content = content.replace(/\{#([^}]+)\}/g, ' ');
-  content = content.replace(/\{\/[A-Za-z0-9_.-]+\}/g, ' ');
-  content = content.replace(/\{[^{}]*\}/g, ' ');
-  content = content.replace(/[#>*~_\-]+/g, ' ');
-  content = content.replace(/\n+/g, ' ');
-  content = content.replace(/\s+/g, ' ').trim();
+  let {content} = parseFrontmatter(String(mdxSource || ""));
+  if (!content) return "";
+  content = content.replace(/```[\s\S]*?```/g, " ");
+  content = content.replace(/`{1,3}([^`]+)`{1,3}/g, "$1");
+  content = content.replace(/!\[[^\]]*\]\([^)]*\)/g, " ");
+  content = content.replace(/\[[^\]]*\]\([^)]*\)/g, "$1");
+  content = content.replace(/<[^>]+>/g, " ");
+  content = content.replace(/\{#([^}]+)\}/g, " ");
+  content = content.replace(/\{\/[A-Za-z0-9_.-]+\}/g, " ");
+  content = content.replace(/\{[^{}]*\}/g, " ");
+  content = content.replace(/[#>*~_\-]+/g, " ");
+  content = content.replace(/\n+/g, " ");
+  content = content.replace(/\s+/g, " ").trim();
   return content;
 }
 
 function extractMarkdownSummary(mdxSource) {
-  let { content } = parseFrontmatter(String(mdxSource || ''));
-  if (!content) return '';
-  content = content.replace(/^import[^\n]+$/gm, ' ');
-  content = content.replace(/^export[^\n]+$/gm, ' ');
-  content = content.replace(/```[\s\S]*?```/g, ' ');
-  content = content.replace(/<[A-Za-z][^>]*?>[\s\S]*?<\/[A-Za-z][^>]*?>/g, ' ');
-  content = content.replace(/<[A-Za-z][^>]*?\/>/g, ' ');
-  content = content.replace(/\{\/[A-Za-z0-9_.-]+\}/g, ' ');
-  content = content.replace(/\{[^{}]*\}/g, ' ');
-  content = content.replace(/^#{1,6}\s+.*$/gm, ' ');
-  content = content.replace(/\s+/g, ' ').trim();
+  let {content} = parseFrontmatter(String(mdxSource || ""));
+  if (!content) return "";
+  content = content.replace(/^import[^\n]+$/gm, " ");
+  content = content.replace(/^export[^\n]+$/gm, " ");
+  content = content.replace(/```[\s\S]*?```/g, " ");
+  content = content.replace(/<[A-Za-z][^>]*?>[\s\S]*?<\/[A-Za-z][^>]*?>/g, " ");
+  content = content.replace(/<[A-Za-z][^>]*?\/>/g, " ");
+  content = content.replace(/\{\/[A-Za-z0-9_.-]+\}/g, " ");
+  content = content.replace(/\{[^{}]*\}/g, " ");
+  content = content.replace(/^#{1,6}\s+.*$/gm, " ");
+  content = content.replace(/\s+/g, " ").trim();
   return content;
 }
 
 function extractTitle(mdxSource) {
-  const { data, content } = parseFrontmatter(String(mdxSource || ""));
+  const {data, content} = parseFrontmatter(String(mdxSource || ""));
   if (data && typeof data.title === "string" && data.title.trim()) {
     return data.title.trim();
   }
@@ -314,9 +388,9 @@ async function loadAppWrapper() {
     // Keep missing _app as a build-time error as specified
     throw new Error("Missing required file: content/_app.mdx");
   }
-  const { compile } = await import("@mdx-js/mdx");
+  const {compile} = await import("@mdx-js/mdx");
   const raw = await fsp.readFile(appPath, "utf8");
-  const { content: source } = parseFrontmatter(raw);
+  const {content: source} = parseFrontmatter(raw);
   let code = String(await compile(source, buildCompileOptions()));
   // MDX v3 default export (MDXContent) does not forward external children.
   // When present, expose the underlying layout function as __MDXLayout for wrapping.
@@ -338,10 +412,14 @@ async function loadAppWrapper() {
     // Try to render the probe inside an MDXProvider with UI server components
     const components = await loadUiComponents();
     const MDXProvider = await getMdxProvider();
-    const probeChild = React.createElement("span", { "data-canopy-probe": "1" });
-    const probeTree = React.createElement(App || (() => null), null, probeChild);
+    const probeChild = React.createElement("span", {"data-canopy-probe": "1"});
+    const probeTree = React.createElement(
+      App || (() => null),
+      null,
+      probeChild
+    );
     const probe = MDXProvider
-      ? React.createElement(MDXProvider, { components }, probeTree)
+      ? React.createElement(MDXProvider, {components}, probeTree)
       : probeTree;
     const out = ReactDOMServer.renderToStaticMarkup(probe);
     ok = !!(out && out.indexOf("data-canopy-probe") !== -1);
@@ -353,14 +431,14 @@ async function loadAppWrapper() {
       "content/_app.mdx must render {children}. Update the layout so downstream pages receive their content."
     );
   }
-  APP_WRAPPER = { App, Head };
+  APP_WRAPPER = {App, Head};
   return APP_WRAPPER;
 }
 
 async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
-  const { compile } = await import("@mdx-js/mdx");
+  const {compile} = await import("@mdx-js/mdx");
   const raw = await fsp.readFile(filePath, "utf8");
-  const { content: source } = parseFrontmatter(raw);
+  const {content: source} = parseFrontmatter(raw);
   const compiled = await compile(source, buildCompileOptions());
   const code = String(compiled);
   ensureDirSync(CACHE_DIR);
@@ -392,9 +470,11 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
       components.CodeBlock ||
       components.MarkdownCodeBlock ||
       components.MDXCodeBlock);
-  const rawHeadings = Array.isArray(extraProps && extraProps.page && extraProps.page.headings)
+  const rawHeadings = Array.isArray(
+    extraProps && extraProps.page && extraProps.page.headings
+  )
     ? extraProps.page.headings
-        .map((heading) => (heading ? { ...heading } : heading))
+        .map((heading) => (heading ? {...heading} : heading))
         .filter(Boolean)
     : [];
   const headingQueue = rawHeadings.slice();
@@ -407,7 +487,7 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
   });
 
   function reserveHeadingId(base) {
-    const fallback = base || 'section';
+    const fallback = base || "section";
     let candidate = fallback;
     let attempt = 1;
     while (headingIdCounts.has(candidate)) {
@@ -419,18 +499,21 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
   }
 
   function extractTextFromChildren(children) {
-    if (children == null) return '';
-    if (typeof children === 'string' || typeof children === 'number') return String(children);
-    if (Array.isArray(children)) return children.map((child) => extractTextFromChildren(child)).join('');
-    if (React.isValidElement(children)) return extractTextFromChildren(children.props && children.props.children);
-    return '';
+    if (children == null) return "";
+    if (typeof children === "string" || typeof children === "number")
+      return String(children);
+    if (Array.isArray(children))
+      return children.map((child) => extractTextFromChildren(child)).join("");
+    if (React.isValidElement(children))
+      return extractTextFromChildren(children.props && children.props.children);
+    return "";
   }
 
   function takeHeading(level, children) {
     if (!headingQueue.length) return null;
     const idx = headingQueue.findIndex((item) => {
-      if (!item || typeof item !== 'object') return false;
-      const depth = typeof item.depth === 'number' ? item.depth : item.level;
+      if (!item || typeof item !== "object") return false;
+      const depth = typeof item.depth === "number" ? item.depth : item.level;
       return depth === level;
     });
     if (idx === -1) return null;
@@ -452,7 +535,7 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
     return function HeadingComponent(props) {
       const heading = takeHeading(level, props && props.children);
       const id = props && props.id ? props.id : heading && heading.id;
-      const finalProps = id ? { ...props, id } : props;
+      const finalProps = id ? {...props, id} : props;
       return React.createElement(Base, finalProps, props && props.children);
     };
   }
@@ -461,7 +544,9 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
     new Set(
       headingQueue
         .map((heading) => (heading ? heading.depth || heading.level : null))
-        .filter((level) => typeof level === 'number' && level >= 1 && level <= 6)
+        .filter(
+          (level) => typeof level === "number" && level >= 1 && level <= 6
+        )
     )
   );
   const headingComponents = levelsPresent.length
@@ -473,27 +558,28 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
   const MDXProvider = await getMdxProvider();
   // Base path support for anchors
   const Anchor = function A(props) {
-    let { href = "", ...rest } = props || {};
+    let {href = "", ...rest} = props || {};
     href = withBase(href);
-    return React.createElement("a", { href, ...rest }, props.children);
+    return React.createElement("a", {href, ...rest}, props.children);
   };
   const app = await loadAppWrapper();
   const dirLayout = await getNearestDirLayout(filePath);
   const contentNode = React.createElement(MDXContent, extraProps);
-  const layoutProps = dirLayout ? { ...extraProps } : null;
+  const layoutProps = dirLayout ? {...extraProps} : null;
   const withLayout = dirLayout
     ? React.createElement(dirLayout, layoutProps, contentNode)
     : contentNode;
   const withApp = React.createElement(app.App, null, withLayout);
   const PageContext = getPageContext();
   const contextValue = {
-    navigation: extraProps && extraProps.navigation ? extraProps.navigation : null,
+    navigation:
+      extraProps && extraProps.navigation ? extraProps.navigation : null,
     page: extraProps && extraProps.page ? extraProps.page : null,
   };
   const withContext = PageContext
-    ? React.createElement(PageContext.Provider, { value: contextValue }, withApp)
+    ? React.createElement(PageContext.Provider, {value: contextValue}, withApp)
     : withApp;
-  const compMap = { ...components, ...headingComponents, a: Anchor };
+  const compMap = {...components, ...headingComponents, a: Anchor};
   if (markdownTableComponent && !compMap.table) {
     compMap.table = markdownTableComponent;
   }
@@ -501,27 +587,31 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
     compMap.pre = codeBlockComponent;
   }
   const page = MDXProvider
-    ? React.createElement(MDXProvider, { components: compMap }, withContext)
+    ? React.createElement(MDXProvider, {components: compMap}, withContext)
     : withContext;
   const body = ReactDOMServer.renderToStaticMarkup(page);
-  let head = '';
+  let head = "";
   if (app && app.Head) {
     const headElement = React.createElement(app.Head, {
       page: contextValue.page,
       navigation: contextValue.navigation,
     });
     const wrappedHead = PageContext
-      ? React.createElement(PageContext.Provider, { value: contextValue }, headElement)
+      ? React.createElement(
+          PageContext.Provider,
+          {value: contextValue},
+          headElement
+        )
       : headElement;
     head = ReactDOMServer.renderToStaticMarkup(wrappedHead);
   }
-  return { body, head };
+  return {body, head};
 }
 
 async function compileMdxToComponent(filePath) {
-  const { compile } = await import("@mdx-js/mdx");
+  const {compile} = await import("@mdx-js/mdx");
   const raw = await fsp.readFile(filePath, "utf8");
-  const { content: source } = parseFrontmatter(raw);
+  const {content: source} = parseFrontmatter(raw);
   const compiled = await compile(source, buildCompileOptions());
   const code = String(compiled);
   ensureDirSync(CACHE_DIR);
@@ -557,9 +647,12 @@ async function ensureClientRuntime() {
       esbuild = require("esbuild");
     } catch (_) {}
   }
-  if (!esbuild) throw new Error('Viewer runtime bundling requires esbuild. Install dependencies before building.');
+  if (!esbuild)
+    throw new Error(
+      "Viewer runtime bundling requires esbuild. Install dependencies before building."
+    );
   ensureDirSync(OUT_DIR);
-  const scriptsDir = path.join(OUT_DIR, 'scripts');
+  const scriptsDir = path.join(OUT_DIR, "scripts");
   ensureDirSync(scriptsDir);
   const outFile = path.join(scriptsDir, "canopy-viewer.js");
   const entry = `
@@ -646,16 +739,34 @@ async function ensureClientRuntime() {
     export const hydrateRoot = RDC.hydrateRoot;
   `;
   const plugin = {
-    name: 'canopy-react-shims',
+    name: "canopy-react-shims",
     setup(build) {
-      const ns = 'canopy-shim';
-      build.onResolve({ filter: /^react$/ }, () => ({ path: 'react', namespace: ns }));
-      build.onResolve({ filter: /^react-dom$/ }, () => ({ path: 'react-dom', namespace: ns }));
-      build.onResolve({ filter: /^react-dom\/client$/ }, () => ({ path: 'react-dom-client', namespace: ns }));
-      build.onLoad({ filter: /^react$/, namespace: ns }, () => ({ contents: reactShim, loader: 'js' }));
-      build.onLoad({ filter: /^react-dom$/, namespace: ns }, () => ({ contents: rdomShim, loader: 'js' }));
-      build.onLoad({ filter: /^react-dom-client$/, namespace: ns }, () => ({ contents: rdomClientShim, loader: 'js' }));
-    }
+      const ns = "canopy-shim";
+      build.onResolve({filter: /^react$/}, () => ({
+        path: "react",
+        namespace: ns,
+      }));
+      build.onResolve({filter: /^react-dom$/}, () => ({
+        path: "react-dom",
+        namespace: ns,
+      }));
+      build.onResolve({filter: /^react-dom\/client$/}, () => ({
+        path: "react-dom-client",
+        namespace: ns,
+      }));
+      build.onLoad({filter: /^react$/, namespace: ns}, () => ({
+        contents: reactShim,
+        loader: "js",
+      }));
+      build.onLoad({filter: /^react-dom$/, namespace: ns}, () => ({
+        contents: rdomShim,
+        loader: "js",
+      }));
+      build.onLoad({filter: /^react-dom-client$/, namespace: ns}, () => ({
+        contents: rdomClientShim,
+        loader: "js",
+      }));
+    },
   };
   await esbuild.build({
     stdin: {
@@ -675,11 +786,15 @@ async function ensureClientRuntime() {
     plugins: [plugin],
   });
   try {
-    const { logLine } = require('./log');
-    let size = 0; try { const st = fs.statSync(outFile); size = st && st.size || 0; } catch (_) {}
-    const kb = size ? ` (${(size/1024).toFixed(1)} KB)` : '';
-    const rel = path.relative(process.cwd(), outFile).split(path.sep).join('/');
-    logLine(`✓ Wrote ${rel}${kb}`, 'cyan');
+    const {logLine} = require("./log");
+    let size = 0;
+    try {
+      const st = fs.statSync(outFile);
+      size = (st && st.size) || 0;
+    } catch (_) {}
+    const kb = size ? ` (${(size / 1024).toFixed(1)} KB)` : "";
+    const rel = path.relative(process.cwd(), outFile).split(path.sep).join("/");
+    logLine(`✓ Wrote ${rel}${kb}`, "cyan");
   } catch (_) {}
 }
 
@@ -687,14 +802,22 @@ async function ensureClientRuntime() {
 // and renders a Slider for each.
 async function ensureFacetsRuntime() {
   let esbuild = null;
-  try { esbuild = require("../../ui/node_modules/esbuild"); } catch (_) { try { esbuild = require("esbuild"); } catch (_) {} }
+  try {
+    esbuild = require("../../ui/node_modules/esbuild");
+  } catch (_) {
+    try {
+      esbuild = require("esbuild");
+    } catch (_) {}
+  }
   if (!esbuild) {
-    throw new Error('RelatedItems runtime bundling requires esbuild. Install dependencies before building.');
+    throw new Error(
+      "RelatedItems runtime bundling requires esbuild. Install dependencies before building."
+    );
   }
   ensureDirSync(OUT_DIR);
-  const scriptsDir = path.join(OUT_DIR, 'scripts');
+  const scriptsDir = path.join(OUT_DIR, "scripts");
   ensureDirSync(scriptsDir);
-  const outFile = path.join(scriptsDir, 'canopy-related-items.js');
+  const outFile = path.join(scriptsDir, "canopy-related-items.js");
   const entry = `
     function ready(fn){ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',fn,{once:true}); else fn(); }
     function parseProps(el){ try{ const s=el.querySelector('script[type="application/json"]'); if(s) return JSON.parse(s.textContent||'{}'); }catch(_){ } return {}; }
@@ -749,6 +872,7 @@ async function ensureFacetsRuntime() {
               const pick = candidates[Math.floor(Math.random() * candidates.length)];
               const wrap = document.createElement('div');
               wrap.setAttribute('data-facet-label', entry.label);
+              wrap.setAttribute('class', 'canopy-slider');
               const ph = makeSliderPlaceholder({ iiifContent: rootBase() + '/api/facet/' + (allow.slug) + '/' + pick.valueSlug + '.json' + verQ });
               if (ph) wrap.appendChild(ph);
               el.appendChild(wrap);
@@ -762,6 +886,7 @@ async function ensureFacetsRuntime() {
           selected.forEach((s) => {
             const wrap = document.createElement('div');
             wrap.setAttribute('data-facet-label', s.label);
+            wrap.setAttribute('class', 'canopy-slider');
             const ph = makeSliderPlaceholder({ iiifContent: rootBase() + '/api/facet/' + s.labelSlug + '/' + s.valueSlug + '.json' + verQ });
             if (ph) wrap.appendChild(ph);
             el.appendChild(wrap);
@@ -770,30 +895,39 @@ async function ensureFacetsRuntime() {
       });
     });
   `;
-  const shim = { name: 'facets-vanilla', setup(){} };
+  const shim = {name: "facets-vanilla", setup() {}};
   try {
     await esbuild.build({
-      stdin: { contents: entry, resolveDir: process.cwd(), sourcefile: 'canopy-facets-entry.js', loader: 'js' },
+      stdin: {
+        contents: entry,
+        resolveDir: process.cwd(),
+        sourcefile: "canopy-facets-entry.js",
+        loader: "js",
+      },
       outfile: outFile,
-      platform: 'browser',
-      format: 'iife',
+      platform: "browser",
+      format: "iife",
       bundle: true,
       sourcemap: false,
-      target: ['es2018'],
-      logLevel: 'silent',
+      target: ["es2018"],
+      logLevel: "silent",
       minify: true,
-      plugins: [shim]
+      plugins: [shim],
     });
   } catch (e) {
     const message = e && e.message ? e.message : e;
     throw new Error(`RelatedItems runtime build failed: ${message}`);
   }
   try {
-    const { logLine } = require('./log');
-    let size = 0; try { const st = fs.statSync(outFile); size = st && st.size || 0; } catch (_) {}
-    const kb = size ? ` (${(size/1024).toFixed(1)} KB)` : '';
-    const rel = path.relative(process.cwd(), outFile).split(path.sep).join('/');
-    logLine(`✓ Wrote ${rel}${kb}`, 'cyan');
+    const {logLine} = require("./log");
+    let size = 0;
+    try {
+      const st = fs.statSync(outFile);
+      size = (st && st.size) || 0;
+    } catch (_) {}
+    const kb = size ? ` (${(size / 1024).toFixed(1)} KB)` : "";
+    const rel = path.relative(process.cwd(), outFile).split(path.sep).join("/");
+    logLine(`✓ Wrote ${rel}${kb}`, "cyan");
   } catch (_) {}
 }
 
@@ -803,11 +937,16 @@ async function ensureSliderRuntime() {
   try {
     esbuild = require("../ui/node_modules/esbuild");
   } catch (_) {
-    try { esbuild = require("esbuild"); } catch (_) {}
+    try {
+      esbuild = require("esbuild");
+    } catch (_) {}
   }
-  if (!esbuild) throw new Error('Slider runtime bundling requires esbuild. Install dependencies before building.');
+  if (!esbuild)
+    throw new Error(
+      "Slider runtime bundling requires esbuild. Install dependencies before building."
+    );
   ensureDirSync(OUT_DIR);
-  const scriptsDir = path.join(OUT_DIR, 'scripts');
+  const scriptsDir = path.join(OUT_DIR, "scripts");
   ensureDirSync(scriptsDir);
   const outFile = path.join(scriptsDir, "canopy-slider.js");
   const entry = `
@@ -892,39 +1031,67 @@ async function ensureSliderRuntime() {
     export const hydrateRoot = RDC.hydrateRoot;
   `;
   const plugin = {
-    name: 'canopy-react-shims-slider',
+    name: "canopy-react-shims-slider",
     setup(build) {
-      const ns = 'canopy-shim';
-      build.onResolve({ filter: /^react$/ }, () => ({ path: 'react', namespace: ns }));
-      build.onResolve({ filter: /^react-dom$/ }, () => ({ path: 'react-dom', namespace: ns }));
-      build.onResolve({ filter: /^react-dom\/client$/ }, () => ({ path: 'react-dom-client', namespace: ns }));
-      build.onLoad({ filter: /^react$/, namespace: ns }, () => ({ contents: reactShim, loader: 'js' }));
-      build.onLoad({ filter: /^react-dom$/, namespace: ns }, () => ({ contents: "export default ((typeof window!=='undefined' && window.ReactDOM) || {});", loader: 'js' }));
-      build.onLoad({ filter: /^react-dom-client$/, namespace: ns }, () => ({ contents: rdomClientShim, loader: 'js' }));
+      const ns = "canopy-shim";
+      build.onResolve({filter: /^react$/}, () => ({
+        path: "react",
+        namespace: ns,
+      }));
+      build.onResolve({filter: /^react-dom$/}, () => ({
+        path: "react-dom",
+        namespace: ns,
+      }));
+      build.onResolve({filter: /^react-dom\/client$/}, () => ({
+        path: "react-dom-client",
+        namespace: ns,
+      }));
+      build.onLoad({filter: /^react$/, namespace: ns}, () => ({
+        contents: reactShim,
+        loader: "js",
+      }));
+      build.onLoad({filter: /^react-dom$/, namespace: ns}, () => ({
+        contents:
+          "export default ((typeof window!=='undefined' && window.ReactDOM) || {});",
+        loader: "js",
+      }));
+      build.onLoad({filter: /^react-dom-client$/, namespace: ns}, () => ({
+        contents: rdomClientShim,
+        loader: "js",
+      }));
       // Inline imported CSS into a <style> tag at runtime so we don't need a separate CSS file
-      build.onLoad({ filter: /\.css$/ }, (args) => {
-        const fs = require('fs');
-        let css = '';
-        try { css = fs.readFileSync(args.path, 'utf8'); } catch (_) { css = ''; }
+      build.onLoad({filter: /\.css$/}, (args) => {
+        const fs = require("fs");
+        let css = "";
+        try {
+          css = fs.readFileSync(args.path, "utf8");
+        } catch (_) {
+          css = "";
+        }
         const js = [
           `var css = ${JSON.stringify(css)};`,
           `(function(){ try { var s = document.createElement('style'); s.setAttribute('data-canopy-slider-css',''); s.textContent = css; document.head.appendChild(s); } catch (e) {} })();`,
-          `export default css;`
-        ].join('\n');
-        return { contents: js, loader: 'js' };
+          `export default css;`,
+        ].join("\n");
+        return {contents: js, loader: "js"};
       });
-    }
+    },
   };
   try {
     await esbuild.build({
-      stdin: { contents: entry, resolveDir: process.cwd(), sourcefile: 'canopy-slider-entry.js', loader: 'js' },
+      stdin: {
+        contents: entry,
+        resolveDir: process.cwd(),
+        sourcefile: "canopy-slider-entry.js",
+        loader: "js",
+      },
       outfile: outFile,
-      platform: 'browser',
-      format: 'iife',
+      platform: "browser",
+      format: "iife",
       bundle: true,
       sourcemap: false,
-      target: ['es2018'],
-      logLevel: 'silent',
+      target: ["es2018"],
+      logLevel: "silent",
       minify: true,
       plugins: [plugin],
     });
@@ -933,11 +1100,15 @@ async function ensureSliderRuntime() {
     throw new Error(`Slider runtime build failed: ${message}`);
   }
   try {
-    const { logLine } = require('./log');
-    let size = 0; try { const st = fs.statSync(outFile); size = st && st.size || 0; } catch (_) {}
-    const kb = size ? ` (${(size/1024).toFixed(1)} KB)` : '';
-    const rel = path.relative(process.cwd(), outFile).split(path.sep).join('/');
-    logLine(`✓ Wrote ${rel}${kb}`, 'cyan');
+    const {logLine} = require("./log");
+    let size = 0;
+    try {
+      const st = fs.statSync(outFile);
+      size = (st && st.size) || 0;
+    } catch (_) {}
+    const kb = size ? ` (${(size / 1024).toFixed(1)} KB)` : "";
+    const rel = path.relative(process.cwd(), outFile).split(path.sep).join("/");
+    logLine(`✓ Wrote ${rel}${kb}`, "cyan");
   } catch (_) {}
 }
 
@@ -951,8 +1122,11 @@ async function ensureReactGlobals() {
       esbuild = require("esbuild");
     } catch (_) {}
   }
-  if (!esbuild) throw new Error('React globals bundling requires esbuild. Install dependencies before building.');
-  const { path } = require("../common");
+  if (!esbuild)
+    throw new Error(
+      "React globals bundling requires esbuild. Install dependencies before building."
+    );
+  const {path} = require("../common");
   ensureDirSync(OUT_DIR);
   const scriptsDir = path.join(OUT_DIR, "scripts");
   ensureDirSync(scriptsDir);
@@ -978,7 +1152,7 @@ async function ensureReactGlobals() {
     target: ["es2018"],
     logLevel: "silent",
     minify: true,
-    define: { 'process.env.NODE_ENV': '"production"' },
+    define: {"process.env.NODE_ENV": '"production"'},
   });
 }
 
@@ -987,35 +1161,45 @@ async function ensureHeroRuntime() {
   try {
     esbuild = require("../ui/node_modules/esbuild");
   } catch (_) {
-    try { esbuild = require("esbuild"); } catch (_) {}
+    try {
+      esbuild = require("esbuild");
+    } catch (_) {}
   }
-  if (!esbuild) throw new Error('Hero slider runtime bundling requires esbuild. Install dependencies before building.');
+  if (!esbuild)
+    throw new Error(
+      "Hero slider runtime bundling requires esbuild. Install dependencies before building."
+    );
   ensureDirSync(OUT_DIR);
-  const scriptsDir = path.join(OUT_DIR, 'scripts');
+  const scriptsDir = path.join(OUT_DIR, "scripts");
   ensureDirSync(scriptsDir);
-  const outFile = path.join(scriptsDir, 'canopy-hero-slider.js');
-  const entryFile = path.join(__dirname, '..', 'components', 'hero-slider-runtime.js');
+  const outFile = path.join(scriptsDir, "canopy-hero-slider.js");
+  const entryFile = path.join(
+    __dirname,
+    "..",
+    "components",
+    "hero-slider-runtime.js"
+  );
   await esbuild.build({
     entryPoints: [entryFile],
     outfile: outFile,
-    platform: 'browser',
-    format: 'iife',
+    platform: "browser",
+    format: "iife",
     bundle: true,
     sourcemap: false,
-    target: ['es2018'],
-    logLevel: 'silent',
+    target: ["es2018"],
+    logLevel: "silent",
     minify: true,
   });
   try {
-    const { logLine } = require('./log');
+    const {logLine} = require("./log");
     let size = 0;
     try {
       const st = fs.statSync(outFile);
       size = (st && st.size) || 0;
     } catch (_) {}
-    const kb = size ? ` (${(size / 1024).toFixed(1)} KB)` : '';
-    const rel = path.relative(process.cwd(), outFile).split(path.sep).join('/');
-    logLine(`✓ Wrote ${rel}${kb}`, 'cyan');
+    const kb = size ? ` (${(size / 1024).toFixed(1)} KB)` : "";
+    const rel = path.relative(process.cwd(), outFile).split(path.sep).join("/");
+    logLine(`✓ Wrote ${rel}${kb}`, "cyan");
   } catch (_) {}
 }
 
