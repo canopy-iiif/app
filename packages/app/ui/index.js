@@ -31,3 +31,4 @@ export { default as SearchPanel } from "./src/search/SearchPanel.jsx";
 export { default as SearchPanelForm } from "./src/search/SearchPanelForm.jsx";
 export { default as SearchPanelTeaserResults } from "./src/search/SearchPanelTeaserResults.jsx";
 export { default as DocsMarkdownTable } from "./src/docs/MarkdownTable.jsx";
+export { CanopyDiagram } from "./src/docs/Diagram.jsx";

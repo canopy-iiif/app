@@ -1,0 +1,75 @@
+.canopy-diagram {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, 3vw, 1.618rem);
+  padding: clamp(1.618rem, 3vw, 2.618rem) 0;
+}
+
+.canopy-diagram__section {
+  padding: 0 clamp(1rem, 3vw, 1.618rem);
+
+  h3 {
+    text-align: center;
+    margin-top: 0;
+  }
+}
+
+.canopy-diagram__section-summary {
+  display: block;
+  text-align: center;
+  padding-bottom: 1.618rem;
+  color: var(--color-gray-700);
+  font-weight: 300;
+}
+
+.canopy-diagram__grid {
+  display: grid;
+  gap: 1.618rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+
+  article {
+    border-radius: 1.25rem;
+    background: linear-gradient(
+      173deg,
+      transparent 0%,
+      var(--color-accent-200) 100%
+    );
+    padding: 1rem 1.618rem;
+  }
+
+  h3 {
+    margin: 0 0 0.382rem;
+    font-weight: 600;
+    text-align: center;
+    color: var(--color-accent-default);
+  }
+
+  ul {
+    padding-top: 1rem;
+    font-size: 0.9222rem;
+  }
+}
+
+.canopy-diagram__arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.canopy-diagram__arrow-line {
+  width: 6px;
+  height: 2.618rem;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--color-accent-default)
+  );
+}
+
+.canopy-diagram__arrow-head {
+  width: 0;
+  height: 0;
+  border-left: 0.618rem solid transparent;
+  border-right: 0.618rem solid transparent;
+  border-top: 1rem solid var(--color-accent-default);
+}
