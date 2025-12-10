@@ -1,0 +1,36 @@
+.canopy-search-tabs {
+  position: relative;
+  display: inline-flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid #e2e8f0; /* subtle bottom border */
+  padding-bottom: 0.25rem;
+}
+
+.canopy-search-tab {
+  position: relative;
+  border: none;
+  background: transparent;
+  padding: 0.25rem 0.75rem 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.canopy-search-tab.is-active {
+  color: #0f172a;
+}
+
+.canopy-search-tabs__highlight {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px; /* underline */
+  border-radius: 999px;
+  background: #2563eb; /* brand-ish blue */
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(0);
+  transition-property: transform, width, opacity;
+  transition-timing-function: ease-out;
+}

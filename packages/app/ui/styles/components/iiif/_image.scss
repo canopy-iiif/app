@@ -1,4 +1,3 @@
-/* Placeholder/hydration styles for the IIIF Image component */
 .canopy-iiif-image {
   --canopy-iiif-image-height: 600px;
   --canopy-iiif-image-bg: var(--color-gray-200);
@@ -25,5 +24,36 @@
     color: var(--color-gray-600);
     font-size: 0.875rem;
     line-height: 1.4;
+  }
+}
+
+html.dark .canopy-iiif-image {
+  .clover-iiif-image-openseadragon {
+    div[data-testid="clover-iiif-image-openseadragon-controls"] {
+      button {
+        background-color: var(--color-gray-100);
+        color: var(--color-gray-900);
+        fill: var(--color-gray-900);
+        stroke: var(--color-gray-900);
+
+        svg {
+          color: inherit;
+          fill: inherit;
+          stroke: inherit;
+        }
+
+        &:hover,
+        &:focus {
+          background-color: var(--color-accent-default);
+        }
+      }
+    }
+
+    .clover-iiif-image-openseadragon-annotation {
+      label {
+        background-color: var(--color-gray-100);
+        color: var(--color-gray-900);
+      }
+    }
   }
 }
