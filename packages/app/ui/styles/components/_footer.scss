@@ -1,18 +1,18 @@
 @layer components {
   .canopy-footer {
     border-top: 1px solid var(--color-gray-200);
-    color: var(--color-gray-500);
+    color: var(--color-gray-700);
   }
 
   .canopy-footer__inner {
     margin: 0 auto;
     width: 100%;
     max-width: 72rem;
-    padding: 1.5rem 1rem;
+    padding: 1.618rem 1rem;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    font-size: 0.875rem;
+    font-size: 0.8333rem;
     line-height: 1.5;
     text-align: center;
   }
@@ -23,7 +23,7 @@
 
   @media (min-width: 48rem) {
     .canopy-footer__inner {
-      padding: 2rem 1.5rem;
+      padding: 2.618rem 1.618rem;
     }
   }
 }
