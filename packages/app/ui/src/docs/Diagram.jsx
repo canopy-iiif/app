@@ -6,7 +6,7 @@ export function CanopyDiagram() {
       <section className="canopy-diagram__section canopy-diagram__section--collections">
         <h3>IIIF Collection(s)</h3>
         <span className="canopy-diagram__section-summary">
-          Source collections contribute 170 total manifests that Canopy
+          Source collections contribute 105 total manifests that Canopy
           retrieves as-is via IIIF endpoints.
         </span>
         <div className="canopy-diagram__grid">
@@ -37,8 +37,8 @@ export function CanopyDiagram() {
       <section className="canopy-diagram__section canopy-diagram__section--build">
         <h3>Canopy Build Process</h3>
         <span className="canopy-diagram__section-summary">
-          Canopy syncs manifests, authored pages, and annotations before
-          bundling data for the static site.
+          Canopy syncs manifests, page content, and annotations before bundling
+          the site.
         </span>
         <div className="canopy-diagram__grid">
           <article>
@@ -46,7 +46,7 @@ export function CanopyDiagram() {
             <ul>
               <li>105 manifests → 105 work pages</li>
               <li>One page per manifest</li>
-              <li>Customize layout per work</li>
+              <li>Customize page layout</li>
             </ul>
           </article>
           <article>
@@ -61,7 +61,7 @@ export function CanopyDiagram() {
             <h4>Search index</h4>
             <ul>
               <li>Combines works + pages</li>
-              <li>FlexSearch powered</li>
+              <li>Customize result layout</li>
               <li>Optional annotations</li>
             </ul>
           </article>
