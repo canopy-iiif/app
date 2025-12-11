@@ -15,3 +15,62 @@ The slider does not load manifests from front matter; always provide an explicit
 ```mdx
 <Slider iiifContent="/api/facet/creator/david-alfaro-siqueiros.json" />
 ```
+
+### Custom breakpoints
+
+Pass Clover’s `options.breakpoints` map to change how many cards are shown per viewport width. Any configuration supported by the [Clover Slider docs](https://clover-iiif.dev/docs/slider#options) works the same in Canopy because we forward the `options` object directly to Clover.
+
+```jsx copy
+const MyCustomSlider = () => {
+  const iiifContent =
+    'https://api.dc.library.northwestern.edu/api/v2/collections/c373ecd2-2c45-45f2-9f9e-52dc244870bd?as=iiif';
+
+  const customBreakpoints = {
+    320: {
+      slidesPerView: 2,
+      spaceBetween: 20,
+    },
+    480: {
+      slidesPerView: 3,
+      spaceBetween: 30,
+    },
+    640: {
+      slidesPerView: 4,
+      spaceBetween: 40,
+    },
+  };
+
+  return (
+    <Slider
+      iiifContent={iiifContent}
+      options={{
+        breakpoints: customBreakpoints,
+      }}
+    />
+  );
+};
+```
+
+<Callout>
+  Set project-wide defaults (applied to `<Slider />`, homepage sliders, and `<RelatedItems />`) by
+  editing `packages/app/ui/src/iiif/sliderOptions.js`. Use the exported `rem()` helper when defining
+  `spaceBetween` so the slider bundle can convert to pixels using `window.getComputedStyle` at
+  runtime. You can still override `options` on an individual `<Slider>` and pass a
+  `sliderOptions` prop to `<RelatedItems />` for page-specific tweaks.
+</Callout>
+
+For example, to space cards with `1.25rem` gutters whenever the viewport is 640px or wider:
+
+```js
+export const sliderOptions = {
+  breakpoints: {
+    640: {
+      slidesPerView: 3,
+      spaceBetween: rem(1.25),
+    },
+  },
+};
+```
+
+The `rem()` helper keeps the config serializable during SSR and converts to pixels client-side once
+the slider runtime has access to `window`.

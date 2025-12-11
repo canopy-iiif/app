@@ -323,6 +323,12 @@ component based on a random value associated with it in the Manifest's `metadata
 and value has a corresponding IIIF Collection Manifest that is generated during the build process that includes all
 manifests in the collection that have the same label and value.
 
+To adjust how many tiles render per viewport size—or to express spacing in `rem`—update
+`packages/app/ui/src/iiif/sliderOptions.js`. Those defaults cascade everywhere the slider runtime
+mounts (homepage facets plus manifest-related sliders), and the bundled helper converts `rem`
+values to pixels client-side using `window.getComputedStyle`. If a work page needs a bespoke setup,
+pass `sliderOptions` to `<RelatedItems iiifContent={…} sliderOptions={{ breakpoints: … }} />`.
+
 ```mdx
 <Slider iiifContent="/api/facet/creator/david-alfaro-siqueiros " />
 ```

@@ -159,6 +159,28 @@ Creating facets as IIIF Collections...
 
 ```mdx copy
 <Slider iiifContent="/api/facet/date/1905.json" />
+
+Need different breakpoints? Supply Clover’s slider options directly:
+
+```mdx copy
+<Slider
+  iiifContent="/api/facet/date/1905.json"
+  options={{
+    breakpoints: {
+      320: { slidesPerView: 2, spaceBetween: 20 },
+      480: { slidesPerView: 3, spaceBetween: 30 },
+      640: { slidesPerView: 4, spaceBetween: 40 },
+    },
+  }}
+/>
+```
+
+Shared defaults live in `packages/app/ui/src/iiif/sliderOptions.js`, so you can adjust project-wide
+behavior there and only override `options` when a page needs something special.
+
+Need spacing tied to `rem` units? Use the `rem()` helper exported from `sliderOptions.js` when
+defining breakpoints. The slider runtime reads `window.getComputedStyle(document.documentElement)`
+once and converts those values to pixels before instantiating Swiper.
 ```
 
 ![canopy content page iiif slider for metadata collection](/examples/creating-markdown-content-referenced-item-4.png)

@@ -821,6 +821,11 @@ async function ensureFacetsRuntime() {
   const entry = `
     function ready(fn){ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',fn,{once:true}); else fn(); }
     function parseProps(el){ try{ const s=el.querySelector('script[type="application/json"]'); if(s) return JSON.parse(s.textContent||'{}'); }catch(_){ } return {}; }
+    function buildSliderProps(iiifContent, options){
+      const props = { iiifContent };
+      if (options && typeof options === 'object') props.options = options;
+      return props;
+    }
     function rootBase(){
       try {
         var bp = (window && window.CANOPY_BASE_PATH) ? String(window.CANOPY_BASE_PATH) : '';
@@ -851,6 +856,7 @@ async function ensureFacetsRuntime() {
           const topN = Number(props.top || 3) || 3;
           const ver = await getApiVersion();
           const verQ = ver ? ('?v=' + encodeURIComponent(ver)) : '';
+          const sliderOptions = (props && typeof props.sliderOptions === 'object') ? props.sliderOptions : null;
           const res = await fetch(rootBase() + '/api/search/facets.json' + verQ).catch(()=>null);
           if(!res || !res.ok) return;
           const json = await res.json().catch(()=>null);
@@ -873,7 +879,7 @@ async function ensureFacetsRuntime() {
               const wrap = document.createElement('div');
               wrap.setAttribute('data-facet-label', entry.label);
               wrap.setAttribute('class', 'canopy-slider');
-              const ph = makeSliderPlaceholder({ iiifContent: rootBase() + '/api/facet/' + (allow.slug) + '/' + pick.valueSlug + '.json' + verQ });
+              const ph = makeSliderPlaceholder(buildSliderProps(rootBase() + '/api/facet/' + (allow.slug) + '/' + pick.valueSlug + '.json' + verQ, sliderOptions));
               if (ph) wrap.appendChild(ph);
               el.appendChild(wrap);
             });
@@ -887,7 +893,7 @@ async function ensureFacetsRuntime() {
             const wrap = document.createElement('div');
             wrap.setAttribute('data-facet-label', s.label);
             wrap.setAttribute('class', 'canopy-slider');
-            const ph = makeSliderPlaceholder({ iiifContent: rootBase() + '/api/facet/' + s.labelSlug + '/' + s.valueSlug + '.json' + verQ });
+            const ph = makeSliderPlaceholder(buildSliderProps(rootBase() + '/api/facet/' + s.labelSlug + '/' + s.valueSlug + '.json' + verQ, sliderOptions));
             if (ph) wrap.appendChild(ph);
             el.appendChild(wrap);
           });
@@ -949,59 +955,7 @@ async function ensureSliderRuntime() {
   const scriptsDir = path.join(OUT_DIR, "scripts");
   ensureDirSync(scriptsDir);
   const outFile = path.join(scriptsDir, "canopy-slider.js");
-  const entry = `
-    import CloverSlider from '@samvera/clover-iiif/slider';
-    import 'swiper/css';
-    import 'swiper/css/navigation';
-    import 'swiper/css/pagination';
-
-    function ready(fn) {
-      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn, { once: true });
-      else fn();
-    }
-    function parseProps(el) {
-      try {
-        const s = el.querySelector('script[type="application/json"]');
-        if (s) return JSON.parse(s.textContent || '{}');
-        const raw = el.getAttribute('data-props') || '{}';
-        return JSON.parse(raw);
-      } catch (_) { return {}; }
-    }
-    function mount(el){
-      try{
-        if (!el || el.getAttribute('data-canopy-slider-mounted')==='1') return;
-        const React = (window && window.React) || null;
-        const ReactDOMClient = (window && window.ReactDOMClient) || null;
-        const createRoot = ReactDOMClient && ReactDOMClient.createRoot;
-        if (!React || !createRoot) return;
-        const props = parseProps(el);
-        const root = createRoot(el);
-        root.render(React.createElement(CloverSlider, props));
-        el.setAttribute('data-canopy-slider-mounted','1');
-      } catch(_){}
-    }
-    function scan(){
-      try{ document.querySelectorAll('[data-canopy-slider]:not([data-canopy-slider-mounted="1"])').forEach(mount); }catch(_){ }
-    }
-    function observe(){
-      try{
-        const obs = new MutationObserver((muts)=>{
-          const toMount = [];
-          for (const m of muts){
-            m.addedNodes && m.addedNodes.forEach((n)=>{
-              if (!(n instanceof Element)) return;
-              if (n.matches && n.matches('[data-canopy-slider]')) toMount.push(n);
-              const inner = n.querySelectorAll ? n.querySelectorAll('[data-canopy-slider]') : [];
-              inner && inner.forEach && inner.forEach((x)=> toMount.push(x));
-            });
-          }
-          if (toMount.length) Promise.resolve().then(()=> toMount.forEach(mount));
-        });
-        obs.observe(document.documentElement || document.body, { childList: true, subtree: true });
-      }catch(_){ }
-    }
-    ready(function(){ scan(); observe(); });
-  `;
+  const entryFile = path.join(__dirname, "../components/slider-runtime-entry.js");
   const reactShim = `
     const React = (typeof window !== 'undefined' && window.React) || {};
     export default React;
@@ -1079,12 +1033,7 @@ async function ensureSliderRuntime() {
   };
   try {
     await esbuild.build({
-      stdin: {
-        contents: entry,
-        resolveDir: process.cwd(),
-        sourcefile: "canopy-slider-entry.js",
-        loader: "js",
-      },
+      entryPoints: [entryFile],
       outfile: outFile,
       platform: "browser",
       format: "iife",

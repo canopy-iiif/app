@@ -1,8 +1,9 @@
 import React, {useEffect, useState} from "react";
+import {mergeSliderOptions, normalizeSliderOptions} from "./sliderOptions.js";
 
 // SSR-safe wrapper around Clover's slider. Clover touches the DOM at import time,
 // so we dynamically import it only in the browser.
-export const Slider = (props) => {
+export const Slider = (props = {}) => {
   const [CloverSlider, setCloverSlider] = useState(null);
 
   useEffect(() => {
@@ -13,7 +14,6 @@ export const Slider = (props) => {
       import("@samvera/clover-iiif/slider")
         .then((mod) => {
           if (!mounted) return;
-          console.log(mod);
           const Comp = mod && (mod.default || mod.Slider || mod);
           setCloverSlider(() => Comp);
         })
@@ -26,16 +26,28 @@ export const Slider = (props) => {
     };
   }, []);
 
+  const {className, ...rest} = props || {};
+  const sliderClassName = ["canopy-slider", className]
+    .filter(Boolean)
+    .join(" ");
+  const mergedOptions = mergeSliderOptions(rest.options);
+  const normalizedOptions = normalizeSliderOptions(mergedOptions);
+  const resolvedProps = {
+    ...rest,
+    className: sliderClassName,
+    options: normalizedOptions,
+  };
+
   if (!CloverSlider) {
     // SSR placeholder for client hydration; props provided as JSON
     let json = "{}";
     try {
-      json = JSON.stringify(props || {});
+      json = JSON.stringify(resolvedProps || {});
     } catch (_) {
       json = "{}";
     }
     return (
-      <div className="canopy-slider" data-canopy-slider="1">
+      <div className={sliderClassName} data-canopy-slider="1">
         <script
           type="application/json"
           dangerouslySetInnerHTML={{__html: json}}
@@ -43,5 +55,5 @@ export const Slider = (props) => {
       </div>
     );
   }
-  return <CloverSlider {...props} className="canopy-slider" />;
+  return <CloverSlider {...resolvedProps} />;
 };
