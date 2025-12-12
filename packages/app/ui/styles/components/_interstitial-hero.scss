@@ -136,6 +136,13 @@
     align-items: stretch;
   }
 
+  &__slide-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    height: 100%;
+  }
+
   &__pane {
     position: relative;
     width: 100%;
@@ -264,43 +271,20 @@
     text-align: center;
   }
 
-  &__caption-link {
-    color: var(--hero-caption-link);
-    text-decoration: underline;
-    text-underline-offset: 0.35em;
-    text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
-    transition:
-      color 0.2s ease,
-      text-decoration-color 0.2s ease;
-
-    &:hover,
-    &:focus-visible {
-      color: var(--hero-caption-link);
-      text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
-    }
-  }
-
   &__nav {
     position: absolute;
     inset: 0;
     z-index: 4;
+    pointer-events: none;
   }
 
   &__nav-btn {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    width: 2.75rem;
-    height: 2.75rem;
+    width: 2.618rem !important;
+    height: 2.618rem !important;
     border-radius: 9999px;
-    border: 1px solid
-      color-mix(in srgb, var(--color-gray-400) 55%, transparent);
-    background-color: color-mix(
-      in srgb,
-      var(--color-gray-100) 65%,
-      transparent
-    );
-    backdrop-filter: blur(6px);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -309,15 +293,20 @@
       background-color 0.2s ease,
       border-color 0.2s ease,
       color 0.2s ease;
-    color: var(--colors-primary);
+    stroke: var(--color-accent-default) !important;
+    color: var(--color-accent-default) !important;
+    pointer-events: auto;
 
     &::after {
-      content: "";
-      border: solid currentColor;
-      border-width: 0 2px 2px 0;
-      display: inline-block;
-      padding: 7px;
-      transform: rotate(135deg);
+      content: none;
+      display: none;
+    }
+
+    svg {
+      display: block;
+      width: 1rem;
+      height: 1rem;
+      stroke: var(--color-accent-default);
     }
 
     &--prev {
@@ -326,25 +315,10 @@
 
     &--next {
       right: 1.5rem;
-
-      &::after {
-        transform: rotate(-45deg);
-      }
     }
 
     &:hover,
     &:focus-visible {
-      background-color: color-mix(
-        in srgb,
-        var(--color-accent-200) 55%,
-        transparent
-      );
-      border-color: color-mix(
-        in srgb,
-        var(--color-accent-400) 70%,
-        transparent
-      );
-      color: var(--color-accent-700);
     }
   }
 

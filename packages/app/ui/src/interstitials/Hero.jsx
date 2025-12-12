@@ -4,6 +4,45 @@ import {computeHeroHeightStyle} from "./hero-utils.js";
 import Button from "../layout/Button.jsx";
 import ButtonWrapper from "../layout/ButtonWrapper.jsx";
 
+const NavIconBase = ({children, ...rest}) => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 16 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+    focusable="false"
+    {...rest}
+  >
+    {children}
+  </svg>
+);
+
+const PrevArrowIcon = (props) => (
+  <NavIconBase {...props}>
+    <path
+      d="M10.5 3L5.5 8L10.5 13"
+      stroke="currentColor"
+      strokeWidth="1.618"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </NavIconBase>
+);
+
+const NextArrowIcon = (props) => (
+  <NavIconBase {...props}>
+    <path
+      d="M5.5 3L10.5 8L5.5 13"
+      stroke="currentColor"
+      strokeWidth="1.618"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </NavIconBase>
+);
+
 const HERO_DEFAULT_SIZES_ATTR = "(min-width: 1024px) 1280px, 100vw";
 
 const basePath = (() => {
@@ -92,7 +131,7 @@ export default function Hero({
   item,
   index,
   random = true,
-  transition = 'fade',
+  transition = "fade",
   headline,
   description,
   links = [],
@@ -186,18 +225,18 @@ export default function Hero({
 
   const normalizedTransition = (() => {
     try {
-      const raw = transition == null ? '' : String(transition);
+      const raw = transition == null ? "" : String(transition);
       const normalized = raw.trim().toLowerCase();
-      return normalized === 'slide' ? 'slide' : 'fade';
+      return normalized === "slide" ? "slide" : "fade";
     } catch (_) {
-      return 'fade';
+      return "fade";
     }
   })();
 
   const renderSlide = (
     slide,
     idx,
-    { showVeil = true, captionVariant = "overlay" } = {}
+    {showVeil = true, captionVariant = "overlay"} = {}
   ) => {
     const safeHref = applyBasePath(slide.href || "#");
     const isStaticCaption = captionVariant === "static";
@@ -219,55 +258,69 @@ export default function Hero({
         loading: idx === 0 ? "eager" : "lazy",
       };
       if (slide.srcset) props.srcSet = slide.srcset;
-      if (slide.srcset)
-        props.sizes = slide.sizes || HERO_DEFAULT_SIZES_ATTR;
+      if (slide.srcset) props.sizes = slide.sizes || HERO_DEFAULT_SIZES_ATTR;
       return props;
+    };
+
+    const wrapWithLink = (node) => {
+      if (!safeHref) return node;
+      return (
+        <a
+          href={safeHref}
+          className="canopy-interstitial__slide-link"
+          aria-label={slide.title || undefined}
+        >
+          {node}
+        </a>
+      );
     };
 
     if (isStaticCaption) {
       return (
         <div className="swiper-slide" key={safeHref || idx}>
-          <article className={paneClassName}>
-            {slide.thumbnail ? (
-              <div className="canopy-interstitial__media-frame">
-                <img
-                  {...buildImageProps(
-                    "canopy-interstitial__media canopy-interstitial__media--static"
-                  )}
-                />
-              </div>
-            ) : null}
-            {slide.title ? (
-              <div className="canopy-interstitial__caption canopy-interstitial__caption--static">
-                <a href={safeHref} className="canopy-interstitial__caption-link">
-                  {slide.title}
-                </a>
-              </div>
-            ) : null}
-          </article>
+          {wrapWithLink(
+            <article className={paneClassName}>
+              {slide.thumbnail ? (
+                <div className="canopy-interstitial__media-frame">
+                  <img
+                    {...buildImageProps(
+                      "canopy-interstitial__media canopy-interstitial__media--static"
+                    )}
+                  />
+                </div>
+              ) : null}
+              {slide.title ? (
+                <div className="canopy-interstitial__caption canopy-interstitial__caption--static">
+                  <span className="canopy-interstitial__caption-link">
+                    {slide.title}
+                  </span>
+                </div>
+              ) : null}
+            </article>
+          )}
         </div>
       );
     }
 
     return (
       <div className="swiper-slide" key={safeHref || idx}>
-        <article className={paneClassName}>
-          {slide.thumbnail ? (
-            <img
-              {...buildImageProps("canopy-interstitial__media")}
-            />
-          ) : null}
-          {showVeil ? (
-            <div className="canopy-interstitial__veil" aria-hidden="true" />
-          ) : null}
-          {slide.title ? (
-            <div className="canopy-interstitial__caption">
-              <a href={safeHref} className="canopy-interstitial__caption-link">
-                {slide.title}
-              </a>
-            </div>
-          ) : null}
-        </article>
+        {wrapWithLink(
+          <article className={paneClassName}>
+            {slide.thumbnail ? (
+              <img {...buildImageProps("canopy-interstitial__media")} />
+            ) : null}
+            {showVeil ? (
+              <div className="canopy-interstitial__veil" aria-hidden="true" />
+            ) : null}
+            {slide.title ? (
+              <div className="canopy-interstitial__caption">
+                <span className="canopy-interstitial__caption-link">
+                  {slide.title}
+                </span>
+              </div>
+            ) : null}
+          </article>
+        )}
       </div>
     );
   };
@@ -282,12 +335,16 @@ export default function Hero({
           type="button"
           aria-label="Previous slide"
           className="canopy-interstitial__nav-btn canopy-interstitial__nav-btn--prev swiper-button-prev"
-        />
+        >
+          <PrevArrowIcon />
+        </button>
         <button
           type="button"
           aria-label="Next slide"
           className="canopy-interstitial__nav-btn canopy-interstitial__nav-btn--next swiper-button-next"
-        />
+        >
+          <NextArrowIcon />
+        </button>
       </div>
       <div className="canopy-interstitial__pagination swiper-pagination" />
     </div>
@@ -299,9 +356,7 @@ export default function Hero({
         <h1 className="canopy-interstitial__headline">{overlayTitle}</h1>
       ) : null}
       {derivedDescription ? (
-        <p className="canopy-interstitial__description">
-          {derivedDescription}
-        </p>
+        <p className="canopy-interstitial__description">{derivedDescription}</p>
       ) : null}
       {overlayLinks.length ? (
         <ButtonWrapper className="canopy-interstitial__actions">
@@ -334,7 +389,7 @@ export default function Hero({
           <div className="canopy-interstitial__body">{overlayContent}</div>
         </div>
         <div className="canopy-interstitial__media-group">
-          {renderSlider({ showVeil: false, captionVariant: "static" })}
+          {renderSlider({showVeil: false, captionVariant: "static"})}
         </div>
       </div>
     </section>
