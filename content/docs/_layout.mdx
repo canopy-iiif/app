@@ -1,8 +1,23 @@
 import {MDXProvider} from "@mdx-js/react";
-import {DocsCodeBlock, DocsMarkdownTable} from "@canopy-iiif/app/ui/server";
+import {
+  DocsCodeBlock,
+  DocsMarkdownTable,
+  Interstitials,
+} from "@canopy-iiif/app/ui/server";
 
-<Layout navigation={true} fluid={true}>
-  <MDXProvider components={{pre: DocsCodeBlock, table: DocsMarkdownTable}}>
-    {props.children}
-  </MDXProvider>
-</Layout>
+export const canopyVersion =
+  (typeof process !== "undefined" &&
+    process.env &&
+    (process.env.CANOPY_APP_VERSION ||
+      process.env.npm_package_version ||
+      process.env.npm_package_VERSION)) ||
+  "dev";
+
+<>
+  <Interstitials.Hero variant="text" description={`Docs v${canopyVersion}`} />
+  <Layout navigation={true} fluid={true}>
+    <MDXProvider components={{pre: DocsCodeBlock, table: DocsMarkdownTable}}>
+      {props.children}
+    </MDXProvider>
+  </Layout>
+</>

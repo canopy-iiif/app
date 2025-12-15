@@ -1,3 +1,25 @@
-# Docs
+---
+title: Documentation
+description: Overview of the builder, content model, and references that live in /content/docs.
+---
 
-Hello
+# Using Canopy IIIF
+
+This docs section explains how the builder ingests IIIF collections, how MDX pages fit into the
+site, and which configuration values control search, theming, or featured experiences.
+
+## What you can do here
+
+- **Configure** core behavior with [`canopy.yml`](./configuration) — collections, featured
+  manifests, search, theme, and sitemap data all live in one file.
+- **Compose layouts** for docs, guides, and project sections through shared `<Layout />`
+  wrappers plus `_meta.json` navigation files. See the [Layout reference](./layout).
+- **Author MDX** content under `content/` with components such as `<Viewer />`, `<Slider />`, and
+  `<ReferencedItems />`. The [Content reference](./content) and [guides](./guides) cover the
+  available helpers.
+- **Explore features** like the hero, metadata page, search, works, and related sliders in the
+  [Features](./features) section.
+- **Tune the theme** via a few Radix-backed tokens documented under [Theming](./theming).
+
+These pages are plain MDX files, so copy/paste patterns directly into your project or remix them
+while keeping the same component APIs.

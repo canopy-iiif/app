@@ -1,47 +1,67 @@
-import { Callout, Box, Colors, Radius, Scaling, accentColors, grayColors } from '@canopy-iiif/app/docs-legacy-compat';
+---
+title: Color & visuals
+description: Choose accent and gray palettes plus extend spacing, radius, and scale.
+---
 
+# Color & visuals
 
-# Color & Visuals
+The design system inherits palettes from [Radix Themes](https://www.radix-ui.com/themes/docs/theme/color).
+Pick an accent and gray family in `canopy.yml → theme` to set the global brand color and neutral
+surfaces.
 
-Implementers of Canopy IIIF can configure the color scheme and visual elements of the site by modifying the `theme` property in the `canopy.yml` file. See [theme configuration options](/configuration#theme) for more information.
+```yaml filename="canopy.yml" {12-18}
+theme:
+  accentColor: tomato
+  grayColor: sand
+  appearance: light
+```
 
-```json copy filename="config/canopy.json" {3-9}
-{
-  "collection": "https://iiif.bodleian.ox.ac.uk/iiif/collection/hobhouse",
-  "theme": {
-    "defaultTheme": "light",
-    "accentColor": "red",
-    "grayColor": "sand",
-    "radius": "small",
-    "scaling": "100%"
-  }
+## Accent palettes
+
+Available options: `amber`, `blue`, `bronze`, `brown`, `crimson`, `cyan`, `gold`, `grass`, `green`,
+`indigo`, `lime`, `mint`, `olive`, `orange`, `pink`, `plum`, `purple`, `red`, `sage`, `sand`, `sky`,
+`slate`, `teal`, `tomato`, `violet`, `yellow`.
+
+Accent colors power buttons, links, focus rings, pills, and slider handles. Choose one with enough
+contrast against your gray palette to keep UI elements distinct.
+
+## Gray palettes
+
+Available options: `slate`, `gray`, `mauve`, `sage`, `olive`, `sand`.
+
+The gray palette controls surfaces, copy, outlines, and component chrome. Pair warmer grays (sand,
+mauve) with muted accents, or stick with `slate`/`gray` when you want a neutral foundation.
+
+## Light vs dark appearance
+
+Switch `appearance` to `dark` to render all components against dark backgrounds. The builder toggles
+`color-scheme` accordingly, so form controls, scrollbars, and system UI follow suit.
+
+## Extending radius and scale
+
+If you need different border radii or sizing ramps, extend them in CSS rather than editing the build
+pipeline:
+
+```css
+@theme {
+  --radius-button: 999px;
+  --font-size-base: 1.05rem;
+}
+
+button {
+  border-radius: var(--radius-button);
 }
 ```
 
-## Colors
+## Preview changes quickly
 
-The following defined and accessible color scales are available for use in the `theme` configuration. Learn more about the colors from the [Radix UI Themes documentation](https://www.radix-ui.com/themes/docs/theme/color).
+- Run `npm run dev` and tweak `canopy.yml` values. The dev watcher refreshes the theme without a full
+  rebuild.
+- Use browser dev tools to inspect the generated CSS variables. Tokens are prefixed with
+  `--color-scale-` (for ramps) and `--accent-a-` (for alpha values).
 
-### Accent Colors
+## Related references
 
-UI components use the accent color to highlight interactive elements. The default accent color is `indigo`.
-
-<Colors colors={accentColors} />
-
-### Gray Colors
-
-UI components use the gray color to style non-interactive elements. The default gray color is `slate`.
-
-<Colors colors={grayColors} />
-
-## Radius
-
-The `radius` property in the `theme` configuration sets the border radius for UI components. The default radius is `medium`.
-
-<Radius />
-
-## Scaling
-
-The `scaling` property in the `theme` configuration sets the scaling factor for UI components. The default scaling is `100%`.
-
-<Scaling />
+- [Theming overview](./index)
+- `packages/app/ui/tailwind-config.js` for the base Tailwind preset
+- [Layout components](../layout/components)

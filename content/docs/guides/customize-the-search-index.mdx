@@ -1,267 +1,118 @@
-# Customize the Search Index
+---
+title: Customize the search index
+description: Tune which fields feed FlexSearch and how records are grouped into tabs.
+---
 
-Under the hood Canopy uses [FlexSearch](https://github.com/nextapps-de/flexsearch) to power the search index. FlexSearch is a full-text, memory efficient, search library that is fast and easy to use. It is also highly customizable. Canopy provides a number of ways to customize the search index.
+# Customize the search index
 
-> **Note:** This guide picks up after you create a Canopy IIIF project. Complete [Create a Project](/get-started) first if needed.
+Search is powered by FlexSearch and configured entirely through `canopy.yml` plus optional front
+matter on MDX pages. This guide walks through indexing additional metadata, enabling summaries,
+adding annotation text, and splitting results into custom tabs.
 
-## Use Case
+> **Prereq:** Start with a working Canopy project and at least one IIIF collection configured.
 
-You'd like to use Canopy IIIF to create a digital exhibit featuring Arabic manuscripts. For example, the [Arabic Manuscripts from West Africa](https://dc.library.northwestern.edu/collections/59ec43f9-a96c-4314-9b44-9923790b371c) provided by Northwestern University. The [IIIF Manifest data](https://api.dc.library.northwestern.edu/api/v2/search?query=collection.id:%2259ec43f9-a96c-4314-9b44-9923790b371c%22&as=iiif) contains both Arabic script and English text in its `label` and `summary` properties.
+## 1. Extend `canopy.yml`
 
-You'd like to [customize search configuration](/configuration#search) in the following three ways:
+Add a `search` block (or edit the existing one) to enable metadata and summary indexing, plus custom
+layouts for each record type.
 
-- Support the "Arabic" character set in Search (in addition to default "Latin").
-- Include text from Manifest `summary` values in search results.
-- Include additional `Manifest` metadata in search results. In our example [Manifests](https://api.dc.library.northwestern.edu/api/v2/works/2ca1b09b-cbad-43dd-82bf-a7fa807269d8?as=iiif) we include "Contributor" and "Alternate Title" as `metadata` items and would like to surface these in search results.
-
-## Implementation
-
-
-### Add search configuration
-
-Setup a Canopy IIIF project with the following configuration, including the `search` property with default values.
-
-```json filename="config/canopy.json" {3-39} copy
-{
-  "collection": "https://api.dc.library.northwestern.edu/api/v2/collections/59ec43f9-a96c-4314-9b44-9923790b371c?as=iiif&size=100",
-  "search": {
-    "enabled": true,
-    "flexSearch": {
-      "bidirectional": false,
-      "charset": "latin:extra",
-      "document": {
-        "index": [
-          {
-            "bidirectional": true,
-            "depth": 3,
-            "field": "label",
-            "resolution": 9,
-            "tokenize": "full"
-          },
-          {
-            "field": "metadata",
-            "resolution": 2
-          },
-          {
-            "field": "summary",
-            "resolution": 1
-          }
-        ]
-      },
-      "optimize": true,
-      "tokenize": "strict"
-    },
-    "index": {
-      "metadata": {
-        "all": false,
-        "enabled": true
-      },
-      "summary": {
-        "enabled": false
-      }
-    }
-  }
-}
+```yaml filename="canopy.yml" {9-30}
+search:
+  results:
+    work:
+      layout: grid
+      result: figure
+    page:
+      layout: list
+      result: article
+    docs:
+      layout: list
+      result: article
+  tabs:
+    order:
+      - work
+      - docs
+      - page
+  index:
+    metadata:
+      enabled: true
+      all: false
+    summary:
+      enabled: true
+    annotations:
+      enabled: true
+      motivation:
+        - commenting
+        - tagging
 ```
 
-### Support additional language charsets
+Key ideas:
 
-Edit `config/canopy.json` and add the additional language encoding, `arabic:extra`, to the `search.flexSearch.charset` property. The entries should be an array of strings as we are using multiple language encodings.
+- `results.<type>` controls layout/markup per record type. Add entries for new types you introduce
+  via front matter (for example, `docs`).
+- `tabs.order` establishes the tab order in the runtime. Types not listed fall back to the order in
+  `results`.
+- `index.metadata.all` controls whether every metadata entry from each manifest is indexed. When it
+  is `false`, Canopy only indexes the labels listed in the top-level `metadata` array of
+  `canopy.yml`.
+- `index.summary.enabled` toggles whether manifest/page summaries become searchable text.
+- `index.annotations.enabled` writes a third artifact (`search-index-annotations.json`) that stores
+  annotation bodies. Set `motivation` to the list you care about.
 
-```json filename="config/canopy.json" {7} copy
-{
-  "collection": "https://api.dc.library.northwestern.edu/api/v2/collections/59ec43f9-a96c-4314-9b44-9923790b371c?as=iiif&size=100",
-  "search": {
-    "enabled": true,
-    "flexSearch": {
-      "bidirectional": false,
-      "charset": ["latin:extra", "arabic:extra"],
-      "document": {
-        "index": [
-          {
-            "bidirectional": true,
-            "depth": 3,
-            "field": "label",
-            "resolution": 9,
-            "tokenize": "full"
-          },
-          {
-            "field": "metadata",
-            "resolution": 2
-          },
-          {
-            "field": "summary",
-            "resolution": 1
-          }
-        ]
-      },
-      "optimize": true,
-      "tokenize": "strict"
-    },
-    "index": {
-      "metadata": {
-        "all": false,
-        "enabled": true
-      },
-      "summary": {
-        "enabled": false
-      }
-    }
-  }
-}
+## 2. Tag MDX pages for search
+
+Front matter controls which MDX pages enter the search index and how they appear in results.
+
+```mdx filename="content/docs/publishing.mdx"
+---
+title: Publishing workflow
+searchType: docs
+searchSummary: Step-by-step deployment guide.
+referencedManifests:
+  - https://api.dc.library.northwestern.edu/api/v2/works/a5d3b7f3-d0fc-4d6d-9417-ef9184fa9273?as=iiif
+---
+
+# Publishing workflow
+
+...
 ```
 
-### Include summary in search results
+Fields:
 
-> **Note:** The [default search configuration](/configuration#search) indexes only Manifest `label` and configured `metadata` values.
+- `search: false` — opt out entirely.
+- `searchType` — overrides the default `page` type. Match this with an entry under
+  `search.results` to give the type its own tab/layout.
+- `searchSummary` / `searchSummaryMarkdown` — concise teaser shown in list layouts.
 
-To include Manifest `summary` values in the search index, update the `search.index.summary.enabled` to `true`.
+## 3. Verify the generated artifacts
 
-```json filename="config/canopy.json" {36} copy
-{
-  "collection": "https://api.dc.library.northwestern.edu/api/v2/collections/59ec43f9-a96c-4314-9b44-9923790b371c?as=iiif&size=100",
-  "search": {
-    "enabled": true,
-    "flexSearch": {
-      "bidirectional": false,
-      "charset": ["latin:extra", "arabic:extra"],
-      "document": {
-        "index": [
-          {
-            "bidirectional": true,
-            "depth": 3,
-            "field": "label",
-            "resolution": 9,
-            "tokenize": "full"
-          },
-          {
-            "field": "metadata",
-            "resolution": 2
-          },
-          {
-            "field": "summary",
-            "resolution": 1
-          }
-        ]
-      },
-      "optimize": true,
-      "tokenize": "strict"
-    },
-    "index": {
-      "metadata": {
-        "all": false,
-        "enabled": true
-      },
-      "summary": {
-        "enabled": true
-      }
-    }
-  }
-}
-```
+Run `npm run build` (or restart `npm run dev`) and inspect the files under `site/api/`:
 
-### Curate metadata labels for indexing
+- `search-index.json` — compact payload used to populate FlexSearch. Inspect it to confirm metadata
+  labels and summaries are present.
+- `search-records.json` — rich records referenced when rendering the UI.
+- `search-index-annotations.json` — only written when `annotations.enabled` is `true`.
 
-Implementers may choose to index all, part, or none of the `metadata` in Manifests. By default, Canopy IIIF indexes only values defined in the `metadata` property of `config/canopy.json` file.
+If annotation indexing is enabled, the browser runtime fetches the annotations file on demand and
+merges it into the FlexSearch source before running queries.
 
-Our source IIIF Collection has Manifests with specific `metadata` content to index, and we want to limit this to **Date**, **Subject**, **Contributor**, and **Alternate Title** labels. In this [example Manifest](https://api.dc.library.northwestern.edu/api/v2/works/2ca1b09b-cbad-43dd-82bf-a7fa807269d8?as=iiif), the respective values of _"Translated title: Love fāʼidah with the amulet of Prophet Yūsuf"_ and _"Falke, ʻUmar, 1893-1962 (Collector)"_ would be included in the index.
+## 4. Custom result templates
 
-```json filename="https://api.dc.library.northwestern.edu/api/v2/works/2ca1b09b-cbad-43dd-82bf-a7fa807269d8?as=iiif" {14, 19, 26, 31}
-{
-  "@context": "http://iiif.io/api/presentation/3/context.json",
-  "id": "https://api.dc.library.northwestern.edu/api/v2/works/2ca1b09b-cbad-43dd-82bf-a7fa807269d8?as=iiif",
-  "type": "Manifest",
-  "label": {
-    "none": [
-      "محبة مع خاتم النبي يوسف."
-    ]
-  },
-  "metadata": [
-    {
-      "label": {
-        "none": [
-          "Alternate Title"
-        ]
-      },
-      "value": {
-        "none": [
-          "Translated title: Love fāʼidah with the amulet of Prophet Yūsuf"
-        ]
-      }
-    },
-    {
-      "label": {
-        "none": [
-          "Contributor"
-        ]
-      },
-      "value": {
-        "none": [
-          "Falke, ʻUmar, 1893-1962 (Collector)"
-        ]
-      }
-    },
-    ...
-  ],
-  ...
-}
-```
+Set `result: figure` or `result: article` per type (see `search.results` above). Then override the
+corresponding MDX partial under `content/search/` to adjust the markup:
 
-Update the `config/canopy.json` file to include these labels in the `metadata` property.
+- `_result-figure.mdx`
+- `_result-article.mdx`
 
-```json filename="config/canopy.json" {3} copy
-{
-  "collection": "https://api.dc.library.northwestern.edu/api/v2/collections/59ec43f9-a96c-4314-9b44-9923790b371c?as=iiif&size=100",
-  "metadata": ["Date", "Subject", "Contributor", "Alternate Title"],
-  "search": {
-    "enabled": true,
-    "flexSearch": {
-      "bidirectional": false,
-      "charset": ["latin:extra", "arabic:extra"],
-      "document": {
-        "index": [
-          {
-            "bidirectional": true,
-            "depth": 3,
-            "field": "label",
-            "resolution": 9,
-            "tokenize": "full"
-          },
-          {
-            "field": "metadata",
-            "resolution": 2
-          },
-          {
-            "field": "summary",
-            "resolution": 1
-          }
-        ]
-      },
-      "optimize": true,
-      "tokenize": "strict"
-    },
-    "index": {
-      "metadata": {
-        "all": false,
-        "enabled": true
-      },
-      "summary": {
-        "enabled": true
-      }
-    }
-  }
-}
-```
+Both receive `record`, `query`, and runtime helpers so you can render badges, metadata, or excerpts.
+If these files are missing, Canopy falls back to its defaults.
 
-> **Tip:** To confirm text is being indexed, open `.canopy/index.json` and verify your custom data is included in the `records` array.
+## 5. Troubleshooting
 
-### Validate search customizations
-
-Verify your customizations are working by searching for:
-
-- An Arabic phrase (e.g. "مجموع الفوائد.")
-- A Manifest `summary` value (e.g. "Fāʼidah of Prophet Yūsuf on gaining people's love and respect.")
-- A Manifest `metadata` value (e.g. "Falke", or "Prophet Yūsuf")
-
-![Search results showing Arabic query](/examples/guide-search-arabic.png)
-![Search results showing English query](/examples/guide-search-english.png)
+- **Missing metadata values in the index** — ensure the exact label appears in `canopy.yml → metadata`
+  (for facet generation and selective metadata indexing). Set `search.index.metadata.all: true` to
+  include every metadata entry regardless of the list.
+- **Tabs in the wrong order** — confirm every type is listed in `tabs.order`. Anything omitted falls
+  back to the declaration order under `results`.
+- **MDX page not indexed** — remove `search: false` (if present) and make sure the file is not in a
+  `content/search/` directory (that folder is reserved for templates).

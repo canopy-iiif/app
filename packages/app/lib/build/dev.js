@@ -3,6 +3,12 @@ const fsp = fs.promises;
 const path = require("path");
 const { spawn, spawnSync } = require("child_process");
 const http = require("http");
+let sass = null;
+try {
+  sass = require("sass");
+} catch (_) {
+  sass = null;
+}
 const {
   CONTENT_DIR,
   OUT_DIR,
@@ -29,6 +35,13 @@ const UI_DIST_DIR = path.resolve(path.join(__dirname, "../../ui/dist"));
 const APP_PACKAGE_ROOT = path.resolve(path.join(__dirname, "..", ".."));
 const APP_LIB_DIR = path.join(APP_PACKAGE_ROOT, "lib");
 const APP_UI_DIR = path.join(APP_PACKAGE_ROOT, "ui");
+let loadUiTheme = null;
+try {
+  const uiTheme = require(path.join(APP_UI_DIR, "theme.js"));
+  if (uiTheme && typeof uiTheme.loadCanopyTheme === "function") {
+    loadUiTheme = uiTheme.loadCanopyTheme;
+  }
+} catch (_) {}
 const APP_WATCH_TARGETS = [
   { dir: APP_LIB_DIR, label: "@canopy-iiif/app/lib" },
   { dir: APP_UI_DIR, label: "@canopy-iiif/app/ui" },
@@ -1025,6 +1038,7 @@ async function dev() {
     );
     const uiStylesDir = path.join(APP_UI_DIR, "styles");
     const uiStylesCss = path.join(uiStylesDir, "index.css");
+    const uiStylesEntry = path.join(uiStylesDir, "index.scss");
     const pluginFiles = [uiPlugin, uiPreset].filter((p) => {
       try {
         return fs.existsSync(p);
@@ -1056,6 +1070,36 @@ async function dev() {
         });
       } catch (_) {}
     }
+    const rebuildUiStyles = () => {
+      if (!sass || !fs.existsSync(uiStylesEntry)) return false;
+      try {
+        const theme = loadUiTheme ? loadUiTheme({ cwd: process.cwd() }) : null;
+        const source = `${
+          theme && theme.sassConfig ? theme.sassConfig : ""
+        }@use 'index';`;
+        const result = sass.compileString(source, {
+          loadPaths: [uiStylesDir],
+          style: "expanded",
+        });
+        let cssOutput = result && result.css ? result.css : "";
+        const themeCss = theme && theme.css ? theme.css.trim() : "";
+        if (themeCss) {
+          cssOutput = `/* canopy-theme */\n${themeCss}\n/* canopy-theme:end */\n${cssOutput}`;
+        }
+        fs.writeFileSync(uiStylesCss, cssOutput, "utf8");
+        console.log(
+          "[tailwind] rebuilt @canopy-iiif/app/ui styles →",
+          prettyPath(uiStylesCss)
+        );
+        return true;
+      } catch (err) {
+        console.warn(
+          "[tailwind] failed to rebuild @canopy-iiif/app/ui styles:",
+          err && err.message ? err.message : err
+        );
+        return false;
+      }
+    };
     const attachCssWatcher = () => {
       if (uiCssWatcherAttached) {
         if (fs.existsSync(uiStylesCss)) return;
@@ -1080,11 +1124,15 @@ async function dev() {
         } catch (_) {}
       }
     };
+    if (fs.existsSync(uiStylesEntry)) rebuildUiStyles();
     attachCssWatcher();
     const handleUiSassChange = () => {
+      const ok = rebuildUiStyles();
       attachCssWatcher();
       scheduleTailwindRestart(
-        "[tailwind] detected @canopy-iiif/app/ui Sass change — restarting Tailwind",
+        ok
+          ? "[tailwind] detected @canopy-iiif/app/ui Sass change — restarting Tailwind"
+          : "[tailwind] Sass compile failed — attempting Tailwind restart",
         "[tailwind] compile after UI Sass change failed"
       );
     };
@@ -1148,16 +1196,66 @@ async function dev() {
     const stylesDir = path.dirname(inputCss);
     if (stylesDir && stylesDir.includes(path.join("app", "styles"))) {
       let cssDebounce = null;
-      try {
-        fs.watch(stylesDir, { persistent: false }, (evt, fn) => {
-          clearTimeout(cssDebounce);
-          cssDebounce = setTimeout(() => {
-            try { onBuildStart(); } catch (_) {}
-            safeCompile("[tailwind] compile after CSS change failed");
-            try { onCssChange(); } catch (_) {}
-          }, 50);
-        });
-      } catch (_) {}
+      const triggerCssRebuild = () => {
+        clearTimeout(cssDebounce);
+        cssDebounce = setTimeout(() => {
+          try { onBuildStart(); } catch (_) {}
+          safeCompile("[tailwind] compile after CSS change failed");
+          try { onCssChange(); } catch (_) {}
+        }, 50);
+      };
+      const shouldHandle = (filename) => {
+        if (!filename) return true;
+        return /\.(css|s[ac]ss)$/i.test(String(filename));
+      };
+      const attachRecursiveWatch = () => {
+        try {
+          fs.watch(
+            stylesDir,
+            { persistent: false, recursive: true },
+            (evt, fn) => {
+              if (!shouldHandle(fn)) return;
+              triggerCssRebuild();
+            }
+          );
+          return true;
+        } catch (_) {
+          return false;
+        }
+      };
+      if (!attachRecursiveWatch()) {
+        const watchers = new Map();
+        function watchDir(dir) {
+          if (watchers.has(dir)) return;
+          try {
+            const watcher = fs.watch(
+              dir,
+              { persistent: false },
+              (evt, fn) => {
+                if (shouldHandle(fn)) triggerCssRebuild();
+                scanDir(dir);
+              }
+            );
+            watchers.set(dir, watcher);
+          } catch (_) {}
+        }
+        function scanDir(dir) {
+          let entries = [];
+          try {
+            entries = fs.readdirSync(dir, { withFileTypes: true });
+          } catch (_) {
+            return;
+          }
+          for (const entry of entries) {
+            if (!entry || !entry.isDirectory()) continue;
+            const next = path.join(dir, entry.name);
+            watchDir(next);
+            scanDir(next);
+          }
+        }
+        watchDir(stylesDir);
+        scanDir(stylesDir);
+      }
     }
   } catch (err) {
     console.error("[tailwind] setup failed:", err && err.message ? err.message : err);

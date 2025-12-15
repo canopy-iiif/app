@@ -1,0 +1,47 @@
+---
+title: Theme configuration
+description: Pick the accent palette, gray ramp, and custom CSS overrides.
+---
+
+# Theme configuration
+
+Canopy reads a small `theme` block to pick the accent palette, gray palette, and default appearance.
+The values feed the Radix-driven token system and the Tailwind preset, so every component inherits
+the same colors.
+
+```yaml
+theme:
+  accentColor: tomato
+  grayColor: sand
+  appearance: light
+```
+
+- `accentColor`: Radix accent family name (`indigo`, `tomato`, `cyan`, etc.). Drives buttons, links,
+  and highlights.
+- `grayColor`: Radix gray family name (`slate`, `sand`, `mauve`, etc.). Sets the neutral surfaces.
+- `appearance`: `light` (default) or `dark`. Controls which Radix ramp supplies the color tokens and
+  sets `color-scheme` for the page.
+
+Stick to lowercase palette names. If you omit a value, Canopy falls back to `indigo` / `slate` with a
+light ramp.
+
+## Extended styling
+
+Use CSS when you want bespoke typography, spacing, or component tweaks:
+
+```css
+/* app/styles/main.css */
+@theme {
+  --font-serif: "Fraunces", Georgia, serif;
+}
+
+@layer components {
+  .custom-hero {
+    border-radius: 32px;
+  }
+}
+```
+
+Tailwind already loads the Canopy preset and plugin, so the overrides above piggyback on the same
+build. If you need a full Tailwind config, import `defineCanopyTailwindConfig` from
+`@canopy-iiif/app/ui/tailwind-config` and extend it there.

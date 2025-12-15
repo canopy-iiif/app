@@ -1,26 +1,45 @@
-import { Box } from '@canopy-iiif/app/docs-legacy-compat';
+---
+title: Metadata browse
+description: Browse-by-metadata page sourced from the facets configured in canopy.yml.
+---
 
-# Metadata
+# Metadata browse
 
-Canopy IIIF automatically provides a Metadata page at `/metadata`. This page helps improve the discovery of the works within the collection by displaying a link to searches of all curated subjects from the `metadata` property in `config/canopy.json` and their unique values that appear in Manifests across the source Collection.
+Canopy builds `/metadata` automatically. It groups the metadata labels you list in `canopy.yml`
+(`metadata:` array) and renders links to every unique value found across the ingested manifests. Each
+link jumps directly to search results filtered to that label/value pair.
 
-<Box m="9" my="6">
-  ![canopy metadata page](/examples/features-metadata-1.png)
-</Box>
-
-## Features
-
-This page is generated automatically during the build process and is based on the values specified in the `metadata`
-property of the `config/canopy.json` file.
-
-```json {3}
-{
-  "collection": "https://api.dc.library.northwestern.edu/api/v2/search?query=%22nez%20perce%22&as=iiif&size=125",
-  "metadata": ["Subject", "Date", "Dimensions"],
-}
+```yaml filename="canopy.yml" {5-9}
+metadata:
+  - Subject
+  - Creator
+  - Date
+  - Location
 ```
 
-The page is organized based on the order of the metadata labels in the array. Below each label is a link to search
-results to works in the collection that have that metadata label and a unique value. The values are organized in order
-of how many works have that label and value pair in the collection. Clicking the link will take the user to search
-results limited to that specific label and value pair.
+During the IIIF build we generate `/api/facet/<label>/<value>.json` collections for those labels. The
+metadata page uses the files to calculate counts and to build the links used elsewhere (home sliders,
+related items, search filters).
+
+## Page anatomy
+
+1. **Intro copy** — `content/metadata/index.mdx` controls the opening paragraph and any contextual
+   guidance you want to provide to visitors.
+2. **Facet sections** — For each configured label we show the label heading and a list of values,
+   ordered by descending occurrence. Each value links to `/search?type=work&label=<label>&value=<value>`.
+3. **Counts** — Values display the number of works that match the label/value pair so users can gauge
+   scale before clicking through.
+
+## Editing the page
+
+Open `content/metadata/index.mdx` to add contextual content above or below the generated list. The
+page already imports the metadata listing component, so you can keep your edits focused on Markdown
+copy, callouts, or links to related guides.
+
+## Tips
+
+- Keep facet labels short and consistent; the UI uses the label verbatim as the section heading.
+- Remove labels from `canopy.yml` when you stop using them—this prevents Canopy from generating
+  unused `/api/facet/**` files.
+- Pair metadata browse sections with MDX essays that explain curatorial choices. Cite those works via
+  `referencedManifests` so the relationship flows back to individual work pages.

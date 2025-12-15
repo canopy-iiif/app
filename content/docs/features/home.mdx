@@ -1,143 +1,93 @@
-import { Callout, Box } from '@canopy-iiif/app/docs-legacy-compat';
+---
+title: Home
+description: Configure the hero, custom content, and highlighted sliders rendered on the landing page.
+---
 
 # Home
 
-The Canopy IIIF build process automatically generates a home page for your project at `/`. This page is customizable from the `content/index.mdx` file in your collection's repository.
+The landing page is rendered from `content/index.mdx`. Front matter toggles the hero and highlighted
+sliders while the Markdown body gives you full control over introductory copy, calls to action, or
+embedded Canopy components.
 
-```mdx filename=content/index.mdx
+```mdx filename="content/index.mdx"
 ---
-title: Canopy IIIF
+title: Amanda Ira Aldridge Correspondence
 showHero: true
 showHighlighted: true
 ---
 
-## About Canopy
-
-**Canopy IIIF** is a purely [IIIF](https://iiif.io/) sourced site generator using Next.js. Canopy is an experimental application that will standup a browseable and searchable digital collections style site entirely from a [IIIF Collection](https://iiif.io/api/presentation/3.0/#51-collection) and the resources it references.
-
-<ButtonWrapper>
-  <Button href="/about" label="Read More" />
-  <Button
-    href="https://github.com/canopy-iiif/canopy-iiif"
-    label="View Code"
-    variant="secondary"
-    target="_blank"
-  />
-</ButtonWrapper>
-
+<Container>
+  <p>Introduce the collection, cite your institution, or drop inline media.</p>
+  <ButtonWrapper>
+    <Button href="/works" label="Browse works" />
+    <Button href="https://example.org" label="About the project" variant="secondary" />
+  </ButtonWrapper>
+</Container>
 ```
 
-## Features
+## Hero interstitial
 
-The Canopy IIIF home page is comprised of the following features:
+When `showHero` is `true` Canopy renders `<Interstitials.Hero />` at the top of the page. The hero
+rotates through the `featured` manifests defined in `canopy.yml`:
 
-- [Hero Image](#hero-image)
-- [Custom Content](#custom-content)
-- [Highlighted Works](#highlighted-works)
-
-<Box m="9" my="6">
-  ![canopy work page](/examples/features-home-1.png)
-</Box>
-
-### Hero Image
-
-If `showHero` is `true`, a hero image is created for your collection automatically.
-
-```mdx filename=content/index.mdx {3}
----
-title: Canopy IIIF
-showHero: true
-showHighlighted: true
----
-
-## About Canopy
-
+```yaml filename="canopy.yml" {5-10}
+collection:
+  - https://collections.example.org/iiif/harpsichords
+featured:
+  - https://collections.example.org/iiif/manifest/alpha
+  - https://collections.example.org/iiif/manifest/bravo
+  - https://collections.example.org/iiif/manifest/charlie
+metadata:
+  - Subject
+  - Creator
 ```
 
-If a `featured` property is included in your collection's `config/canophy.json` file, the hero image will be generated from these manifests.
+Behavior notes:
 
-```json file=config/canopy.json {4-7}
-{
-  "collection": "https://api.dc.library.northwestern.edu/api/v2/search?query=%22nez%20perce%22&as=iiif&size=125",
-  "metadata": ["Subject", "Date", "Dimensions"],
-  "featured": [
-    "https://api.dc.library.northwestern.edu/api/v2/works/cd5e1b9c-370b-40e5-b3d9-defc1d8e0777?as=iiif",
-    "https://api.dc.library.northwestern.edu/api/v2/works/14a6aa15-9e12-47a7-9617-91f430d4f47b?as=iiif"
-  ]
-}
+- Featured manifests are normalized during the IIIF build so duplicates collapse to a single entry.
+- If you omit `featured`, Canopy falls back to a random manifest from the cached collection.
+- The hero supports props like `headline`, `description`, `links`, `variant`, `background`, and
+  `height`. Pass them via `content/index.mdx` (e.g., `<Interstitials.Hero headline="Explore" />`).
+- Set `variant="text"` to render a text-centric hero that centers copy, trims the padding, and
+  skips featured manifests entirely. The default `variant="featured"` keeps the rotating manifest
+  slider.
+
+```mdx filename="content/index.mdx" {11-16}
+<Interstitials.Hero
+  variant="text"
+  headline="Plan your visit"
+  description="Preview your favorites, bookmark upcoming tours, and read the latest from the archives."
+  links={[{ title: 'Browse works', href: '/works' }]}
+/>
 ```
 
-If the `featured` array contains more than one Manifest, the hero image will be a slideshow with arrows pointing left
-and right that allows visitors to browse featured works. In the bottom right corner of the hero image, the label of the
-Manifest is displayed as the title of the work.
+## Custom content region
 
-If no `featured` Manifests are provided in `config/canopy.json`, the hero image will be randomly selected from the
-Manifests within the collection.
+Everything beneath the hero comes directly from your MDX file. Compose Markdown, `<Container />`
+wrappers, or IIIF components (Viewer, Slider, ReferencedItems). The docs layout wrapper automatically
+provides typography defaults so you can focus on content, not scaffolding.
 
-### Custom Content
+## Highlighted metadata sliders
 
-You can easily add an abstract or other custom content to the home page beneath the hero image by modifying the contents of `content/index.mdx`.
+When `showHighlighted` is `true`, Canopy renders `<RelatedItems />` rows driven by the metadata
+labels listed in `canopy.yml`. Each slider fetches a generated `/api/facet/<label>/<value>.json`
+collection and links cards back to the corresponding work page.
 
-```mdx filename=content/index.mdx
----
-title: Canopy IIIF
-showHero: true
-showHighlighted: true
----
+Tips:
 
-## About Canopy
+- Limit the `metadata` list to fields that have a reasonable number of distinct values—each unique
+  value generates its own IIIF Collection file.
+- Use the `top` prop on `<RelatedItems />` to restrict the number of sliders (`top={2}` renders two
+  label buckets).
+- Override slider spacing with the `sliderOptions` prop or by editing
+  `packages/app/ui/src/iiif/sliderOptions.js`.
 
-**Canopy IIIF** is a purely [IIIF](https://iiif.io/) sourced site generator using Next.js. Canopy is an experimental application that will standup a browseable and searchable digital collections style site entirely from a [IIIF Collection](https://iiif.io/api/presentation/3.0/#51-collection) and the resources it references.
+## Checklist when editing the home page
 
-<ButtonWrapper>
-  <Button href="/about" label="Read More" />
-  <Button
-    href="https://github.com/canopy-iiif/canopy-iiif"
-    label="View Code"
-    variant="secondary"
-    target="_blank"
-  />
-</ButtonWrapper>
-
-```
-
-### Highlighted Works
-
-If `showHero` is set to `true`, highlighted works sliders are displayed at the bottom of the page.
-
-```mdx filename=content/index.mdx {4}
----
-title: Canopy IIIF
-showHero: true
-showHighlighted: true
----
-
-## About Canopy
-
-```
-
-These sliders are generated based on the values of the `metadata` array in `config/canopy.json`.
-
-```json file=config/canopy.json {3}
-{
-  "collection": "https://api.dc.library.northwestern.edu/api/v2/search?query=%22nez%20perce%22&as=iiif&size=125",
-  "metadata": ["Subject", "Date", "Dimensions"],
-  "featured": [
-    "https://api.dc.library.northwestern.edu/api/v2/works/cd5e1b9c-370b-40e5-b3d9-defc1d8e0777?as=iiif",
-    "https://api.dc.library.northwestern.edu/api/v2/works/14a6aa15-9e12-47a7-9617-91f430d4f47b?as=iiif"
-  ]
-}
-```
-
-The sliders are driven by IIIF Collections that are automatically generated during the build process. At this time,
-a IIIF Collection resource is created for each unique metadata value in the Manifests of the IIIF Collection that is
-associated with a label in the `metadata` array of `config/canopy.json`. The generated IIIF Collections contain each
-Manifest that has the value for the associated metadata label.
-
-On the home, a slider is created for each value in the `metadata` array of `confing/canopy.json`. The IIIF Collection
-that is passed to each slider is randomly selected during build time.
-
-<Callout>
-  For more information on Sliders in Canopy, see [Slider](/content/slider) and the [Create Markdown Content](/create-markdown-content)
-  guide.
-</Callout>
+- Add descriptive `title` and `description` front matter so the landing page sets the correct SEO and
+  social tags.
+- Keep hero copy short; the manifest label and summary already surface detailed provenance.
+- Use `<Button />` for primary actions and `<Button variant="secondary" />` for tertiary links to
+  maintain consistent styling.
+- When you embed sliders or viewers in the Markdown body, wrap them in `<section>`/heading combos so
+  the table of contents and skip links remain meaningful.

@@ -51,13 +51,10 @@ const MyCustomSlider = () => {
 };
 ```
 
-<Callout>
-  Set project-wide defaults (applied to `<Slider />`, homepage sliders, and `<RelatedItems />`) by
-  editing `packages/app/ui/src/iiif/sliderOptions.js`. Use the exported `rem()` helper when defining
-  `spaceBetween` so the slider bundle can convert to pixels using `window.getComputedStyle` at
-  runtime. You can still override `options` on an individual `<Slider>` and pass a
-  `sliderOptions` prop to `<RelatedItems />` for page-specific tweaks.
-</Callout>
+> Tip: Set project-wide defaults (used by `<Slider />`, homepage sliders, and `<RelatedItems />`)
+> in `packages/app/ui/src/iiif/sliderOptions.js`. Use the exported `rem()` helper when defining
+> `spaceBetween` so the slider bundle can convert to pixels with
+> `window.getComputedStyle(document.documentElement)`.
 
 For example, to space cards with `1.25rem` gutters whenever the viewport is 640px or wider:
 

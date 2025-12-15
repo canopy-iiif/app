@@ -1,37 +1,41 @@
-import { Cards, Card } from '@canopy-iiif/app/docs-legacy-compat';
+---
+title: Features
+description: Overview of the pages Canopy builds automatically plus the UI you can drop into MDX.
+---
 
 # Features
 
-On build, Canopy IIIF will generate a static site from a IIIF Collection.
+Canopy ingests a IIIF collection and produces a full static site: home, search, works, metadata
+facets, and any MDX you add under `content/`. Each section below links to deeper dives that explain
+how data flows from `canopy.yml` and cached manifests into the rendered page.
 
-## Automatic Pages and Routes
+## Auto-generated routes
 
-Canopy IIIF will automatically generate pages and routes for the following:
+- **[Home](./home)** — hero carousel sourced from `featured` manifests plus optional metadata
+  sliders and custom MDX content from `content/index.mdx`.
+- **[Search](./search)** — FlexSearch-powered, tabbed results that merge works and MDX pages, with
+  templates controlled by `search.results` in `canopy.yml` and overrides in `content/search/`.
+- **[Works](./works)** — one page per manifest, rendering the viewer, metadata, required statement,
+  references, and related sliders.
+- **[Metadata](./metadata)** — per-facet browse pages fed by the `metadata` labels you configure in
+  `canopy.yml`.
 
-<Cards>
-  <Card title="Home" href="/features/home" />
-  <Card title="Search" href="/features/search" />
-  <Card title="Works" href="/features/works" />
-  <Card title="Metadata" href="/features/metadata" />
-</Cards>
+## Components for custom pages
 
-### Guides
+Everything in the `content/` directory is authored in MDX. Use the component docs when you need to
+embed IIIF viewers, image regions, or referenced work grids alongside prose:
 
-- [Customize the Search Index](/customize-the-search-index)
+- [Markdown primitives](../content/markdown)
+- [Card](../content/card)
+- [Image](../content/image)
+- [Slider](../content/slider)
+- [Viewer](../content/viewer)
+- [ReferencedItems](../content/referenced-items)
+- [References](../content/references)
+- [Search primitives](../content/search)
 
-## Custom Pages
+## Next steps
 
-Implementers can add custom pages with Markdown content in the their `content` directory. An `about` route at `content/about` is created as a usable example route.
-
-For more information regarding creation of new content, see the [Content](/content) documentation.
-
-<Cards>
-  <Card title="Content" href="/content" />
-  <Card title="Markdown" href="/content/markdown" />
-  <Card title="Navigation" href="/content/navigation" />
-</Cards>
-
-### Guides
-
-- [Create Markdown Content](/create-markdown-content)
-- [Create Navigation Routes](/create-navigation-routes)
+Pick a section above to see concrete config examples, snippets, and screenshots. The guides under
+`/docs/guides` walk through multi-step workflows such as building a new collection, enriching
+manifests with navPlace, and customizing the search index.

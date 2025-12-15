@@ -116,6 +116,21 @@
     }
   }
 
+  &--hero-text {
+    .canopy-interstitial__body {
+      align-items: center;
+    }
+
+    .canopy-interstitial__panel {
+      padding: 1.618rem 0 1rem;
+    }
+
+    .canopy-interstitial__description {
+      color: var(--color-accent-800);
+      font-size: 0.9222rem;
+    }
+  }
+
   &__slider {
     position: relative;
     width: 100%;

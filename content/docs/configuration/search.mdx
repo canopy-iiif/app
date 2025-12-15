@@ -1,0 +1,86 @@
+---
+title: Search configuration
+description: Control FlexSearch indexing, result layouts, and runtime behavior.
+---
+
+# Search configuration
+
+Search settings live in the `search` block. The build uses them to control FlexSearch indexing,
+result layouts, and tab order.
+
+```yaml
+search:
+  results:
+    work:
+      layout: grid
+      result: figure
+    page:
+      layout: list
+      result: article
+  tabs:
+    order:
+      - work
+      - page
+  index:
+    metadata:
+      enabled: true
+      all: false
+    summary:
+      enabled: true
+    annotations:
+      enabled: false
+      motivation:
+        - commenting
+        - tagging
+```
+
+## Tabs and layouts
+
+- `results.<type>` defines how each tab renders. `layout` accepts `grid` or `list`. `result` accepts
+  `figure` or `article` and maps to the runtime templates under
+  `packages/app/lib/search/templates/`.
+- Adding entries to `results` also fixes the tab order. If you only need to reorder existing tabs,
+  use `tabs.order` instead.
+- Unknown tab names are ignored. Tabs without entries fall back to `work` with a grid of `figure`
+  cards.
+
+## Index sources
+
+- Works: every manifest pulled from your configured collections becomes a `type: 'work'` record.
+  Metadata fields are filtered by `metadata` plus `search.index.metadata`.
+- Pages: MDX pages contribute `type: 'page'` records unless they opt out. The `search` collector
+  honors frontmatter (`search: false`, custom `searchType`, `searchSummary`, and
+  `searchSummaryMarkdown`). See `packages/app/lib/build/search-index.js` for the exact mapping.
+- Set `search.index.metadata.enabled` to `false` when you want the index to include only titles and
+  summaries. Set `all: true` to index every manifest metadata entry, even if it is not listed under
+  `metadata`.
+- `search.index.summary.enabled` defaults to `true`. Toggle it if your manifests have long summaries
+  that you do not want to index.
+- `search.index.annotations.enabled` turns on deep annotation indexing. When enabled we write
+  `site/api/search-index-annotations.json` and the runtime fetches it on demand. Filter motivations
+  with the `motivation` list shown above.
+
+## Opting pages in or out
+
+Add YAML frontmatter to any MDX page to control indexing:
+
+```mdx
+---
+search: false
+---
+```
+
+Supported keys:
+
+- `search: false` removes the page from the index.
+- `searchType: docs` sets the record type so you can define a dedicated `results.docs` layout.
+- `searchSummary` or `searchSummaryMarkdown` let you write concise blurbs for the results list.
+
+## Runtime notes
+
+- The build writes three artifacts in `site/api/`: `search-index.json`, `search-records.json`, and
+  (optionally) `search-index-annotations.json`.
+- The browser runtime (`site/search.js`) reads `site/api/index.json` to learn the tab order, layout
+  preferences, and asset sizes before hydrating results.
+- Each result tab shares a single FlexSearch store, so layout tweaks never change the underlying
+  index.

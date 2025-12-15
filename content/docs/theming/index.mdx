@@ -1,52 +1,61 @@
-import {
-  Cards,
-  Card,
-  ColorsLabeled,
-  Button,
-  accentColors,
-  grayColors,
-} from "@canopy-iiif/app/docs-legacy-compat";
+---
+title: Theming
+description: Configure Radix-backed colors plus extend styling with CSS and Tailwind.
+---
 
 # Theming
 
-Canopy IIIF leans on a combination of [Radix UI Themes](https://www.radix-ui.com/themes/docs/theme/overview) and MDX (Markdown) to provide a flexible theming and design system. The default visuals are based on the Radix UI defaults. See [`theme` configuration documentation](/configuration#theme).
+Canopy exposes a single `theme` block in `canopy.yml` to control the site-wide accent palette, gray
+palette, and base appearance. These values feed the Radix Themes token system and the Tailwind v4
+preset that ships with the starter, so your UI and MDX components stay in sync.
 
-<Cards>
-  <Card title="Color & Visuals" href="/theming/color-visuals" />
-  <Card title="Layout" href="/theming/layout" />
-</Cards>
+```yaml filename="canopy.yml" {12-18}
+theme:
+  accentColor: indigo   # Radix accent name
+  grayColor: slate      # Radix gray name
+  appearance: light     # light | dark
+```
 
-```json copy filename="config/canopy.json" {3-9}
-{
-  "collection": "https://iiif.bodleian.ox.ac.uk/iiif/collection/hobhouse",
-  "theme": {
-    "defaultTheme": "light",
-    "accentColor": "red",
-    "grayColor": "sand",
-    "radius": "small",
-    "scaling": "100%"
+- **`accentColor`** drives buttons, links, checkboxes, and focus rings.
+- **`grayColor`** sets the base neutral ramp used for page backgrounds, card borders, and typography.
+- **`appearance`** flips the design token ramp (`light` or `dark`).
+
+## Beyond the base tokens
+
+Use the standard CSS entry point (`app/styles/main.css`) or Tailwind utilities to extend the theme:
+
+```css
+/* app/styles/main.css */
+@theme {
+  --font-serif: 'Fraunces', Georgia, serif;
+  --radius-large: 32px;
+}
+
+@layer components {
+  .docs-callout {
+    border-radius: var(--radius-large);
+    background: var(--color-scale-slate-3);
+    padding: 1.5rem;
   }
 }
 ```
 
-### Colors & Visuals
+The Tailwind config already imports the Canopy preset (`@canopy-iiif/app/ui/tailwind-config`).
+Extend it if you need custom tokens, plugins, or safelisted classes.
 
-Implementers may choose to modify the theme settings of their Canopy IIIF project to fit their project's design requirements. As of `v0.12.0`, Canopy now utilizes Radix UI Themes, allowing implementers to [customize Colors, Scaling, and Radius styling](/theming/color-visuals).
+## Component-level tweaks
 
-#### Accent Colors
+Many components exposed by `@canopy-iiif/app/ui` accept `className` props so you can apply scoped
+changes without forking the shared styles. For example:
 
-<ColorsLabeled colors={accentColors} />
-
-#### Gray Colors
-
-<ColorsLabeled colors={grayColors} />
-
-### MDX Layouts
-
-Canopy IIIF utilizes MDX (Markdown) for creation of custom pages and content. Implementers can also customize layouts of fixed content pages by modifying a relative `.mdx` file in the `content` directory.
-
-All Radix UI Themes components are available for use in MDX content. For example, the following layout file uses the [Radix UI Themes `Tabs` component](https://www.radix-ui.com/themes/docs/components/tabs) to display metadata and related content.
-
-```jsx filename="content/works/_layout.mdx" {10-28}
-
+```mdx
+<Button className="rounded-full px-6" href="/search" label="Browse works" />
 ```
+
+Pair targeted overrides like the one above with global theme changes for a cohesive look.
+
+## Related docs
+
+- [Color & visual tokens](./color-visuals)
+- [Layout components](../layout/components)
+- [Content authoring](../content)

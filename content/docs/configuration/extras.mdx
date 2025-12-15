@@ -1,0 +1,65 @@
+---
+title: Extras
+description: Optional site metadata and complete YAML examples.
+---
+
+# Configuration extras
+
+Use these settings when you need to add canonical URLs or see a full `canopy.yml` reference.
+
+## site.baseUrl
+
+```yaml
+site:
+  baseUrl: https://example.org/canopy
+```
+
+- Optional absolute origin (with optional path prefix) for sitemap links, IIIF Collection ids, and
+  canonical URLs.
+- If blank, Canopy falls back to `CANOPY_BASE_URL`, the Pages workflow origin, or
+  `http://localhost:5001` during `npm run dev`.
+
+## Complete example
+
+```yaml filename="canopy.yml"
+collection:
+  - https://api.dc.library.northwestern.edu/api/v2/collections/7ac5769f-a1d9-4227-a350-bf8bd8b1cddc?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/collections/94536627-cfdf-413c-852b-0cb16d986da3?as=iiif
+metadata:
+  - Subject
+  - Genre
+featured:
+  - https://api.dc.library.northwestern.edu/api/v2/works/f2adabc0-497f-4284-b969-5829971fa2a2?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/6f336d7c-fb8a-4c15-8f34-44f30866b7f4?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/e1d27060-c8d7-4863-a120-7dced701d6be?as=iiif
+search:
+  results:
+    work:
+      layout: grid
+      result: figure
+    page:
+      layout: list
+      result: article
+  tabs:
+    order:
+      - work
+      - page
+      - examples
+  index:
+    metadata:
+      enabled: true
+      all: false
+    summary:
+      enabled: true
+    annotations:
+      enabled: false
+      motivation:
+        - commenting
+        - tagging
+site:
+  baseUrl: https://example.org/exhibit
+theme:
+  accentColor: indigo
+  grayColor: slate
+  appearance: light
+```

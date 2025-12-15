@@ -78,25 +78,25 @@ server.
 Now that all your files are ready, we can setup a new Canopy project to use them.  To do that:
 
 * Follow the instructions in [this guide](https://canopy-iiif.github.io/docs/deploy-to-github-pages) to set up a new Canopy site in GitHub Pages.
-* In your `config/canopy.json`file in your new Canopy instance, set the `collection` value to `https://{GitHubAccount}.github.io/{RepositoryYouCreatedInStep1}/index.json`
+* In your `canopy.yml`, point `collection` at the `index.json` Tropiiify generated in your GitHub
+  Pages repo. Use the same URL for local development so the dev server loads the exported data.
 
-```json {2-3}
-{
-  "collection": "https://markpbaggett.github.io/canopy-tropy-example/index.json",
-  "devCollection": "https://markpbaggett.github.io/canopy-tropy-example/index.json",
-  "metadata": ["Date"],
-  "label": { "none": ["Tropiiify Example Site"] },
-  "summary": {
-    "none": ["An Example Site using Tropiiify"]
-  },
-  "theme": {
-    "defaultTheme": "light",
-    "accentColor": "red",
-    "grayColor": "mauve",
-    "radius": "small",
-    "scaling": "100%"
-  }
-}
+```yaml filename="canopy.yml" {1-9}
+collection:
+  - https://markpbaggett.github.io/canopy-tropy-example/index.json
+metadata:
+  - Date
+featured:
+  - https://markpbaggett.github.io/canopy-tropy-example/manifest/1.json
+search:
+  results:
+    work:
+      layout: grid
+      result: figure
+theme:
+  appearance: light
+  accentColor: red
+  grayColor: mauve
 ```
 
 * The site will now build and be available online at the address described in step 5 of the **Deploy to GitHub Pages**  guide in 5 to 10 minutes.

@@ -1,73 +1,97 @@
-import { Box } from '@canopy-iiif/app/docs-legacy-compat';
+---
+title: Search
+description: How the FlexSearch runtime, MDX templates, and search config fit together.
+---
 
-# Search and Work Results
+# Search
 
-Canopy IIIF automatically provides a route to all works in a collection at `/works`. Each Manifest in the IIIF Collection
-is represented on this page. This same template is displayed when a user searches for a term in the search bar at the
-top of the screen. This page displays labels and thumbnails for all works in the collection and are lazily loaded as
-the user scrolls down the page.
+`npm run build` writes a search index under `site/api/` and bundles a React runtime that mounts
+into the `<Search />` placeholder or `[data-canopy-search]`. Works (IIIF manifests) and pages (MDX
+files) share a single FlexSearch store so filters and type tabs stay in sync.
 
-## Features
+## Data sources
 
-The search and work results page is composed of several features that are available automatically:
+- **Works** — every manifest pulled from `collection` URIs becomes a `type: 'work'` record with
+  `id`, `title`, and `href` pointing at `/works/<slug>.html`. Metadata fields listed in
+  `search.index.metadata` are flattened for indexing.
+- **Pages** — MDX files contribute `type: 'page'` records when they have no front matter or when
+  they explicitly set `type`. Add `search: false` to opt out. Optional `searchSummary` and
+  `searchSummaryMarkdown` fields override the teaser.
 
-- Results List
-- Filter
+`packages/app/lib/build/search-index.js` combines the records and keeps IDs stable between
+`search-index.json` (FlexSearch input) and `search-records.json` (display data).
 
-<Box m="9" my="6">
-  ![canopy work results](/examples/features-search-1.png)
-</Box>
+## Page composition
 
-### Results List
+Create `content/search/_layout.mdx` to control the markup surrounding the runtime. The layout
+receives a `search` prop with `form`, `summary`, `count`, and `results` placeholders. Drop them
+anywhere in the document to change the layout without editing React code.
 
-The results list is a masonry layout of all works in the collection or the corresponding search results when loaded as
-search results or limited via the [Filter](#Filter). Each work is represented by a `figure` element that is made up of a
-representative thumbnail and the Manifest label. The figures are hyper linked to the corresponding work page. The list
-is lazily loaded as the user scrolls down the page.
+```mdx filename="content/search/_layout.mdx"
+---
+title: Search
+---
 
-### Filter
+<section>
+  <h1>{props.title}</h1>
+  {props.search.summary}
+  {props.search.form}
+  {props.search.count}
+</section>
 
-The Filter element allows a user to limit the results list to a specific set of works. The filter options are determined
-by the values of the `metadata` property in the `config/canopy.json` file. From the filter, a user can limit the results
-by one value from each metadata field. Once the user clicks _View Results_, the results list will be limited to only
-the works that match the selected filter options.
+{props.search.results}
+```
 
-### Customize Result Layouts
+If you omit `_layout.mdx`, Canopy renders a fallback layout that stacks the form, summary, and
+results vertically.
 
-Search results rendered via `<SearchResults />` pull their markup from partials in
-`content/search`. Two files are evaluated automatically:
+## Tabs, layouts, and templates
 
-- `_result-figure.mdx` — used for IIIF works rendered as figures/cards. The default
-  implementation wraps the shared `<Card />` component.
-- `_result-article.mdx` — used for textual/annotation hits (pages, docs, etc.) and
-  renders an `<ArticleCard />`.
+Control the rendered tabs and markup via `search.results` in `canopy.yml`:
 
-Both files receive `props.record`, `props.query`, and other metadata so they can inject
-custom semantics or additional UI. Template authors can import `Card`, `ArticleCard`, or any
-other UI components exposed by `@canopy-iiif/app/ui` to tailor the experience without
-touching the React runtime. If either partial is removed, Canopy falls back to the
-built-in defaults to keep search functional.
-
-#### Configure Layouts and Templates via `canopy.yml`
-
-The builder also reads `search.results` from `canopy.yml` to configure the tab order and the
-layout/template for each record type. Keys map to the record `type` emitted in the search
-index (e.g., `work`, `page`, or any custom type assigned via frontmatter). The order of the
-keys controls the tab order; any types omitted from the map are appended to the end using
-the default `list` + `article` fallback.
-
-```yaml copy filename="canopy.yml"
+```yaml filename="canopy.yml" {12-24}
 search:
   results:
     work:
-      layout: grid   # options: grid | list
-      result: figure # options: figure | article
+      layout: grid      # grid | list
+      result: figure    # figure | article
     page:
       layout: list
       result: article
+  tabs:
+    order:
+      - work
+      - page
 ```
 
-This configuration keeps works in the masonry grid with figure-based cards while forcing
-pages (or documentation types defined via frontmatter) into a list of text articles. If the
-`search.results` map is omitted the legacy behavior remains (works grid first, other types
-follow in their default order).
+- `layout` switches between the masonry grid (uses `react-masonry-css`) and a stacked list.
+- `result` picks the MDX partial that renders each item. Define `_result-figure.mdx` or
+  `_result-article.mdx` under `content/search/` to override the defaults. Each file receives the
+  record (`props.record`), the active query, and helper props for badges or metadata.
+- `tabs.order` reorders tabs without redefining `layout`/`result`. Types omitted from `results`
+  inherit the default `grid` + `figure` combo.
+
+## Filtering and URL state
+
+The runtime watches `?q` and `?type` query params, so deep links remain stable when you switch
+between tabs or refine a search. When you add more record types via front matter (`searchType:
+example`), include them in `search.results` and `tabs.order` to expose dedicated tabs.
+
+## Styling hooks
+
+- Use the `.canopy-search` class (root element) to add custom spacing or background treatments in
+  `app/styles/main.css`.
+- Override button or input styles globally via the Tailwind preset or your own CSS variables in
+  `@theme`.
+- When you need different markup for specific record types, create additional templates under
+  `content/search/` and branch based on `record.type` inside the MDX.
+
+## Debugging tips
+
+- Inspect `site/api/search-index.json` to confirm front-matter summaries and metadata labels are
+  being indexed.
+- When the browser console logs `Dynamic require of 'react' is not supported`, make sure the UI
+  build marks `react`, `react-dom`, `react-dom/client`, `react-masonry-css`, and `flexsearch` as
+  externals (the repository is already configured this way).
+- Delete `.cache/search` (if present) plus `site/api/search-*` and rebuild when you change record
+  shapes.

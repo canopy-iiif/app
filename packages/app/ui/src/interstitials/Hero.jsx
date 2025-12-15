@@ -126,6 +126,16 @@ function normalizeBackground(value) {
   }
 }
 
+function normalizeVariant(value) {
+  try {
+    const raw = value == null ? "" : String(value);
+    const normalized = raw.trim().toLowerCase();
+    return normalized === "text" ? "text" : "featured";
+  } catch (_) {
+    return "featured";
+  }
+}
+
 export default function Hero({
   height = 520,
   item,
@@ -138,62 +148,71 @@ export default function Hero({
   className = "",
   style = {},
   background = "theme",
+  variant = "featured",
   ...rest
 }) {
-  const resolved = resolveFeaturedItem({item, index, random});
-  const helpersList =
-    helpers && helpers.readFeaturedFromCacheSync
-      ? helpers.readFeaturedFromCacheSync()
-      : [];
+  const normalizedVariant = normalizeVariant(variant);
+  const isTextVariant = normalizedVariant === "text";
 
-  const slides = [];
-  const pushUnique = (entry) => {
-    if (!entry) return;
-    const key = String(entry.href || entry.id || entry.title || "");
-    const hasKey = slides.some(
-      (item) =>
-        String(item && (item.href || item.id || item.title || "")) === key
-    );
-    if (!hasKey) {
-      slides.push(entry);
-    }
-  };
+  let orderedSlides = [];
+  if (!isTextVariant) {
+    const resolved = resolveFeaturedItem({item, index, random});
+    const helpersList =
+      helpers && helpers.readFeaturedFromCacheSync
+        ? helpers.readFeaturedFromCacheSync()
+        : [];
 
-  if (resolved) pushUnique(resolved);
-  helpersList.forEach(pushUnique);
+    const slides = [];
+    const pushUnique = (entry) => {
+      if (!entry) return;
+      const key = String(entry.href || entry.id || entry.title || "");
+      const hasKey = slides.some(
+        (item) =>
+          String(item && (item.href || item.id || item.title || "")) === key
+      );
+      if (!hasKey) {
+        slides.push(entry);
+      }
+    };
 
-  if (!slides.length) return null;
+    if (resolved) pushUnique(resolved);
+    helpersList.forEach(pushUnique);
+    if (!slides.length) return null;
 
-  let orderedSlides = slides.slice();
-  if (typeof index === "number" && orderedSlides.length > 1) {
-    const clamp = Math.max(
-      0,
-      Math.min(orderedSlides.length - 1, Math.floor(index))
-    );
-    if (clamp > 0) {
-      orderedSlides = orderedSlides
-        .slice(clamp)
-        .concat(orderedSlides.slice(0, clamp));
-    }
-  } else if (random === true || random === "true") {
-    const rand = Math.floor(Math.random() * orderedSlides.length);
-    if (rand > 0) {
-      orderedSlides = orderedSlides
-        .slice(rand)
-        .concat(orderedSlides.slice(0, rand));
+    orderedSlides = slides.slice();
+    if (typeof index === "number" && orderedSlides.length > 1) {
+      const clamp = Math.max(
+        0,
+        Math.min(orderedSlides.length - 1, Math.floor(index))
+      );
+      if (clamp > 0) {
+        orderedSlides = orderedSlides
+          .slice(clamp)
+          .concat(orderedSlides.slice(0, clamp));
+      }
+    } else if (random === true || random === "true") {
+      const rand = Math.floor(Math.random() * orderedSlides.length);
+      if (rand > 0) {
+        orderedSlides = orderedSlides
+          .slice(rand)
+          .concat(orderedSlides.slice(0, rand));
+      }
     }
   }
 
   const heroHeight = computeHeroHeightStyle(height);
   const heroStyles = {...(style || {})};
-  if (heroHeight && heroHeight.height) {
+  if (heroHeight && heroHeight.height && !isTextVariant) {
     heroStyles["--hero-height"] = heroHeight.height;
+  }
+  if (isTextVariant) {
+    heroStyles["--hero-height"] = "auto";
   }
 
   const derivedDescription = description ? String(description) : "";
   const normalizedLinks = normalizeLinks(links);
 
-  const primarySlide = orderedSlides[0] || null;
+  const primarySlide = !isTextVariant ? orderedSlides[0] || null : null;
   const overlayTitle = headline || (primarySlide && primarySlide.title) || "";
   const defaultLinkHref = applyBasePath(
     primarySlide && primarySlide.href ? primarySlide.href : "#"
@@ -206,7 +225,8 @@ export default function Hero({
           title: "View work",
           type: "primary",
         },
-      ];
+      ].filter(Boolean);
+  const finalOverlayLinks = isTextVariant ? normalizedLinks : overlayLinks;
 
   const normalizedBackground = normalizeBackground(background);
   const backgroundClassName =
@@ -214,9 +234,13 @@ export default function Hero({
       ? "canopy-interstitial--bg-transparent"
       : "";
 
+  const variantClassName = isTextVariant
+    ? "canopy-interstitial--hero-text"
+    : "canopy-interstitial--hero-featured";
   const containerClassName = [
     "canopy-interstitial",
     "canopy-interstitial--hero",
+    variantClassName,
     backgroundClassName,
     className,
   ]
@@ -358,9 +382,9 @@ export default function Hero({
       {derivedDescription ? (
         <p className="canopy-interstitial__description">{derivedDescription}</p>
       ) : null}
-      {overlayLinks.length ? (
+      {finalOverlayLinks.length ? (
         <ButtonWrapper className="canopy-interstitial__actions">
-          {overlayLinks.map((link) => (
+          {finalOverlayLinks.map((link) => (
             <Button
               key={`${link.href}-${link.title}`}
               href={link.href}
@@ -375,23 +399,36 @@ export default function Hero({
   );
 
   const cleanedProps = sanitizeRest(rest);
+  const sectionProps = {
+    className: containerClassName,
+    style: heroStyles,
+    ...cleanedProps,
+  };
+  if (!isTextVariant) {
+    sectionProps["data-canopy-hero-slider"] = "1";
+    sectionProps["data-transition"] = normalizedTransition;
+  } else {
+    sectionProps["data-canopy-hero-variant"] = "text";
+  }
 
   return (
-    <section
-      className={containerClassName}
-      data-canopy-hero-slider="1"
-      data-transition={normalizedTransition}
-      style={heroStyles}
-      {...cleanedProps}
-    >
-      <div className="canopy-interstitial__layout">
-        <div className="canopy-interstitial__panel">
-          <div className="canopy-interstitial__body">{overlayContent}</div>
+    <section {...sectionProps}>
+      {isTextVariant ? (
+        <div className="canopy-interstitial__layout canopy-interstitial__layout--text">
+          <div className="canopy-interstitial__panel">
+            <div className="canopy-interstitial__body">{overlayContent}</div>
+          </div>
         </div>
-        <div className="canopy-interstitial__media-group">
-          {renderSlider({showVeil: false, captionVariant: "static"})}
+      ) : (
+        <div className="canopy-interstitial__layout">
+          <div className="canopy-interstitial__panel">
+            <div className="canopy-interstitial__body">{overlayContent}</div>
+          </div>
+          <div className="canopy-interstitial__media-group">
+            {renderSlider({showVeil: false, captionVariant: "static"})}
+          </div>
         </div>
-      </div>
+      )}
     </section>
   );
 }
