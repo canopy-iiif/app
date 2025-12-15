@@ -5,21 +5,40 @@ description: Overview of the builder, content model, and references that live in
 
 # Using Canopy IIIF
 
-This docs section explains how the builder ingests IIIF collections, how MDX pages fit into the
-site, and which configuration values control search, theming, or featured experiences.
+Canopy renders static sites directly from IIIF Collections. The builder fetches manifests,
+derives a sitemap, writes `site/`, and leaves you with Markdown files instead of templates or a
+database.
 
-## What you can do here
+## Working with Canopy
 
-- **Configure** core behavior with [`canopy.yml`](./configuration) — collections, featured
-  manifests, search, theme, and sitemap data all live in one file.
-- **Compose layouts** for docs, guides, and project sections through shared `<Layout />`
-  wrappers plus `_meta.json` navigation files. See the [Layout reference](./layout).
-- **Author MDX** content under `content/` with components such as `<Viewer />`, `<Slider />`, and
-  `<ReferencedItems />`. The [Content reference](./content) and [guides](./guides) cover the
-  available helpers.
-- **Explore features** like the hero, metadata page, search, works, and related sliders in the
-  [Features](./features) section.
-- **Tune the theme** via a few Radix-backed tokens documented under [Theming](./theming).
+Canopy turns the IIIF collection URIs listed in [`canopy.yml`](./configuration) into static pages.
+Each manifest becomes `/works/<slug>.html` with normalized metadata, thumbnails, and links.
+Manifest metadata is indexed for search and exposed as JSON under `/api/search/**`. MDX files under
+`content/` are first-class: you can embed `<Viewer />`, `<Slider />`, or `<ReferencedItems />`
+without reaching for separate templates. UI primitives (hero, related sliders, navigation) are
+opinionated but configurable, so you focus on data and copy. The theme system is a small set of
+Radix-backed tokens plus optional CSS overrides. See [Content](./content), [Features](./features),
+and [Theming](./theming) for specifics.
 
-These pages are plain MDX files, so copy/paste patterns directly into your project or remix them
-while keeping the same component APIs.
+Set up [`canopy.yml`](./configuration) with collection URIs, featured manifests, metadata facets,
+and theme choices. Run `npm run dev` (with live reload) or `npm run build` to fetch IIIF data,
+populate `.cache/iiif/`, and write HTML + assets into `site/`. Author or edit MDX pages under
+`content/`; shared wrappers (`_app.mdx`, `_layout.mdx`) control navigation and layout.
+When you’re satisfied, deploy by copying the generated `site/` directory to your host (Pages, S3,
+etc.). No application server or database ships with the result.
+
+<CanopyDiagram />
+
+## How to use these docs
+
+- Start with [Configuration](./configuration) to understand the `canopy.yml` keys and environment
+  variables.
+- Use [Guides](./guides) for task-driven walkthroughs (populating metadata collections, writing
+  markdown, mapping `navPlace`, and so on).
+- Refer to [Features](./features) for the behavior of each UI primitive, including props and data
+  requirements.
+- Keep the [Content reference](./content) handy when embedding viewers, related items, or inline
+  IIIF assets in prose.
+
+All examples in this section are plain MDX. Copy them into your project or adapt them while keeping
+the same component APIs.

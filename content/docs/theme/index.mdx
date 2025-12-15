@@ -1,9 +1,11 @@
 ---
-title: Theming
+title: Theme
 description: Configure Radix-backed colors plus extend styling with CSS and Tailwind.
 ---
 
-# Theming
+import {ThemeShowcase} from "@canopy-iiif/app/ui/server";
+
+# Theme
 
 Canopy exposes a single `theme` block in `canopy.yml` to control the site-wide accent palette, gray
 palette, and base appearance. These values feed the Radix Themes token system and the Tailwind v4
@@ -11,9 +13,9 @@ preset that ships with the starter, so your UI and MDX components stay in sync.
 
 ```yaml filename="canopy.yml" {12-18}
 theme:
-  accentColor: indigo   # Radix accent name
-  grayColor: slate      # Radix gray name
-  appearance: light     # light | dark
+  accentColor: indigo # Radix accent name
+  grayColor: slate # Radix gray name
+  appearance: light # light | dark
 ```
 
 - **`accentColor`** drives buttons, links, checkboxes, and focus rings.
@@ -27,7 +29,7 @@ Use the standard CSS entry point (`app/styles/main.css`) or Tailwind utilities t
 ```css
 /* app/styles/main.css */
 @theme {
-  --font-serif: 'Fraunces', Georgia, serif;
+  --font-serif: "Fraunces", Georgia, serif;
   --radius-large: 32px;
 }
 
@@ -42,6 +44,8 @@ Use the standard CSS entry point (`app/styles/main.css`) or Tailwind utilities t
 
 The Tailwind config already imports the Canopy preset (`@canopy-iiif/app/ui/tailwind-config`).
 Extend it if you need custom tokens, plugins, or safelisted classes.
+
+<ThemeShowcase />
 
 ## Component-level tweaks
 

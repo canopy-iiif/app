@@ -28,28 +28,10 @@ This a sample page for scholarly content with historical context relating to the
 
 Your file is now accessible at the relative route `/about/nez-perce`. If running in development mode, your file is accessible at http://localhost:5001/about/nez-perce.
 
-### Update Navigation Menu
+### Navigation updates automatically
 
-Add the new page to the section’s `_meta.json` so it appears in the sidebar. For the `about` section that file lives at `content/about/_meta.json`.
-
-```json copy filename="content/about/_meta.json"
-[
-  {
-    "path": "/about",
-    "text": "About"
-  },
-  {
-    "path": "/about/example",
-    "text": "Markdown Example"
-  },
-  {
-    "path": "/about/nez-perce",
-    "text": "The Nez Percé (Nimíipuu)"
-  }
-]
-```
-
-You will see the menu rendered in the `<aside>` of the page after a browser refresh.
+`<Layout>` builds the About sidebar directly from the files in `content/about/`, so the new page
+appears immediately. There is nothing else to configure.
 
 ### Add a IIIF Viewer
 

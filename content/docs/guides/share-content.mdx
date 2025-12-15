@@ -49,25 +49,9 @@ This is an example of a Content State request with the Viewer Component.
 
 > **Why Base64?** IIIF Content State encodes JSON as Base64 so you can embed complex state in URLs. See the [encoding section](https://iiif.io/api/content-state/1.0/#6-content-state-encoding) for details.
 
-### Add New Route to `About` Navigation
+### Navigation updates automatically
 
-Open `/content/about/_meta.json` and add the link to your content to the array:
-
-```
-[
-  {
-    "path": "/about",
-    "text": "About"
-  },
-  {
-    "path": "/about/example",
-    "text": "Markdown Example"
-  },
-  {
-    "path": "/about/content-state",
-    "text": "Content State Example"
-  }
-]
-```
+Because Canopy derives navigation from the file tree, new pages under `content/about/` show up in
+the About sidebar as soon as you add the MDX file—no separate menu files required.
 
 ![Screenshot of Content State example in Viewer](/examples/content-state-view.png)

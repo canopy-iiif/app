@@ -43,3 +43,4 @@ export {
 export { default as DocsCodeBlock } from "./src/docs/CodeBlock.jsx";
 export { default as DocsMarkdownTable } from "./src/docs/MarkdownTable.jsx";
 export { CanopyDiagram } from "./src/docs/Diagram.jsx";
+export { default as ThemeShowcase } from "./src/docs/ThemeShowcase.jsx";

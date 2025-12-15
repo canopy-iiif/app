@@ -1,64 +1,56 @@
 ---
 title: Navigation
-description: "How layout metadata drives primary and section menus."
+description: How the layout builds headers, sidebars, and tables of contents.
 ---
 
 # Navigation
 
-`<Layout>` reads navigation metadata from the `content/` directory so authors can manage menus in plain JSON alongside their MDX files.
+Navigation is derived directly from the files under `content/`. The builder scans directories,
+filters out reserved entries (names starting with `_`), and feeds the structure to `<Layout>` so you
+never maintain a parallel menu schema.
 
-## Primary navigation (`content/_meta.json`)
+## Primary navigation
 
-Add a `_meta.json` file at the root of `content/` to control the links in the global header. Each entry must include a route (`path`) and the label to display (`text`). The order of the array controls the rendered order.
+Configure top-level links in `content/_app.mdx` when you render `<CanopyHeader />`. Pass a
+`navigation` array with `href`/`label` pairs and the header renders them on every page:
 
-```json filename="content/_meta.json"
-[
-  {"path": "/works", "text": "Works"},
-  {"path": "/docs", "text": "Docs"},
-  {"path": "/about", "text": "About"}
-]
+```mdx filename="content/_app.mdx" {9-17}
+<CanopyHeader
+  navigation={[
+    {href: "/search", label: "Works"},
+    {href: "/docs", label: "Docs"},
+    {href: "/about", label: "About"},
+  ]}
+  title="Canopy IIIF"
+  logo={Logo}
+/>
 ```
 
-Paths map to MDX files (`/content/about/index.mdx` → `/about`) or to pages implemented under `src/pages/` (`/works`, `/metadata`, etc.).
+## Section navigation
 
-## Section navigation (`content/<section>/_meta.json`)
-
-Directories that contain their own `_meta.json` receive a sidebar when `navigation={true}` on the wrapping `<Layout>`. Define the relative routes you want to expose within that section.
-
-```json filename="content/docs/_meta.json"
-[
-  {"path": "/docs", "text": "Overview"},
-  {"path": "/docs/layout", "text": "Layout"},
-  {"path": "/docs/layout/navigation", "text": "Navigation"}
-]
-```
-
-`<Layout>` automatically picks the sidebar based on the current path, so you only need to maintain the `_meta.json` files—no front matter flag required.
-
-## Directory structure example
+When `<Layout navigation={true}>` wraps a page, it builds a sidebar from the MDX files that share the
+same directory. Order follows the file path (directories first, then `index.mdx`, then remaining
+files alphabetically). Nested folders become nested menus automatically. There is no front matter or
+metadata file to maintain; rename a file or add a new one and the sidebar updates on the next build.
 
 ```
 content/
-├── _meta.json
 ├── docs/
 │   ├── _layout.mdx
-│   ├── _meta.json
 │   ├── index.mdx
 │   └── layout/
-│       ├── _meta.json
 │       ├── index.mdx
 │       └── navigation.mdx
 └── about/
-    ├── _meta.json
     └── index.mdx
 ```
 
-With this setup:
+Visiting `/docs/layout/navigation` renders the docs sidebar because the page lives under
+`content/docs/layout/`. Pages outside that tree (e.g., `/about`) receive a minimalist layout unless
+you wrap them in `<Layout navigation={true}>`.
 
-- The global header renders the `content/_meta.json` links.
-- Visiting `/docs/layout/navigation` shows the docs sidebar provided by `content/docs/_meta.json`.
-- The layout automatically highlights the active entry based on the current path.
+## Table of contents
 
-## Table of contents from headings
-
-When `contentNavigation` is left enabled, `<Layout>` builds an on-page table of contents using level-two headings (`##`) and deeper. Keep heading text descriptive; the generated IDs are used both for deep links and for the right-hand toc column.
+`<Layout>` also builds an on-page table of contents from headings inside each MDX file (levels two
+and below). Keep headings short, descriptive, and unique; the generated IDs power deep links and the
+right-hand toc.

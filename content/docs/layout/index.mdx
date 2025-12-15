@@ -30,7 +30,7 @@ type: "docs"
 
 During the MDX build, heading data and navigation metadata are injected into the page context. `<Layout>` reads that context to:
 
-- Build the section navigation (`content/docs/_meta.json`, plus any `_meta.json` files found deeper in the directory tree).
+- Build the section navigation directly from the `content/` directory tree.
 - Generate the table of contents from Markdown headings.
 - Prefill component props such as `pageTitle` for downstream components like `<ContentNavigation />`.
 
@@ -46,4 +46,4 @@ If a section needs a different layout treatment, create or edit the relevant `_l
 </Layout>
 ```
 
-Pair these overrides with `_meta.json` files in the same directory to drive the section menu. See [Navigation](./navigation) for details on how the metadata files map to the sidebar.
+Navigation mirrors the file system, so overrides only need to worry about layout props. See [Navigation](./navigation) for the full behavior.
