@@ -5,9 +5,11 @@ title: Configuration
 
 # Configuration
 
-Canopy reads settings from `canopy.yml` in the repository root. Override the path with `CANOPY_CONFIG=/path/to/file.yml`. Edit the file after walking through the [Get Started guide](/get-started).
+Canopy reads settings from `canopy.yml` in the repository root. Edit this file after walking through the [Get Started guide](/get-started).
 
 ## Quick start
+
+The minimal `canopy.yml` includes a list of IIIF Collection URIs, metadata fields to index, featured items, and a theme block. These settings are not strictly required, yet they form the basis of most Canopy sites.
 
 ```yaml filename="canopy.yml" copy
 collection:
@@ -20,14 +22,14 @@ featured:
   - https://example.org/iiif/manifest/alpha
   - https://example.org/iiif/manifest/bravo
 theme:
-  accentColor: tomato
-  grayColor: sand
+  accentColor: violet
+  grayColor: mauve
   appearance: light
 ```
 
-## Basic configuration
+## Basic
 
-### Collections
+### Collection
 
 ```yaml
 collection:
@@ -35,11 +37,13 @@ collection:
   - https://example.org/iiif/collections/b
 ```
 
-- **Required.** Provide one URI or an array of IIIF Collection URIs.
+- Not strictly required but provides one URI or multiple IIIF Collection URIs.
 - URIs must match the Collection `id` values.
-- Override the entire list with `CANOPY_COLLECTION_URI` for scripted builds.
+- Each Manifest listed in the Collections becomes a page in the site.
+- Collections can be Presentation API 2.x or 3.0.
+- Collections may be nested (i.e., contain other Collections).
 
-### Metadata and facets
+### Metadata
 
 ```yaml
 metadata:
@@ -47,11 +51,11 @@ metadata:
   - Creator
 ```
 
-- Optional list of manifest metadata labels (case-sensitive in YAML, matched case-insensitively at build time).
+- Optional list of manifest metadata labels (matched case-insensitively at build time; `subject`, `Subject`, and `SUBJECT` are treated the same).
 - Drives related sliders, metadata callouts, and `/api/facet/**` IIIF collections.
 - Set it to an empty list to turn off facets without deleting the key.
 
-### Featured items
+### Featured
 
 ```yaml
 featured:
@@ -62,12 +66,12 @@ featured:
 - Optional list of manifest URIs for the homepage hero and other highlighted slots.
 - Entries should belong to your configured collections; Canopy normalizes IDs to avoid duplicates.
 
-### Theme configuration
+## Theme
 
 Canopy reads a `theme` configuration to pick the accent palette, gray palette, and default appearance (light or dark mode).
-The values feed a CSS variable steps used in styling so every component inherits the same colors. All color names should be referenced in lowercase. If you omit a value, Canopy falls back to `indigo` and `slate` with a `light` appearance.
+The values feed a CSS variable set used in styling so every component inherits the same colors. Reference all color names in lowercase. If you omit a value, Canopy falls back to `indigo` and `slate` with a `light` appearance.
 
-See a full list of supported colors in the [Theme](/docs/theme) docs.
+#### **See a full list of supported colors in the [Theme](/docs/theme) docs.**
 
 ```yaml
 theme:
@@ -76,6 +80,116 @@ theme:
   appearance: light
 ```
 
-- `accentColor`: Styles buttons, links, and highlights: (e.g., `indigo`, `tomato`, `cyan`)
-- `grayColor`: Sets the neutrals, foreground, and background colors: (e.g., `slate`, `sand`, `gray`)
-- `appearance`: Controls dark or light mode of the site: options are `light` (default) or `dark`.
+- `accentColor`: Styles buttons, links, and highlights (e.g., `indigo`, `tomato`, `cyan`).
+- `grayColor`: Sets the neutrals, foreground, and background colors (e.g., `slate`, `sand`, `gray`).
+- `appearance`: Controls the site's dark or light mode; options are `light` (default) or `dark`.
+
+## Search
+
+Search settings live in the `search` block. The build uses them to control FlexSearch indexing, result layouts, and tab order.
+
+```yaml
+search:
+  results:
+    work:
+      layout: grid
+      result: figure
+    page:
+      layout: list
+      result: article
+  index:
+    metadata:
+      enabled: true
+      all: false
+    summary:
+      enabled: true
+    annotations:
+      enabled: false
+      motivation:
+        - commenting
+        - tagging
+```
+
+### Results layout
+
+- `search.results.<type>` defines how each tab renders and maps to `type` values of the documents. By default only `work` is used for all IIIF Manifests in listed collections. Add other types like `page` to render MDX pages with dedicated layouts. Custom `type` values are supported too.
+- `layout` accepts `grid` or `list`. [Works](/search?q=&type=work) are rendered as cards in a grid by default; [pages](/search?q=&type=page) use a search engine style vertical list.
+- `result` accepts `figure` or `article` and maps to `_result-figure.mdx` and `_results-article.mdx` templates in `/content/docs/search/`.
+- The order of `search.results.<type>` entries fixes the tab order on the search page.
+
+#### Custom types
+
+A team developing a project with contextual essays might want to add a custom `essay` type tab with a dedicated layout. This would correspond to all content documents with the `type` value of `essay`, ex:
+
+```yaml
+search:
+  results:
+    work:
+      layout: grid
+      result: figure
+    essay:
+      layout: list
+      result: article
+    page:
+      layout: list
+      result: article
+```
+
+### Index
+
+Every manifest pulled from your configured collections becomes a `type: 'work'` record. The `label` (_title_) of all manifests is included in this index. You can further customize what is indexed for these records with the following options:
+
+#### Metadata
+
+Metadata fields set in `metadata` (ex: _Subject_) at the top level of your configuration are used by `search.index.metadata`. Set `search.index.metadata.enabled` to `false` when you want to exclude metadata values from the search index. Set `all: true` to index every metadata entry across all manifests even if it is not listed under `metadata`.
+
+#### Summary
+
+Manifests may contain rich context in their `summary` labels and these are indexed by default. Toggle `search.index.summary.enabled` to `false` if your manifests have long or invaluable summaries.
+
+#### Annotations
+
+Your collection and manifests may contain textual annotations. You can optionally add these as search results by setting `search.index.annotations.enabled` to `true` and turning on deep annotation indexing. When enabled, Canopy will write these to an annotations index. Annotations carry a `motivation` value, and you can filter motivations with the `motivation` list to determine which values should be included in the index.
+
+**Note:** Enabling the indexing of annotations will increase the size and scale of your search index. Build times will also be affected. As Canopy generates the search index for use in the browser, you should consider size of your index when developing your project.
+
+```yaml
+search:
+  index:
+    metadata:
+      enabled: true
+      all: false
+    summary:
+      enabled: true
+    annotations:
+      enabled: false
+      motivation:
+        - commenting
+        - tagging
+```
+
+### Excluding content
+
+MDX pages contribute `type: 'page'` records unless explicitly excluded. The build process scans every `.mdx` file in your content directory. Any file with the frontmatter `search: false` is excluded. This is useful for content that does not add scholarly value to your digital project.
+
+```mdx filename="content/privacy-policy.mdx"
+---
+title: Privacy Policy
+search: false
+---
+
+# Privacy Policy
+
+Your privacy is important to us...
+```
+
+## Extras
+
+### Base URL
+
+By default, Canopy generates relative URLs for sitemap links, IIIF Collection ids, and canonical URLs. You can override this behavior by setting an absolute `site.baseUrl` in your configuration. This is helpful in cases where your project is not hosted by GitHub Pages (which has the Base URL automatically determined) or if you want to include a path prefix. Canopy uses `http://localhost:5001` during local development with `npm run dev`.
+
+```yaml
+site:
+  baseUrl: https://example.org/canopy-project
+```
