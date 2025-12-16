@@ -147,6 +147,7 @@ export default function DocsCodeBlock(props = {}) {
   };
 
   const showFilename = Boolean(filename);
+  const showHeader = showFilename || enableCopy;
 
   const {style: preStyleOverride, className: preClassName, ...preRest} = rest;
   const mergedPreStyle = Object.assign({}, preStyle, preStyleOverride || {});
@@ -168,32 +169,34 @@ export default function DocsCodeBlock(props = {}) {
   return React.createElement(
     "div",
     {style: containerStyle},
-    React.createElement(
-      "div",
-      {style: headerStyle},
-      React.createElement("span", null, showFilename ? filename : null),
-      enableCopy
-        ? React.createElement(
-            "button",
-            {
-              type: "button",
-              onClick: handleCopy,
-              style: {
-                border: "1px solid var(--color-accent-300, #bfdbfe)",
-                borderRadius: "6px",
-                padding: "0.2rem 0.55rem",
-                fontSize: "0.7rem",
-                fontWeight: 500,
-                background:
-                  "color-mix(in srgb, var(--color-accent-100, #e0f2ff) 55%, #ffffff)",
-                color: "var(--color-accent-700, #1d4ed8)",
-                cursor: "pointer",
-              },
-            },
-            copied ? "Copied" : "Copy"
-          )
-        : null
-    ),
+    showHeader
+      ? React.createElement(
+          "div",
+          {style: headerStyle},
+          React.createElement("span", null, showFilename ? filename : null),
+          enableCopy
+            ? React.createElement(
+                "button",
+                {
+                  type: "button",
+                  onClick: handleCopy,
+                  style: {
+                    border: "1px solid var(--color-accent-300, #bfdbfe)",
+                    borderRadius: "6px",
+                    padding: "0.2rem 0.55rem",
+                    fontSize: "0.7rem",
+                    fontWeight: 500,
+                    background:
+                      "color-mix(in srgb, var(--color-accent-100, #e0f2ff) 55%, #ffffff)",
+                    color: "var(--color-accent-700, #1d4ed8)",
+                    cursor: "pointer",
+                  },
+                },
+                copied ? "Copied" : "Copy"
+              )
+            : null
+        )
+      : null,
     React.createElement(
       "pre",
       {...preRest, className: preClassName, style: mergedPreStyle},

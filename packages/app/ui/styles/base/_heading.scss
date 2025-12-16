@@ -1,6 +1,6 @@
 @layer base {
   h1 {
-    font-size: 2.618rem;
+    font-size: 2.61rem;
     line-height: 1.25;
     margin: 0 0 1rem 0;
   }
@@ -16,7 +16,13 @@
     line-height: 1.3;
     letter-spacing: -0.0125em;
     margin: 1.618rem 0 1rem;
-    font-weight: 300;
+  }
+
+  h4 {
+    font-size: 1.111rem !important;
+    line-height: 1.3;
+    letter-spacing: -0.0125em !important;
+    margin: 1.382rem 0 0.618rem 0;
   }
 
   .canopy-lead {
