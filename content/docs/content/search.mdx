@@ -1,83 +1,133 @@
 ---
-title: Search components
-description: Compose the search page in MDX using SSR-safe placeholders that hydrate client-side.
+title: Search
+description: How the FlexSearch runtime, MDX templates, and search config fit together.
 ---
 
-# Search components
+# Search
 
-Drop search primitives into any MDX page to control how the search UI renders. Each component renders
-SSR-safe markup and hydrates client-side via `site/search.js`, so you can rearrange them freely.
+`npm run build` writes a search index under `site/api/` and bundles a React runtime that mounts
+into the `<Search />` placeholder or `[data-canopy-search]`. Works (IIIF manifests) and pages (MDX
+files) share a single FlexSearch store so filters and type tabs stay in sync.
 
-## Available components
+## Data sources
 
-| Component         | Purpose                                                   |
-| ----------------- | --------------------------------------------------------- |
-| `<SearchForm />`  | Input + submit button wired to the shared search store.   |
-| `<SearchSummary />` | Describes the current query and filter.                 |
-| `<SearchResults />` | Renders the result list in a grid or list layout.       |
-| `<SearchTabs />`  | Displays tabs for each record type (work, page, etc.).    |
-| `<SearchTotal />` | Shows the count of visible results.                       |
-| `<Search />`      | Convenience wrapper that renders the default layout.      |
+- **Works** — every manifest pulled from `collection` URIs becomes a `type: 'work'` record with
+  `id`, `title`, and `href` pointing at `/works/<slug>.html`. Metadata fields listed in
+  `search.index.metadata` are flattened for indexing.
+- **Pages** — MDX files contribute `type: 'page'` records when they have no front matter or when
+  they explicitly set `type`. Add `search: false` to opt out. Optional `searchSummary` and
+  `searchSummaryMarkdown` fields override the teaser.
 
-`<SearchResults />` accepts a `layout` prop (`'grid'` or `'list'`). Grids use the masonry layout from
-`@canopy-iiif/app/ui` and hydrate in the browser. Lists render server-side markup immediately.
+`packages/app/lib/build/search-index.js` combines the records and keeps IDs stable between
+`search-index.json` (FlexSearch input) and `search-records.json` (display data).
 
-## Building a custom layout
+## Page composition
+
+Create `content/search/_layout.mdx` to control the markup surrounding the runtime. The layout
+receives a `search` prop with `form`, `summary`, `count`, and `results` placeholders. Drop them
+anywhere in the document to change the layout without editing React code.
 
 ```mdx filename="content/search/_layout.mdx"
 ---
 title: Search
 ---
 
-<section className="space-y-6">
-  <header className="space-y-3">
-    <h1>Search</h1>
-    <p>Type to search across works and documentation pages.</p>
-  </header>
-
-  <SearchForm />
-  <SearchTabs />
-  <SearchSummary />
-  <SearchTotal />
+<section>
+  <h1>{props.title}</h1>
+  {props.search.summary}
+  {props.search.form}
+  {props.search.count}
 </section>
 
-<SearchResults layout="grid" />
+{props.search.results}
 ```
 
-You can place the components anywhere in the tree—drop a `<SearchTabs />` in a sidebar, or wrap the
-form in a `<Container />` for a full-bleed background. The runtime automatically wires them together.
+If you omit `_layout.mdx`, Canopy renders a fallback layout that stacks the form, summary, and
+results vertically.
 
-## Result templates
+## Tabs, layouts, and templates
 
-Search results render through MDX partials inside `content/search/`:
+Control the rendered tabs and markup via `search.results` in `canopy.yml`:
 
-- `_result-figure.mdx` — used when `results.<type>.result` is set to `figure`.
-- `_result-article.mdx` — used when that value is `article`.
-
-Each partial receives `props.record`, `props.query`, and helper props like `props.activeType`. Import
-`Card`, `ArticleCard`, or your own components to customize the markup without rebuilding the runtime.
-If these files are missing, Canopy falls back to the defaults in `packages/app/lib/search/templates/`.
-
-## Advanced: modal search form
-
-Use `<SearchFormModal />` (exported from `@canopy-iiif/app/ui/server`) to trigger the search drawer
-that appears in the site header. Each trigger renders an element with `data-canopy-search-form`, and
-`site/scripts/canopy-search-form.js` hydrates it into an accessible dialog.
-
-```mdx
-<SearchFormModal mode="dialog">
-  <button type="button">Open search</button>
-</SearchFormModal>
+```yaml filename="canopy.yml" {12-24}
+search:
+  results:
+    work:
+      layout: grid      # grid | list
+      result: figure    # figure | article
+    page:
+      layout: list
+      result: article
+  tabs:
+    order:
+      - work
+      - page
 ```
 
-`mode="dialog"` (default) opens the modal directly; pass `mode="inline"` to embed the form where
-the component is placed.
+- `layout` switches between the masonry grid (uses `react-masonry-css`) and a stacked list.
+- `result` picks the MDX partial that renders each item. Define `_result-figure.mdx` or
+  `_result-article.mdx` under `content/search/` to override the defaults. Each file receives the
+  record (`props.record`), the active query, and helper props for badges or metadata.
+- `tabs.order` reorders tabs without redefining `layout`/`result`. Types omitted from `results`
+  inherit the default `grid` + `figure` combo.
 
-## Troubleshooting
+## Filtering and URL state
 
-- Ensure `content/search/_layout.mdx` imports the components from MDX (no manual import required—the
-  MDX provider injects them globally).
-- If the components never hydrate, confirm the page includes `[data-canopy-search]` or `<Search />`
-  so the runtime bundle loads.
-- When editing `_result-*.mdx`, restart `npm run dev` if you add new imports; esbuild watches these
-  files but cached metadata may need a rebuild after structural changes.
+The runtime watches `?q` and `?type` query params, so deep links remain stable when you switch
+between tabs or refine a search. When you add more record types via front matter (`searchType:
+example`), include them in `search.results` and `tabs.order` to expose dedicated tabs.
+
+## Styling hooks
+
+- Use the `.canopy-search` class (root element) to add custom spacing or background treatments in
+  `app/styles/main.css`.
+- Override button or input styles globally via the Tailwind preset or your own CSS variables in
+  `@theme`.
+- When you need different markup for specific record types, create additional templates under
+  `content/search/` and branch based on `record.type` inside the MDX.
+
+## Debugging tips
+
+- Inspect `site/api/search-index.json` to confirm front-matter summaries and metadata labels are
+  being indexed.
+- When the browser console logs `Dynamic require of 'react' is not supported`, make sure the UI
+  build marks `react`, `react-dom`, `react-dom/client`, `react-masonry-css`, and `flexsearch` as
+  externals (the repository is already configured this way).
+- Delete `.cache/search` (if present) plus `site/api/search-*` and rebuild when you change record
+  shapes.
+
+## Metadata browse
+
+Canopy builds `/metadata` automatically. It groups the metadata labels you list in `canopy.yml`
+(`metadata` array) and renders links to every unique value found across the ingested manifests. Each
+link jumps directly to search results filtered to that label/value pair.
+
+```yaml filename="canopy.yml" {5-9}
+metadata:
+  - Subject
+  - Creator
+  - Date
+  - Location
+```
+
+During the IIIF build, Canopy generates `/api/facet/<label>/<value>.json` collections for those
+labels. The metadata page uses the files to calculate counts and to build the links used elsewhere
+(home sliders, related items, search filters).
+
+### Page anatomy
+
+1. **Intro copy** — `content/metadata/index.mdx` controls the opening paragraph and any contextual
+   guidance you want to provide to visitors.
+2. **Facet sections** — For each configured label Canopy shows the heading and a list of values,
+   ordered by descending occurrence. Each value links to
+   `/search?type=work&label=<label>&value=<value>`.
+3. **Counts** — Values display the number of works that match the label/value pair so users can
+   gauge scale before clicking through.
+
+### Editing tips
+
+- Keep facet labels short and consistent; the UI uses the label verbatim as the section heading.
+- Remove labels from `canopy.yml` when you stop using them to avoid generating unused
+  `/api/facet/**` files.
+- Pair metadata browse sections with MDX essays that explain curatorial choices. Cite those works
+  via `referencedManifests` so the relationship flows back to individual work pages.

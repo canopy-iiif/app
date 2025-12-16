@@ -130,4 +130,129 @@ Embed Canopy components inline to tie Markdown narratives back to IIIF assets:
 
 Because MDX is just React, you can pass props directly in the markup. Keep component usage minimal when possible so the prose stays readable in raw form.
 
+## Home page content
+
+`content/index.mdx` controls the landing page. Front matter toggles the hero interstitial sourced from featured manifests and the highlighted metadata sliders that render below it.
+
+```mdx filename="content/index.mdx"
+---
+title: Amanda Ira Aldridge Correspondence
+showHero: true
+showHighlighted: true
+---
+
+<Container>
+  <p>Introduce the collection, cite your institution, or drop inline media.</p>
+  <ButtonWrapper>
+    <Button href="/works" label="Browse works" />
+    <Button href="https://example.org" label="About the project" variant="secondary" />
+  </ButtonWrapper>
+</Container>
+```
+
+### Hero interstitial
+
+When `showHero` is `true`, `<Interstitials.Hero />` renders at the top of the page and rotates through the `featured` manifests listed in `canopy.yml`.
+
+```yaml filename="canopy.yml" {5-10}
+collection:
+  - https://collections.example.org/iiif/harpsichords
+featured:
+  - https://collections.example.org/iiif/manifest/alpha
+  - https://collections.example.org/iiif/manifest/bravo
+  - https://collections.example.org/iiif/manifest/charlie
+metadata:
+  - Subject
+  - Creator
+```
+
+Behavior notes:
+
+- Featured manifests are normalized during the IIIF build so duplicates collapse to a single entry.
+- If you omit `featured`, Canopy falls back to a random manifest from the cached collection.
+- The hero supports props like `headline`, `description`, `links`, `variant`, `background`, and `height`. Pass them via `content/index.mdx` (e.g., `<Interstitials.Hero headline="Explore" />`).
+- Set `variant="text"` to render a centered, copy-driven hero without the manifest slider.
+
+```mdx filename="content/index.mdx" {11-16}
+<Interstitials.Hero
+  variant="text"
+  headline="Plan your visit"
+  description="Preview your favorites, bookmark upcoming tours, and read the latest from the archives."
+  links={[{ title: 'Browse works', href: '/works' }]}
+/>
+```
+
+### Custom content region
+
+Everything beneath the hero comes from the Markdown body. Compose `<Container />` wrappers, prose, or IIIF components (Viewer, Slider, ReferencedItems) to introduce the project. The docs layout wrapper provides typography defaults so you can focus on the content itself.
+
+### Highlighted metadata sliders
+
+When `showHighlighted` is `true`, `<RelatedItems />` rows render one slider per metadata label defined in `canopy.yml`. Each slider fetches a generated `/api/facet/<label>/<value>.json` collection and links cards back to the related work page.
+
+Tips:
+
+- Limit the `metadata` list to fields with a reasonable number of distinct values; each unique value generates its own IIIF Collection file.
+- Use the `top` prop on `<RelatedItems />` to restrict the number of sliders (`top={2}` renders two label buckets).
+- Override slider spacing with the `sliderOptions` prop or by editing `packages/app/ui/src/iiif/sliderOptions.js`.
+
+### Checklist when editing the home page
+
+- Add descriptive `title` and `description` front matter for accurate SEO and social cards.
+- Keep hero copy short; the manifest label and summary already surface detailed provenance.
+- Use `<Button />` for primary actions and `<Button variant="secondary" />` for tertiary links to maintain consistent styling.
+- Wrap embedded sliders or viewers in `<section>` and heading pairs so the table of contents and skip links stay meaningful.
+
+## Layout components
+
+Use layout primitives from `@canopy-iiif/app/ui/server` to keep spacing and call-to-action styling consistent across MDX pages.
+
+### Container
+
+Wrap sections in a centered, padded shell that respects the project’s max width. Add utility classes via `className` to tweak backgrounds or spacing.
+
+```mdx
+<Container>
+
+Textual content goes here.
+
+</Container>
+```
+
+| Attribute   | Values            | Purpose                                                       |
+| ----------- | ----------------- | ------------------------------------------------------------- |
+| `className` | string (optional) | Extends the base spacing/width utilities with custom classes. |
+
+### Button
+
+Render calls to action with the Canopy button styles. `label` provides the text while `variant` toggles between primary and secondary treatments.
+
+```mdx
+<Button href="/about" label="Read more" target="_blank" variant="primary" />
+```
+
+| Attribute   | Values                 | Purpose                                                                  |
+| ----------- | ---------------------- | ------------------------------------------------------------------------ |
+| `label`     | string                 | Text shown inside the button.                                            |
+| `href`      | string                 | Destination URL for the anchor element.                                  |
+| `variant`   | `primary`, `secondary` | Controls color treatment; defaults to `'primary'`.                       |
+| `target`    | string (optional)      | Anchor target (`_blank`, etc.); auto-adds `rel="noopener noreferrer"`.   |
+| `rel`       | string (optional)      | Custom `rel` attribute; overrides the auto-generated value when present. |
+| `className` | string (optional)      | Appends classes before the variant modifier.                             |
+
+### ButtonWrapper
+
+Arrange multiple buttons with a consistent gap. Useful for callouts with several actions.
+
+```mdx
+<ButtonWrapper>
+  <Button href="/search" label="Browse" />
+  <Button href="/about" label="About" variant="secondary" />
+</ButtonWrapper>
+```
+
+| Attribute   | Values            | Purpose                                     |
+| ----------- | ----------------- | ------------------------------------------- |
+| `className` | string (optional) | Extends the default flex and gap utilities. |
+
 [^1]: Footnotes defined later in the file display at the bottom of the rendered page.
