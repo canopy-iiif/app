@@ -116,21 +116,55 @@
     }
   }
 
-  &--hero-text {
+  &--hero-breadcrumb {
     margin-bottom: 0.618rem;
 
     .canopy-interstitial__body {
       align-items: center;
+      display: flex;
+      flex-wrap: nowrap;
+      flex-direction: row;
+      justify-content: space-between;
+      padding: 0;
+
+      p {
+        flex-grow: 0;
+      }
     }
 
     .canopy-interstitial__panel {
-      padding: 1.618rem 0 1rem;
+      padding: 1rem 1.618rem;
     }
 
     .canopy-interstitial__description {
+      font-size: 0.8333rem;
       color: var(--color-accent-800);
-      font-size: 0.9222rem;
+      font-family: var(--font-mono);
     }
+  }
+
+  &__breadcrumb {
+    display: inline-flex;
+    gap: 0.5rem;
+    font-size: 0.8333rem;
+  }
+
+  &__breadcrumb a {
+    color: inherit;
+    text-decoration: none;
+    color: var(--color-gray-700);
+  }
+
+  &__breadcrumb a:hover,
+  &__breadcrumb a:focus-visible {
+    color: var(--color-accent-700);
+    outline: none;
+  }
+
+  &__breadcrumb-separator,
+  &__breadcrumb-current {
+    color: var(--color-gray-900);
+    font-weight: 600;
   }
 
   &__slider {

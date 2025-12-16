@@ -1,5 +1,6 @@
 import React from "react";
 import helpers from "../../../lib/components/featured.js";
+import navigationHelpers from "../../../lib/components/navigation.js";
 import {computeHeroHeightStyle} from "./hero-utils.js";
 import Button from "../layout/Button.jsx";
 import ButtonWrapper from "../layout/ButtonWrapper.jsx";
@@ -126,11 +127,27 @@ function normalizeBackground(value) {
   }
 }
 
+function findNodePathBySlug(node, targetSlug) {
+  if (!node || !targetSlug) return null;
+  const normalizedTarget = String(targetSlug || "");
+  if (!normalizedTarget) return null;
+  if (node.slug === normalizedTarget) return [node];
+  const children = Array.isArray(node.children) ? node.children : [];
+  for (const child of children) {
+    const path = findNodePathBySlug(child, normalizedTarget);
+    if (path && path.length) {
+      return [node, ...path];
+    }
+  }
+  return null;
+}
+
 function normalizeVariant(value) {
   try {
     const raw = value == null ? "" : String(value);
     const normalized = raw.trim().toLowerCase();
-    return normalized === "text" ? "text" : "featured";
+    if (normalized === "breadcrumb" || normalized === "text") return "breadcrumb";
+    return "featured";
   } catch (_) {
     return "featured";
   }
@@ -149,13 +166,19 @@ export default function Hero({
   style = {},
   background = "theme",
   variant = "featured",
+  homeLabel = "Home",
   ...rest
 }) {
   const normalizedVariant = normalizeVariant(variant);
-  const isTextVariant = normalizedVariant === "text";
+  const isBreadcrumbVariant = normalizedVariant === "breadcrumb";
+  const PageContext =
+    navigationHelpers && typeof navigationHelpers.getPageContext === "function"
+      ? navigationHelpers.getPageContext()
+      : null;
+  const pageContext = PageContext ? React.useContext(PageContext) : null;
 
   let orderedSlides = [];
-  if (!isTextVariant) {
+  if (!isBreadcrumbVariant) {
     const resolved = resolveFeaturedItem({item, index, random});
     const helpersList =
       helpers && helpers.readFeaturedFromCacheSync
@@ -202,17 +225,17 @@ export default function Hero({
 
   const heroHeight = computeHeroHeightStyle(height);
   const heroStyles = {...(style || {})};
-  if (heroHeight && heroHeight.height && !isTextVariant) {
+  if (heroHeight && heroHeight.height && !isBreadcrumbVariant) {
     heroStyles["--hero-height"] = heroHeight.height;
   }
-  if (isTextVariant) {
+  if (isBreadcrumbVariant) {
     heroStyles["--hero-height"] = "auto";
   }
 
   const derivedDescription = description ? String(description) : "";
   const normalizedLinks = normalizeLinks(links);
 
-  const primarySlide = !isTextVariant ? orderedSlides[0] || null : null;
+  const primarySlide = !isBreadcrumbVariant ? orderedSlides[0] || null : null;
   const overlayTitle = headline || (primarySlide && primarySlide.title) || "";
   const defaultLinkHref = applyBasePath(
     primarySlide && primarySlide.href ? primarySlide.href : "#"
@@ -226,7 +249,65 @@ export default function Hero({
           type: "primary",
         },
       ].filter(Boolean);
-  const finalOverlayLinks = isTextVariant ? normalizedLinks : overlayLinks;
+  const finalOverlayLinks = isBreadcrumbVariant ? normalizedLinks : overlayLinks;
+
+  const breadcrumbItems = React.useMemo(() => {
+    if (!isBreadcrumbVariant) return [];
+    const items = [];
+    const label = typeof homeLabel === "string" ? homeLabel.trim() : "";
+    if (label) {
+      items.push({title: label, href: applyBasePath("/")});
+    }
+    const navigation = pageContext && pageContext.navigation ? pageContext.navigation : null;
+    const page = pageContext && pageContext.page ? pageContext.page : null;
+    const slug =
+      (page && page.slug) ||
+      (navigation && navigation.currentSlug) ||
+      "";
+    const rootNode = navigation && navigation.root ? navigation.root : null;
+    if (!slug || !rootNode) return items;
+    const path = findNodePathBySlug(rootNode, slug);
+    if (!path || !path.length) return items;
+    path.forEach((node) => {
+      if (!node) return;
+      const title = node.title || node.slug || "";
+      if (!title) return;
+      const href = node.href ? applyBasePath(node.href) : null;
+      items.push({title, href});
+    });
+    return items;
+  }, [isBreadcrumbVariant, pageContext, homeLabel]);
+
+  const breadcrumbNode = isBreadcrumbVariant && breadcrumbItems.length
+    ? (
+        <nav className="canopy-interstitial__breadcrumb" aria-label="Breadcrumb">
+          {breadcrumbItems.map((item, idx) => {
+            const isLast = idx === breadcrumbItems.length - 1;
+            const key = `${item.title || idx}-${idx}`;
+            const content = !isLast && item.href ? (
+              <a href={item.href}>{item.title}</a>
+            ) : (
+              <span className="canopy-interstitial__breadcrumb-current">
+                {item.title}
+              </span>
+            );
+            return (
+              <React.Fragment key={key}>
+                {idx > 0 ? (
+                  <span
+                    className="canopy-interstitial__breadcrumb-separator"
+                    aria-hidden="true"
+                  >
+                    &gt;
+                  </span>
+                ) : null}
+                {content}
+              </React.Fragment>
+            );
+          })}
+        </nav>
+      )
+    : null;
 
   const normalizedBackground = normalizeBackground(background);
   const backgroundClassName =
@@ -234,8 +315,8 @@ export default function Hero({
       ? "canopy-interstitial--bg-transparent"
       : "";
 
-  const variantClassName = isTextVariant
-    ? "canopy-interstitial--hero-text"
+  const variantClassName = isBreadcrumbVariant
+    ? "canopy-interstitial--hero-breadcrumb"
     : "canopy-interstitial--hero-featured";
   const containerClassName = [
     "canopy-interstitial",
@@ -404,19 +485,22 @@ export default function Hero({
     style: heroStyles,
     ...cleanedProps,
   };
-  if (!isTextVariant) {
+  if (!isBreadcrumbVariant) {
     sectionProps["data-canopy-hero-slider"] = "1";
     sectionProps["data-transition"] = normalizedTransition;
   } else {
-    sectionProps["data-canopy-hero-variant"] = "text";
+    sectionProps["data-canopy-hero-variant"] = "breadcrumb";
   }
 
   return (
     <section {...sectionProps}>
-      {isTextVariant ? (
-        <div className="canopy-interstitial__layout canopy-interstitial__layout--text">
+      {isBreadcrumbVariant ? (
+        <div className="canopy-interstitial__layout canopy-interstitial__layout--breadcrumb">
           <div className="canopy-interstitial__panel">
-            <div className="canopy-interstitial__body">{overlayContent}</div>
+            <div className="canopy-interstitial__body">
+              {breadcrumbNode}
+              {overlayContent}
+            </div>
           </div>
         </div>
       ) : (

@@ -170,12 +170,12 @@ Behavior notes:
 
 - Featured manifests are normalized during the IIIF build so duplicates collapse to a single entry.
 - If you omit `featured`, Canopy falls back to a random manifest from the cached collection.
-- The hero supports props like `headline`, `description`, `links`, `variant`, `background`, and `height`. Pass them via `content/index.mdx` (e.g., `<Interstitials.Hero headline="Explore" />`).
-- Set `variant="text"` to render a centered, copy-driven hero without the manifest slider.
+- The hero supports props like `headline`, `description`, `links`, `variant`, `background`, `homeLabel`, and `height`. Pass them via `content/index.mdx` (e.g., `<Interstitials.Hero headline="Explore" />`).
+- Set `variant="breadcrumb"` to render a centered, copy-driven hero with a breadcrumb that mirrors the current docs path; override the leading crumb with `homeLabel` when needed.
 
 ```mdx filename="content/index.mdx" {11-16}
 <Interstitials.Hero
-  variant="text"
+  variant="breadcrumb"
   headline="Plan your visit"
   description="Preview your favorites, bookmark upcoming tours, and read the latest from the archives."
   links={[{ title: 'Browse works', href: '/works' }]}

@@ -14,7 +14,7 @@ export const canopyVersion =
   "dev";
 
 <>
-  <Interstitials.Hero variant="text" description={`v${canopyVersion}`} />
+  <Interstitials.Hero variant="breadcrumb" description={`v${canopyVersion}`} />
   <Layout navigation={true} fluid={true}>
     <MDXProvider components={{pre: DocsCodeBlock, table: DocsMarkdownTable}}>
       {props.children}

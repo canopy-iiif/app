@@ -7,7 +7,7 @@
   :host {
     --font-sans: system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
     --font-serif: "Fraunces", Georgia, "Times New Roman", serif;
-    --font-mono: "ui-monospace", Menlo, Consolas, monospace;
+    --font-mono: "IBM Plex Mono", "ui-monospace", Menlo, Consolas, monospace;
     --default-font-family: var(--font-serif);
   }
 }
