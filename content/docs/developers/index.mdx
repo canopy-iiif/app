@@ -1,0 +1,66 @@
+---
+title: Developers
+description: Documentation for developers who want to update canopy installations, contribute to core code, or build custom integrations.
+---
+
+export const CanopyVersion = () => {
+  const version =
+    (typeof process !== "undefined" &&
+      process.env &&
+      (process.env.CANOPY_APP_VERSION ||
+        process.env.npm_package_version ||
+        process.env.npm_package_VERSION)) ||
+    "dev";
+  return <strong>v{version}</strong>;
+};
+
+# Developers
+
+Welcome to the Canopy IIIF developer documentation! This section is dedicated to developers who want to contribute to the Canopy project, customize their Canopy installations, or build integrations with other systems. Here, you'll find guides on setting up your development environment, understanding the codebase, and best practices for contributing.
+
+## Architecture
+
+Canopy templates are intentionally designed to be simple and modular. The project is structured to allow easy customization and extension by developers of varying skill levels. The core of Canopy is built using modern web technologies, including Markdown + JSX (MDX) for the frontend development and easy inlining of rich content.
+
+```
+├── app/
+│   ├── scripts/canopy-build.mts   # orchestrates Canopy build
+│   └── styles/                    # TailwindCSS entry & styling
+├── assets/                        # directory for static files
+├── content/
+│   ├── _app.mdx                   # global wrapper for all pages
+|   |── _layout.mdx                # inheritable layout for .mdx files
+│   ├── about/                     # custom directory for pages
+│   ├── search/                    # special route for search results
+│   └── works/                     # special route for all IIIF works
+├── canopy.yml                     # Canopy configuration file
+├── package.json                   # depends on @canopy-iiif/app
+```
+
+- `app/` is intended for server-side scripts that developers could customize or extend.
+- `assets/` is for static files like images, fonts, scripts, or other resources.
+- `content/` is where all site content lives, including MDX files and IIIF work layouts.
+- `canopy.yml` file is the main configuration file for your Canopy project.
+- `package.json` manages dependencies, including the core Canopy application package.
+
+### Updating Canopy
+
+Occasionally, new versions of Canopy are released with bug fixes, new features, and improvements. To update your Canopy installation to the latest version, you can use `npm`. Run the following command in the root of your Canopy project directory:
+
+#### Updating in your local environment
+
+If you have a local development environment set up, you can update `@canopy-iiif/app` by running the command below. The current latest version of <CanopyVersion/> will be installed:
+
+```sh
+npm i @canopy-iiif/app@latest
+```
+
+#### Updating via GitHub Actions
+
+If your project was created from the official Canopy template, you can also update `@canopy-iiif/app` without touching your local environment by running the **Update Canopy App** workflow in GitHub Actions:
+
+1. Open your repository in GitHub, go to **Actions**, and select **Update Canopy App** in the sidebar.
+2. Click **Run workflow**. You can optionally provide a specific version (for example `1.0.2`); leave it blank to install the latest release.
+3. The workflow installs the requested version and opens a pull request with the updated `package.json` / `package-lock.json`.
+
+Review the pull request, run your usual tests, and merge when you are ready. This keeps Canopy dependencies current while giving you the chance to audit changes before deploying.

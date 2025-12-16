@@ -4,7 +4,7 @@ This repository offers a pared-down starting point for new Canopy IIIF sites. Wh
 
 ## Updates
 
-Keep the starter current by running `npm install @canopy-iiif/app@latest` whenever a new release ships.
+Keep the starter current by running `npm install @canopy-iiif/app@latest` whenever a new release ships, or trigger the `Update Canopy App` GitHub Action (Actions tab → *Update Canopy App* → *Run workflow*) and let it open a pull request with the dependency bump for you.
 
 ## Getting Started
 
