@@ -4,18 +4,20 @@
 
 ## Props
 
-| Prop          | Type   | Required | Notes                                                                          |
-| ------------- | ------ | -------- | ------------------------------------------------------------------------------ |
-| `iiifContent` | string | ✅       | IIIF Manifest or Collection URL.                                               |
+| Prop          | Type   | Required | Notes                                                                            |
+| ------------- | ------ | -------- | -------------------------------------------------------------------------------- |
+| `iiifContent` | string | ✅       | IIIF Manifest or Collection URL.                                                 |
 | `options`     | object |          | Merged with Canopy’s defaults before passing to Clover (use to toggle controls). |
 
 Default options hide Clover’s download/badge UI. Override them sparingly so multiple viewers stay consistent.
 
 ```mdx
-<Viewer
-  iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/14a6aa15-9e12-47a7-9617-91f430d4f47b?as=iiif"
-  options={{ showDownload: true }}
-/>
+<Viewer iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/14a6aa15-9e12-47a7-9617-91f430d4f47b?as=iiif" />
 ```
 
-The component hydrates only in the browser. On the server it emits a placeholder `<div data-canopy-viewer>…</div>` so MDX remains SSR-safe.
+<Viewer
+  iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/14a6aa15-9e12-47a7-9617-91f430d4f47b?as=iiif"
+  options={{
+    informationPanel: {open: true, showAbout: true},
+  }}
+/>
