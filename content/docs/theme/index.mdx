@@ -24,20 +24,36 @@ theme:
 
 ## Beyond the base tokens
 
-Use the standard CSS entry point (`app/styles/main.css`) or Tailwind utilities to extend the theme:
+Use the standard CSS entry point (`app/styles/main.css`) or Tailwind utilities to extend the theme.
 
-```css
-/* app/styles/main.css */
-@theme {
-  --font-serif: "Fraunces", Georgia, serif;
-  --radius-large: 32px;
+```css filename="app/styles/main.css"
+@layer properties {
+  :root,
+  :host {
+    --font-sans: system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+    --font-serif: "Fraunces", Georgia, "Times New Roman", serif;
+    --font-mono: "IBM Plex Mono", "ui-monospace", Menlo, Consolas, monospace;
+    --default-font-family: var(--font-serif);
+  }
 }
 
-@layer components {
-  .docs-callout {
-    border-radius: var(--radius-large);
-    background: var(--color-scale-slate-3);
-    padding: 1.5rem;
+@utility max-w-content {
+  max-width: 1080px;
+}
+
+@utility max-w-wide {
+  max-width: 1300px;
+}
+
+@layer base {
+  html {
+    font-size: 110%;
+    font-weight: 300;
+  }
+
+  body {
+    background: var(--color-gray-50);
+    color: var(--color-gray-900);
   }
 }
 ```

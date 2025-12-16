@@ -3,7 +3,7 @@
  * @see https://canopy-iiif.github.io/app/docs/theming/tailwind#custom
  */
 
-/* @layer theme {
+/* @layer properties {
   :root,
   :host {
     --color-northwestern-purple: #4e2a84;
