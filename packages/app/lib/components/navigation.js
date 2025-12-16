@@ -88,6 +88,20 @@ function collectPagesSync() {
       } catch (_) {
         raw = "";
       }
+      let frontmatterData = null;
+      if (raw && typeof mdx.parseFrontmatter === "function") {
+        try {
+          const parsed = mdx.parseFrontmatter(raw);
+          if (parsed && parsed.data && typeof parsed.data === "object") {
+            frontmatterData = parsed.data;
+          }
+        } catch (_) {
+          frontmatterData = null;
+        }
+      }
+      const isRoadmap = frontmatterData && typeof mdx.isRoadmapEntry === "function"
+        ? mdx.isRoadmapEntry(frontmatterData)
+        : false;
       const {
         slug,
         segments: slugSegments,
@@ -114,6 +128,7 @@ function collectPagesSync() {
         fallbackTitle,
         sortKey: pageSortKey(normalizedRel),
         topSegment: slugSegments[0] || firstSegment || "",
+        isRoadmap,
       };
       pages.push(page);
     }
@@ -138,6 +153,7 @@ function createNode(slug) {
     sortKey: slug || name,
     sourcePage: null,
     children: [],
+    isRoadmap: false,
   };
 }
 
@@ -173,6 +189,7 @@ function getNavigationCache() {
       node.relativePath = page.relativePath;
       node.sortKey = page.sortKey || node.sortKey;
       node.hasContent = true;
+      node.isRoadmap = !!page.isRoadmap;
     }
   }
 
@@ -240,6 +257,7 @@ function cloneNode(node, currentSlug) {
     hasContent: node.hasContent,
     relativePath: node.relativePath,
     children,
+    isRoadmap: !!node.isRoadmap,
   };
 }
 

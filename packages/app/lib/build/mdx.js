@@ -81,6 +81,21 @@ function parseFrontmatter(src) {
   return {data, content};
 }
 
+function isRoadmapEntry(frontmatterData) {
+  if (!frontmatterData || typeof frontmatterData !== "object") return false;
+  if (!Object.prototype.hasOwnProperty.call(frontmatterData, "roadmap")) return false;
+  const raw = frontmatterData.roadmap;
+  if (typeof raw === "boolean") return raw;
+  if (typeof raw === "number") return raw !== 0;
+  if (typeof raw === "string") {
+    const normalized = raw.trim().toLowerCase();
+    if (!normalized) return false;
+    if (["false", "0", "no", "off", "none"].includes(normalized)) return false;
+    return true;
+  }
+  return !!raw;
+}
+
 // ESM-only in v3; load dynamically from CJS
 let MDXProviderCached = null;
 async function getMdxProvider() {
@@ -1159,6 +1174,7 @@ module.exports = {
   extractMarkdownSummary,
   isReservedFile,
   parseFrontmatter,
+  isRoadmapEntry,
   compileMdxFile,
   compileMdxToComponent,
   loadCustomLayout,

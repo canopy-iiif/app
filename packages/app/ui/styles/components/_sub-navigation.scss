@@ -40,6 +40,32 @@
   color: var(--color-gray-600);
 }
 
+.canopy-sub-navigation__link.is-disabled {
+  cursor: default;
+  color: var(--color-gray-700);
+  font-style: italic;
+}
+
+.canopy-sub-navigation__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  font-size: 0.6111rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  z-index: 0;
+  position: relative;
+  background: var(--color-accent-200);
+  color: var(--color-accent-700);
+  font-family: var(--font-sans);
+  padding: 0.175rem 0.175rem;
+  top: -1px;
+  margin-left: 0.25rem;
+  letter-spacing: -0.0125em;
+}
+
 .canopy-sub-navigation__link.is-active {
   color: var(--color-gray-900);
   font-weight: 600;
@@ -92,7 +118,8 @@
   background-color: rgba(255, 255, 255, 1);
   border-color: var(--color-gray-300);
   outline: none;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent-200) 60%, transparent);
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--color-accent-200) 60%, transparent);
 }
 
 .canopy-layout__content-nav.is-collapsed .canopy-content-navigation {

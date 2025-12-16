@@ -77,8 +77,9 @@ function mapContentPathToOutput(filePath) {
   return path.join(OUT_DIR, outRel);
 }
 
-async function renderContentMdxToHtml(filePath, outPath, extraProps = {}) {
-  const source = await fsp.readFile(filePath, 'utf8');
+async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, sourceOverride = null) {
+  const sourceRaw = sourceOverride != null ? sourceOverride : await fsp.readFile(filePath, 'utf8');
+  const source = typeof sourceRaw === 'string' ? sourceRaw : String(sourceRaw || '');
   const title = mdx.extractTitle(source);
   const relContentPath = path.relative(CONTENT_DIR, filePath);
   const normalizedRel = navigation.normalizeRelativePath(relContentPath);
@@ -259,12 +260,27 @@ async function processContentEntry(absPath, pagesMetadata = []) {
   if (/\.mdx$/i.test(absPath)) {
     if (mdx.isReservedFile(absPath)) return;
     const outPath = mapContentPathToOutput(absPath);
-    ensureDirSync(path.dirname(outPath));
     try {
+      const source = await fsp.readFile(absPath, 'utf8');
+      const frontmatter = typeof mdx.parseFrontmatter === 'function'
+        ? mdx.parseFrontmatter(source)
+        : { data: null };
+      const frontmatterData = frontmatter && isPlainObject(frontmatter.data) ? frontmatter.data : null;
+      const isRoadmap = frontmatterData && typeof mdx.isRoadmapEntry === 'function'
+        ? mdx.isRoadmapEntry(frontmatterData)
+        : false;
+      if (isRoadmap) {
+        try { await fsp.rm(outPath, { force: true }); } catch (_) {}
+        try {
+          log(`• Skipped roadmap page ${path.relative(process.cwd(), absPath)}\n`, 'yellow', { dim: true });
+        } catch (_) {}
+        return;
+      }
+      ensureDirSync(path.dirname(outPath));
       try { log(`• Processing MDX ${absPath}\n`, 'blue'); } catch (_) {}
       const base = path.basename(absPath);
       const extra = base.toLowerCase() === 'sitemap.mdx' ? { pages: pagesMetadata } : {};
-      const html = await renderContentMdxToHtml(absPath, outPath, extra);
+      const html = await renderContentMdxToHtml(absPath, outPath, extra, source);
       await fsp.writeFile(outPath, html || '', 'utf8');
       try { log(`✓ Built ${path.relative(process.cwd(), outPath)}\n`, 'green'); } catch (_) {}
     } catch (err) {

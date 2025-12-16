@@ -1,4 +1,4 @@
-# Create Markdown Content
+# Author Markdown
 
 Implementers of Canopy IIIF can author contextual content to support Manifest resources using formatted Markdown files. These files are stored in the `/content` directory of your project. In doing so, you can add context to items in your IIIF Collection and craft a custom experience using integrated components provided by Canopy IIIF.
 
@@ -9,7 +9,6 @@ Implementers of Canopy IIIF can author contextual content to support Manifest re
 As a digital humanist, you have authored scholarly content for distinct items in a IIIF Collection. Your aim is to publish a digital scholarship project that highlights your context alongside these items.
 
 ## Implementation
-
 
 ### Create a Markdown file
 
@@ -139,7 +138,7 @@ Creating facets as IIIF Collections...
 
 - Or, **Add** a `<Slider />` component as an alternative view to render a carousel of items that link to the local relative `/work` pages representing the Manifests. This component takes the same `iiifContent` property. Note that this component only supports Collection resources.
 
-```mdx copy
+````mdx copy
 <Slider iiifContent="/api/facet/date/1905.json" />
 
 Need different breakpoints? Supply Clover’s slider options directly:
@@ -149,13 +148,14 @@ Need different breakpoints? Supply Clover’s slider options directly:
   iiifContent="/api/facet/date/1905.json"
   options={{
     breakpoints: {
-      320: { slidesPerView: 2, spaceBetween: 20 },
-      480: { slidesPerView: 3, spaceBetween: 30 },
-      640: { slidesPerView: 4, spaceBetween: 40 },
+      320: {slidesPerView: 2, spaceBetween: 20},
+      480: {slidesPerView: 3, spaceBetween: 30},
+      640: {slidesPerView: 4, spaceBetween: 40},
     },
   }}
 />
 ```
+````
 
 Shared defaults live in `packages/app/ui/src/iiif/sliderOptions.js`, so you can adjust project-wide
 behavior there and only override `options` when a page needs something special.
@@ -163,7 +163,8 @@ behavior there and only override `options` when a page needs something special.
 Need spacing tied to `rem` units? Use the `rem()` helper exported from `sliderOptions.js` when
 defining breakpoints. The slider runtime reads `window.getComputedStyle(document.documentElement)`
 once and converts those values to pixels before instantiating Swiper.
-```
+
+````
 
 ![canopy content page iiif slider for metadata collection](/examples/creating-markdown-content-referenced-item-4.png)
 
@@ -208,4 +209,4 @@ The `<Viewer />` component supports IIIF Collections. This allows you to referen
 Alternatively, you can use the `<Slider />` component to render a carousel of items that link to the local relative `/work` pages representing the Manifests.
 
 <Slider iiifContent="/api/facet/date/1905.json" />
-```
+````
