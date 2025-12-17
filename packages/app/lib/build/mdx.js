@@ -1167,6 +1167,106 @@ async function ensureHeroRuntime() {
   } catch (_) {}
 }
 
+async function ensureTimelineRuntime() {
+  let esbuild = null;
+  try {
+    esbuild = require("../ui/node_modules/esbuild");
+  } catch (_) {
+    try {
+      esbuild = require("esbuild");
+    } catch (_) {}
+  }
+  if (!esbuild)
+    throw new Error(
+      "Timeline runtime bundling requires esbuild. Install dependencies before building."
+    );
+  ensureDirSync(OUT_DIR);
+  const scriptsDir = path.join(OUT_DIR, "scripts");
+  ensureDirSync(scriptsDir);
+  const outFile = path.join(scriptsDir, "canopy-timeline.js");
+  const entryFile = path.join(
+    __dirname,
+    "..",
+    "components",
+    "timeline-runtime.js"
+  );
+  const reactShim = `
+    const React = (typeof window !== 'undefined' && window.React) || {};
+    export default React;
+    export const Children = React.Children;
+    export const Component = React.Component;
+    export const Fragment = React.Fragment;
+    export const createElement = React.createElement;
+    export const cloneElement = React.cloneElement;
+    export const createContext = React.createContext;
+    export const forwardRef = React.forwardRef;
+    export const memo = React.memo;
+    export const startTransition = React.startTransition;
+    export const isValidElement = React.isValidElement;
+    export const useEffect = React.useEffect;
+    export const useLayoutEffect = React.useLayoutEffect;
+    export const useMemo = React.useMemo;
+    export const useState = React.useState;
+    export const useRef = React.useRef;
+    export const useCallback = React.useCallback;
+    export const useContext = React.useContext;
+    export const useReducer = React.useReducer;
+    export const useId = React.useId;
+  `;
+  const rdomClientShim = `
+    const RDC = (typeof window !== 'undefined' && window.ReactDOMClient) || {};
+    export const createRoot = RDC.createRoot;
+    export const hydrateRoot = RDC.hydrateRoot;
+  `;
+  const plugin = {
+    name: "canopy-react-shims-timeline",
+    setup(build) {
+      const ns = "canopy-timeline-shim";
+      build.onResolve({filter: /^react$/}, () => ({path: "react", namespace: ns}));
+      build.onResolve({filter: /^react-dom$/}, () => ({path: "react-dom", namespace: ns}));
+      build.onResolve({filter: /^react-dom\/client$/}, () => ({
+        path: "react-dom-client",
+        namespace: ns,
+      }));
+      build.onLoad({filter: /^react$/, namespace: ns}, () => ({
+        contents: reactShim,
+        loader: "js",
+      }));
+      build.onLoad({filter: /^react-dom$/, namespace: ns}, () => ({
+        contents: "export default (typeof window !== 'undefined' && window.ReactDOM) || {};",
+        loader: "js",
+      }));
+      build.onLoad({filter: /^react-dom-client$/, namespace: ns}, () => ({
+        contents: rdomClientShim,
+        loader: "js",
+      }));
+    },
+  };
+  await esbuild.build({
+    entryPoints: [entryFile],
+    outfile: outFile,
+    platform: "browser",
+    format: "iife",
+    bundle: true,
+    sourcemap: false,
+    target: ["es2018"],
+    logLevel: "silent",
+    minify: true,
+    plugins: [plugin],
+  });
+  try {
+    const {logLine} = require("./log");
+    let size = 0;
+    try {
+      const st = fs.statSync(outFile);
+      size = (st && st.size) || 0;
+    } catch (_) {}
+    const kb = size ? ` (${(size / 1024).toFixed(1)} KB)` : "";
+    const rel = path.relative(process.cwd(), outFile).split(path.sep).join("/");
+    logLine(`✓ Wrote ${rel}${kb}`, "cyan");
+  } catch (_) {}
+}
+
 module.exports = {
   extractTitle,
   extractHeadings,
@@ -1181,6 +1281,7 @@ module.exports = {
   loadAppWrapper,
   ensureClientRuntime,
   ensureSliderRuntime,
+  ensureTimelineRuntime,
   ensureHeroRuntime,
   ensureFacetsRuntime,
   ensureReactGlobals,

@@ -1,5 +1,201 @@
 ---
 title: Timeline
-search: false
-roadmap: true
+referencedManifests:
+  - https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/e0d60273-e64c-49d8-99dc-d1af8f4c6266?as=iiif
 ---
+
+# Timeline
+
+`<Timeline>` renders a vertical, scrollable series of `<TimelinePoint>` markers that stay in
+proportion to the range you provide. Each point supports a title, summary, full description, a
+highlight state, and a list of IIIF resources that readers can open for deeper context.
+
+Ranges accept year-, month-, or day-level precision (for example `1701`, `July 1776`, or
+`1776-07-04`). When you pass a `range` prop to the timeline the points are spaced mathematically so a
+cluster of events will appear closer together inside the scroll container.
+
+## Example: Two centuries of listening experiments
+
+Below is a simple demo with seven points stretched from 1650 through 1850. The `range` prop keeps the
+events proportional, the first point is highlighted, and the cluster of late-18th century experiments uses
+`threshold={15}` so entries that fall within 15 years of each other collapse into an expandable group.
+
+<Timeline
+  title="Early listening experiments"
+  description="Quick hits that shaped how we listen."
+  range={{start: "1650", end: "1850", granularity: "year"}}
+  threshold={15}
+  steps={50}
+>
+  <TimelinePoint
+    title="Journey through the spheres"
+    date="1664"
+    summary="Marin Mersenne maps resonance math for stringed instruments."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7-498d-8e6e-e49ea9bc4778?as=iiif",
+    ]}
+  />
+  <TimelinePoint
+    title="First public ear trumpets"
+    date="1703"
+    highlight
+    summary="Contoured brass trumpets boost faint salon performances."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b?as=iiif",
+    ]}
+  />
+  <TimelinePoint
+    title="Acousticae Physicae"
+    date="1739-01-12"
+    summary="C.F. Neumann releases an illustrated acoustics handbook."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif",
+    ]}
+  />
+  <TimelinePoint
+    title="Café listening journals"
+    date="1768"
+    summary="Vienna diarists document small-room echo experiments."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/e0d60273-e64c-49d8-99dc-d1af8f4c6266?as=iiif",
+    ]}
+  />
+  <TimelinePoint
+    title="Salon improvisations"
+    date="1774"
+    summary="Paris circles test portable resonators in drawing rooms."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif",
+    ]}
+  />
+  <TimelinePoint
+    title="Copper ear training"
+    date="1778"
+    summary="Atlantic merchants share tuned horn sketches in logbooks."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b?as=iiif",
+    ]}
+  />
+  <TimelinePoint
+    title="Treatise on the violin"
+    date="1801-07-21"
+    summary="Giovanni Augurio Paganini documents bowing mechanics and overtones."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif",
+      "https://api.dc.library.northwestern.edu/api/v2/works/e0d60273-e64c-49d8-99dc-d1af8f4c6266?as=iiif",
+    ]}
+  />
+  <TimelinePoint
+    title="Portable field recordings"
+    date="1817"
+    summary="Scott de Martinville captures voices as etched waveforms."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/e0d60273-e64c-49d8-99dc-d1af8f4c6266?as=iiif",
+    ]}
+  />
+</Timeline>
+
+Use the `referencedManifests` prop whenever a point should cite a work from your collection. Add every
+referenced ID to the page’s `referencedManifests` front matter so Canopy can fetch the data during the
+build. Pass an array (even for a single work) and the Timeline renders the same Teaser cards used in
+the search modal, so each reference inherits thumbnails and metadata.
+
+The vertical spine runs through the center of the layout. By default, each `<TimelinePoint>`
+oscillates left and right of that line while a connector “arm” points back to the center marker. To
+pin a point to a specific side pass `side="left"` (or `"right"`).
+
+Set the `threshold` prop to collapse points that fall within the specified number of units for the
+current `granularity`. For example, `threshold={15}` on a year-based range turns any cluster of
+events that fall within 15 years into a single inline group with a “Show details” toggle.
+
+Use `steps={50}` (or any positive number) to draw subtle tick marks along the spine. The label next to
+each tick shows the computed year, so `steps={50}` on a 1650–1850 range renders marks at 1700, 1750,
+1800, and so on.
+
+Because `<TimelinePoint>` is exported globally you can nest it under `<Timeline>` without importing
+anything in MDX:
+
+```mdx
+<Timeline
+  title="Early listening experiments"
+  description="Quick hits that shaped how we listen."
+  range={{start: "1650", end: "1850", granularity: "year"}}
+  threshold={15}
+>
+  <TimelinePoint
+    title="Journey through the spheres"
+    date="1654"
+    summary="Marin Mersenne maps resonance math for stringed instruments."
+    highlight
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif",
+    ]}
+  />
+  <TimelinePoint
+    title="First public ear trumpets"
+    date="1703"
+    summary="Contoured brass trumpets boost faint salon performances."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b?as=iiif",
+    ]}
+  />
+  <TimelinePoint
+    title="Acousticae Physicae"
+    date="1739-01-12"
+    summary="C.F. Neumann releases an illustrated acoustics handbook."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif",
+    ]}
+  />
+  <TimelinePoint
+    title="Café listening journals"
+    date="1768"
+    summary="Vienna diarists document small-room echo experiments."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/e0d60273-e64c-49d8-99dc-d1af8f4c6266?as=iiif",
+    ]}
+  />
+  <TimelinePoint
+    title="Salon improvisations"
+    date="1774"
+    summary="Paris circles test portable resonators in drawing rooms."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif",
+    ]}
+  />
+  <TimelinePoint
+    title="Copper ear training"
+    date="1778"
+    summary="Atlantic merchants share tuned horn sketches in logbooks."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b?as=iiif",
+    ]}
+  />
+  <TimelinePoint
+    title="Treatise on the violin"
+    date="1801-07-21"
+    summary="Giovanni Augurio Paganini documents bowing mechanics and overtones."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif",
+      "https://api.dc.library.northwestern.edu/api/v2/works/e0d60273-e64c-49d8-99dc-d1af8f4c6266?as=iiif",
+    ]}
+  />
+  <TimelinePoint
+    title="Portable field recordings"
+    date="1803"
+    summary="Scott de Martinville captures voices as etched waveforms."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/e0d60273-e64c-49d8-99dc-d1af8f4c6266?as=iiif",
+    ]}
+  />
+</Timeline>
+```
+
+```mdx
+<Timeline>
+  <TimelinePoint title="Event" date="1795" side="left" />
+</Timeline>
+```

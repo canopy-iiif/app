@@ -1525,6 +1525,7 @@ async function buildIiifCollectionPages(CONFIG) {
             body.includes("data-canopy-image");
           const needsRelated = body.includes("data-canopy-related-items");
           const needsHeroSlider = body.includes("data-canopy-hero-slider");
+          const needsTimeline = body.includes("data-canopy-timeline");
           const needsSearchForm = body.includes("data-canopy-search-form");
           const needsHydrate =
             body.includes("data-canopy-hydrate") ||
@@ -1546,6 +1547,15 @@ async function buildIiifCollectionPages(CONFIG) {
                 .relative(
                   path.dirname(outPath),
                   path.join(OUT_DIR, "scripts", "canopy-slider.js")
+                )
+                .split(path.sep)
+                .join("/")
+            : null;
+          const timelineRel = needsTimeline
+            ? path
+                .relative(
+                  path.dirname(outPath),
+                  path.join(OUT_DIR, "scripts", "canopy-timeline.js")
                 )
                 .split(path.sep)
                 .join("/")
@@ -1581,12 +1591,14 @@ async function buildIiifCollectionPages(CONFIG) {
           let jsRel = null;
           if (needsHeroSlider && heroRel) jsRel = heroRel;
           else if (needsRelated && sliderRel) jsRel = sliderRel;
+          else if (needsTimeline && timelineRel) jsRel = timelineRel;
           else if (viewerRel) jsRel = viewerRel;
 
           const headSegments = [head];
           const needsReact = !!(
             needsHydrateViewer ||
-            needsRelated
+            needsRelated ||
+            needsTimeline
           );
           let vendorTag = "";
           if (needsReact) {
@@ -1612,6 +1624,8 @@ async function buildIiifCollectionPages(CONFIG) {
             extraScripts.push(`<script defer src="${heroRel}"></script>`);
           if (relatedRel && jsRel !== relatedRel)
             extraScripts.push(`<script defer src="${relatedRel}"></script>`);
+          if (timelineRel && jsRel !== timelineRel)
+            extraScripts.push(`<script defer src="${timelineRel}"></script>`);
           if (viewerRel && jsRel !== viewerRel)
             extraScripts.push(`<script defer src="${viewerRel}"></script>`);
           if (sliderRel && jsRel !== sliderRel)

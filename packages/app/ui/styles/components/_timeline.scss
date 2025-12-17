@@ -1,0 +1,272 @@
+.canopy-timeline {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--color-gray-800);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 2.618rem 0;
+}
+
+.canopy-timeline__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.canopy-timeline__description {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--color-gray-700);
+}
+
+.canopy-timeline__range {
+  margin: 0;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--color-gray-600);
+}
+
+.canopy-timeline__body {
+  position: relative;
+}
+
+.canopy-timeline__list {
+  position: relative;
+  min-height: 400px;
+}
+
+.canopy-timeline__spine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1rem;
+  background: var(--color-accent-300);
+  z-index: 0;
+}
+
+.canopy-timeline__step {
+  position: absolute;
+  left: calc(50% - 0.5rem);
+  display: flex;
+  gap: 0.35rem;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.canopy-timeline__step-line {
+  width: 1rem;
+  height: 0.125rem;
+  background: var(--color-gray-50);
+}
+
+.canopy-timeline__step-label {
+  font-size: 0.8333rem;
+  font-weight: 600;
+  color: var(--color-gray-900);
+  transform: translateX(0.5rem);
+  margin-top: -0.618rem;
+}
+
+.canopy-timeline__point-wrapper {
+  position: absolute;
+  width: 50%;
+  display: flex;
+  align-items: center;
+}
+
+.canopy-timeline__point-wrapper--left {
+  right: 50%;
+  justify-content: flex-end;
+  padding-right: 0.125rem;
+  text-align: right;
+}
+
+.canopy-timeline__point-wrapper--right {
+  left: 50%;
+  justify-content: flex-start;
+  padding-left: 0.125rem;
+  text-align: left;
+}
+
+.canopy-timeline__point,
+.canopy-timeline__group {
+  width: min(100%, 28rem);
+  border-radius: 1.25rem;
+  border: 1px solid var(--color-gray-200);
+  background: var(--color-gray-50);
+  padding: 1rem 1.25rem;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.canopy-timeline__point.is-active,
+.canopy-timeline__group.is-active {
+  border-color: var(--color-accent-400);
+  box-shadow:
+    0 12px 22px rgba(15, 23, 42, 0.15),
+    0 0 0 2px color-mix(in srgb, var(--color-accent-300) 45%, transparent);
+}
+
+.canopy-timeline__point.is-highlighted {
+  border-color: var(--color-accent-600);
+}
+
+.canopy-timeline__point-date,
+.canopy-timeline__group-point-date,
+.canopy-timeline__group-count {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--color-gray-600);
+  font-weight: 600;
+}
+
+.canopy-timeline__point-title,
+.canopy-timeline__group-point-title {
+  display: block;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-gray-900);
+  margin-top: 0.25rem;
+}
+
+.canopy-timeline__point-summary,
+.canopy-timeline__group-range {
+  font-size: 1rem;
+  color: var(--color-gray-700);
+  margin: 0.25rem 0 0;
+}
+
+.canopy-timeline__connector {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.canopy-timeline__connector-line {
+  width: clamp(2.618rem, 6vw, 2.618rem);
+  height: 0.125rem;
+  border-radius: 999px;
+  background: var(--color-accent-700);
+}
+
+.canopy-timeline__connector-dot {
+  width: 0.618rem;
+  height: 0.618rem;
+  border-radius: 50%;
+  background: var(--color-accent-700);
+  border: 2px solid var(--color-accent-700);
+}
+
+.canopy-timeline__connector-dot.is-active {
+  width: 1rem;
+  height: 1rem;
+  background: var(--color-accent-700);
+  border-color: var(--color-accent-700);
+}
+
+.canopy-timeline__resources {
+  margin-top: 1rem;
+}
+
+.canopy-timeline__resources-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.canopy-teaser-card {
+  width: 100%;
+}
+
+.canopy-timeline__group-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.canopy-timeline__group-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.canopy-timeline__group-range {
+  font-size: 1rem;
+  color: var(--color-gray-700);
+}
+
+.canopy-timeline__group-toggle {
+  font-size: 1rem;
+  background: transparent;
+  border: none;
+  color: var(--color-accent-default);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.canopy-timeline__group-points {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.canopy-timeline__group-point {
+  width: 100%;
+  border-radius: 0.85rem;
+  border: 1px solid var(--color-gray-200);
+  background: color-mix(in srgb, var(--color-gray-50) 70%, #fff);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.canopy-timeline__group-point.is-active {
+  border-color: var(--color-accent-400);
+}
+
+@media (max-width: 900px) {
+  .canopy-timeline__point-wrapper {
+    position: static;
+    width: 100%;
+    padding: 0 !important;
+    margin-bottom: 1rem;
+  }
+
+  .canopy-timeline__list {
+    min-height: auto;
+  }
+
+  .canopy-timeline__spine {
+    left: 0.5rem;
+    transform: none;
+    width: 0.35rem;
+  }
+
+  .canopy-timeline__connector {
+    display: none;
+  }
+
+  .canopy-timeline__point,
+  .canopy-timeline__group {
+    width: 100%;
+  }
+}
+.canopy-timeline__point-body {
+  display: flex;
+  flex-direction: column;
+}

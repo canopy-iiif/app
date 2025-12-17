@@ -175,6 +175,7 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
     body.includes('data-canopy-image');
   const needsHydrateSlider = body.includes('data-canopy-slider');
   const needsHeroSlider = body.includes('data-canopy-hero-slider');
+  const needsTimeline = body.includes('data-canopy-timeline');
   const needsSearchForm = true; // search form runtime is global
   const needsFacets = body.includes('data-canopy-related-items');
   const viewerRel = needsHydrateViewer
@@ -189,6 +190,9 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
   const heroCssRel = needsHeroSlider
     ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-hero-slider.css')).split(path.sep).join('/')
     : null;
+  const timelineRel = needsTimeline
+    ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-timeline.js')).split(path.sep).join('/')
+    : null;
   const facetsRel = needsFacets
     ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-related-items.js')).split(path.sep).join('/')
     : null;
@@ -202,10 +206,11 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
   let jsRel = null;
   if (needsHeroSlider && heroRel) jsRel = heroRel;
   else if (needsFacets && sliderRel) jsRel = sliderRel;
+  else if (needsTimeline && timelineRel) jsRel = timelineRel;
   else if (viewerRel) jsRel = viewerRel;
   else if (sliderRel) jsRel = sliderRel;
   else if (facetsRel) jsRel = facetsRel;
-  const needsReact = !!(needsHydrateViewer || needsHydrateSlider || needsFacets);
+  const needsReact = !!(needsHydrateViewer || needsHydrateSlider || needsFacets || needsTimeline);
   let vendorTag = '';
   if (needsReact) {
     try {
@@ -223,6 +228,7 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
   const headSegments = [head];
   const extraScripts = [];
   if (heroRel && jsRel !== heroRel) extraScripts.push(`<script defer src="${heroRel}"></script>`);
+  if (timelineRel && jsRel !== timelineRel) extraScripts.push(`<script defer src="${timelineRel}"></script>`);
   if (facetsRel && jsRel !== facetsRel) extraScripts.push(`<script defer src="${facetsRel}"></script>`);
   if (viewerRel && jsRel !== viewerRel) extraScripts.push(`<script defer src="${viewerRel}"></script>`);
   if (sliderRel && jsRel !== sliderRel) extraScripts.push(`<script defer src="${sliderRel}"></script>`);

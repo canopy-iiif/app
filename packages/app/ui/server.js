@@ -13,11 +13,14 @@ export { default as CanopyHeader } from "./src/layout/CanopyHeader.jsx";
 export { default as CanopyFooter } from "./src/layout/CanopyFooter.jsx";
 export { default as CanopyBrand } from "./src/layout/CanopyBrand.jsx";
 export { default as CanopyModal } from "./src/layout/CanopyModal.jsx";
+export { default as TeaserCard } from "./src/layout/TeaserCard.jsx";
 export { default as Container } from "./src/layout/Container.jsx";
 export { default as Button } from "./src/layout/Button.jsx";
 export { default as ButtonWrapper } from "./src/layout/ButtonWrapper.jsx";
 export { default as ReferencedItems } from "./src/content/ReferencedItems.jsx";
 export { default as References } from "./src/content/References.jsx";
+export { default as Timeline } from "./src/content/timeline/MdxTimeline.jsx";
+export { default as TimelinePoint } from "./src/content/timeline/TimelinePoint.jsx";
 
 // SSR-safe MDX placeholders (do not import browser-only UI here)
 export { default as SearchResults } from "./src/search/MdxSearchResults.jsx";

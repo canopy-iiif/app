@@ -234,7 +234,7 @@ function renderList(list, records, groupOrder) {
       item.setAttribute('data-canopy-item', '');
       item.href = href;
       item.tabIndex = 0;
-      item.className = 'canopy-card canopy-card--teaser canopy-search-teaser__item';
+      item.className = 'canopy-card canopy-card--teaser canopy-search-teaser__item canopy-teaser-card';
 
       const showThumb = String(record && record.type || '') === 'work' && record && record.thumbnail;
       if (showThumb) {
