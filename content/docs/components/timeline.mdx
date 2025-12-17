@@ -1,10 +1,8 @@
 ---
 title: Timeline
 referencedManifests:
-  - https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif
-  - https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b?as=iiif
-  - https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif
-  - https://api.dc.library.northwestern.edu/api/v2/works/e0d60273-e64c-49d8-99dc-d1af8f4c6266?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/7a5dd871-d0bc-4d6f-8469-1c23a872fc29?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/c5a11577-a1f2-4288-95de-96ad616174ed?as=iiif
 ---
 
 # Timeline
@@ -22,83 +20,80 @@ CSS size like `48rem`, `75vh`, or `60%` and the scroll container honors that val
 
 ## Example: Two centuries of listening experiments
 
-Below is a simple demo with seven points stretched from 1650 through 1850. The `range` prop keeps the
-events proportional, the first point is highlighted, and the cluster of late-18th century experiments uses
-`threshold={15}` so entries that fall within 15 years of each other collapse into an expandable group.
+Below is a simple demo with eight points stretched from 1650 through 1850. The `range` prop keeps the
+events proportional, the highlighted `First public ear trumpets` entry calls attention to a key moment,
+and the cluster of late-18th century experiments uses `threshold={15}` so entries that fall within 15 years
+of each other collapse into an expandable group.
 
 <Timeline
   title="Early listening experiments"
   description="Quick hits that shaped how we listen."
-  range={{start: "1650", end: "1850", granularity: "year"}}
-  threshold={15}
+  range={{start: "1750", end: "1900", granularity: "year"}}
+  threshold={5}
   steps={50}
-  height="1500px"
+  height="1700px"
 >
   <TimelinePoint
-    title="Journey through the spheres"
-    date="1664"
-    summary="Marin Mersenne maps resonance math for stringed instruments."
+    date="1770"
+    title="Great Bengal Famine"
+    summary="The Great Bengal Famine of 1770 caused widespread starvation and death, devastating the population under East India Company rule."
+  />
+  <TimelinePoint
+    date="1781"
+    title="Bengal Atlas published by James Rennell"
+    summary="The Bengal atlas presents maps of Eastern India, illustrating strategic theatres of war and commerce under East India Company authority."
     referencedManifests={[
-      "https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7-498d-8e6e-e49ea9bc4778?as=iiif",
+      "https://api.dc.library.northwestern.edu/api/v2/works/7a5dd871-d0bc-4d6f-8469-1c23a872fc29?as=iiif",
     ]}
   />
   <TimelinePoint
-    title="First public ear trumpets"
-    date="1703"
-    highlight
-    summary="Contoured brass trumpets boost faint salon performances."
-    referencedManifests={[
-      "https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b?as=iiif",
-    ]}
+    date="1793"
+    title="Permanent Settlement of Bengal"
+    summary="The East India Company fixed land revenues permanently, reshaping agrarian life and empowering zamindars."
   />
   <TimelinePoint
-    title="Acousticae Physicae"
-    date="1739-01-12"
-    summary="C.F. Neumann releases an illustrated acoustics handbook."
-    referencedManifests={[
-      "https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif",
-    ]}
+    date="1803"
+    title="British Capture of Delhi"
+    summary="East India Company forces seized Delhi, bringing the Mughal emperor under British control."
   />
   <TimelinePoint
-    title="Café listening journals"
-    date="1768"
-    summary="Vienna diarists document small-room echo experiments."
-    referencedManifests={[
-      "https://api.dc.library.northwestern.edu/api/v2/works/e0d60273-e64c-49d8-99dc-d1af8f4c6266?as=iiif",
-    ]}
+    date="1813"
+    title="Charter Act of 1813"
+    summary="The Act renewed Company rule while opening India to Christian missionaries and private British trade."
   />
   <TimelinePoint
-    title="Salon improvisations"
-    date="1774"
-    summary="Paris circles test portable resonators in drawing rooms."
-    referencedManifests={[
-      "https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif",
-    ]}
-  />
-  <TimelinePoint
-    title="Copper ear training"
-    date="1778"
-    summary="Atlantic merchants share tuned horn sketches in logbooks."
-    referencedManifests={[
-      "https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b?as=iiif",
-    ]}
-  />
-  <TimelinePoint
-    title="Treatise on the violin"
-    date="1801-07-21"
-    summary="Giovanni Augurio Paganini documents bowing mechanics and overtones."
-    referencedManifests={[
-      "https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif",
-      "https://api.dc.library.northwestern.edu/api/v2/works/e0d60273-e64c-49d8-99dc-d1af8f4c6266?as=iiif",
-    ]}
-  />
-  <TimelinePoint
-    title="Portable field recordings"
     date="1817"
-    summary="Scott de Martinville captures voices as etched waveforms."
+    title="Third Anglo-Maratha War"
+    summary="British victory ended Maratha power and secured Company dominance across most of the subcontinent."
+  />
+  <TimelinePoint
+    date="1834"
+    title="End of East India Company Trade Monopoly"
+    summary="The Company ceased commercial activities, transitioning into a purely administrative governing body."
+  />
+  <TimelinePoint
+    date="1848"
+    title="Doctrine of Lapse Enforced"
+    summary="British annexation policy absorbed princely states lacking male heirs, intensifying territorial expansion."
+  />
+  <TimelinePoint
+    title="Great Mutiny, India"
+    date="1857"
+    highlight
+    summary="Indian troops fighting against British soldiers in the Great Mutiny, India, 1857-1858."
     referencedManifests={[
-      "https://api.dc.library.northwestern.edu/api/v2/works/e0d60273-e64c-49d8-99dc-d1af8f4c6266?as=iiif",
+      "https://api.dc.library.northwestern.edu/api/v2/works/c5a11577-a1f2-4288-95de-96ad616174ed?as=iiif",
     ]}
+  />
+  <TimelinePoint
+    date="1877"
+    title="Queen Victoria Proclaimed Empress of India"
+    summary="The British Crown formally asserted imperial rule over India during a ceremonial durbar in Delhi."
+  />
+  <TimelinePoint
+    date="1885"
+    title="Indian National Congress Founded"
+    summary="Indian political leaders formed a national organization advocating reform and greater self-governance."
   />
 </Timeline>
 

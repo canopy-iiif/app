@@ -31,5 +31,5 @@ search:
         - tagging
 theme:
   appearance: white
-  accentColor: violet
-  grayColor: mauve
+  accentColor: indigo
+  grayColor: slate
