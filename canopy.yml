@@ -30,6 +30,6 @@ search:
         - commenting
         - tagging
 theme:
-  appearance: light
-  accentColor: indigo
-  grayColor: slate
+  appearance: white
+  accentColor: violet
+  grayColor: mauve

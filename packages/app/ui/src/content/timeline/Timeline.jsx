@@ -8,6 +8,8 @@ import {
 import TeaserCard from "../../layout/TeaserCard.jsx";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const DEFAULT_TRACK_HEIGHT = 640;
+const MIN_HEIGHT_PER_POINT = 220;
 
 function getThresholdMs(threshold, granularity) {
   const value = Number(threshold);
@@ -160,6 +162,32 @@ function sanitizePoints(points) {
     .filter(Boolean);
 }
 
+function resolveTrackHeight(height, pointCount) {
+  const minimumPx = Math.max(
+    DEFAULT_TRACK_HEIGHT,
+    pointCount * MIN_HEIGHT_PER_POINT
+  );
+  const fallback = `${minimumPx}px`;
+  if (height == null) return fallback;
+  if (typeof height === "number") {
+    const numeric = Number(height);
+    if (Number.isFinite(numeric)) {
+      return `${Math.max(numeric, pointCount * MIN_HEIGHT_PER_POINT)}px`;
+    }
+    return fallback;
+  }
+  if (typeof height === "string") {
+    const trimmed = height.trim();
+    if (!trimmed) return fallback;
+    const numeric = Number(trimmed);
+    if (Number.isFinite(numeric)) {
+      return `${Math.max(numeric, pointCount * MIN_HEIGHT_PER_POINT)}px`;
+    }
+    return trimmed;
+  }
+  return fallback;
+}
+
 function TimelineConnector({side, isActive, highlight}) {
   const connectorClasses = [
     "canopy-timeline__connector",
@@ -244,7 +272,7 @@ export default function Timeline({
   description,
   range: rangeProp,
   locale: localeProp = "en-US",
-  height = 640,
+  height = DEFAULT_TRACK_HEIGHT,
   threshold: thresholdProp = null,
   steps = null,
   points: pointsProp,
@@ -371,8 +399,7 @@ export default function Timeline({
     });
   }, []);
 
-  const resolvedHeight = Number.isFinite(Number(height)) ? Number(height) : 640;
-  const trackHeight = Math.max(resolvedHeight, pointsWithPosition.length * 220);
+  const trackHeight = resolveTrackHeight(height, pointsWithPosition.length);
   const containerClasses = ["canopy-timeline", className]
     .filter(Boolean)
     .join(" ");
@@ -559,7 +586,7 @@ export default function Timeline({
         <div
           className="canopy-timeline__list"
           role="list"
-          style={{minHeight: `${trackHeight}px`}}
+          style={{minHeight: trackHeight}}
         >
           <div className="canopy-timeline__spine" aria-hidden="true" />
           {renderSteps(stepsValue, effectiveRange)}

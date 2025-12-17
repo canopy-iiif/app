@@ -17,6 +17,9 @@ Ranges accept year-, month-, or day-level precision (for example `1701`, `July 1
 `1776-07-04`). When you pass a `range` prop to the timeline the points are spaced mathematically so a
 cluster of events will appear closer together inside the scroll container.
 
+Control the vertical track with the `height` prop. Pass a number (interpreted as pixels) or any valid
+CSS size like `48rem`, `75vh`, or `60%` and the scroll container honors that value.
+
 ## Example: Two centuries of listening experiments
 
 Below is a simple demo with seven points stretched from 1650 through 1850. The `range` prop keeps the
@@ -29,6 +32,7 @@ events proportional, the first point is highlighted, and the cluster of late-18t
   range={{start: "1650", end: "1850", granularity: "year"}}
   threshold={15}
   steps={50}
+  height="1500px"
 >
   <TimelinePoint
     title="Journey through the spheres"

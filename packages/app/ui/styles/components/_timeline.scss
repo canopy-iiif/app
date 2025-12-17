@@ -1,35 +1,38 @@
 .canopy-timeline {
   font-size: 1rem;
   line-height: 1.5;
-  color: var(--color-gray-800);
+  color: var(--color-gray-900);
   display: flex;
   flex-direction: column;
-  gap: 1rem;
   margin: 2.618rem 0;
+  text-align: center;
 }
 
 .canopy-timeline__title {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.382rem;
   font-weight: 600;
 }
 
 .canopy-timeline__description {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.9222rem;
   color: var(--color-gray-700);
 }
 
 .canopy-timeline__range {
   margin: 0;
   font-size: 1rem;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  color: var(--color-gray-600);
+  color: var(--color-gray-700);
+  font-size: 1.111rem;
+  letter-spacing: 0.0125em;
+  color: var(--color-gray-700);
+  font-weight: 300;
 }
 
 .canopy-timeline__body {
   position: relative;
+  padding: 2.618rem;
 }
 
 .canopy-timeline__list {
@@ -131,7 +134,6 @@
     box-shadow 150ms ease;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
 }
 
 .canopy-timeline__point-date,
@@ -140,6 +142,7 @@
   letter-spacing: 0.0125em;
   color: var(--color-gray-700);
   font-weight: 300;
+  margin-bottom: 0.382rem;
 }
 
 .canopy-timeline__point-title,
@@ -148,13 +151,12 @@
   font-size: 1rem;
   font-weight: 600;
   color: var(--color-gray-900);
-  margin-top: 0.25rem;
+  margin-top: 0.382rem 0;
 }
 
 .canopy-timeline__point-summary,
 .canopy-timeline__group-count {
-  font-size: 0.8333rem;
-  font-style: italic;
+  font-size: 0.9222rem;
   font-weight: 300;
   color: var(--color-gray-700);
 }
@@ -214,7 +216,6 @@
 .canopy-timeline__group-summary {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
 }
 
 .canopy-timeline__group-toggle {
@@ -248,6 +249,11 @@
 }
 
 @media (max-width: 900px) {
+  .canopy-timeline__list {
+    height: unset;
+    min-height: unset !important;
+  }
+
   .canopy-timeline__point-wrapper {
     position: static;
     width: 100%;
@@ -256,16 +262,23 @@
     transform: none;
   }
 
+  .canopy-timeline__point-wrapper--left {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
   .canopy-timeline__list {
     min-height: auto;
   }
 
   .canopy-timeline__spine {
-    left: 0.5rem;
+    left: -1.5rem;
     transform: none;
     width: 0.35rem;
+    display: none;
   }
 
+  .canopy-timeline__step,
   .canopy-timeline__connector {
     display: none;
   }
@@ -274,8 +287,8 @@
   .canopy-timeline__group {
     width: 100%;
   }
-}
-.canopy-timeline__point-body {
-  display: flex;
-  flex-direction: column;
+
+  .canopy-timeline__body {
+    padding: 1rem 0 0;
+  }
 }
