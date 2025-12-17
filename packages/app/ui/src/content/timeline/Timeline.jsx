@@ -148,9 +148,7 @@ function sanitizePoints(points) {
         detailsHtml: point.detailsHtml || "",
         highlight: !!point.highlight,
         side:
-          point.side === "left" || point.side === "right"
-            ? point.side
-            : null,
+          point.side === "left" || point.side === "right" ? point.side : null,
         meta: {
           label: meta.label || "",
           timestamp: Number.isFinite(timestamp) ? timestamp : null,
@@ -205,21 +203,27 @@ function renderResourceSection(point) {
   if (!manifestCards.length && !legacyResources.length) return null;
   return (
     <div className="canopy-timeline__resources">
-      <ul className="canopy-timeline__resources-list">
+      <div className="canopy-timeline__resources-list">
         {manifestCards.map((manifest) => (
-          <li key={manifest.id || manifest.href}>
+          <div key={manifest.id || manifest.href}>
             <TeaserCard
               href={manifest.href}
               title={manifest.title || manifest.href}
               summary={manifest.summary}
-              metadata={Array.isArray(manifest.metadata) && manifest.metadata.length ? manifest.metadata : manifest.summary ? [manifest.summary] : []}
+              metadata={
+                Array.isArray(manifest.metadata) && manifest.metadata.length
+                  ? manifest.metadata
+                  : manifest.summary
+                    ? [manifest.summary]
+                    : []
+              }
               thumbnail={manifest.thumbnail}
               type={manifest.type || "work"}
             />
-          </li>
+          </div>
         ))}
         {legacyResources.map((resource, idx) => (
-          <li key={resource.id || resource.href || `legacy-${idx}`}>
+          <div key={resource.id || resource.href || `legacy-${idx}`}>
             <TeaserCard
               href={resource.href}
               title={resource.label || resource.title || resource.href}
@@ -227,9 +231,9 @@ function renderResourceSection(point) {
               thumbnail={resource.thumbnail}
               type={resource.type || "resource"}
             />
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
@@ -247,7 +251,8 @@ export default function Timeline({
   __canopyTimeline: payload = null,
   ...rest
 }) {
-  const payloadPoints = payload && Array.isArray(payload.points) ? payload.points : null;
+  const payloadPoints =
+    payload && Array.isArray(payload.points) ? payload.points : null;
   const rawPoints = React.useMemo(() => {
     if (Array.isArray(pointsProp) && pointsProp.length) return pointsProp;
     if (payloadPoints && payloadPoints.length) return payloadPoints;
@@ -260,7 +265,10 @@ export default function Timeline({
   );
 
   const localeValue = payload && payload.locale ? payload.locale : localeProp;
-  const baseLocale = React.useMemo(() => createLocale(localeValue), [localeValue]);
+  const baseLocale = React.useMemo(
+    () => createLocale(localeValue),
+    [localeValue]
+  );
 
   const rangeInput = payload && payload.range ? payload.range : rangeProp || {};
   const rangeOverrides = React.useMemo(
@@ -284,9 +292,7 @@ export default function Timeline({
     return sanitizedPoints.map((point, index) => {
       const timestamp = point.meta.timestamp;
       const fallbackProgress =
-        sanitizedPoints.length > 1
-          ? index / (sanitizedPoints.length - 1)
-          : 0;
+        sanitizedPoints.length > 1 ? index / (sanitizedPoints.length - 1) : 0;
       const progress = Number.isFinite(timestamp)
         ? clampProgress((timestamp - spanStart) / span)
         : fallbackProgress;
@@ -311,14 +317,14 @@ export default function Timeline({
     typeof thresholdProp === "number"
       ? thresholdProp
       : payload && payload.threshold != null
-      ? payload.threshold
-      : null;
+        ? payload.threshold
+        : null;
   const stepsValue =
     typeof steps === "number"
       ? Number(steps)
       : payload && typeof payload.steps === "number"
-      ? Number(payload.steps)
-      : null;
+        ? Number(payload.steps)
+        : null;
 
   const thresholdMs = React.useMemo(
     () => getThresholdMs(thresholdValue, effectiveRange.granularity),
@@ -334,7 +340,9 @@ export default function Timeline({
     [pointsWithPosition, thresholdMs, effectiveRange.granularity, baseLocale]
   );
 
-  const [expandedGroupIds, setExpandedGroupIds] = React.useState(() => new Set());
+  const [expandedGroupIds, setExpandedGroupIds] = React.useState(
+    () => new Set()
+  );
 
   React.useEffect(() => {
     setExpandedGroupIds((prev) => {
@@ -363,9 +371,7 @@ export default function Timeline({
     });
   }, []);
 
-  const resolvedHeight = Number.isFinite(Number(height))
-    ? Number(height)
-    : 640;
+  const resolvedHeight = Number.isFinite(Number(height)) ? Number(height) : 640;
   const trackHeight = Math.max(resolvedHeight, pointsWithPosition.length * 220);
   const containerClasses = ["canopy-timeline", className]
     .filter(Boolean)
@@ -382,7 +388,7 @@ export default function Timeline({
     ]
       .filter(Boolean)
       .join(" ");
-    const wrapperStyle = {top: `calc(${point.progress * 100}% - 1rem)`};
+    const wrapperStyle = {top: `${point.progress * 100}%`};
     const cardClasses = [
       "canopy-timeline__point",
       point.id === activeId ? "is-active" : "",
@@ -398,15 +404,17 @@ export default function Timeline({
       />
     );
 
-  const body = (
-    <div className="canopy-timeline__point-body">
-      <span className="canopy-timeline__point-date">{point.meta.label}</span>
-      <span className="canopy-timeline__point-title">{point.title}</span>
-      {point.summary ? (
-        <span className="canopy-timeline__point-summary">{point.summary}</span>
-      ) : null}
-    </div>
-  );
+    const body = (
+      <div className="canopy-timeline__point-body">
+        <span className="canopy-timeline__point-date">{point.meta.label}</span>
+        <span className="canopy-timeline__point-title">{point.title}</span>
+        {point.summary ? (
+          <span className="canopy-timeline__point-summary">
+            {point.summary}
+          </span>
+        ) : null}
+      </div>
+    );
     const resourceSection = renderResourceSection(point);
 
     return (
@@ -446,7 +454,7 @@ export default function Timeline({
     ]
       .filter(Boolean)
       .join(" ");
-    const wrapperStyle = {top: `calc(${entry.progress * 100}% - 1rem)`};
+    const wrapperStyle = {top: `${entry.progress * 100}%`};
     const isExpanded = expandedGroupIds.has(entry.id);
     const hasActivePoint = entry.points.some((point) => point.id === activeId);
     const connector = (
@@ -468,8 +476,8 @@ export default function Timeline({
     const header = (
       <div className="canopy-timeline__group-header">
         <div className="canopy-timeline__group-summary">
+          <span className="canopy-timeline__point-date">{entry.label}</span>
           <span className="canopy-timeline__group-count">{countLabel}</span>
-          <span className="canopy-timeline__group-range">{entry.label}</span>
         </div>
         <button
           type="button"
@@ -496,7 +504,7 @@ export default function Timeline({
               .join(" ")}
             onClick={() => setActiveId(point.id)}
           >
-            <span className="canopy-timeline__group-point-date">
+            <span className="canopy-timeline__point-date">
               {point.meta.label}
             </span>
             <span className="canopy-timeline__group-point-title">
@@ -574,7 +582,7 @@ function renderSteps(stepSize, range) {
     markers.push(
       <span
         key="timeline-step-start"
-        className="canopy-timeline__step canopy-timeline__step--edge"
+        className="canopy-timeline__step canopy-timeline__step--start"
         style={{top: "0%"}}
         aria-hidden="true"
       >
@@ -585,8 +593,8 @@ function renderSteps(stepSize, range) {
     markers.push(
       <span
         key="timeline-step-end"
-        className="canopy-timeline__step canopy-timeline__step--edge"
-        style={{top: "calc(100% - 1px)"}}
+        className="canopy-timeline__step canopy-timeline__step--end"
+        style={{top: "100%"}}
         aria-hidden="true"
       >
         <span className="canopy-timeline__step-line" />
