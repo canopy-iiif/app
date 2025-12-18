@@ -12,6 +12,7 @@ description: Linked figure component for work and page teasers.
   src="https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778/thumbnail"
   alt="The town and pass of Boondi, in Rajpootana"
   title="The town & pass of Boondi"
+  lazy={false}
 />
 
 ```mdx
@@ -25,17 +26,17 @@ description: Linked figure component for work and page teasers.
 
 ## Props
 
-| Prop | Type | Required | Notes |
-| --- | --- | --- | --- |
-| `href` | string | ✅ | Destination URL for the figure link. |
-| `title` | string | | Primary caption text shown under the image. |
-| `subtitle` | string | | Optional secondary line for composer, date, or summary. |
-| `src` | string | | Image URL (IIIF thumbnail, static JPG, or custom media). |
-| `alt` | string | | Accessible alt text; defaults to `title` if omitted. |
-| `imgWidth` / `imgHeight` | number | | Provide intrinsic size to keep ratios steady without CSS. |
-| `aspectRatio` | number | | Alternative to width/height when you know the ratio. |
-| `lazy` | boolean | | Lazily load the image (default `true`). Disable inside sliders. |
-| `className` | string | | Extra utility classes for custom layouts. |
+| Prop                     | Type    | Required | Notes                                                           |
+| ------------------------ | ------- | -------- | --------------------------------------------------------------- |
+| `href`                   | string  | ✅       | Destination URL for the figure link.                            |
+| `title`                  | string  |          | Primary caption text shown under the image.                     |
+| `subtitle`               | string  |          | Optional secondary line for composer, date, or summary.         |
+| `src`                    | string  |          | Image URL (IIIF thumbnail, static JPG, or custom media).        |
+| `alt`                    | string  |          | Accessible alt text; defaults to `title` if omitted.            |
+| `imgWidth` / `imgHeight` | number  |          | Provide intrinsic size to keep ratios steady without CSS.       |
+| `aspectRatio`            | number  |          | Alternative to width/height when you know the ratio.            |
+| `lazy`                   | boolean |          | Lazily load the image (default `true`). Disable inside sliders. |
+| `className`              | string  |          | Extra utility classes for custom layouts.                       |
 
 ## Examples
 

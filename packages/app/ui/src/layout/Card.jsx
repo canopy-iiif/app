@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 
+const DEFAULT_CARD_ASPECT_RATIO = 4 / 3; // match ReferencedItems proportions
+
 /**
  * Card
  *
@@ -33,8 +35,13 @@ export default function Card({
   ...rest
 }) {
   const containerRef = useRef(null);
-  const [inView, setInView] = useState(!lazy);
-  const [imageLoaded, setImageLoaded] = useState(!lazy);
+  const isBrowser = typeof window !== "undefined";
+  const supportsIntersectionObserver =
+    typeof IntersectionObserver === "function";
+  const shouldRenderImmediately =
+    !lazy || !isBrowser || !supportsIntersectionObserver;
+  const [inView, setInView] = useState(shouldRenderImmediately);
+  const [imageLoaded, setImageLoaded] = useState(shouldRenderImmediately);
 
   /**
    * Use IntersectionObserver to detect when the card enters the viewport.
@@ -44,7 +51,7 @@ export default function Card({
   useEffect(() => {
     if (!lazy) return;
     if (!containerRef.current) return;
-    if (typeof IntersectionObserver !== "function") {
+    if (!supportsIntersectionObserver) {
       setInView(true);
       return;
     }
@@ -71,19 +78,24 @@ export default function Card({
         obs.disconnect();
       } catch (_) {}
     };
-  }, [lazy]);
+  }, [lazy, supportsIntersectionObserver]);
 
   /**
    * Calculate aspect ratio and padding percent for responsive image container.
    */
   const w = Number(imgWidth);
   const h = Number(imgHeight);
-  const ratio =
-    Number.isFinite(Number(aspectRatio)) && Number(aspectRatio) > 0
-      ? Number(aspectRatio)
-      : Number.isFinite(w) && w > 0 && Number.isFinite(h) && h > 0
-      ? w / h
-      : undefined;
+  const hasAspectRatio =
+    Number.isFinite(Number(aspectRatio)) && Number(aspectRatio) > 0;
+  const hasDimensions =
+    Number.isFinite(w) && w > 0 && Number.isFinite(h) && h > 0;
+  const ratio = hasAspectRatio
+    ? Number(aspectRatio)
+    : hasDimensions
+    ? w / h
+    : src
+    ? DEFAULT_CARD_ASPECT_RATIO
+    : undefined;
   const paddingPercent = ratio ? 100 / ratio : 100;
 
   /**
