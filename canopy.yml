@@ -30,6 +30,6 @@ search:
         - commenting
         - tagging
 theme:
-  appearance: white
-  accentColor: indigo
-  grayColor: slate
+  appearance: dark
+  accentColor: bronze
+  grayColor: sand
