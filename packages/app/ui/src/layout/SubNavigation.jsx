@@ -28,7 +28,7 @@ function renderNodes(nodes, parentKey = "node") {
     const linkClass = classes.join(" ");
     const Tag = isInteractive ? "a" : "span";
     const badge = isRoadmap ? (
-      <span className="canopy-sub-navigation__badge">Beta</span>
+      <span className="canopy-sub-navigation__badge">Roadmap</span>
     ) : null;
     return (
       <li key={key} className="canopy-sub-navigation__item" data-depth={depth}>
