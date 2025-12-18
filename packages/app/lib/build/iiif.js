@@ -14,6 +14,7 @@ const {
   rootRelativeHref,
   canopyBodyClassForType,
 } = require("../common");
+const {resolveCanopyConfigPath} = require("../config-path");
 const mdx = require("./mdx");
 const {log, logLine, logResponse} = require("./log");
 const { getPageContext } = require("../page-context");
@@ -1109,7 +1110,7 @@ async function rebuildManifestIndexFromCache() {
 }
 
 async function loadConfig() {
-  const cfgPath = path.resolve("canopy.yml");
+  const cfgPath = resolveCanopyConfigPath();
   if (!fs.existsSync(cfgPath)) return {};
   const raw = await fsp.readFile(cfgPath, "utf8");
   let cfg = {};

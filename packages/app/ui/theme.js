@@ -1,7 +1,7 @@
 const fs = require("fs");
-const path = require("path");
 const yaml = require("js-yaml");
 const radixColors = require("@radix-ui/colors");
+const {resolveCanopyConfigPath} = require("../lib/config-path");
 
 const DEFAULT_ACCENT = "indigo";
 const DEFAULT_GRAY = "slate";
@@ -205,10 +205,7 @@ function buildSassConfig(brandScale, grayScale) {
 }
 
 function loadCanopyTheme(options = {}) {
-  const cwd = options.cwd || process.cwd();
-  const cfgPath =
-    options.configPath ||
-    path.resolve(cwd, process.env.CANOPY_CONFIG || "canopy.yml");
+  const cfgPath = resolveCanopyConfigPath(options);
   const cfg = readYamlConfig(cfgPath);
   const theme = (cfg && cfg.theme) || {};
   const accentRequested = theme && theme.accentColor;

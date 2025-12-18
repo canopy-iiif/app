@@ -12,6 +12,7 @@ const {
   htmlShell,
   canopyBodyClassForType,
 } = require('../common');
+const { resolveCanopyConfigPath } = require('../config-path');
 
 const SEARCH_TEMPLATES_ALIAS = '__CANOPY_SEARCH_RESULT_TEMPLATES__';
 const SEARCH_TEMPLATES_CACHE_DIR = path.resolve('.cache/search');
@@ -444,10 +445,9 @@ async function writeSearchIndex(records) {
     let resultsConfigEntries = [];
     try {
       const yaml = require('js-yaml');
-      const common = require('../common');
-      const cfgPath = common.path.resolve(process.env.CANOPY_CONFIG || 'canopy.yml');
-      if (common.fs.existsSync(cfgPath)) {
-        const raw = common.fs.readFileSync(cfgPath, 'utf8');
+      const cfgPath = resolveCanopyConfigPath();
+      if (fs.existsSync(cfgPath)) {
+        const raw = fs.readFileSync(cfgPath, 'utf8');
         const data = yaml.load(raw) || {};
         const searchCfg = data && data.search ? data.search : {};
         const tabs = searchCfg && searchCfg.tabs ? searchCfg.tabs : {};

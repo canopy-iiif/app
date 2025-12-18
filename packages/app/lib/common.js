@@ -1,6 +1,7 @@
 const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
+const { resolveCanopyConfigPath } = require('./config-path');
 
 const CONTENT_DIR = path.resolve('content');
 const OUT_DIR = path.resolve('site');
@@ -29,7 +30,7 @@ function resolveThemeAppearance() {
 function readYamlConfigBaseUrl() {
   try {
     const y = require('js-yaml');
-    const p = path.resolve(process.env.CANOPY_CONFIG || 'canopy.yml');
+    const p = resolveCanopyConfigPath();
     if (!fs.existsSync(p)) return '';
     const raw = fs.readFileSync(p, 'utf8');
     const data = y.load(raw) || {};

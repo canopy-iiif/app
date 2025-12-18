@@ -65,6 +65,7 @@ Logbook
 - 2025-09-27 / chatgpt: Documented Tailwind token flow in `app/styles/tailwind.config.mts`, compiled UI Sass variables during config load, and exposed `stylesheetHref`/`Stylesheet` helpers via `@canopy-iiif/app/head` so `_app.mdx` can reference the generated CSS directly.
 - 2025-09-27 / chatgpt: Expanded search indexing to harvest MDX pages (respecting frontmatter/layout types), injected BASE_PATH hydration data into search.html, and reworked `mdx.extractTitle()` so generated records surface real headings instead of `Untitled`.
 - 2025-10-19 / chatgpt: Embedded the Tailwind preset/plugin in a packaged config so dev/build fall back automatically; removed `app/styles/tailwind.config.*` from the default app and switched the public stylesheet to Tailwind’s CSS-first (`@import 'tailwindcss'; @theme { ... }`) workflow.
+- 2025-10-20 / chatgpt: Added `lib/config-path.js` to resolve `canopy.yml` from the workspace root (preferring `options.cwd`, then npm `INIT_CWD`, then `process.cwd()`) and updated all loaders (theme, common base URL, search metadata, IIIF builder, featured manifests) to use it so hosted builds and Tailwind runs inside `node_modules/@canopy-iiif/app/ui` pick up user theme settings.
 
 Verification Commands
 ---------------------

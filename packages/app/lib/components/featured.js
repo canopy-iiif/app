@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
 const { rootRelativeHref } = require('../common');
+const { resolveCanopyConfigPath } = require('../config-path');
 
 function firstLabelString(label) {
   if (!label) return 'Untitled';
@@ -85,7 +86,7 @@ function findSlugByIdFromDiskSync(nid) {
 function readFeaturedFromCacheSync() {
   try {
     const debug = !!process.env.CANOPY_DEBUG_FEATURED;
-    const cfg = readYaml(path.resolve('canopy.yml')) || {};
+    const cfg = readYaml(resolveCanopyConfigPath()) || {};
     const featured = Array.isArray(cfg && cfg.featured) ? cfg.featured : [];
     if (!featured.length) return [];
     const idx = readJson(path.resolve('.cache/iiif/index.json')) || {};
