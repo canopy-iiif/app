@@ -1,73 +1,65 @@
+---
+title: Slider
+description: Horizontal carousel for IIIF collections and Canopy facet feeds.
+---
+
 # Slider
 
-`<Slider>` renders a horizontally scrolling carousel using Clover’s slider component. Point it at a IIIF Collection (facet output, curated set, etc.) and each manifest becomes a card that links back to its work page.
+`<Slider>` wraps Clover’s carousel so you can stream manifests from a collection or facet feed. It hydrates client-side, stays SSR-safe, and links each slide back to its work page.
+
+<Slider iiifContent="https://api.dc.library.northwestern.edu/api/v2/collections/7ac5769f-a1d9-4227-a350-bf8bd8b1cddc?as=iiif" />
+
+```mdx
+<Slider iiifContent="https://api.dc.library.northwestern.edu/api/v2/collections/7ac5769f-a1d9-4227-a350-bf8bd8b1cddc?as=iiif" />
+```
 
 ## Props
 
-| Prop          | Type   | Required | Notes                                                      |
-| ------------- | ------ | -------- | ---------------------------------------------------------- |
-| `iiifContent` | string | ✅       | IIIF Collection URL. Local `/api/facet/...` paths also work. |
-| `height`      | string |          | Optional height for the viewer region.                     |
-| `options`     | object |          | Passed through to Clover’s slider implementation.          |
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `iiifContent` | string | ✅ | IIIF Collection URL or Canopy facet JSON (`/api/facet/...`). |
+| `height` | string | | CSS height for the viewport area. |
+| `options` | object | | Passed to Clover and merged with global defaults from `sliderOptions.js`. |
+| `className` | string | | Adds classes to the slider container. |
 
-The slider does not load manifests from front matter; always provide an explicit collection URL. When you point it at a Canopy-generated facet (`/api/facet/<label>/<value>.json`), the cards automatically link back to `/works/<slug>.html`.
+## Examples
+
+### Facet feed
+
+Point the slider at a generated facet feed to surface related manifests inline.
 
 ```mdx
-<Slider iiifContent="/api/facet/creator/david-alfaro-siqueiros.json" />
+<Slider iiifContent="/api/facet/Subject/architecture.json" />
 ```
 
 ### Custom breakpoints
 
-Pass Clover’s `options.breakpoints` map to change how many cards are shown per viewport width. Any configuration supported by the [Clover Slider docs](https://clover-iiif.dev/docs/slider#options) works the same in Canopy because we forward the `options` object directly to Clover.
+Override the defaults with your own `options.breakpoints` map. Use the exported `rem()` helper in `sliderOptions.js` so the client runtime can convert to pixels.
 
-```jsx copy
-const MyCustomSlider = () => {
-  const iiifContent =
-    'https://api.dc.library.northwestern.edu/api/v2/collections/c373ecd2-2c45-45f2-9f9e-52dc244870bd?as=iiif';
+```mdx
+import {rem} from '@canopy-iiif/app/ui/iiif/sliderOptions';
 
-  const customBreakpoints = {
-    320: {
-      slidesPerView: 2,
-      spaceBetween: 20,
-    },
-    480: {
-      slidesPerView: 3,
-      spaceBetween: 30,
-    },
-    640: {
-      slidesPerView: 4,
-      spaceBetween: 40,
-    },
-  };
-
-  return (
-    <Slider
-      iiifContent={iiifContent}
-      options={{
-        breakpoints: customBreakpoints,
-      }}
-    />
-  );
-};
-```
-
-> Tip: Set project-wide defaults (used by `<Slider />`, homepage sliders, and `<RelatedItems />`)
-> in `packages/app/ui/src/iiif/sliderOptions.js`. Use the exported `rem()` helper when defining
-> `spaceBetween` so the slider bundle can convert to pixels with
-> `window.getComputedStyle(document.documentElement)`.
-
-For example, to space cards with `1.25rem` gutters whenever the viewport is 640px or wider:
-
-```js
-export const sliderOptions = {
+const customOptions = {
   breakpoints: {
-    640: {
-      slidesPerView: 3,
-      spaceBetween: rem(1.25),
-    },
+    320: {slidesPerView: 1.5, spaceBetween: rem(0.75)},
+    640: {slidesPerView: 3, spaceBetween: rem(1)},
+    1024: {slidesPerView: 4, spaceBetween: rem(1.25)},
   },
 };
+
+<Slider
+  iiifContent="https://api.dc.library.northwestern.edu/api/v2/collections/94536627-cfdf-413c-852b-0cb16d986da3?as=iiif"
+  options={customOptions}
+/>
 ```
 
-The `rem()` helper keeps the config serializable during SSR and converts to pixels client-side once
-the slider runtime has access to `window`.
+### Tall viewport
+
+Use the `height` prop when a slider needs extra breathing room for taller thumbnails.
+
+```mdx
+<Slider
+  iiifContent="https://api.dc.library.northwestern.edu/api/v2/collections/7ac5769f-a1d9-4227-a350-bf8bd8b1cddc?as=iiif"
+  height="28rem"
+/>
+```

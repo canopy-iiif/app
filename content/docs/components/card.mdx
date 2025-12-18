@@ -1,31 +1,106 @@
+---
+title: Card
+description: Linked figure component for work and page teasers.
+---
+
 # Card
 
-Use `<Card>` when you need a simple linked figure: image plus caption, wrapped in an anchor. The component is layout-focused and does not fetch IIIF data on its own. Pass the URL, image, and text explicitly.
+`<Card>` renders an anchored figure with an image, title, and optional subtitle. Use it when you need a lightweight teaser that links directly to a work page or supporting essay.
 
-## Props
-
-| Prop        | Type     | Required | Notes                                                    |
-| ----------- | -------- | -------- | -------------------------------------------------------- |
-| `href`      | string   | ✅       | Destination URL.                                        |
-| `title`     | string   |          | Primary caption text (rendered in `<figcaption>`).       |
-| `subtitle`  | string   |          | Optional second line of caption text.                    |
-| `src`       | string   |          | Image URL (IIIF thumbnail, static JPG, etc.).            |
-| `alt`       | string   |          | Accessible alt text (falls back to `title`).             |
-| `imgWidth` / `imgHeight` | number |          | Provide intrinsic dimensions to maintain aspect ratio. |
-| `aspectRatio` | number |          | Alternative way to lock the image ratio.                |
-| `lazy`      | boolean  |          | Defaults to `true`. Set to `false` when used in carousels. |
-
-## Example
+<Card
+  href="/works/the-town-and-pass-of-boondi-in-rajpootana.html"
+  src="https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778/thumbnail"
+  alt="The town and pass of Boondi, in Rajpootana"
+  title="The town & pass of Boondi"
+/>
 
 ```mdx
 <Card
   href="/works/the-town-and-pass-of-boondi-in-rajpootana.html"
   src="https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778/thumbnail"
-  imgWidth={1024}
-  imgHeight={768}
-  title="The town & pass of Boondi, in Rajpootana"
+  alt="The town and pass of Boondi, in Rajpootana"
+  title="The town & pass of Boondi"
+/>
+```
+
+## Props
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `href` | string | ✅ | Destination URL for the figure link. |
+| `title` | string | | Primary caption text shown under the image. |
+| `subtitle` | string | | Optional secondary line for composer, date, or summary. |
+| `src` | string | | Image URL (IIIF thumbnail, static JPG, or custom media). |
+| `alt` | string | | Accessible alt text; defaults to `title` if omitted. |
+| `imgWidth` / `imgHeight` | number | | Provide intrinsic size to keep ratios steady without CSS. |
+| `aspectRatio` | number | | Alternative to width/height when you know the ratio. |
+| `lazy` | boolean | | Lazily load the image (default `true`). Disable inside sliders. |
+| `className` | string | | Extra utility classes for custom layouts. |
+
+## Examples
+
+### Summary line
+
+Add a `subtitle` when you want a brief line of context under the main title.
+
+<Card
+  href="/works/the-town-and-pass-of-boondi-in-rajpootana.html"
+  src="https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778/thumbnail"
+  title="The town & pass of Boondi"
+  subtitle="Lieutenant-Colonel Thomas Bacon, 1836"
+/>
+
+```mdx
+<Card
+  href="/works/the-town-and-pass-of-boondi-in-rajpootana.html"
+  src="https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778/thumbnail"
+  title="The town & pass of Boondi"
   subtitle="Lieutenant-Colonel Thomas Bacon, 1836"
 />
 ```
 
-`<ReferencedItems />` renders a grid of cards automatically, so you only need to use `<Card>` directly for bespoke layouts.
+### Fixed ratio
+
+Lock the image ratio with `imgWidth` and `imgHeight` so cards line up even when thumbnails vary.
+
+<Card
+  href="/works/prayer-mat-from-the-panjab.html"
+  src="https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b/thumbnail"
+  title="Prayer mat from the Panjab"
+  subtitle="Embroidered silk, ca. 1870"
+  imgWidth={1024}
+  imgHeight={1536}
+/>
+
+```mdx
+<Card
+  href="/works/prayer-mat-from-the-panjab.html"
+  src="https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b/thumbnail"
+  title="Prayer mat from the Panjab"
+  subtitle="Embroidered silk, ca. 1870"
+  imgWidth={1024}
+  imgHeight={1536}
+/>
+```
+
+### Controlled loading
+
+Disable lazy loading when the card sits inside an already lazy container such as `<Slider />`.
+
+<Card
+  href="/works/street-scene-in-lucknow.html"
+  src="https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7/thumbnail"
+  title="Street Scene in Lucknow"
+  subtitle="Gustav Leitner, 1860"
+  lazy={false}
+/>
+
+```mdx
+<Card
+  href="/works/street-scene-in-lucknow.html"
+  src="https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7/thumbnail"
+  title="Street Scene in Lucknow"
+  subtitle="Gustav Leitner, 1860"
+  lazy={false}
+/>
+```

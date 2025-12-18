@@ -1,27 +1,113 @@
+---
+title: ReferencedItems
+description: Grid of cited manifests pulled from page front matter.
+referencedManifests:
+  - https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b?as=iiif
+---
+
 # ReferencedItems
 
-`<ReferencedItems />` renders a responsive grid of cards for every manifest listed in the page’s `referencedManifests` front matter. Use it at the end of an essay to cite the works you pulled from the collection. Pair it with [`<References />`](./references) to surface backlinks on work pages.
+`<ReferencedItems />` reads the current page’s `referencedManifests` and renders a responsive grid of linked cards. Place it near the end of an essay to cite the works you used.
 
-## How it works
-
-1. Add `referencedManifests` to the page front matter (see [Markdown](./markdown#front-matter)).
-2. Drop `<ReferencedItems />` anywhere in the body. The component reads the front matter via the page context and loads each manifest’s thumbnail, title, and summary.
-
-You can bypass front matter by passing an `items` prop (array of `{ href, title, thumbnail, thumbnailWidth, thumbnailHeight, summary }`).
-
-`emptyLabel` renders a fallback message when no manifests are referenced.
-
-## Example
+<ReferencedItems />
 
 ```mdx
 ---
-title: Remedies for Restoring the Constitution
 referencedManifests:
-  - https://api.dc.library.northwestern.edu/api/v2/works/89a30426-a35a-48df-b748-27426fd3a23b?as=iiif
-  - https://api.dc.library.northwestern.edu/api/v2/works/e4917381-b5ba-4b11-8666-f28abc4c7b2d?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b?as=iiif
 ---
 
-## Works cited
+<ReferencedItems />
+```
 
+## Props
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `items` | array | | Provide custom `{href, title, thumbnail, summary}` entries instead of pulling from context. |
+| `emptyLabel` | string or function | | Message rendered when no items exist; accepts a React node factory. |
+| `className` | string | | Extra classes for spacing or theming. |
+| `children` | node | | Optional heading or description rendered before the grid. |
+| `...rest` | any | | Spread onto the wrapping `<section>`. |
+
+## Examples
+
+### Custom heading
+
+Pass copy as children to add a heading that travels with the component.
+
+<ReferencedItems>
+  <h2>Works cited</h2>
+  <p>Each figure links back to the full manifest page.</p>
+</ReferencedItems>
+
+```mdx
+<ReferencedItems>
+  <h2>Works cited</h2>
+  <p>Each figure links back to the full manifest page.</p>
+</ReferencedItems>
+```
+
+### Manual list
+
+Bypass page context and drive the cards with your own data. This is useful for curated bibliographies that mix works and static pages.
+
+<ReferencedItems
+  items={[
+    {
+      href: "/works/the-town-and-pass-of-boondi-in-rajpootana.html",
+      title: "The town & pass of Boondi",
+      summary: "Watercolor panorama after Thomas Bacon, 1836",
+      thumbnail:
+        "https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778/thumbnail",
+      thumbnailWidth: 1024,
+      thumbnailHeight: 768,
+    },
+    {
+      href: "/works/prayer-mat-from-the-panjab.html",
+      title: "Prayer mat from the Panjab",
+      summary: "Silk embroidery with floral border",
+      thumbnail:
+        "https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b/thumbnail",
+      thumbnailWidth: 768,
+      thumbnailHeight: 1024,
+    },
+  ]}
+/>
+
+```mdx
+<ReferencedItems
+  items={[
+    {
+      href: "/works/the-town-and-pass-of-boondi-in-rajpootana.html",
+      title: "The town & pass of Boondi",
+      summary: "Watercolor panorama after Thomas Bacon, 1836",
+      thumbnail:
+        "https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778/thumbnail",
+      thumbnailWidth: 1024,
+      thumbnailHeight: 768,
+    },
+    {
+      href: "/works/prayer-mat-from-the-panjab.html",
+      title: "Prayer mat from the Panjab",
+      summary: "Silk embroidery with floral border",
+      thumbnail:
+        "https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b/thumbnail",
+      thumbnailWidth: 768,
+      thumbnailHeight: 1024,
+    },
+  ]}
+/>
+```
+
+### Empty state copy
+
+Use `emptyLabel` when you want to prompt authors to cite their sources.
+
+<ReferencedItems emptyLabel="Add referencedManifests to show cited works." />
+
+```mdx
 <ReferencedItems emptyLabel="Add referencedManifests to show cited works." />
 ```

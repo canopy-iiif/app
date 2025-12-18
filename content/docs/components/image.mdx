@@ -1,147 +1,148 @@
 ---
 title: Image
-description: A pan-zoom image viewer component powered by Clover IIIF with support for static images and annotations.
+description: Pan-zoom image viewer powered by Clover IIIF.
 ---
 
 # Image
 
-`<Image>` embeds a pan-zoom viewer powered by Clover. It works with both static image URLs and IIIF Image API endpoints.
+`<Image>` embeds Clover’s zoomable viewer for any IIIF Image API resource or static asset. It handles deep zoom, lazy tile loading, and optional annotations without any manual wiring.
 
 <Image
   src="https://iiif.dc.library.northwestern.edu/iiif/3/3d4a01f1-664d-48aa-89b7-a887d3843644"
   isTiledImage
-  alt="Lithographs of historic buildings in Lucknow, India."
+  alt="Lithographs of historic buildings in Lucknow, India"
   caption="Historic buildings in Lucknow, India, 1860. No. 12 The Shah Nujeef. No. 13 Khoorsyad Munzil. No. 14 The Motee Mahal. No. 15 Interior of the Compound of Alum Bagh."
 />
 
+```mdx
+<Image
+  src="https://iiif.dc.library.northwestern.edu/iiif/3/3d4a01f1-664d-48aa-89b7-a887d3843644"
+  isTiledImage
+  alt="Lithographs of historic buildings in Lucknow, India"
+  caption="Historic buildings in Lucknow, India, 1860. No. 12 The Shah Nujeef. No. 13 Khoorsyad Munzil. No. 14 The Motee Mahal. No. 15 Interior of the Compound of Alum Bagh."
+/>
+```
+
 ## Props
 
-| Prop              | Type    | Required | Notes                                                               |
-| ----------------- | ------- | -------- | ------------------------------------------------------------------- |
-| `src`             | string  | ✅       | Image API endpoint or direct asset URL.                             |
-| `isTiledImage`    | boolean |          | Set to `true` for IIIF Image API endpoints so tiles load on demand. |
-| `height`          | string  |          | CSS height for the viewer area (default `600px`).                   |
-| `alt`             | string  |          | Accessible alt text.                                                |
-| `caption`         | string  |          | Optional caption rendered under the viewer.                         |
-| `backgroundColor` | string  |          | Placeholder background color while tiles load.                      |
-| `annotations`     | array   |          | Pass Clover annotation objects to highlight regions.                |
-
-All additional props flow to Clover’s image component. See its docs for advanced options.
+| Prop              | Type    | Required | Notes                                                          |
+| ----------------- | ------- | -------- | -------------------------------------------------------------- |
+| `src`             | string  | ✅       | IIIF Image API endpoint or static asset URL.                   |
+| `isTiledImage`    | boolean |          | Set to `true` for IIIF Image API URLs so Clover fetches tiles. |
+| `height`          | string  |          | CSS height for the viewport (`600px` default).                 |
+| `alt`             | string  |          | Accessible alt text for the rendered canvas.                   |
+| `caption`         | string  |          | Optional footer shown under the viewer.                        |
+| `backgroundColor` | string  |          | Placeholder background while tiles load.                       |
+| `annotations`     | array   |          | Clover annotation objects for callouts.                        |
+| `className`       | string  |          | Extra classes for layout tweaks.                               |
 
 ## Examples
 
 ### Static image
 
-Use this when you have a regular JPG/PNG and want a simple pan-zoom viewer with a caption. The component handles the interaction so you only supply the URL, alt text, and optional caption.
+In many cases, you may want to provide a simple static image that do not have IIIF support or are hosted externally. Use `<Image>` for regular JPG or PNG assets as well. This example references the Wikimedia scan of Herman Moll’s 1717 East Indies map.
 
 <Image
   src="https://upload.wikimedia.org/wikipedia/commons/1/10/B26055943A_-_A_map_of_the_East-Indies_and_the_adjacent_countries.jpg"
-  alt="1717 map by Herman Moll illustrating early European colonial reach."
-  caption="1717 map by British cartographer Herman Moll, depicting the East Indies from the Persian frontier to New Guinea and southern Japan, including India, Ceylon, Southeast Asia, much of China, Indonesia, and the Philippines. It shows the reach of European influence and trade during a period of expanding colonial power that would continue for several centuries."
+  alt="1717 map by Herman Moll illustrating colonial reach"
+  caption="1717 map by Herman Moll depicting the East Indies from the Persian frontier to New Guinea and southern Japan."
 />
 
 ```mdx
 <Image
   src="https://upload.wikimedia.org/wikipedia/commons/1/10/B26055943A_-_A_map_of_the_East-Indies_and_the_adjacent_countries.jpg"
-  alt="1717 map by Herman Moll illustrating early European colonial reach."
-  caption="1717 map by British cartographer Herman Moll, depicting the East Indies from the Persian frontier to New Guinea and southern Japan, including India, Ceylon, Southeast Asia, much of China, Indonesia, and the Philippines. It shows the reach of European influence and trade during a period of expanding colonial power that would continue for several centuries."
+  alt="1717 map by Herman Moll illustrating colonial reach"
+  caption="1717 map by Herman Moll depicting the East Indies from the Persian frontier to New Guinea and southern Japan."
 />
 ```
 
-### IIIF tiled image
+### Full canvas tiles
 
-Point `src` at a IIIF Image API endpoint and set `isTiledImage` so Clover fetches tiles dynamically. This keeps large images performant without pre-generating downscaled versions.
+Use the base Image API endpoint with `isTiledImage` to keep very large works responsive.
 
 <Image
-  src="https://ids.lib.harvard.edu/ids/iiif/9013118"
+  src="https://iiif.dc.library.northwestern.edu/iiif/3/138a94b0-175a-4152-98c7-df58661ce7d5"
   isTiledImage
-  alt="The Summons by Emanuel Leutze"
-  caption="The Summons, 1856. Harvard Art Museums."
+  alt="Wide view of Boondi"
+  caption="The full Boondi panorama renders with tile-based zoom and pan controls."
+  height="520px"
 />
 
 ```mdx
 <Image
-  src="https://ids.lib.harvard.edu/ids/iiif/9013118"
+  src="https://iiif.dc.library.northwestern.edu/iiif/3/138a94b0-175a-4152-98c7-df58661ce7d5"
   isTiledImage
-  alt="The Summons by Emanuel Leutze"
-  caption="The Summons, 1856. Harvard Art Museums."
+  alt="Wide view of Boondi"
+  caption="The full Boondi panorama renders with tile-based zoom and pan controls."
+  height="520px"
 />
 ```
 
-### IIIF region
+### Region focus
 
-Crop down to a subsection of a IIIF image by appending the `xywh` fragment to the URL. Region URLs are great for spotlighting details inside a larger canvas.
+Append `xywh` fragments to zoom into a detail from the same source canvas. In this case, we draw a `3000,2800,2000,1600` rectangle around a palace below the ridge fortifications.
 
 <Image
-  src="https://ids.lib.harvard.edu/ids/iiif/9013118/188,650,914,712/full/0/default.jpg"
-  alt="Detail from The Summons"
-  caption="Masked messenger approaching a startled courtier."
+  src="https://iiif.dc.library.northwestern.edu/iiif/3/138a94b0-175a-4152-98c7-df58661ce7d5/3000,2800,2000,1600/max/0/default.jpg"
+  alt="Palace below ridge fortifications"
+  caption="Region croping highlighting hillside palace below ridge fortifications."
 />
 
 ```mdx
 <Image
-  src="https://ids.lib.harvard.edu/ids/iiif/9013118/188,650,914,712/full/0/default.jpg"
-  alt="Detail from The Summons"
-  caption="Masked messenger approaching a startled courtier."
+  src="https://iiif.dc.library.northwestern.edu/iiif/3/138a94b0-175a-4152-98c7-df58661ce7d5/3000,2800,2000,1600/max/0/default.jpg"
+  alt="Palace below ridge fortifications"
+  caption="Region croping highlighting hillside palace below ridge fortifications."
 />
 ```
 
-### Annotations
-
-Pass a Clover-style `annotations` array to highlight one or more regions directly in the viewer. Each annotation object includes the source canvas, selector, and textual body so readers see structured callouts.
+We can also zoom into a more specific detail by combining `xywh` with size constraints. Here, we focus on a palace above Boondi using `950,520,7100,4740/!1200,630` to remove extraneous context.
 
 <Image
-  src="https://ids.lib.harvard.edu/ids/iiif/9013118"
+  src="https://iiif.dc.library.northwestern.edu/iiif/3/138a94b0-175a-4152-98c7-df58661ce7d5/950,520,7100,4740/!1200,630/0/default.jpg"
+  alt="Detail of a hillside palace above Boondi"
+  caption="Detail from The town & pass of Boondi, created for Governor-General Thomas Munro."
+/>
+
+```mdx
+<Image
+  src="https://iiif.dc.library.northwestern.edu/iiif/3/138a94b0-175a-4152-98c7-df58661ce7d5/950,520,7100,4740/!1200,630/0/default.jpg"
+  alt="Detail of a hillside palace above Boondi"
+  caption="Detail from The town & pass of Boondi, created for Governor-General Thomas Munro."
+/>
+```
+
+### Annotated callouts
+
+We can also pass annotations to draw attention to important regions or narrative elements. In this example, an annotation highlights a group of travelers near the ridge. This retains zoom and pan functionality across the image while adding context.
+
+<Image
+  src="https://iiif.dc.library.northwestern.edu/iiif/3/138a94b0-175a-4152-98c7-df58661ce7d5"
   isTiledImage
-  alt="Annotated detail"
-  caption="Annotations highlight regions inside the canvas."
+  alt="Annotated Boondi panorama"
+  caption="Annotations describe figures and landmarks inside the panorama."
   annotations={[
     {
       annotation: {
-        id: "https://ids.lib.harvard.edu/annotations/0",
+        id: "https://iiif.dc.library.northwestern.edu/iiif/3/f7409acd-e3f9-496a-b733-81f46d4ffa4f/annotation/0",
         type: "Annotation",
         motivation: ["tagging"],
         body: [
           {
+            id: "https://iiif.dc.library.northwestern.edu/iiif/3/f7409acd-e3f9-496a-b733-81f46d4ffa4f/annotation/0/body/0",
             type: "TextualBody",
-            value: "A masked messenger approaching a startled courtier.",
+            value: "Five travelers pause with their horses near the ridge.",
           },
         ],
         target: {
           type: "SpecificResource",
           source: {
-            id: "https://ids.lib.harvard.edu/ids/iiif/9013118/canvas/1",
+            id: "https://iiif.dc.library.northwestern.edu/iiif/3/f7409acd-e3f9-496a-b733-81f46d4ffa4f/canvas/1",
             type: "Canvas",
           },
           selector: {
             type: "FragmentSelector",
-            value: "xywh=188,650,914,712",
-          },
-        },
-      },
-      targetIndex: 0,
-    },
-    {
-      annotation: {
-        id: "https://ids.lib.harvard.edu/annotations/1",
-        type: "Annotation",
-        motivation: ["tagging"],
-        body: [
-          {
-            type: "TextualBody",
-            value:
-              "Women sit at a table, conversing over tea or a meal, while one cradles an infant on her lap.",
-          },
-        ],
-        target: {
-          type: "SpecificResource",
-          source: {
-            id: "https://ids.lib.harvard.edu/ids/iiif/9013118/canvas/1",
-            type: "Canvas",
-          },
-          selector: {
-            type: "FragmentSelector",
-            value: "xywh=1160,800,544,372",
+            value: "xywh=1900,4050,1500,1000",
           },
         },
       },
@@ -152,57 +153,32 @@ Pass a Clover-style `annotations` array to highlight one or more regions directl
 
 ```mdx
 <Image
-  src="https://ids.lib.harvard.edu/ids/iiif/9013118"
+  src="https://iiif.dc.library.northwestern.edu/iiif/3/138a94b0-175a-4152-98c7-df58661ce7d5"
   isTiledImage
-  alt="Annotated detail"
-  caption="Annotations highlight regions inside the canvas."
+  alt="Annotated Boondi panorama"
+  caption="Annotations describe figures and landmarks inside the panorama."
   annotations={[
     {
       annotation: {
-        id: "https://ids.lib.harvard.edu/annotations/0",
+        id: "https://iiif.dc.library.northwestern.edu/iiif/3/f7409acd-e3f9-496a-b733-81f46d4ffa4f/annotation/0",
         type: "Annotation",
         motivation: ["tagging"],
         body: [
           {
+            id: "https://iiif.dc.library.northwestern.edu/iiif/3/f7409acd-e3f9-496a-b733-81f46d4ffa4f/annotation/0/body/0",
             type: "TextualBody",
-            value: "A masked messenger approaching a startled courtier",
+            value: "Five travelers pause with their horses near the ridge.",
           },
         ],
         target: {
           type: "SpecificResource",
           source: {
-            id: "https://ids.lib.harvard.edu/ids/iiif/9013118/canvas/1",
+            id: "https://iiif.dc.library.northwestern.edu/iiif/3/f7409acd-e3f9-496a-b733-81f46d4ffa4f/canvas/1",
             type: "Canvas",
           },
           selector: {
             type: "FragmentSelector",
-            value: "xywh=188,650,914,712",
-          },
-        },
-      },
-      targetIndex: 0,
-    },
-    {
-      annotation: {
-        id: "https://ids.lib.harvard.edu/annotations/1",
-        type: "Annotation",
-        motivation: ["tagging"],
-        body: [
-          {
-            type: "TextualBody",
-            value:
-              "Women sit at a table, conversing over tea or a meal, while one cradles an infant on her lap.",
-          },
-        ],
-        target: {
-          type: "SpecificResource",
-          source: {
-            id: "https://ids.lib.harvard.edu/ids/iiif/9013118/canvas/1",
-            type: "Canvas",
-          },
-          selector: {
-            type: "FragmentSelector",
-            value: "xywh=1160,800,544,372",
+            value: "xywh=1900,4050,1500,1000",
           },
         },
       },

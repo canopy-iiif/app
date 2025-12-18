@@ -1,37 +1,62 @@
+---
+title: References
+description: Backlink list showing which essays cite a manifest.
+---
+
 # References
 
-`<References />` lists the essays that cite a manifest. It belongs on work layouts (`content/works/_layout.mdx`) or anywhere you want to surface backlinks to contextual pages.
+`<References />` lists every MDX page that cites a manifest through `referencedManifests`. Drop it on work layouts so readers can follow contextual essays without leaving the page template.
 
-## How it works
+<References id="https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif" />
 
-- When a page sets `referencedManifests`, Canopy records the relationship in `.cache/iiif/index.json`.
-- `<References />` looks up those relationships, either for the current work page or for a manifest ID you pass via `id`.
-- The component renders a definition list (`<dl>`), so it inherits the standard metadata styling on work pages.
+```mdx
+<References id="https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif" />
+```
+
+> The component quietly returns `null` when no essays reference the manifest. Use a surrounding `<section>` to supply your own fallback copy if needed.
 
 ## Props
 
-| Prop        | Type   | Required | Notes                                               |
-| ----------- | ------ | -------- | --------------------------------------------------- |
-| `id`        | string |          | Manifest URI. Defaults to the work currently in view. |
-| `title`     | string |          | Heading text (defaults to `Referenced by`).         |
-| `emptyLabel`| string |          | Optional message when no essays cite this manifest. |
-| `className` | string |          | Extra class names for custom styling.               |
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `id` | string | | Manifest URI to inspect. Defaults to the manifest currently being rendered on a work page. |
+| `title` | string | | Heading text shown above the backlink list. Defaults to `Referenced by`. |
+| `className` | string | | Additional classes applied to the wrapping `<dl>`. |
+| `...rest` | any | | Passed through to the `<dl>` container. |
 
-## Example
+## Examples
+
+### Work layout default
+
+Let the component infer the manifest from the page context inside `content/works/_layout.mdx`.
 
 ```mdx filename="content/works/_layout.mdx"
-<section>
-  <h2>Contextual references</h2>
-  <References emptyLabel="No essays cite this work yet." />
+<section className="space-y-4">
+  <h2>Context</h2>
+  <References />
 </section>
 ```
 
-To show references for any manifest (not just the one being rendered), pass `id`:
+### Custom title
+
+Rename the heading to match your editorial voice.
+
+<References
+  id="https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif"
+  title="Cited in"
+/>
 
 ```mdx
 <References
-  id="https://api.dc.library.northwestern.edu/api/v2/works/46de2c91-3a29-4525-939e-ee17073f3a7e?as=iiif"
+  id="https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif"
   title="Cited in"
-  emptyLabel="No matches yet."
 />
+```
+
+### Scoped styling
+
+Apply a custom class when the references sit beside metadata so you can style the definition list differently from the default.
+
+```mdx
+<References className="border-t border-slate-200 pt-6" />
 ```

@@ -1,23 +1,60 @@
+---
+title: Viewer
+description: Full Clover IIIF viewer for manifests and collections.
+---
+
 # Viewer
 
-`<Viewer>` mounts the Clover IIIF viewer so you can embed a manifest or collection anywhere in MDX. It handles deep zoom, multi-canvas navigation, audio/video playback, and loads client-side for performance.
+`<Viewer>` mounts Clover’s IIIF viewer so you can embed a manifest or collection anywhere in MDX. It hydrates client-side, supports deep zoom, audio, and video, and inherits the project-wide viewer defaults.
 
-## Props
-
-| Prop          | Type   | Required | Notes                                                                            |
-| ------------- | ------ | -------- | -------------------------------------------------------------------------------- |
-| `iiifContent` | string | ✅       | IIIF Manifest or Collection URL.                                                 |
-| `options`     | object |          | Merged with Canopy’s defaults before passing to Clover (use to toggle controls). |
-
-Default options hide Clover’s download/badge UI. Override them sparingly so multiple viewers stay consistent.
+<Viewer iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/14a6aa15-9e12-47a7-9617-91f430d4f47b?as=iiif" />
 
 ```mdx
 <Viewer iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/14a6aa15-9e12-47a7-9617-91f430d4f47b?as=iiif" />
 ```
 
+## Props
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `iiifContent` | string | ✅ | IIIF Manifest or Collection URL. |
+| `options` | object | | Merged with Canopy’s defaults before passing into Clover. |
+| `className` | string | | Adds classes to the viewer container. |
+| `height` | string | | CSS height override for the viewport. |
+
+## Examples
+
+### Open info panel
+
+Toggle Clover controls through the `options` prop. Here we default the information panel to the open state and surface the “About” tab.
+
 <Viewer
   iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/14a6aa15-9e12-47a7-9617-91f430d4f47b?as=iiif"
-  options={{
-    informationPanel: {open: true, showAbout: true},
-  }}
+  options={{informationPanel: {open: true, showAbout: true}}}
 />
+
+```mdx
+<Viewer
+  iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/14a6aa15-9e12-47a7-9617-91f430d4f47b?as=iiif"
+  options={{informationPanel: {open: true, showAbout: true}}}
+/>
+```
+
+### Collection playback
+
+Feed a collection URL to let readers page through every manifest returned by the IIIF collection.
+
+```mdx
+<Viewer iiifContent="https://api.dc.library.northwestern.edu/api/v2/collections/7ac5769f-a1d9-4227-a350-bf8bd8b1cddc?as=iiif" />
+```
+
+### Tall viewport
+
+Raise the `height` when you embed the viewer inside a stacked layout so the canvas gets more room.
+
+```mdx
+<Viewer
+  iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b?as=iiif"
+  height="720px"
+/>
+```

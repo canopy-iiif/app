@@ -1,28 +1,37 @@
 ---
 title: Search
-description: Compose the search page in MDX using SSR-safe placeholders that hydrate client-side.
+description: Compose the search page with SSR-safe placeholders that hydrate client-side.
 ---
 
-# Search components
+# Search
 
-Drop search primitives into any MDX page to control how the search UI renders. Each component renders
-SSR-safe markup and hydrates client-side via `site/search.js`, so you can rearrange them freely.
+Search primitives expose SSR-safe markup that hydrates into a FlexSearch-powered client app. Use `<Search />` for the default layout or mix the smaller components to control every region of the page.
 
-## Available components
+<Search />
 
-| Component           | Purpose                                                 |
-| ------------------- | ------------------------------------------------------- |
-| `<SearchForm />`    | Input + submit button wired to the shared search store. |
-| `<SearchSummary />` | Describes the current query and filter.                 |
-| `<SearchResults />` | Renders the result list in a grid or list layout.       |
-| `<SearchTabs />`    | Displays tabs for each record type (work, page, etc.).  |
-| `<SearchTotal />`   | Shows the count of visible results.                     |
-| `<Search />`        | Convenience wrapper that renders the default layout.    |
+```mdx
+<Search />
+```
 
-`<SearchResults />` accepts a `layout` prop (`'grid'` or `'list'`). Grids use the masonry layout from
-`@canopy-iiif/app/ui` and hydrate in the browser. Lists render server-side markup immediately.
+## Props
 
-## Building a custom layout
+| Component | Prop | Type | Notes |
+| --- | --- | --- | --- |
+| `Search` | `layout` | string | Optional layout override for the results region (`'grid'` or `'list'`). |
+| `SearchForm` | `id`, `className` | string | Wire a custom label/`aria` relationship or add utility classes. |
+| `SearchSummary` | `className` | string | Finely control typography above the results. |
+| `SearchResults` | `layout` | string | Choose between `'grid'` (masonry) and `'list'` (stacked cards). |
+| `SearchTabs` | `className` | string | Style the per-type toggle list. |
+| `SearchTotal` | `className` | string | Display the live count anywhere on the page. |
+| `SearchFormModal` | `mode` | `'dialog' \/ 'inline'` | Render the search drawer in dialog or inline form mode. |
+
+> Every component reads from the same client store and URL params, so you can scatter them around the layout without extra plumbing.
+
+## Examples
+
+### Custom layout
+
+Compose your own layout inside `content/search/_layout.mdx` and let Canopy inject the `search` prop.
 
 ```mdx filename="content/search/_layout.mdx"
 ---
@@ -30,54 +39,35 @@ title: Search
 ---
 
 <section className="space-y-6">
-  <header className="space-y-3">
+  <header className="space-y-2">
     <h1>Search</h1>
-    <p>Type to search across works and documentation pages.</p>
+    <p>Browse works and documentation pages from the Northwestern collections.</p>
   </header>
-
   <SearchForm />
   <SearchTabs />
-  <SearchSummary />
-  <SearchTotal />
+  <div className="flex items-center justify-between text-sm text-slate-500">
+    <SearchSummary />
+    <SearchTotal />
+  </div>
 </section>
 
 <SearchResults layout="grid" />
 ```
 
-You can place the components anywhere in the tree—drop a `<SearchTabs />` in a sidebar, or wrap the
-form in a `<Container />` for a full-bleed background. The runtime automatically wires them together.
+### List layout
 
-## Result templates
+Flip to a list view when you need dense metadata instead of masonry cards.
 
-Search results render through MDX partials inside `content/search/`:
+```mdx
+<SearchResults layout="list" />
+```
 
-- `_result-figure.mdx` — used when `results.<type>.result` is set to `figure`.
-- `_result-article.mdx` — used when that value is `article`.
+### Modal trigger
 
-Each partial receives `props.record`, `props.query`, and helper props like `props.activeType`. Import
-`Card`, `ArticleCard`, or your own components to customize the markup without rebuilding the runtime.
-If these files are missing, Canopy falls back to the defaults in `packages/app/lib/search/templates/`.
-
-## Advanced: modal search form
-
-Use `<SearchFormModal />` (exported from `@canopy-iiif/app/ui/server`) to trigger the search drawer
-that appears in the site header. Each trigger renders an element with `data-canopy-search-form`, and
-`site/scripts/canopy-search-form.js` hydrates it into an accessible dialog.
+Use the modal helper when you need a search trigger outside the main page tree, such as the global header.
 
 ```mdx
 <SearchFormModal mode="dialog">
-  <button type="button">Open search</button>
+  <button type="button" className="btn">Open search</button>
 </SearchFormModal>
 ```
-
-`mode="dialog"` (default) opens the modal directly; pass `mode="inline"` to embed the form where
-the component is placed.
-
-## Troubleshooting
-
-- Ensure `content/search/_layout.mdx` imports the components from MDX (no manual import required—the
-  MDX provider injects them globally).
-- If the components never hydrate, confirm the page includes `[data-canopy-search]` or `<Search />`
-  so the runtime bundle loads.
-- When editing `_result-*.mdx`, restart `npm run dev` if you add new imports; esbuild watches these
-  files but cached metadata may need a rebuild after structural changes.
