@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot, hydrateRoot } from 'react-dom/client';
-import Timeline from '../../ui/src/content/timeline/Timeline.jsx';
+import { Timeline } from '../../ui/dist/index.mjs';
 
 function ready(fn) {
   if (typeof document === 'undefined') return;

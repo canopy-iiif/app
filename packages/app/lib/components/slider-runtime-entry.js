@@ -4,7 +4,10 @@ import CloverSlider from '@samvera/clover-iiif/slider';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import { mergeSliderOptions, normalizeSliderOptions } from '../../ui/src/iiif/sliderOptions.js';
+import {
+  mergeSliderOptions,
+  normalizeSliderOptions,
+} from '../../ui/dist/index.mjs';
 
 function ready(fn) {
   if (document.readyState === 'loading') {
