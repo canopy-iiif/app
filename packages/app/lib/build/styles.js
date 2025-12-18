@@ -112,33 +112,11 @@ async function ensureStyles() {
       const marker = "/* canopy-theme */";
       const markerEnd = "/* canopy-theme:end */";
       const markerRegex = new RegExp(`${marker}[\\s\\S]*?${markerEnd}\\n?`, "g");
-      const sanitized = existing.replace(markerRegex, "");
-
-      const layerRegex = /@layer properties\{([\s\S]*?)\}(?=@|$)/;
-      const match = layerRegex.exec(sanitized);
-      let before = sanitized;
-      let after = "";
-      let customRulesBlock = "";
-
-      if (match) {
-        before = sanitized.slice(0, match.index);
-        after = sanitized.slice(match.index + match[0].length);
-        const layerBody = match[1] || "";
-        const boundaryMatch = /}\s*:/.exec(layerBody);
-        if (boundaryMatch) {
-          const start = boundaryMatch.index + boundaryMatch[0].length - 1;
-          const customSegment = layerBody.slice(start).trim();
-          if (customSegment) {
-            const normalized = customSegment.endsWith("}")
-              ? customSegment
-              : `${customSegment}}`;
-            customRulesBlock = `@layer properties {\n  ${normalized}\n}\n`;
-          }
-        }
-      }
+      const sanitized = existing.replace(markerRegex, "").replace(/\s+$/, "");
 
       const themeBlock = `${marker}\n${themeCss}\n${markerEnd}\n`;
-      const next = `${before}${themeBlock}${customRulesBlock}${after}`;
+      const separator = sanitized ? "\n" : "";
+      const next = `${sanitized}${separator}${themeBlock}`;
       fs.writeFileSync(targetPath, next, "utf8");
     } catch (_) {}
   }
@@ -151,8 +129,6 @@ async function ensureStyles() {
     } catch (_) {}
   }
 
-  const shouldInjectTheme = !(hasAppCss && configPath);
-
   if (configPath && (inputCss || generatedInput)) {
     const ok = buildTailwindCli({
       input: inputCss || generatedInput,
@@ -161,7 +137,7 @@ async function ensureStyles() {
       minify: true,
     });
     if (ok) {
-      if (shouldInjectTheme) injectThemeTokens(dest);
+      injectThemeTokens(dest);
       stripTailwindThemeLayer(dest);
       return; // Tailwind compiled CSS
     }
@@ -178,7 +154,7 @@ async function ensureStyles() {
   if (fs.existsSync(customAppCss)) {
     if (!isTailwindSource(customAppCss)) {
       await fsp.copyFile(customAppCss, dest);
-      if (shouldInjectTheme) injectThemeTokens(dest);
+      injectThemeTokens(dest);
       stripTailwindThemeLayer(dest);
       return;
     }
@@ -186,7 +162,7 @@ async function ensureStyles() {
   if (fs.existsSync(customContentCss)) {
     if (!isTailwindSource(customContentCss)) {
       await fsp.copyFile(customContentCss, dest);
-      if (shouldInjectTheme) injectThemeTokens(dest);
+      injectThemeTokens(dest);
       stripTailwindThemeLayer(dest);
       return;
     }

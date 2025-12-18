@@ -45,7 +45,9 @@ async function compileStylesOnce() {
     const out = sass.compileString(source, { style: 'expanded', loadPaths });
     fs.mkdirSync(path.dirname(indexCss), { recursive: true });
     let css = out.css || '';
-    const tokens = theme && theme.css ? theme.css.trim() : '';
+    const embedTheme = String(process.env.CANOPY_EMBED_THEME || '').trim();
+    const shouldEmbed = /^(1|true|yes|on)$/i.test(embedTheme);
+    const tokens = shouldEmbed && theme && theme.css ? theme.css.trim() : '';
     if (tokens) {
       const marker = '/* canopy-theme */';
       const markerEnd = '/* canopy-theme:end */';
