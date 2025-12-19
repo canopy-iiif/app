@@ -4,7 +4,12 @@
   "private": false,
   "license": "MIT",
   "author": "Mat Jordan <mat@northwestern.edu>",
-  "homepage": "https://canopy-iiif.github.io/docs/",
+  "homepage": "https://canopy-iiif.github.io/app/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/canopy-iiif/app.git",
+    "directory": "packages/app"
+  },
   "type": "commonjs",
   "main": "./lib/index.js",
   "exports": {
