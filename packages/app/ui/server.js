@@ -27,6 +27,7 @@ export { default as TimelinePoint } from "./src/content/timeline/TimelinePoint.j
 export { default as SearchResults } from "./src/search/MdxSearchResults.jsx";
 export { default as SearchSummary } from "./src/search/SearchSummary.jsx";
 export { default as SearchTabs } from "./src/search/MdxSearchTabs.jsx";
+export { default as Search } from "./src/search/MdxSearch.jsx";
 
 // Search form modal (SSR-safe placeholder). Client app not exported to avoid optional deps.
 export { default as SearchFormModal } from "./src/search-form/MdxSearchFormModal.jsx";

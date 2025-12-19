@@ -25,6 +25,7 @@ export { default as RelatedItems } from "./src/iiif/MdxRelatedItems.jsx";
 export { default as SearchResults } from "./src/search/MdxSearchResults.jsx";
 export { default as SearchSummary } from "./src/search/SearchSummary.jsx";
 export { default as SearchTabs } from "./src/search/MdxSearchTabs.jsx";
+export { default as Search } from "./src/search/MdxSearch.jsx";
 
 export { default as SearchResultsUI } from "./src/search/SearchResults.jsx";
 export { default as SearchTabsUI } from "./src/search/SearchTabs.jsx";
