@@ -23,6 +23,7 @@ Welcome to the Canopy IIIF developer documentation! This section is dedicated to
 Canopy templates are intentionally designed to be simple and modular. The project is structured to allow easy customization and extension by developers of varying skill levels. The core of Canopy is built using modern web technologies, including Markdown + JSX (MDX) for the frontend development and easy inlining of rich content.
 
 ```
+├── .cache/                        # build cache (gitignored)
 ├── app/
 │   ├── scripts/canopy-build.mts   # orchestrates Canopy build
 │   └── styles/                    # TailwindCSS entry & styling
@@ -33,13 +34,16 @@ Canopy templates are intentionally designed to be simple and modular. The projec
 │   ├── about/                     # custom directory for pages
 │   ├── search/                    # special route for search results
 │   └── works/                     # special route for all IIIF works
+├── site/                          # generated site output (on build)
 ├── canopy.yml                     # Canopy configuration file
 └── package.json                   # depends on @canopy-iiif/app
 ```
 
+- `.cache/` is where build artifacts are stored to speed up subsequent builds.
 - `app/` is intended for server-side scripts that developers could customize or extend.
 - `assets/` is for static files like images, fonts, scripts, or other resources.
 - `content/` is where all site content lives, including MDX files and IIIF work layouts.
+- `site/` is the output directory for the deployed static site.
 - `canopy.yml` file is the main configuration file for your Canopy project.
 - `package.json` manages dependencies, including the core Canopy application package.
 
@@ -64,3 +68,19 @@ If your project was created from the official Canopy template, you can also upda
 3. The workflow installs the requested version and opens a pull request with the updated `package.json` / `package-lock.json`.
 
 Review the pull request, run your usual tests, and merge when you are ready. This keeps Canopy dependencies current while giving you the chance to audit changes before deploying.
+
+### Cache
+
+Canopy will write heavy build artifacts to `.cache/` so repeat builds skip extra network and compile work. Cache will not _stay alive_ in GitHub pages builds unless the directory is removed `.gitignore` and committed.
+
+- `.cache/iiif/`: normalized collections, manifests, and thumbnails fetched during `npm run build`.
+- `.cache/mdx/`: compiled MDX modules for faster server renders.
+- `.cache/search/`: bundled search templates and helper assets.
+
+#### Committing caches for stable projects
+
+For mature projects that rarely change, you may drop `.cache` from `.gitignore` and commit the directory. New clones then inherit the warmed cache and cold builds speed up. Only do this when you expect the data in your IIIF Collections to be stable and unchanging or if the project has reached a frozen state.
+
+#### Deleting caches for troubleshooting
+
+Active projects should leave `.cache` untracked in their repository and delete it whenever you need a clean slate while working locally. Removing the folder (`rm -rf .cache`) forces the next build or dev server run to refetch IIIF data, recompile MDX, and rebuild search assets. It’s the fastest fix for stale thumbnails or mismatched manifest data.
