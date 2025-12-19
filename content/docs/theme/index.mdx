@@ -7,15 +7,13 @@ import {ThemeShowcase} from "@canopy-iiif/app/ui/server";
 
 # Theme
 
-Canopy exposes a single `theme` block in `canopy.yml` to control the site-wide accent palette, gray
-palette, and base appearance. These values feed the Radix Themes token system and the Tailwind v4
-preset that ships with the starter, so your UI and MDX components stay in sync.
+Canopy exposes a single `theme` block in `canopy.yml` to control the site-wide accent palette, gray palette, and base appearance. These values generated CSS variables ship with your project so your user interface and MDX components stay in sync and accessible.
 
-```yaml filename="canopy.yml" {12-18}
+```yaml filename="canopy.yml"
 theme:
-  accentColor: indigo # Radix accent name
-  grayColor: slate # Radix gray name
-  appearance: light # light | dark
+  accentColor: indigo
+  grayColor: slate
+  appearance: light
 ```
 
 - **`accentColor`** drives buttons, links, checkboxes, and focus rings.
