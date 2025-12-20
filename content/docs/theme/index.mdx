@@ -7,7 +7,7 @@ import {ThemeShowcase} from "@canopy-iiif/app/ui/server";
 
 # Theme
 
-## Colors and appearance
+## Colors
 
 Canopy exposes a single `theme` block in `canopy.yml` to control the site-wide accent palette, gray palette, and base appearance. These values generated CSS variables ship with your project so your user interface and MDX components stay in sync and accessible. Modify the `canopy.yml` file in the root of your project to adjust these settings. Updating this configuration will require a rebuild of your project to take effect. Here is an example configuration:
 
@@ -76,7 +76,7 @@ export function Head() {
 }
 ```
 
-## Custom styles
+## Styling
 
 Implementers can easily customize their Canopy projects by adding their own CSS rules that extend or override the default styles. Many Canopy components accept `className` and other valid HTML attributes so you can apply scoped changes without overriding the global theme. You can author these in your custom CSS files that extend the base styles.
 
@@ -132,7 +132,24 @@ You can then add your own CSS rules in `app/styles/_custom.css` or new files you
 }
 ```
 
-### Classes
+### Overrides
+
+You can also override existing styles by targeting specific classes. For example, to modify the default button styles across your project, you can add the following CSS rules:
+
+```css filename="app/styles/_custom.css"
+/* overrides default button styling */
+.canopy-button {
+  border-radius: 0;
+}
+```
+
+```mdx
+<Button href="/search" label="Browse Works" />
+```
+
+<Button data-override-example="true" href="#search" label="Browse Works" />
+
+### Custom classes
 
 Implementers can easily add their own custom CSS classes like `custom-button` to modify button styles.
 
@@ -151,7 +168,11 @@ Implementers can easily add their own custom CSS classes like `custom-button` to
 }
 ```
 
-<Button className="custom-button" href="/search" label="Bibliography" />
+```mdx
+<Button className="custom-button" href="/bibliography" label="Bibliography" />
+```
+
+<Button className="custom-button" href="#bibliography" label="Bibliography" />
 
 ### Complex selectors
 
@@ -170,13 +191,16 @@ You can also extend existing button classes by explicitly defining new selectors
 ```
 
 ```mdx
-<Button data-color="crimson" href="/search" label="Explore Exhibit" />
+<Button data-color="crimson" href="/exhibit" label="Explore Exhibit" />
 ```
 
-<Button data-color="crimson" href="/search" label="Explore Exhibit" />
+<Button data-color="crimson" href="#exhibit" label="Explore Exhibit" />
 
 export const CustomClass = () => (
     <style>{`
+      .canopy-button[data-override-example="true"] {
+        border-radius: 0;
+      }
       .custom-button {
         font-weight: 700;
         background: linear-gradient(
