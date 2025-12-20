@@ -1,0 +1,63 @@
+---
+title: Releases
+description: Semantic version notes for @canopy-iiif/app starting at v1.0.0.
+---
+
+import releases from "../../content/docs/developers/releases/releases.data.mjs";
+export const Releases = ({releases}) => {
+  return (
+    <>
+      <style>{`
+      .canopy-release-entry {
+        margin-bottom: 1.618rem;
+        
+        h4 {
+          font-size: 1rem;
+          margin-bottom: 0rem;
+          color: var(--color-accent-600);
+
+          span {
+            color: var(--color-gray-700);
+            font-size: 0.8333rem;
+            font-weight: 300;
+            font-family: var(--font-sans);
+          }
+        }
+
+        ul {
+          list-style-type: disc;
+          padding-left: 1.618rem;
+          font-size: 0.9222rem;
+          font-style: italic;
+
+          li {
+            margin-bottom: 0.382rem;
+          }
+        }
+      }
+    `}</style>
+      {releases?.map((release) => (
+        <section key={release.version} className="canopy-release-entry">
+          <h4>
+            <code>v{release.version}</code><span> — {release.date}</span>
+          </h4>
+          {release.summary ? <p>{release.summary}</p> : null}
+          {release.highlights && release.highlights.length ? (
+            <ul>
+              {release.highlights.map((item, index) => (
+                <li key={`${release.version}-item-${index}`}>{item}</li>
+              ))}
+            </ul>
+          ) : null}
+        </section>
+      ))}
+    </>
+
+);
+};
+
+# Releases
+
+Canopy IIIF `v1.0.0` was published on December 19, 2025, marking the first official stable release of Canopy. Regular updates made to improve functionality, fix bugs, and introduce new features are documented here. Previous versions prior to `v1.0.0` were considered experimental releases and are not included in this changelog.
+
+<Releases releases={releases} />

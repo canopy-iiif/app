@@ -68,7 +68,7 @@ async function promptForReleaseNotes(version) {
 }
 
 function ensureReleaseFiles() {
-  const dir = path.resolve('content/docs/releases');
+  const dir = path.resolve('content/docs/developers/releases');
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   const jsonPath = path.join(dir, 'releases.json');
   const modulePath = path.join(dir, 'releases.data.mjs');
@@ -97,13 +97,27 @@ function writeReleasesModule(modulePath, entries) {
   fs.writeFileSync(modulePath, source, 'utf8');
 }
 
+function formatEasternDate(date = new Date()) {
+  try {
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/New_York',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    return formatter.format(date);
+  } catch (_) {
+    return date.toISOString().slice(0, 10);
+  }
+}
+
 function recordReleaseNotes(version, notes) {
   if (!notes) return;
   const {jsonPath, modulePath} = ensureReleaseFiles();
   const entries = loadReleaseEntries(jsonPath);
   const entry = {
     version,
-    date: new Date().toISOString().slice(0, 10),
+    date: formatEasternDate(),
     summary: notes.summary || '',
     highlights: notes.highlights || [],
   };

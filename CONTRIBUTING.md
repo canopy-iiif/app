@@ -66,14 +66,14 @@ Tips:
   - Patch: `npm run version:packages`
   - Major: `npm run version:packages -- --major`
 - Scope: `@canopy-iiif/app` versions independently; the root app stays private and auto‑syncs its version.
-- The helper prompts for a short summary + bullet highlights and writes them to `content/docs/releases/releases.json` (and regenerates `releases.data.mjs`) so the docs’ release log stays current. Press enter on an empty line to skip the prompt.
+- The helper prompts for a short summary + bullet highlights and writes them to `content/docs/developers/releases/releases.json` (and regenerates `releases.data.mjs`) so the docs’ release log stays current. Press enter on an empty line to skip the prompt.
 - Don’t hand‑edit versions or changelogs; the script and Changesets handle it.
 
 ## Release Flow
 
 - Open a PR with changes and get approval.
 - Run the version bump command and commit:
-  - Commit updated `package.json`, `CHANGELOG.md`, and the generated `content/docs/releases/releases.json` + `releases.data.mjs` files (and any edits to `content/docs/releases/index.mdx` if present).
+  - Commit updated `package.json`, `CHANGELOG.md`, and the generated `content/docs/developers/releases/releases.json` + `releases.data.mjs` files (and any edits to `content/docs/developers/releases/index.mdx` if present).
 - Merge to `main`. The Release workflow:
   - Publishes `@canopy-iiif/app` to npm.
   - Keeps the root app private (guarded by a pre‑publish check).
