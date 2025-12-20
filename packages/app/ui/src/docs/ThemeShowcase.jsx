@@ -114,17 +114,17 @@ export default function ThemeShowcase() {
 
   const styles = `
     .canopy-theme-showcase__section {
-      margin-bottom: 2.5rem;
+      margin: 2.618rem 0;
     }
     .canopy-theme-showcase__section:last-of-type {
       margin-bottom: 0;
     }
     .canopy-theme-showcase__section-title {
-      margin: 0 0 0.5rem 0;
-      font-size: 1.25rem;
+      margin: 0 0 0.382rem;
+      font-size: 1.382rem;
     }
     .canopy-theme-showcase__section-description {
-      margin: 0 0 1.25rem 0;
+      margin: 0 0 1rem;
       color: var(--color-gray-muted);
       line-height: 1.5;
     }
@@ -141,7 +141,7 @@ export default function ThemeShowcase() {
     }
     .canopy-theme-showcase__scale-label {
       min-width: 90px;
-      font-size: 0.95rem;
+      font-size: 0.9222rem;
     }
     .canopy-theme-showcase__scale-track {
       display: flex;
@@ -213,14 +213,14 @@ export default function ThemeShowcase() {
         </div>
       </Section>
       <Section
-        title="Accent palette options"
-        description="All accent color families available via Radix Themes."
+        title="Accent color palette options"
+        description="Primary color steps used for buttons, links, and highlights."
       >
         <ColorsLabeled colors={accentColors} />
       </Section>
       <Section
-        title="Gray palette options"
-        description="Neutral ramps you can assign via the theme block."
+        title="Gray color palette options"
+        description="Neutral color steps used for backgrounds, borders, and text."
       >
         <ColorsLabeled colors={grayColors} />
       </Section>

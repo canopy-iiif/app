@@ -7,31 +7,35 @@ import {ThemeShowcase} from "@canopy-iiif/app/ui/server";
 
 # Theme
 
-Canopy exposes a single `theme` block in `canopy.yml` to control the site-wide accent palette, gray palette, and base appearance. These values generated CSS variables ship with your project so your user interface and MDX components stay in sync and accessible.
+## Colors and appearance
+
+Canopy exposes a single `theme` block in `canopy.yml` to control the site-wide accent palette, gray palette, and base appearance. These values generated CSS variables ship with your project so your user interface and MDX components stay in sync and accessible. Modify the `canopy.yml` file in the root of your project to adjust these settings. Updating this configuration will require a rebuild of your project to take effect. Here is an example configuration:
 
 ```yaml filename="canopy.yml"
 theme:
-  accentColor: indigo
-  grayColor: slate
-  appearance: light
+  appearance: dark
+  accentColor: bronze
+  grayColor: sand
 ```
 
+- **`appearance`** flips the design token ramp (`light` or `dark`).
 - **`accentColor`** drives buttons, links, checkboxes, and focus rings.
 - **`grayColor`** sets the base neutral ramp used for page backgrounds, card borders, and typography.
-- **`appearance`** flips the design token ramp (`light` or `dark`).
 
-## Beyond the base tokens
+<ThemeShowcase />
 
-Use the standard CSS entry point (`app/styles/main.css`) or Tailwind utilities to extend the theme.
+## Typography
 
-```css filename="app/styles/main.css"
+In many cases, you may want to adjust the base typography styles to suit your branding. To do so, modify the standard CSS entry point (`app/styles/index.css`) to customize the theme. Here is an example of setting custom font families and max-width utilities. In this case we set the default sans-serif font to `Inter`, set the `--font-sans` variable as default, and modify the base font size and weight.
+
+```css filename="app/styles/index.css" {4,7,21-22}
 @layer properties {
   :root,
   :host {
-    --font-sans: system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
-    --font-serif: "Fraunces", Georgia, "Times New Roman", serif;
-    --font-mono: "IBM Plex Mono", "ui-monospace", Menlo, Consolas, monospace;
-    --default-font-family: var(--font-serif);
+    --font-sans: "Inter", system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+    --font-serif: Georgia, "Times New Roman", serif;
+    --font-mono: "ui-monospace", Menlo, Consolas, monospace;
+    --default-font-family: var(--font-sans);
   }
 }
 
@@ -45,8 +49,8 @@ Use the standard CSS entry point (`app/styles/main.css`) or Tailwind utilities t
 
 @layer base {
   html {
-    font-size: 110%;
-    font-weight: 300;
+    font-size: 100%;
+    font-weight: 400;
   }
 
   body {
@@ -56,24 +60,77 @@ Use the standard CSS entry point (`app/styles/main.css`) or Tailwind utilities t
 }
 ```
 
-The Tailwind config already imports the Canopy preset (`@canopy-iiif/app/ui/tailwind-config`).
-Extend it if you need custom tokens, plugins, or safelisted classes.
+In addition to modifying the base styles, you will also want to ensure your font files are included in the project. You can easily do this with web fonts like Google Fonts by adding the appropriate `<link>` tags to your `content/_app.mdx` head block.
 
-<ThemeShowcase />
-
-## Component-level tweaks
-
-Many components exposed by `@canopy-iiif/app/ui` accept `className` props so you can apply scoped
-changes without forking the shared styles. For example:
-
-```mdx
-<Button className="rounded-full px-6" href="/search" label="Browse works" />
+```jsx filename="content/_app.mdx" {6-8}
+export function Head() {
+  return (
+    <>
+      <Meta siteTitle="Manu's Great Flood" />
+      <Stylesheet />
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    </>
+  );
+}
 ```
 
-Pair targeted overrides like the one above with global theme changes for a cohesive look.
+## Custom styles
 
-## Related docs
+### Classes
 
-- [Color & visual tokens](./color-visuals)
-- [Layout components](../layout/components)
-- [Content authoring](../content)
+```mdx
+<Button className="custom-button" href="/search" label="Bibliography" />
+```
+
+<Button className="custom-button" href="/search" label="Bibliography" />
+
+### Complex selectors
+
+You can also extend existing button classes by explicitly defining new selectors like this example with the added `data-color="crimson"` attribute.
+
+```css filename="app/styles/_custom-button.css"
+/* adds custom crimson shaded button */
+.canopy-button[data-color="crimson"] {
+  background-color: #df3478;
+
+  &:hover,
+  &:focus {
+    background-color: #cb1d63;
+  }
+}
+```
+
+```mdx
+<Button data-color="crimson" href="/search" label="Explore Exhibit" />
+```
+
+<Button data-color="crimson" href="/search" label="Explore Exhibit" />
+
+export const CustomClass = () => (
+    <style>{`
+      .custom-button {
+        font-weight: 700;
+        background: linear-gradient(
+          135deg,
+          var(--color-accent-50) 0%,
+          var(--color-accent-200)
+        );
+        color: var(--color-accent-800);
+        border: 2px solid var(--color-accent-300);
+        box-shadow: 2px 2px 5px var(--color-accent-200);
+      }
+      .canopy-button[data-color="crimson"] {
+        background-color: #df3478;
+
+        &:hover,
+        &:focus {
+          background-color: #cb1d63;
+        }
+      }
+    `}</style>
+
+);
+
+<CustomClass />
