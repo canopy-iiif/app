@@ -100,10 +100,10 @@
   gap: 0.25rem;
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
-  border: 1px solid var(--color-gray-200);
-  background-color: rgba(255, 255, 255, 0.9);
-  color: inherit;
-  font-size: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--color-gray-300) 60%, transparent);
+  color: color-mix(in srgb, var(--color-gray-900) 92%, transparent);
+  background-color: var(--color-gray-50);
+  font-size: 0.7222rem;
   font-weight: 600;
   cursor: pointer;
   transition:
@@ -115,11 +115,13 @@
 
 .canopy-content-navigation__toggle:hover,
 .canopy-content-navigation__toggle:focus-visible {
-  background-color: rgba(255, 255, 255, 1);
-  border-color: var(--color-gray-300);
-  outline: none;
-  box-shadow: 0 0 0 2px
-    color-mix(in srgb, var(--color-accent-200) 60%, transparent);
+  border-color: color-mix(in srgb, var(--color-accent-400) 65%, transparent);
+  background-color: color-mix(
+    in srgb,
+    var(--color-accent-200) 25%,
+    transparent
+  );
+  color: var(--color-accent-700);
 }
 
 .canopy-layout__content-nav.is-collapsed .canopy-content-navigation {

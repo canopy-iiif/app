@@ -1,0 +1,30 @@
+---
+title: Releases
+description: Semantic version notes for @canopy-iiif/app starting at v1.0.0.
+---
+
+import releases from '../../content/docs/releases/releases.data.mjs';
+
+# Releases
+
+Every published version from `1.0.0` onward gets a short summary so builders know what changed between semantic versions. Run `npm run version:packages` when preparing a release and follow the prompts to add highlights—the helper script keeps the log below in sync.
+
+{(!releases || releases.length === 0) ? (
+  <p>Release notes will appear here after the first entry is recorded. Use `npm run version:packages` to add version highlights.</p>
+) : (
+  releases.map((release) => (
+    <section key={release.version} className="canopy-release-entry">
+      <h2>{release.version} — {release.date}</h2>
+      {release.summary ? <p>{release.summary}</p> : null}
+      {(release.highlights && release.highlights.length) ? (
+        <ul>
+          {release.highlights.map((item, index) => (
+            <li key={`${release.version}-item-${index}`}>{item}</li>
+          ))}
+        </ul>
+      ) : null}
+    </section>
+  ))
+)}
+
+<p className="text-sm text-slate-500">The release helper stores entries in `content/docs/releases/releases.json` and exports them to `releases.data.mjs`. Manual edits are rarely necessary—rerun the script if you need to replace the latest notes.</p>

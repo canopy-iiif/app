@@ -1,0 +1,9 @@
+const releases = [
+  {
+    "version": "1.0.3",
+    "date": "2025-12-20",
+    "summary": "Refine background color of show/hide content navigation button.",
+    "highlights": []
+  }
+];
+export default releases;
