@@ -78,10 +78,77 @@ export function Head() {
 
 ## Custom styles
 
+Implementers can easily customize their Canopy projects by adding their own CSS rules that extend or override the default styles. Many Canopy components accept `className` and other valid HTML attributes so you can apply scoped changes without overriding the global theme. You can author these in your custom CSS files that extend the base styles.
+
+First, ensure your custom CSS files are imported in the main stylesheet (`app/styles/index.css`):
+
+```css filename="app/styles/index.css" {3}
+@import "tailwindcss";
+@import "@canopy-iiif/app/ui/styles/index.css";
+@import "./custom.css";`
+```
+
+### CSS Variables
+
+You can then add your own CSS rules in `app/styles/_custom.css` or new files you import to extend or override existing styles. This can include modifying CSS variables, adding new classes, or defining more complex selectors. For example, a Northwestern University digital project might include the following customizations to match [institutional brand](https://www.northwestern.edu/brand/visual-identity/color-palettes/).
+
+```css filename="app/styles/_custom.css" {8-17, 20-29}
+/* Northwestern Brand */
+/* https://www.northwestern.edu/brand/visual-identity/color-palettes/ */
+
+@layer properties {
+  :root,
+  :host {
+    /* Northwestern Purple */
+    --color-accent-50: #ffffff;
+    --color-accent-100: #e4e0ee; /* Purple 10 */
+    --color-accent-200: #ccc4df; /* Purple 20 */
+    --color-accent-300: #b6acd1; /* Purple 30 */
+    --color-accent-400: #a495c3; /* Purple 40 */
+    --color-accent-500: #9380b6; /* Purple 50 */
+    --color-accent-600: #765da0; /* Purple 70 */
+    --color-accent-700: #4e2a84; /* Northwestern Purple */
+    --color-accent-800: #401f68; /* Purple 120 */
+    --color-accent-900: #200b48; /* Purple 160 */
+
+    /* Northwestern Rich Black */
+    --color-gray-50: #ffffff;
+    --color-gray-100: #d8d6d6; /* Rich Black 10% */
+    --color-gray-200: #bbb8b8; /* Rich Black 20% */
+    --color-gray-300: #a29f9e; /* Rich Black 30% */
+    --color-gray-400: #8a8585; /* Rich Black 40% */
+    --color-gray-500: #716c6b; /* Rich Black 50% */
+    --color-gray-600: #484342; /* Rich Black 70% */
+    --color-gray-700: #342f2e; /* Rich Black 80% */
+    --color-gray-800: #1a1817; /* Rich Black 90% */
+    --color-gray-900: #000000; /* Rich Black */
+
+    /* Additional Variables */
+    --color-northwestern-purple: var(--color-accent-700);
+    --color-accent-default: var(--color-northwestern-purple);
+    --color-gray-default: var(--color-gray-900);
+    --color-gray-muted: var(--color-gray-700);
+  }
+}
+```
+
 ### Classes
 
-```mdx
-<Button className="custom-button" href="/search" label="Bibliography" />
+Implementers can easily add their own custom CSS classes like `custom-button` to modify button styles.
+
+```css filename="app/styles/_custom.css"
+/* adds custom soft button styling */
+.custom-button {
+  font-weight: 700;
+  background: linear-gradient(
+    135deg,
+    var(--color-accent-50) 0%,
+    var(--color-accent-200)
+  );
+  color: var(--color-accent-800);
+  border: 2px solid var(--color-accent-300);
+  box-shadow: 2px 2px 5px var(--color-accent-200);
+}
 ```
 
 <Button className="custom-button" href="/search" label="Bibliography" />
@@ -90,7 +157,7 @@ export function Head() {
 
 You can also extend existing button classes by explicitly defining new selectors like this example with the added `data-color="crimson"` attribute.
 
-```css filename="app/styles/_custom-button.css"
+```css filename="app/styles/_custom.css"
 /* adds custom crimson shaded button */
 .canopy-button[data-color="crimson"] {
   background-color: #df3478;
