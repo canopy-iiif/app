@@ -4,7 +4,6 @@ const { fs, path, OUT_DIR, ensureDirSync } = require('../common');
 async function prepareAllRuntimes() {
   const mdx = require('./mdx');
   try { await mdx.ensureClientRuntime(); } catch (_) {}
-  try { if (typeof mdx.ensureSliderRuntime === 'function') await mdx.ensureSliderRuntime(); } catch (_) {}
   try { if (typeof mdx.ensureTimelineRuntime === 'function') await mdx.ensureTimelineRuntime(); } catch (_) {}
   try { if (typeof mdx.ensureHeroRuntime === 'function') await mdx.ensureHeroRuntime(); } catch (_) {}
   try { if (typeof mdx.ensureFacetsRuntime === 'function') await mdx.ensureFacetsRuntime(); } catch (_) {}

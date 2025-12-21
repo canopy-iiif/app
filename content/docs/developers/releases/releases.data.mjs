@@ -1,5 +1,15 @@
 const releases = [
   {
+    "version": "1.1.0",
+    "date": "2025-12-21",
+    "summary": "Make Clover IIIF shims more efficient through chunking.",
+    "highlights": [
+      "Updates Clover dependency to v3.1.1",
+      "Adds chunking logic to slider, viewer, image, and scroll",
+      "Reduces overall payload for components"
+    ]
+  },
+  {
     "version": "1.0.3",
     "date": "2025-12-19",
     "summary": "Refine background color of show/hide content navigation button.",
@@ -22,7 +32,7 @@ const releases = [
     "date": "2025-12-19",
     "summary": "Initial public release of refactored Canopy.",
     "highlights": [
-      "Creates `@canopy-iiif/app` release workflow",
+      "Creates @canopy-iiif/app release workflow",
       "IIIF ingestion for works/collections",
       "MDX authoring with SSR-safe components",
       "Allows multiple collections",

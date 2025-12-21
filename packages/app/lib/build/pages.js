@@ -203,13 +203,20 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
     try { const st = fs.statSync(runtimeAbs); rel += `?v=${Math.floor(st.mtimeMs || Date.now())}`; } catch (_) {}
     searchFormRel = rel;
   }
+  const moduleScriptRels = [];
+  if (viewerRel) moduleScriptRels.push(viewerRel);
+  if (sliderRel) moduleScriptRels.push(sliderRel);
+  const primaryClassicScripts = [];
+  if (heroRel) primaryClassicScripts.push(heroRel);
+  if (timelineRel) primaryClassicScripts.push(timelineRel);
+  if (facetsRel) primaryClassicScripts.push(facetsRel);
+  const secondaryClassicScripts = [];
+  if (searchFormRel) secondaryClassicScripts.push(searchFormRel);
   let jsRel = null;
-  if (needsHeroSlider && heroRel) jsRel = heroRel;
-  else if (needsFacets && sliderRel) jsRel = sliderRel;
-  else if (needsTimeline && timelineRel) jsRel = timelineRel;
-  else if (viewerRel) jsRel = viewerRel;
-  else if (sliderRel) jsRel = sliderRel;
-  else if (facetsRel) jsRel = facetsRel;
+  if (primaryClassicScripts.length) {
+    jsRel = primaryClassicScripts.shift();
+  }
+  const classicScriptRels = primaryClassicScripts.concat(secondaryClassicScripts);
   const needsReact = !!(needsHydrateViewer || needsHydrateSlider || needsFacets || needsTimeline);
   let vendorTag = '';
   if (needsReact) {
@@ -227,12 +234,18 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
   } catch (_) {}
   const headSegments = [head];
   const extraScripts = [];
-  if (heroRel && jsRel !== heroRel) extraScripts.push(`<script defer src="${heroRel}"></script>`);
-  if (timelineRel && jsRel !== timelineRel) extraScripts.push(`<script defer src="${timelineRel}"></script>`);
-  if (facetsRel && jsRel !== facetsRel) extraScripts.push(`<script defer src="${facetsRel}"></script>`);
-  if (viewerRel && jsRel !== viewerRel) extraScripts.push(`<script defer src="${viewerRel}"></script>`);
-  if (sliderRel && jsRel !== sliderRel) extraScripts.push(`<script defer src="${sliderRel}"></script>`);
-  if (searchFormRel && jsRel !== searchFormRel) extraScripts.push(`<script defer src="${searchFormRel}"></script>`);
+  const pushClassicScript = (src) => {
+    if (!src || src === jsRel) return;
+    extraScripts.push(`<script defer src="${src}"></script>`);
+  };
+  const pushModuleScript = (src) => {
+    if (!src) return;
+    extraScripts.push(`<script type="module" src="${src}"></script>`);
+  };
+  classicScriptRels.forEach((src) => pushClassicScript(src));
+  if (moduleScriptRels.length) {
+    moduleScriptRels.forEach((src) => pushModuleScript(src));
+  }
   const extraStyles = [];
   if (heroCssRel) {
     let rel = heroCssRel;
@@ -244,8 +257,9 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
     extraStyles.push(`<link rel="stylesheet" href="${rel}">`);
   }
   if (extraStyles.length) headSegments.push(extraStyles.join(''));
+  if (vendorTag) headSegments.push(vendorTag);
   if (extraScripts.length) headSegments.push(extraScripts.join(''));
-  const headExtra = headSegments.join('') + vendorTag;
+  const headExtra = headSegments.join('');
   const typeForClass = resolvedType || 'page';
   const bodyClass = canopyBodyClassForType(typeForClass);
   const html = htmlShell({

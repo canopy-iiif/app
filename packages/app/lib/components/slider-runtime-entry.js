@@ -1,6 +1,5 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import CloverSlider from '@samvera/clover-iiif/slider';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
@@ -41,13 +40,29 @@ function withDefaults(rawProps) {
   };
 }
 
+let cloverSliderPromise = null;
+
+function loadCloverSlider() {
+  if (!cloverSliderPromise) {
+    cloverSliderPromise = import('@samvera/clover-iiif/slider')
+      .then((mod) => (mod && (mod.default || mod.Slider || mod)) || null)
+      .catch(() => null);
+  }
+  return cloverSliderPromise;
+}
+
 function mount(el) {
   try {
     if (!el || el.getAttribute('data-canopy-slider-mounted') === '1') return;
     const props = withDefaults(parseProps(el));
     const root = createRoot(el);
-    root.render(React.createElement(CloverSlider, props));
-    el.setAttribute('data-canopy-slider-mounted', '1');
+    loadCloverSlider().then((Component) => {
+      try {
+        if (!Component) return;
+        root.render(React.createElement(Component, props));
+        el.setAttribute('data-canopy-slider-mounted', '1');
+      } catch (_) {}
+    });
   } catch (_) {}
 }
 

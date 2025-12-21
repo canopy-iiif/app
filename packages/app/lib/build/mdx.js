@@ -651,72 +651,19 @@ async function loadCustomLayout(defaultLayout) {
   return defaultLayout;
 }
 
-async function ensureClientRuntime() {
-  // Bundle a lightweight client runtime to hydrate browser-only components
-  // like the Clover Viewer when placeholders are present in the HTML.
-  let esbuild = null;
+function resolveEsbuild() {
   try {
-    esbuild = require("../../ui/node_modules/esbuild");
+    return require("../../ui/node_modules/esbuild");
   } catch (_) {
     try {
-      esbuild = require("esbuild");
-    } catch (_) {}
+      return require("esbuild");
+    } catch (_) {
+      return null;
+    }
   }
-  if (!esbuild)
-    throw new Error(
-      "Viewer runtime bundling requires esbuild. Install dependencies before building."
-    );
-  ensureDirSync(OUT_DIR);
-  const scriptsDir = path.join(OUT_DIR, "scripts");
-  ensureDirSync(scriptsDir);
-  const outFile = path.join(scriptsDir, "canopy-viewer.js");
-  const entry = `
-    import CloverViewer from '@samvera/clover-iiif/viewer';
-    import CloverScroll from '@samvera/clover-iiif/scroll';
-    import CloverImage from '@samvera/clover-iiif/image';
+}
 
-    function ready(fn) {
-      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn, { once: true });
-      else fn();
-    }
-
-    function parseProps(el) {
-      try {
-        const s = el.querySelector('script[type="application/json"]');
-        if (s) return JSON.parse(s.textContent || '{}');
-        const raw = el.getAttribute('data-props') || '{}';
-        return JSON.parse(raw);
-      } catch (_) { return {}; }
-    }
-
-    function mountAll(selector, Component) {
-      try {
-        const nodes = document.querySelectorAll(selector);
-        if (!nodes || !nodes.length || !Component) return;
-        const React = (window && window.React) || null;
-        const ReactDOMClient = (window && window.ReactDOMClient) || null;
-        const createRoot = ReactDOMClient && ReactDOMClient.createRoot;
-        if (!React || !createRoot) return;
-        for (const el of nodes) {
-          try {
-            if (el.__canopyHydrated) continue;
-            const props = parseProps(el);
-            const root = createRoot(el);
-            root.render(React.createElement(Component, props));
-            el.__canopyHydrated = true;
-          } catch (_) { /* skip */ }
-        }
-      } catch (_) { /* no-op */ }
-    }
-
-    function seedScrollSearchInput() {}
-
-    ready(function() {
-      mountAll('[data-canopy-viewer]', CloverViewer);
-      mountAll('[data-canopy-scroll]', CloverScroll);
-      mountAll('[data-canopy-image]', CloverImage);
-    });
-  `;
+function createReactShimPlugin() {
   const reactShim = `
     const React = (typeof window !== 'undefined' && window.React) || {};
     export default React;
@@ -749,68 +696,143 @@ async function ensureClientRuntime() {
   `;
   const rdomClientShim = `
     const RDC = (typeof window !== 'undefined' && window.ReactDOMClient) || {};
-    export default RDC;
     export const createRoot = RDC.createRoot;
     export const hydrateRoot = RDC.hydrateRoot;
   `;
-  const plugin = {
+  return {
     name: "canopy-react-shims",
     setup(build) {
       const ns = "canopy-shim";
-      build.onResolve({filter: /^react$/}, () => ({
-        path: "react",
-        namespace: ns,
-      }));
-      build.onResolve({filter: /^react-dom$/}, () => ({
-        path: "react-dom",
-        namespace: ns,
-      }));
-      build.onResolve({filter: /^react-dom\/client$/}, () => ({
-        path: "react-dom-client",
-        namespace: ns,
-      }));
-      build.onLoad({filter: /^react$/, namespace: ns}, () => ({
-        contents: reactShim,
-        loader: "js",
-      }));
-      build.onLoad({filter: /^react-dom$/, namespace: ns}, () => ({
-        contents: rdomShim,
-        loader: "js",
-      }));
-      build.onLoad({filter: /^react-dom-client$/, namespace: ns}, () => ({
-        contents: rdomClientShim,
-        loader: "js",
-      }));
+      build.onResolve({ filter: /^react$/ }, () => ({ path: "react", namespace: ns }));
+      build.onResolve({ filter: /^react-dom$/ }, () => ({ path: "react-dom", namespace: ns }));
+      build.onResolve({ filter: /^react-dom\/client$/ }, () => ({ path: "react-dom-client", namespace: ns }));
+      build.onLoad({ filter: /^react$/, namespace: ns }, () => ({ contents: reactShim, loader: "js" }));
+      build.onLoad({ filter: /^react-dom$/, namespace: ns }, () => ({ contents: rdomShim, loader: "js" }));
+      build.onLoad({ filter: /^react-dom-client$/, namespace: ns }, () => ({ contents: rdomClientShim, loader: "js" }));
     },
   };
-  await esbuild.build({
-    stdin: {
-      contents: entry,
-      resolveDir: process.cwd(),
-      sourcefile: "canopy-viewer-entry.js",
-      loader: "js",
+}
+
+function createSliderCssInlinePlugin() {
+  return {
+    name: "canopy-inline-slider-css",
+    setup(build) {
+      build.onLoad({ filter: /\.css$/ }, (args) => {
+        const fs = require("fs");
+        let css = "";
+        try {
+          css = fs.readFileSync(args.path, "utf8");
+        } catch (_) {
+          css = "";
+        }
+        const js = [
+          `var css = ${JSON.stringify(css)};`,
+          `(function(){ try { var s = document.createElement('style'); s.setAttribute('data-canopy-slider-css',''); s.textContent = css; document.head.appendChild(s); } catch (e) {} })();`,
+          `export default css;`,
+        ].join("\n");
+        return { contents: js, loader: "js" };
+      });
     },
-    outfile: outFile,
-    platform: "browser",
-    format: "iife",
+  };
+}
+
+let cloverRuntimePromise = null;
+
+function renameAnonymousChunks(scriptsDir) {
+  try {
+    const entries = fs
+      .readdirSync(scriptsDir)
+      .filter((name) => name.startsWith('canopy-chunk-') && name.endsWith('.js'));
+    if (!entries.length) return;
+    const replacements = [];
+    for (const oldName of entries) {
+      const newName = `canopy-shared-${oldName.slice('canopy-chunk-'.length)}`;
+      if (newName === oldName) continue;
+      const fromPath = path.join(scriptsDir, oldName);
+      const toPath = path.join(scriptsDir, newName);
+      try {
+        fs.renameSync(fromPath, toPath);
+        replacements.push({ from: oldName, to: newName });
+      } catch (_) {}
+    }
+    if (!replacements.length) return;
+    const targetFiles = fs
+      .readdirSync(scriptsDir)
+      .filter((name) => name.endsWith('.js'));
+    for (const filename of targetFiles) {
+      const filePath = path.join(scriptsDir, filename);
+      let contents = '';
+      try {
+        contents = fs.readFileSync(filePath, 'utf8');
+      } catch (_) {
+        continue;
+      }
+      let changed = false;
+      replacements.forEach(({ from, to }) => {
+        if (contents.includes(from)) {
+          contents = contents.split(from).join(to);
+          changed = true;
+        }
+      });
+      if (changed) {
+        try {
+          fs.writeFileSync(filePath, contents, 'utf8');
+        } catch (_) {}
+      }
+    }
+  } catch (_) {}
+}
+
+async function buildCloverHydrationRuntimes() {
+  const esbuild = resolveEsbuild();
+  if (!esbuild)
+    throw new Error(
+      "Clover hydration runtimes require esbuild. Install dependencies before building."
+    );
+  ensureDirSync(OUT_DIR);
+  const scriptsDir = path.join(OUT_DIR, "scripts");
+  ensureDirSync(scriptsDir);
+  const entryPoints = {
+    viewer: path.join(__dirname, "../components/viewer-runtime-entry.js"),
+    slider: path.join(__dirname, "../components/slider-runtime-entry.js"),
+  };
+  await esbuild.build({
+    entryPoints,
+    outdir: scriptsDir,
+    entryNames: "canopy-[name]",
+    chunkNames: "canopy-[name]-[hash]",
     bundle: true,
+    platform: "browser",
+    format: "esm",
+    splitting: true,
     sourcemap: false,
     target: ["es2018"],
     logLevel: "silent",
     minify: true,
-    plugins: [plugin],
+    define: { "process.env.NODE_ENV": '"production"' },
+    plugins: [createReactShimPlugin(), createSliderCssInlinePlugin()],
   });
+  renameAnonymousChunks(scriptsDir);
   try {
-    const {logLine} = require("./log");
-    let size = 0;
-    try {
-      const st = fs.statSync(outFile);
-      size = (st && st.size) || 0;
-    } catch (_) {}
-    const kb = size ? ` (${(size / 1024).toFixed(1)} KB)` : "";
-    const rel = path.relative(process.cwd(), outFile).split(path.sep).join("/");
-    logLine(`✓ Wrote ${rel}${kb}`, "cyan");
+    const { logLine } = require("./log");
+    ["canopy-viewer.js", "canopy-slider.js"].forEach((file) => {
+      try {
+        const abs = path.join(scriptsDir, file);
+        const st = fs.statSync(abs);
+        const size = st && st.size ? st.size : 0;
+        const kb = size ? ` (${(size / 1024).toFixed(1)} KB)` : "";
+        const rel = path.relative(process.cwd(), abs).split(path.sep).join("/");
+        logLine(`✓ Wrote ${rel}${kb}`, "cyan");
+      } catch (_) {}
+    });
   } catch (_) {}
+}
+
+async function ensureClientRuntime() {
+  if (!cloverRuntimePromise) {
+    cloverRuntimePromise = buildCloverHydrationRuntimes();
+  }
+  return cloverRuntimePromise;
 }
 
 // Facets runtime: fetches /api/search/facets.json, picks a value per label (random from top 3),
@@ -952,128 +974,8 @@ async function ensureFacetsRuntime() {
   } catch (_) {}
 }
 
-// Bundle a separate client runtime for the Clover Slider to keep payloads split.
 async function ensureSliderRuntime() {
-  let esbuild = null;
-  try {
-    esbuild = require("../ui/node_modules/esbuild");
-  } catch (_) {
-    try {
-      esbuild = require("esbuild");
-    } catch (_) {}
-  }
-  if (!esbuild)
-    throw new Error(
-      "Slider runtime bundling requires esbuild. Install dependencies before building."
-    );
-  ensureDirSync(OUT_DIR);
-  const scriptsDir = path.join(OUT_DIR, "scripts");
-  ensureDirSync(scriptsDir);
-  const outFile = path.join(scriptsDir, "canopy-slider.js");
-  const entryFile = path.join(__dirname, "../components/slider-runtime-entry.js");
-  const reactShim = `
-    const React = (typeof window !== 'undefined' && window.React) || {};
-    export default React;
-    export const Children = React.Children;
-    export const Component = React.Component;
-    export const Fragment = React.Fragment;
-    export const createElement = React.createElement;
-    export const cloneElement = React.cloneElement;
-    export const createContext = React.createContext;
-    export const forwardRef = React.forwardRef;
-    export const memo = React.memo;
-    export const startTransition = React.startTransition;
-    export const isValidElement = React.isValidElement;
-    export const useEffect = React.useEffect;
-    export const useLayoutEffect = React.useLayoutEffect;
-    export const useMemo = React.useMemo;
-    export const useState = React.useState;
-    export const useRef = React.useRef;
-    export const useCallback = React.useCallback;
-    export const useContext = React.useContext;
-    export const useReducer = React.useReducer;
-    export const useId = React.useId;
-  `;
-  const rdomClientShim = `
-    const RDC = (typeof window !== 'undefined' && window.ReactDOMClient) || {};
-    export const createRoot = RDC.createRoot;
-    export const hydrateRoot = RDC.hydrateRoot;
-  `;
-  const plugin = {
-    name: "canopy-react-shims-slider",
-    setup(build) {
-      const ns = "canopy-shim";
-      build.onResolve({filter: /^react$/}, () => ({
-        path: "react",
-        namespace: ns,
-      }));
-      build.onResolve({filter: /^react-dom$/}, () => ({
-        path: "react-dom",
-        namespace: ns,
-      }));
-      build.onResolve({filter: /^react-dom\/client$/}, () => ({
-        path: "react-dom-client",
-        namespace: ns,
-      }));
-      build.onLoad({filter: /^react$/, namespace: ns}, () => ({
-        contents: reactShim,
-        loader: "js",
-      }));
-      build.onLoad({filter: /^react-dom$/, namespace: ns}, () => ({
-        contents:
-          "export default ((typeof window!=='undefined' && window.ReactDOM) || {});",
-        loader: "js",
-      }));
-      build.onLoad({filter: /^react-dom-client$/, namespace: ns}, () => ({
-        contents: rdomClientShim,
-        loader: "js",
-      }));
-      // Inline imported CSS into a <style> tag at runtime so we don't need a separate CSS file
-      build.onLoad({filter: /\.css$/}, (args) => {
-        const fs = require("fs");
-        let css = "";
-        try {
-          css = fs.readFileSync(args.path, "utf8");
-        } catch (_) {
-          css = "";
-        }
-        const js = [
-          `var css = ${JSON.stringify(css)};`,
-          `(function(){ try { var s = document.createElement('style'); s.setAttribute('data-canopy-slider-css',''); s.textContent = css; document.head.appendChild(s); } catch (e) {} })();`,
-          `export default css;`,
-        ].join("\n");
-        return {contents: js, loader: "js"};
-      });
-    },
-  };
-  try {
-    await esbuild.build({
-      entryPoints: [entryFile],
-      outfile: outFile,
-      platform: "browser",
-      format: "iife",
-      bundle: true,
-      sourcemap: false,
-      target: ["es2018"],
-      logLevel: "silent",
-      minify: true,
-      plugins: [plugin],
-    });
-  } catch (e) {
-    const message = e && e.message ? e.message : e;
-    throw new Error(`Slider runtime build failed: ${message}`);
-  }
-  try {
-    const {logLine} = require("./log");
-    let size = 0;
-    try {
-      const st = fs.statSync(outFile);
-      size = (st && st.size) || 0;
-    } catch (_) {}
-    const kb = size ? ` (${(size / 1024).toFixed(1)} KB)` : "";
-    const rel = path.relative(process.cwd(), outFile).split(path.sep).join("/");
-    logLine(`✓ Wrote ${rel}${kb}`, "cyan");
-  } catch (_) {}
+  return ensureClientRuntime();
 }
 
 // Build a small React globals vendor for client-side React pages.
@@ -1291,5 +1193,6 @@ module.exports = {
     } catch (_) {}
     APP_WRAPPER = null;
     UI_COMPONENTS = null;
+    cloverRuntimePromise = null;
   },
 };

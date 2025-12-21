@@ -1589,11 +1589,22 @@ async function buildIiifCollectionPages(CONFIG) {
                 .join("/")
             : null;
 
+          const moduleScriptRels = [];
+          if (viewerRel) moduleScriptRels.push(viewerRel);
+          if (sliderRel) moduleScriptRels.push(sliderRel);
+          const primaryClassicScripts = [];
+          if (heroRel) primaryClassicScripts.push(heroRel);
+          if (relatedRel) primaryClassicScripts.push(relatedRel);
+          if (timelineRel) primaryClassicScripts.push(timelineRel);
+          const secondaryClassicScripts = [];
+          if (searchFormRel) secondaryClassicScripts.push(searchFormRel);
           let jsRel = null;
-          if (needsHeroSlider && heroRel) jsRel = heroRel;
-          else if (needsRelated && sliderRel) jsRel = sliderRel;
-          else if (needsTimeline && timelineRel) jsRel = timelineRel;
-          else if (viewerRel) jsRel = viewerRel;
+          if (primaryClassicScripts.length) {
+            jsRel = primaryClassicScripts.shift();
+          }
+          const classicScriptRels = primaryClassicScripts.concat(
+            secondaryClassicScripts
+          );
 
           const headSegments = [head];
           const needsReact = !!(
@@ -1621,20 +1632,16 @@ async function buildIiifCollectionPages(CONFIG) {
             } catch (_) {}
           }
           const extraScripts = [];
-          if (heroRel && jsRel !== heroRel)
-            extraScripts.push(`<script defer src="${heroRel}"></script>`);
-          if (relatedRel && jsRel !== relatedRel)
-            extraScripts.push(`<script defer src="${relatedRel}"></script>`);
-          if (timelineRel && jsRel !== timelineRel)
-            extraScripts.push(`<script defer src="${timelineRel}"></script>`);
-          if (viewerRel && jsRel !== viewerRel)
-            extraScripts.push(`<script defer src="${viewerRel}"></script>`);
-          if (sliderRel && jsRel !== sliderRel)
-            extraScripts.push(`<script defer src="${sliderRel}"></script>`);
-          if (searchFormRel && jsRel !== searchFormRel)
-            extraScripts.push(`<script defer src="${searchFormRel}"></script>`);
-          if (extraScripts.length)
-            headSegments.push(extraScripts.join(""));
+          const pushClassicScript = (src) => {
+            if (!src || src === jsRel) return;
+            extraScripts.push(`<script defer src="${src}"></script>`);
+          };
+          const pushModuleScript = (src) => {
+            if (!src) return;
+            extraScripts.push(`<script type="module" src="${src}"></script>`);
+          };
+          classicScriptRels.forEach((src) => pushClassicScript(src));
+          moduleScriptRels.forEach((src) => pushModuleScript(src));
           try {
             const {BASE_PATH} = require("../common");
             if (BASE_PATH)
@@ -1644,7 +1651,9 @@ async function buildIiifCollectionPages(CONFIG) {
                 )}</script>` + vendorTag;
           } catch (_) {}
           let pageBody = body;
-          const headExtra = headSegments.join("") + vendorTag;
+          if (vendorTag) headSegments.push(vendorTag);
+          if (extraScripts.length) headSegments.push(extraScripts.join(""));
+          const headExtra = headSegments.join("");
           const pageType = (pageDetails && pageDetails.type) || "work";
           const bodyClass = canopyBodyClassForType(pageType);
           let html = htmlShell({
