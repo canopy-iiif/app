@@ -7,22 +7,22 @@ description: Backlink list showing which essays cite a manifest.
 
 `<References />` lists every MDX page that cites a manifest through `referencedManifests`. Drop it on work layouts so readers can follow contextual essays without leaving the page template.
 
-<References id="https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif" />
+<References id="https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif" />
 
 ```mdx
-<References id="https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif" />
+<References id="https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif" />
 ```
 
 > The component quietly returns `null` when no essays reference the manifest. Use a surrounding `<section>` to supply your own fallback copy if needed.
 
 ## Props
 
-| Prop | Type | Required | Notes |
-| --- | --- | --- | --- |
-| `id` | string | | Manifest URI to inspect. Defaults to the manifest currently being rendered on a work page. |
-| `title` | string | | Heading text shown above the backlink list. Defaults to `Referenced by`. |
-| `className` | string | | Additional classes applied to the wrapping `<dl>`. |
-| `...rest` | any | | Passed through to the `<dl>` container. |
+| Prop        | Type   | Required | Notes                                                                                      |
+| ----------- | ------ | -------- | ------------------------------------------------------------------------------------------ |
+| `id`        | string |          | Manifest URI to inspect. Defaults to the manifest currently being rendered on a work page. |
+| `title`     | string |          | Heading text shown above the backlink list. Defaults to `Referenced by`.                   |
+| `className` | string |          | Additional classes applied to the wrapping `<dl>`.                                         |
+| `...rest`   | any    |          | Passed through to the `<dl>` container.                                                    |
 
 ## Examples
 
@@ -58,5 +58,13 @@ Rename the heading to match your editorial voice.
 Apply a custom class when the references sit beside metadata so you can style the definition list differently from the default.
 
 ```mdx
-<References className="border-t border-slate-200 pt-6" />
+<References
+  id="https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif"
+  className="custom-references-class"
+/>
 ```
+
+<References
+  id="https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif"
+  className="custom-references-class"
+/>

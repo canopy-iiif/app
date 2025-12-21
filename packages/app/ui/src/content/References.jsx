@@ -1,5 +1,6 @@
 import React from "react";
 import navigationHelpers from "../../../lib/components/navigation.js";
+import referenced from "../../../lib/components/referenced.js";
 
 function getPageContext() {
   if (!navigationHelpers || typeof navigationHelpers.getPageContext !== "function") {
