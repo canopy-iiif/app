@@ -70,6 +70,12 @@ function applyTemplateOverrides() {
     copyDirContents(templateContentDir, distContentDir);
   }
 
+  const templateAssetsDir = path.join(templateRoot, 'assets');
+  const distAssetsDir = path.join(distRoot, 'assets');
+  if (fs.existsSync(templateAssetsDir) && fs.statSync(templateAssetsDir).isDirectory()) {
+    copyDirContents(templateAssetsDir, distAssetsDir);
+  }
+
   const templateAppPath = path.join(templateRoot, '_app.mdx');
   if (fs.existsSync(templateAppPath)) {
     const destAppPath = path.join(distRoot, 'content', '_app.mdx');
