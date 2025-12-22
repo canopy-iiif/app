@@ -14,6 +14,7 @@ export { default as CanopyFooter } from "./src/layout/CanopyFooter.jsx";
 export { default as CanopyBrand } from "./src/layout/CanopyBrand.jsx";
 export { default as CanopyModal } from "./src/layout/CanopyModal.jsx";
 export { default as TeaserCard } from "./src/layout/TeaserCard.jsx";
+export { default as GoogleAnalytics } from "./src/layout/GoogleAnalytics.jsx";
 export { default as Container } from "./src/layout/Container.jsx";
 export { default as Button } from "./src/layout/Button.jsx";
 export { default as ButtonWrapper } from "./src/layout/ButtonWrapper.jsx";

@@ -10,6 +10,7 @@ export { default as CanopyFooter } from "./src/layout/CanopyFooter.jsx";
 export { default as CanopyBrand } from "./src/layout/CanopyBrand.jsx";
 export { default as CanopyModal } from "./src/layout/CanopyModal.jsx";
 export { default as TeaserCard } from "./src/layout/TeaserCard.jsx";
+export { default as GoogleAnalytics } from "./src/layout/GoogleAnalytics.jsx";
 export { Viewer } from "./src/iiif/Viewer.jsx";
 export { Slider } from "./src/iiif/Slider.jsx";
 export { Scroll } from "./src/iiif/Scroll.jsx";

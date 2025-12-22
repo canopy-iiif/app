@@ -1,5 +1,5 @@
 import {Meta, Stylesheet} from "@canopy-iiif/app/head";
-import {CanopyHeader, CanopyFooter} from "@canopy-iiif/app/ui";
+import {CanopyHeader, CanopyFooter, GoogleAnalytics} from "@canopy-iiif/app/ui";
 
 export function Head() {
   return (
@@ -20,17 +20,7 @@ export function Head() {
         href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..600,50,0..1;1,9..144,300..600,50,0..1&display=swap&family=IBM+Plex+Mono:wght@400;700&display=swap"
         rel="stylesheet"
       />
-      <script
-        async
-        src="https://www.googletagmanager.com/gtag/js?id=G-YPJRYY7848"
-      ></script>
-      <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments)}
-        gtag('js', new Date());
-
-        gtag('config', 'G-YPJRYY7848');
-      </script>
+      <GoogleAnalytics id="G-YPJRYY7848" />
     </>
 
 );

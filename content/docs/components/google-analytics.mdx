@@ -1,0 +1,38 @@
+---
+title: GoogleAnalytics
+description: SSR-safe helper that injects the Google Analytics Global Site Tag without touching browser globals during the MDX build.
+---
+
+# GoogleAnalytics
+
+`<GoogleAnalytics>` outputs the GA loader script plus the inline configuration block with the measurement ID you provide. It renders entirely on the server, so you can drop it inside `content/_app.mdx` (or any MDX page) without checking `window`.
+
+## Usage
+
+```mdx filename="content/_app.mdx" {3}
+import {CanopyHeader, CanopyFooter, GoogleAnalytics} from '@canopy-iiif/app/ui';
+
+export function Head() {
+  return (
+    <>
+      <GoogleAnalytics id="G-XXXXXXX" />
+    </>
+  );
+}
+```
+
+- Place the component in your global `Head` export so every page shares the same analytics configuration.
+- Swap the `id` prop based on environment variables when you need different containers for staging vs. production builds.
+- The component only writes `<script>` tags; it never references `window` while Node renders MDX, so static builds stay stable.
+
+## Props
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `id` | string | ✅ | Google Analytics 4 measurement ID (e.g., `G-XXXXXXXX`). When omitted, nothing renders. |
+
+## Tips
+
+- The inline config runs after the async loader, so events are queued immediately even before the network request completes.
+- Wrap the component with an environment guard if you want to disable GA locally: `{process.env.NODE_ENV === 'production' && <GoogleAnalytics id="…" />}`.
+- Because the helper lives in `@canopy-iiif/app/ui`, it stays updated when the package evolves—keeping custom projects and the template aligned.
