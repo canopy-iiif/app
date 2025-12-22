@@ -4,7 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       npm_version:
-        description: "Optional version (default latest)"
+        description: "Optional @canopy-iiif/app version (default latest)"
+        required: false
+        type: string
+      clover_version:
+        description: "Optional @samvera/clover-iiif version (default latest)"
         required: false
         type: string
 
@@ -25,14 +29,18 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Install updated package
+      - name: Install updated packages
         env:
-          VERSION: ${{ github.event.inputs.npm_version }}
+          APP_VERSION: ${{ github.event.inputs.npm_version }}
+          CLOVER_VERSION: ${{ github.event.inputs.clover_version }}
         run: |
           npm config set fund false
           npm config set audit false
-          TARGET=${VERSION:-latest}
-          npm install --no-audit --no-fund @canopy-iiif/app@"${TARGET}"
+          APP_TARGET=${APP_VERSION:-latest}
+          CLOVER_TARGET=${CLOVER_VERSION:-latest}
+          npm install --no-audit --no-fund \
+            @canopy-iiif/app@"${APP_TARGET}" \
+            @samvera/clover-iiif@"${CLOVER_TARGET}"
 
       - name: Record changes
         id: git-status
@@ -48,14 +56,14 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           branch: chore/update-canopy-app
-          commit-message: "chore: update @canopy-iiif/app"
-          title: "chore: update @canopy-iiif/app"
+          commit-message: "chore: update @canopy-iiif/app and @samvera/clover-iiif"
+          title: "chore: update @canopy-iiif/app and @samvera/clover-iiif"
           body: |
-            Automated update of `@canopy-iiif/app` triggered from the Actions tab.
+            Automated update of `@canopy-iiif/app` and `@samvera/clover-iiif` triggered from the Actions tab.
 
             Review the diff, run `npm install`, and rerun your usual checks before merging.
           delete-branch: true
 
       - name: No update needed
         if: steps.git-status.outputs.changed != 'true'
-        run: echo "@canopy-iiif/app is already up to date."
+        run: echo "@canopy-iiif/app and @samvera/clover-iiif are already up to date."
