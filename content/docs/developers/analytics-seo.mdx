@@ -9,7 +9,7 @@ When you are nearing launch for your Canopy IIIF-powered site, there are a few a
 
 ## Sitemap
 
-On every page build, a `sitemap.xml` file is generated automatically at the root of your site. This file helps search engines discover and index your pages more effectively. If your URL is `https://example.com`, your sitemap will be accessible at `https://example.com/sitemap.xml`. Submitting this to search engines like Google Search Console can enhance your site's SEO.
+On every build, a `sitemap.xml` file is generated automatically at the root of your site. This file helps search engines discover and index your pages more effectively. If your URL is `https://example.com`, your sitemap will be accessible at `https://example.com/sitemap.xml`. Submitting this to search engines like Google Search Console can enhance your site's SEO.
 
 ## Robots.txt
 
@@ -24,7 +24,7 @@ Allow: /
 
 To track user interactions and gather insights about your site's traffic, you can integrate Google Analytics using the `<GoogleAnalytics>` component. This component simplifies the process of adding the necessary scripts to your site. The `<GoogleAnalytics>` component outputs an analytics loader script for the ID you provide. If you prefer a different analytics solution, you can manually add the required scripts in your site's global `Head` export.
 
-## Usage
+### Usage
 
 ```mdx filename="content/_app.mdx" {1,8}
 import {CanopyHeader, CanopyFooter, GoogleAnalytics} from "@canopy-iiif/app/ui";
@@ -41,8 +41,8 @@ export function Head() {
 }
 ```
 
-## Props
+### Props
 
-| Prop | Type   | Required | Notes                                                                                  |
-| ---- | ------ | -------- | -------------------------------------------------------------------------------------- |
-| `id` | string | ✅       | Google Analytics 4 measurement ID (e.g., `G-XXXXXXXX`). When omitted, nothing renders. |
+| Prop | Type   | Required | Notes                                                                    |
+| ---- | ------ | -------- | ------------------------------------------------------------------------ |
+| `id` | string | ✅       | Google Analytics ID (e.g., `G-XXXXXXXX`). When omitted, nothing renders. |
