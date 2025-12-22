@@ -37,13 +37,17 @@ Canopy templates are intentionally designed to be simple and modular. The projec
 ```
 ├── .cache/                        # build cache (gitignored)
 ├── app/
-│   ├── scripts/canopy-build.mts   # orchestrates Canopy build
-│   └── styles/                    # TailwindCSS entry & styling
-├── assets/                        # directory for static files
+│   ├── components/
+│   │   └── mdx.tsx                # registers custom React components for MDX
+│   ├── scripts/
+│   │   └── canopy-build.mts       # orchestrates Canopy build
+│   └── styles/
+│       └── index.css              # global CSS styles
+├── assets/                        # directory for files, e.g. robots.txt, favicon.ico, images/**/
 ├── content/
 │   ├── _app.mdx                   # global wrapper for all pages
-|   |── _layout.mdx                # inheritable layout for .mdx files
-│   ├── about/                     # custom directory for pages
+│   ├── _layout.mdx                # inheritable layout for .mdx files
+│   ├── about/                     # example directory for contextual content
 │   ├── search/                    # special route for search results
 │   └── works/                     # special route for all IIIF works
 ├── site/                          # generated site output (on build)
