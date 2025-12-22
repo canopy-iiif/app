@@ -15,7 +15,9 @@ const {
   ASSETS_DIR,
   ensureDirSync,
 } = require("../common");
-  function resolveTailwindCli() {
+const APP_COMPONENTS_DIR = path.join(process.cwd(), "app", "components");
+
+function resolveTailwindCli() {
   const bin = path.join(
     process.cwd(),
     "node_modules",
@@ -35,6 +37,11 @@ const UI_DIST_DIR = path.resolve(path.join(__dirname, "../../ui/dist"));
 const APP_PACKAGE_ROOT = path.resolve(path.join(__dirname, "..", ".."));
 const APP_LIB_DIR = path.join(APP_PACKAGE_ROOT, "lib");
 const APP_UI_DIR = path.join(APP_PACKAGE_ROOT, "ui");
+const CUSTOM_COMPONENT_EXTENSIONS = new Set(
+  [".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs", ".mts", ".cts"].map((
+    ext
+  ) => ext.toLowerCase())
+);
 let loadUiTheme = null;
 try {
   const uiTheme = require(path.join(APP_UI_DIR, "theme.js"));
@@ -335,6 +342,74 @@ function watchAssetsPerDir() {
 
   return () => {
     for (const w of watchers.values()) w.close();
+  };
+}
+
+function handleCustomComponentChange(fullPath, eventType) {
+  if (!fullPath) return;
+  const ext = path.extname(fullPath).toLowerCase();
+  if (ext && !CUSTOM_COMPONENT_EXTENSIONS.has(ext)) return;
+  try {
+    console.log(`[components] ${eventType}: ${prettyPath(fullPath)}`);
+  } catch (_) {}
+  nextBuildSkipIiif = true;
+  try {
+    onBuildStart();
+  } catch (_) {}
+  debounceBuild();
+}
+
+function tryRecursiveWatchAppComponents(dir) {
+  try {
+    return fs.watch(dir, { recursive: true }, (eventType, filename) => {
+      if (!filename) return;
+      const full = path.join(dir, filename);
+      handleCustomComponentChange(full, eventType);
+    });
+  } catch (_) {
+    return null;
+  }
+}
+
+function watchAppComponentsPerDir(dir) {
+  const watchers = new Map();
+
+  function watchDir(target) {
+    if (watchers.has(target)) return;
+    try {
+      const watcher = fs.watch(target, (eventType, filename) => {
+        const full = filename ? path.join(target, filename) : target;
+        handleCustomComponentChange(full, eventType);
+        scan(target);
+      });
+      watchers.set(target, watcher);
+    } catch (_) {}
+  }
+
+  function scan(target) {
+    let entries = [];
+    try {
+      entries = fs.readdirSync(target, { withFileTypes: true });
+    } catch (_) {
+      return;
+    }
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const next = path.join(target, entry.name);
+      watchDir(next);
+      scan(next);
+    }
+  }
+
+  watchDir(dir);
+  scan(dir);
+
+  return () => {
+    for (const watcher of watchers.values()) {
+      try {
+        watcher.close();
+      } catch (_) {}
+    }
   };
 }
 
@@ -1279,6 +1354,15 @@ async function dev() {
     );
     const urw = tryRecursiveWatchUiDist();
     if (!urw) watchUiDistPerDir();
+  }
+  if (fs.existsSync(APP_COMPONENTS_DIR)) {
+    console.log(
+      "[Watching]",
+      prettyPath(APP_COMPONENTS_DIR),
+      "(app components)"
+    );
+    const crw = tryRecursiveWatchAppComponents(APP_COMPONENTS_DIR);
+    if (!crw) watchAppComponentsPerDir(APP_COMPONENTS_DIR);
   }
   if (HAS_APP_WORKSPACE) {
     watchAppSources();

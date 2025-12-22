@@ -30,12 +30,34 @@ The Nez Percé, or Nimíipuu, lived across what is now Idaho, Oregon, and Washin
 <ReferencedItems />
 ```
 
-## Component reference
+## Custom MDX components
 
-- [Markdown](./markdown)
-- [Card](./card)
-- [Image](./image)
-- [Slider](./slider)
-- [Viewer](./viewer)
-- [ReferencedItems](./referenced-items)
-- [References](./references)
+Canopy auto-loads React components from `app/components/mdx.tsx`. Export any component you want to use and it becomes available inside every MDX file.
+
+```tsx filename="app/components/Callout.tsx"
+import type {ReactNode} from 'react';
+
+export default function Callout({children}: {children?: ReactNode}) {
+  return <article className="custom-callout">{children}</article>;
+}
+```
+
+```tsx filename="app/components/mdx.tsx"
+export const components = {
+  Callout: './Callout.tsx',
+};
+```
+
+- `components` can export multiple entries. You can also export individual functions (e.g., `export const Gallery = () => …`) and they’ll be merged automatically.
+- The entry supports `.ts`, `.tsx`, `.js`, and `.jsx` and is bundled with esbuild during every build.
+- `npm run dev` watches `app/components/**/*.{js,jsx,ts,tsx}`. Changing a component rerenders MDX with the new version and triggers the browser reload.
+
+Once a component is exported, use it directly in content:
+
+```mdx
+<Callout>
+  <p>The Canopy builder hydrates everything automatically.</p>
+</Callout>
+```
+
+Developers who need deeper guidance—including runtime-only components, bundling behavior, and troubleshooting tips—should read [Developers → Components](/docs/developers/components). That page covers both SSR-safe components and the `clientComponents` runtime workflow so we don’t duplicate instructions here.

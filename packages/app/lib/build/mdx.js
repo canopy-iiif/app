@@ -1,6 +1,7 @@
 const React = require("react");
 const ReactDOMServer = require("react-dom/server");
 const {pathToFileURL} = require("url");
+const crypto = require("crypto");
 const {
   fs,
   fsp,
@@ -114,9 +115,221 @@ async function getMdxProvider() {
 let UI_COMPONENTS = null;
 let UI_COMPONENTS_PATH = "";
 let UI_COMPONENTS_MTIME = 0;
+let MERGED_UI_COMPONENTS = null;
+let MERGED_UI_KEY = "";
 const DEBUG =
   process.env.CANOPY_DEBUG === "1" || process.env.CANOPY_DEBUG === "true";
-async function loadUiComponents() {
+const APP_COMPONENTS_DIR = path.join(process.cwd(), "app", "components");
+const CUSTOM_COMPONENT_ENTRY_CANDIDATES = [
+  "mdx.tsx",
+  "mdx.ts",
+  "mdx.mts",
+  "mdx.cts",
+  "mdx.jsx",
+  "mdx.js",
+  "mdx.mjs",
+  "mdx.cjs",
+  "mdx-components.tsx",
+  "mdx-components.ts",
+  "mdx-components.mts",
+  "mdx-components.cts",
+  "mdx-components.jsx",
+  "mdx-components.js",
+  "mdx-components.mjs",
+  "mdx-components.cjs",
+];
+const CUSTOM_COMPONENT_EXTENSIONS = new Set(
+  [".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs", ".mts", ".cts"].map(
+    (ext) => ext.toLowerCase()
+  )
+);
+let CUSTOM_MDX_COMPONENTS = null;
+let CUSTOM_MDX_SIGNATURE = "";
+let CUSTOM_CLIENT_COMPONENT_ENTRIES = [];
+let CUSTOM_CLIENT_COMPONENT_PLACEHOLDERS = new Map();
+let SERVER_COMPONENT_CACHE = new Map();
+
+function isPlainObject(val) {
+  if (!val || typeof val !== "object") return false;
+  const proto = Object.getPrototypeOf(val);
+  return !proto || proto === Object.prototype;
+}
+
+function serializeClientValue(value, depth = 0) {
+  if (value == null) return null;
+  if (depth > 4) return null;
+  const type = typeof value;
+  if (type === "string" || type === "number" || type === "boolean") {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    const items = value
+      .map((entry) => serializeClientValue(entry, depth + 1))
+      .filter((entry) => typeof entry !== "undefined" && entry !== null);
+    return items;
+  }
+  if (React.isValidElement && React.isValidElement(value)) {
+    return null;
+  }
+  if (isPlainObject(value)) {
+    const out = {};
+    Object.keys(value).forEach((key) => {
+      const result = serializeClientValue(value[key], depth + 1);
+      if (typeof result !== "undefined" && result !== null) {
+        out[key] = result;
+      }
+    });
+    return out;
+  }
+  return null;
+}
+
+function serializeClientProps(props) {
+  if (!props || typeof props !== "object") return {};
+  const out = {};
+  Object.keys(props).forEach((key) => {
+    if (key === "children") {
+      const child = props[key];
+      if (
+        typeof child === "string" ||
+        typeof child === "number" ||
+        typeof child === "boolean"
+      ) {
+        out[key] = child;
+      }
+      return;
+    }
+    const serialized = serializeClientValue(props[key]);
+    if (typeof serialized !== "undefined" && serialized !== null) {
+      out[key] = serialized;
+    }
+  });
+  return out;
+}
+
+function createClientComponentPlaceholder(name) {
+  const safeName = String(name || "");
+  return function ClientComponentPlaceholder(props = {}) {
+    let payload = {};
+    try {
+      payload = serializeClientProps(props);
+    } catch (_) {
+      payload = {};
+    }
+    let json = "{}";
+    try {
+      json = JSON.stringify(payload || {});
+    } catch (_) {
+      json = "{}";
+    }
+    return React.createElement(
+      "div",
+      {
+        "data-canopy-client-component": safeName,
+      },
+      React.createElement("script", {type: "application/json"}, json)
+    );
+  };
+}
+
+function getClientComponentPlaceholder(name) {
+  const cached = CUSTOM_CLIENT_COMPONENT_PLACEHOLDERS.get(name);
+  if (cached) return cached;
+  const placeholder = createClientComponentPlaceholder(name);
+  CUSTOM_CLIENT_COMPONENT_PLACEHOLDERS.set(name, placeholder);
+  return placeholder;
+}
+
+async function loadServerComponentFromPath(name, spec) {
+  if (!spec || typeof spec !== "string") return null;
+  const esbuild = resolveEsbuild();
+  if (!esbuild)
+    throw new Error(
+      "Custom MDX components require esbuild. Install dependencies before building."
+    );
+  let resolved = spec;
+  if (!path.isAbsolute(resolved)) {
+    resolved = path.resolve(APP_COMPONENTS_DIR, spec);
+  }
+  if (!fs.existsSync(resolved)) {
+    throw new Error(
+      '[canopy][mdx] Component "' + String(name) + '" not found at ' + String(spec) + '. Ensure the file exists under app/components.'
+    );
+  }
+  let mtime = 0;
+  try {
+    const st = fs.statSync(resolved);
+    mtime = Math.floor(st.mtimeMs || 0);
+  } catch (_) {}
+  const cacheKey = resolved;
+  const cached = SERVER_COMPONENT_CACHE.get(cacheKey);
+  if (cached && cached.mtime === mtime && cached.component) {
+    return cached.component;
+  }
+  ensureDirSync(CACHE_DIR);
+  const hash = crypto.createHash("sha1").update(resolved).digest("hex");
+  const outFile = path.join(CACHE_DIR, "server-comp-" + hash + ".mjs");
+  await esbuild.build({
+    entryPoints: [resolved],
+    outfile: outFile,
+    bundle: true,
+    platform: "node",
+    target: "node18",
+    format: "esm",
+    jsx: "automatic",
+    jsxImportSource: "react",
+    sourcemap: false,
+    logLevel: "silent",
+    external: [
+      "react",
+      "react-dom",
+      "react-dom/server",
+      "react-dom/client",
+      "@canopy-iiif/app",
+      "@canopy-iiif/app/*",
+    ],
+    allowOverwrite: true,
+  });
+  const bust = mtime || Date.now();
+  const mod = await import(pathToFileURL(outFile).href + "?v=" + bust);
+  let component = null;
+  if (mod && typeof mod === "object") {
+    component = mod.default || mod[name] || null;
+    if (!isComponentLike(component)) {
+      component = Object.keys(mod)
+        .map((key) => mod[key])
+        .find((value) => isComponentLike(value));
+    }
+  }
+  if (!isComponentLike(component)) {
+    throw new Error(
+      '[canopy][mdx] Component "' +
+        String(name) +
+        '" from ' +
+        String(spec) +
+        ' did not export a valid React component. Ensure the module exports a default component or named export matching the key.'
+    );
+  }
+  SERVER_COMPONENT_CACHE.set(cacheKey, {mtime, component});
+  return component;
+}
+
+async function resolveServerComponentMap(source) {
+  const entries = Object.entries(source || {});
+  if (!entries.length) return {};
+  const resolved = {};
+  for (const [key, value] of entries) {
+    if (value == null) continue;
+    if (typeof value === "string") {
+      const component = await loadServerComponentFromPath(key, value);
+      if (component) resolved[key] = component;
+    } else {
+      resolved[key] = value;
+    }
+  }
+  return resolved;
+}
+async function loadCoreUiComponents() {
   // Do not rely on a cached mapping; re-import each time to avoid transient races.
   try {
     // Prefer the workspace dist path during dev to avoid export-map resolution issues
@@ -179,10 +392,10 @@ async function loadUiComponents() {
       const attempts = 5;
       for (let i = 0; i < attempts && !mod; i++) {
         const bustVal = currentMtime
-          ? `${currentMtime}-${i}`
-          : `${Date.now()}-${i}`;
+          ? String(currentMtime) + '-' + String(i)
+          : String(Date.now()) + '-' + String(i);
         try {
-          mod = await import(fileUrl + `?v=${bustVal}`);
+          mod = await import(fileUrl + '?v=' + bustVal);
         } catch (e) {
           importErr = e;
           if (DEBUG) {
@@ -269,6 +482,250 @@ async function loadUiComponents() {
     );
   }
   return UI_COMPONENTS;
+}
+
+function resolveCustomComponentsEntry() {
+  const baseDir = APP_COMPONENTS_DIR;
+  if (!baseDir) return null;
+  try {
+    if (!fs.existsSync(baseDir)) return null;
+  } catch (_) {
+    return null;
+  }
+  for (const candidate of CUSTOM_COMPONENT_ENTRY_CANDIDATES) {
+    const full = path.join(baseDir, candidate);
+    try {
+      const st = fs.statSync(full);
+      if (st && st.isFile()) return full;
+    } catch (_) {}
+  }
+  return null;
+}
+
+function computeCustomComponentsSignature(entryPath) {
+  const baseDir = fs.existsSync(APP_COMPONENTS_DIR)
+    ? APP_COMPONENTS_DIR
+    : path.dirname(entryPath);
+  let newest = 0;
+  const stack = [];
+  if (baseDir && fs.existsSync(baseDir)) stack.push(baseDir);
+  while (stack.length) {
+    const dir = stack.pop();
+    let entries = [];
+    try {
+      entries = fs.readdirSync(dir, {withFileTypes: true});
+    } catch (_) {
+      continue;
+    }
+    for (const entry of entries) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(full);
+        continue;
+      }
+      const ext = path.extname(full).toLowerCase();
+      if (!CUSTOM_COMPONENT_EXTENSIONS.has(ext)) continue;
+      try {
+        const st = fs.statSync(full);
+        const mtime = st && st.mtimeMs ? Math.floor(st.mtimeMs) : 0;
+        if (mtime > newest) newest = mtime;
+      } catch (_) {}
+    }
+  }
+  const entryKey = (() => {
+    try {
+      return path.resolve(entryPath);
+    } catch (_) {
+      return entryPath;
+    }
+  })();
+  return String(entryKey) + ':' + String(newest);
+}
+
+async function compileCustomComponentModule(entryPath, signature) {
+  const esbuild = resolveEsbuild();
+  if (!esbuild)
+    throw new Error(
+      "Custom MDX components require esbuild. Install dependencies before building."
+    );
+  ensureDirSync(CACHE_DIR);
+  const rel = (() => {
+    try {
+      return path
+        .relative(process.cwd(), entryPath)
+        .split(path.sep)
+        .join("/");
+    } catch (_) {
+      return entryPath;
+    }
+  })();
+  const tmpFile = path.join(CACHE_DIR, "custom-mdx-components.mjs");
+  try {
+    await esbuild.build({
+      entryPoints: [entryPath],
+      outfile: tmpFile,
+      bundle: true,
+      platform: "node",
+      target: "node18",
+      format: "esm",
+      sourcemap: false,
+      logLevel: "silent",
+      jsx: "automatic",
+      jsxImportSource: "react",
+      external: [
+        "react",
+        "react-dom",
+        "react-dom/server",
+        "react-dom/client",
+        "@canopy-iiif/app",
+        "@canopy-iiif/app/*",
+        "@canopy-iiif/app/ui",
+        "@canopy-iiif/app/ui/*",
+      ],
+      allowOverwrite: true,
+    });
+  } catch (err) {
+    const msg = err && (err.message || err.stack) ? err.message || err.stack : err;
+    throw new Error(
+      'Failed to compile custom MDX components (' +
+        rel +
+        ').\n' +
+        (msg || 'Unknown error')
+    );
+  }
+  const cacheBust = signature || String(Date.now());
+  return import(pathToFileURL(tmpFile).href + '?custom=' + cacheBust);
+}
+
+function isComponentLike(value) {
+  if (value == null) return false;
+  if (typeof value === "function") return true;
+  if (typeof value === "object") {
+    if (value.$$typeof) return true;
+    if (value.render && typeof value.render === "function") return true;
+  }
+  return false;
+}
+
+function cloneComponentMap(source) {
+  const out = {};
+  Object.keys(source || {}).forEach((key) => {
+    const value = source[key];
+    if (typeof value === "undefined" || value === null) return;
+    out[key] = value;
+  });
+  return out;
+}
+
+async function normalizeCustomComponentExports(mod) {
+  if (!mod || typeof mod !== "object") return {components: {}, clientEntries: []};
+  const candidateKeys = ["components", "mdxComponents", "MDXComponents"];
+  let components = {};
+  for (const key of candidateKeys) {
+    if (mod[key] && typeof mod[key] === "object") {
+      const cloned = cloneComponentMap(mod[key]);
+      if (Object.keys(cloned).length) {
+        components = cloned;
+        break;
+      }
+    }
+  }
+  if (!Object.keys(components).length && mod.default && typeof mod.default === "object") {
+    const cloned = cloneComponentMap(mod.default);
+    if (Object.keys(cloned).length) components = cloned;
+  }
+  if (!Object.keys(components).length) {
+    const fallback = {};
+    Object.keys(mod).forEach((key) => {
+      if (key === "default" || key === "__esModule") return;
+      const value = mod[key];
+      if (!isComponentLike(value)) return;
+      fallback[key] = value;
+    });
+    components = fallback;
+  }
+  if (Object.keys(components).length) {
+    components = await resolveServerComponentMap(components);
+  }
+  const clientEntries = [];
+  const rawClient = mod && typeof mod === "object" ? mod.clientComponents : null;
+  if (rawClient && typeof rawClient === "object") {
+    Object.keys(rawClient).forEach((key) => {
+      const spec = rawClient[key];
+      if (typeof spec !== "string" || !spec.trim()) return;
+      let resolved = spec.trim();
+      if (!path.isAbsolute(resolved)) {
+        resolved = path.resolve(APP_COMPONENTS_DIR, resolved);
+      }
+      if (!fs.existsSync(resolved)) {
+        throw new Error(
+          `[canopy][mdx] Client component "${key}" not found at ${spec}. Ensure the file exists under app/components.`
+        );
+      }
+      clientEntries.push({
+        name: String(key),
+        source: spec,
+        path: resolved,
+      });
+    });
+  }
+  if (clientEntries.length) {
+    clientEntries.forEach((entry) => {
+      components[entry.name] = getClientComponentPlaceholder(entry.name);
+    });
+  }
+  return {components, clientEntries};
+}
+
+async function loadCustomMdxComponents() {
+  const entry = resolveCustomComponentsEntry();
+  if (!entry) {
+    CUSTOM_MDX_COMPONENTS = null;
+    CUSTOM_MDX_SIGNATURE = "";
+    CUSTOM_CLIENT_COMPONENT_ENTRIES = [];
+    return null;
+  }
+  const signature = computeCustomComponentsSignature(entry);
+  if (
+    CUSTOM_MDX_COMPONENTS &&
+    CUSTOM_MDX_SIGNATURE &&
+    CUSTOM_MDX_SIGNATURE === signature
+  ) {
+    return {
+      components: CUSTOM_MDX_COMPONENTS,
+      signature,
+      clientEntries: CUSTOM_CLIENT_COMPONENT_ENTRIES.slice(),
+    };
+  }
+  const mod = await compileCustomComponentModule(entry, signature);
+  const {components, clientEntries} = await normalizeCustomComponentExports(mod);
+  CUSTOM_MDX_COMPONENTS = components;
+  CUSTOM_MDX_SIGNATURE = signature;
+  CUSTOM_CLIENT_COMPONENT_ENTRIES = Array.isArray(clientEntries)
+    ? clientEntries.slice()
+    : [];
+  return {components, signature, clientEntries: CUSTOM_CLIENT_COMPONENT_ENTRIES};
+}
+
+async function loadUiComponents() {
+  const baseComponents = await loadCoreUiComponents();
+  const custom = await loadCustomMdxComponents();
+  const customKey = custom && custom.signature ? custom.signature : "";
+  const compositeKey = `${UI_COMPONENTS_PATH || ""}:${
+    UI_COMPONENTS_MTIME || 0
+  }:${customKey}`;
+  if (MERGED_UI_COMPONENTS && MERGED_UI_KEY === compositeKey) {
+    return MERGED_UI_COMPONENTS;
+  }
+  const merged =
+    custom &&
+    custom.components &&
+    Object.keys(custom.components).length > 0
+      ? {...baseComponents, ...custom.components}
+      : baseComponents;
+  MERGED_UI_COMPONENTS = merged;
+  MERGED_UI_KEY = compositeKey;
+  return MERGED_UI_COMPONENTS;
 }
 
 function slugifyHeading(text) {
@@ -835,6 +1292,116 @@ async function ensureClientRuntime() {
   return cloverRuntimePromise;
 }
 
+function getCustomClientComponentEntries() {
+  return Array.isArray(CUSTOM_CLIENT_COMPONENT_ENTRIES)
+    ? CUSTOM_CLIENT_COMPONENT_ENTRIES.slice()
+    : [];
+}
+
+let customClientRuntimePromise = null;
+let customClientRuntimeSignature = "";
+
+function computeClientRuntimeSignature(entries) {
+  if (!entries || !entries.length) return "";
+  const parts = entries
+    .map((entry) => {
+      const abs = entry && entry.path ? entry.path : "";
+      let mtime = 0;
+      if (abs) {
+        try {
+          const st = fs.statSync(abs);
+          mtime = Math.floor(st.mtimeMs || 0);
+        } catch (_) {}
+      }
+      return `${entry.name || ""}:${abs}:${mtime}`;
+    })
+    .sort();
+  return parts.join("|");
+}
+
+async function buildCustomClientRuntime(entries) {
+  const esbuild = resolveEsbuild();
+  if (!esbuild) {
+    throw new Error(
+      "Custom client component hydration requires esbuild. Install dependencies before building."
+    );
+  }
+  ensureDirSync(OUT_DIR);
+  const scriptsDir = path.join(OUT_DIR, "scripts");
+  ensureDirSync(scriptsDir);
+  const outFile = path.join(scriptsDir, "canopy-custom-components.js");
+  const imports = entries
+    .map((entry, index) => {
+      const ident = `Component${index}`;
+      return `import ${ident} from ${JSON.stringify(entry.path)}; registry.set(${JSON.stringify(
+        entry.name
+      )}, ${ident});`;
+    })
+    .join("\n");
+  const runtimeSource = `
+    import React from 'react';
+    import { createRoot } from 'react-dom/client';
+    const registry = new Map();
+    ${imports}
+    function ready(fn){ if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', fn, { once: true }); } else { fn(); } }
+    function parseProps(node){ try { const script = node.querySelector('script[type="application/json"]'); if (!script) return {}; const text = script.textContent || '{}'; const data = JSON.parse(text); if (script.parentNode) { script.parentNode.removeChild(script); } return (data && typeof data === 'object') ? data : {}; } catch (_) { return {}; } }
+    const roots = new WeakMap();
+    function mount(node, Component){ if(!node || !Component) return; const props = parseProps(node); let root = roots.get(node); if(!root){ root = createRoot(node); roots.set(node, root); } root.render(React.createElement(Component, props)); }
+    function hydrateAll(){
+      const nodes = document.querySelectorAll('[data-canopy-client-component]');
+      nodes.forEach((node) => {
+        if (!node || node.__canopyClientMounted) return;
+        const name = node.getAttribute('data-canopy-client-component');
+        const Component = registry.get(name);
+        if (!Component) return;
+        mount(node, Component);
+        node.__canopyClientMounted = true;
+      });
+    }
+    ready(hydrateAll);
+  `;
+  await esbuild.build({
+    stdin: {
+      contents: runtimeSource,
+      resolveDir: process.cwd(),
+      sourcefile: "canopy-custom-client-runtime.js",
+      loader: "js",
+    },
+    outfile: outFile,
+    bundle: true,
+    platform: "browser",
+    target: ["es2018"],
+    format: "esm",
+    sourcemap: false,
+    minify: true,
+    logLevel: "silent",
+    plugins: [createReactShimPlugin()],
+  });
+  try {
+    const {logLine} = require("./log");
+    let size = 0;
+    try {
+      const st = fs.statSync(outFile);
+      size = st && st.size ? st.size : 0;
+    } catch (_) {}
+    const kb = size ? ` (${(size / 1024).toFixed(1)} KB)` : "";
+    const rel = path.relative(process.cwd(), outFile).split(path.sep).join("/");
+    logLine(`✓ Wrote ${rel}${kb}`, "cyan");
+  } catch (_) {}
+}
+
+async function ensureCustomClientRuntime() {
+  const entries = getCustomClientComponentEntries();
+  if (!entries.length) return null;
+  const signature = computeClientRuntimeSignature(entries);
+  if (customClientRuntimePromise && customClientRuntimeSignature === signature) {
+    return customClientRuntimePromise;
+  }
+  customClientRuntimeSignature = signature;
+  customClientRuntimePromise = buildCustomClientRuntime(entries);
+  return customClientRuntimePromise;
+}
+
 // Facets runtime: fetches /api/search/facets.json, picks a value per label (random from top 3),
 // and renders a Slider for each.
 async function ensureFacetsRuntime() {
@@ -1187,12 +1754,32 @@ module.exports = {
   ensureHeroRuntime,
   ensureFacetsRuntime,
   ensureReactGlobals,
+  ensureCustomClientRuntime,
   resetMdxCaches: function () {
     try {
       DIR_LAYOUTS.clear();
     } catch (_) {}
     APP_WRAPPER = null;
     UI_COMPONENTS = null;
+    UI_COMPONENTS_PATH = "";
+    UI_COMPONENTS_MTIME = 0;
+    MERGED_UI_COMPONENTS = null;
+    MERGED_UI_KEY = "";
+    CUSTOM_MDX_COMPONENTS = null;
+    CUSTOM_MDX_SIGNATURE = "";
+    CUSTOM_CLIENT_COMPONENT_ENTRIES = [];
+    try {
+      CUSTOM_CLIENT_COMPONENT_PLACEHOLDERS.clear();
+    } catch (_) {
+      CUSTOM_CLIENT_COMPONENT_PLACEHOLDERS = new Map();
+    }
+    try {
+      SERVER_COMPONENT_CACHE.clear();
+    } catch (_) {
+      SERVER_COMPONENT_CACHE = new Map();
+    }
+    customClientRuntimePromise = null;
+    customClientRuntimeSignature = "";
     cloverRuntimePromise = null;
   },
 };

@@ -178,6 +178,7 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
   const needsTimeline = body.includes('data-canopy-timeline');
   const needsSearchForm = true; // search form runtime is global
   const needsFacets = body.includes('data-canopy-related-items');
+  const needsCustomClients = body.includes('data-canopy-client-component');
   const viewerRel = needsHydrateViewer
     ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-viewer.js')).split(path.sep).join('/')
     : null;
@@ -203,9 +204,25 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
     try { const st = fs.statSync(runtimeAbs); rel += `?v=${Math.floor(st.mtimeMs || Date.now())}`; } catch (_) {}
     searchFormRel = rel;
   }
+  let customClientRel = null;
+  if (needsCustomClients) {
+    try {
+      await mdx.ensureCustomClientRuntime();
+      const customAbs = path.join(OUT_DIR, 'scripts', 'canopy-custom-components.js');
+      let rel = path.relative(path.dirname(outPath), customAbs).split(path.sep).join('/');
+      try {
+        const st = fs.statSync(customAbs);
+        rel += `?v=${Math.floor(st.mtimeMs || Date.now())}`;
+      } catch (_) {}
+      customClientRel = rel;
+    } catch (e) {
+      console.warn('[canopy][mdx] failed to build custom client runtime:', e && e.message ? e.message : e);
+    }
+  }
   const moduleScriptRels = [];
   if (viewerRel) moduleScriptRels.push(viewerRel);
   if (sliderRel) moduleScriptRels.push(sliderRel);
+  if (customClientRel) moduleScriptRels.push(customClientRel);
   const primaryClassicScripts = [];
   if (heroRel) primaryClassicScripts.push(heroRel);
   if (timelineRel) primaryClassicScripts.push(timelineRel);
@@ -217,7 +234,13 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
     jsRel = primaryClassicScripts.shift();
   }
   const classicScriptRels = primaryClassicScripts.concat(secondaryClassicScripts);
-  const needsReact = !!(needsHydrateViewer || needsHydrateSlider || needsFacets || needsTimeline);
+  const needsReact = !!(
+    needsHydrateViewer ||
+    needsHydrateSlider ||
+    needsFacets ||
+    needsTimeline ||
+    (customClientRel && needsCustomClients)
+  );
   let vendorTag = '';
   if (needsReact) {
     try {

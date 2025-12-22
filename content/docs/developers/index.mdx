@@ -59,6 +59,10 @@ Canopy templates are intentionally designed to be simple and modular. The projec
 - `canopy.yml` file is the main configuration file for your Canopy project.
 - `package.json` manages dependencies, including the core Canopy application package.
 
+## Custom components
+
+Projects that need reusable UI blocks can register React components under `app/components/mdx.tsx`. See [Developers → Components](/docs/developers/components) for instructions covering both server-rendered components and browser-only runtimes.
+
 ### Updating Canopy
 
 Occasionally, new versions of Canopy are released with bug fixes, new features, and improvements. To update your Canopy installation to the latest version, you can use `npm`. Run the following command in the root of your Canopy project directory:

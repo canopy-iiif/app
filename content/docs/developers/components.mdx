@@ -1,0 +1,128 @@
+---
+title: Components
+description: Register local React components (server-safe and browser-only) so they are available in every MDX file.
+---
+
+# Components
+
+Canopy lets you create global React components that are automatically available inside every MDX file. This is useful for reusable content blocks, custom widgets, or any UI that needs to appear in multiple places.
+
+```tsx filename="app/components/mdx.tsx" {7-9,13-15}
+/**
+ * Replace the examples with your own components or add new ones. You
+ * may also import components from dependencies and re-export them here.
+ */
+
+// Map SSR-safe components to be rendered at build time and used in MDX files
+export const components = {
+  Example: "./Example.tsx",
+};
+
+// Map browser-only components to their source files; the builder bundles
+// them separately and hydrates placeholders at runtime.
+export const clientComponents = {
+  ExampleClient: "./Example.client.tsx",
+};
+```
+
+## Static Components
+
+Anything inside `components` renders at build time and is exported entirely to the static site as HTML and JavaScript. You use these components just like any other MDX tag. Keep these functions predictable and free of browser APIs (like `window` or `document`). The builder compiles this file with JSX and merges your keys on top of built-in components such as `Card` and `Timeline`. If you reuse one of those names, your version will supplant it.
+
+```tsx filename="app/components/Example.tsx"
+import React from "react";
+
+export default function Example({
+  title,
+  children,
+}: {
+  title: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <article>
+      <strong>{title}</strong>
+      <p>{children}</p>
+    </article>
+  );
+}
+```
+
+```tsx filename="app/components/mdx.tsx"
+export const components = {
+  Example: "./Example.tsx",
+};
+```
+
+You can use the `Example` component anywhere in MDX without importing it:
+
+---
+
+```mdx
+<Example title="Server Component">
+  This text comes from a global server component.
+</Example>
+```
+
+<Example title="Server Component">
+  This text comes from a global server component.
+</Example>
+
+## Runtime components
+
+Some components need `window`, `document`, or other browser-only features. This is common with OpenSeadragon based IIIF viewers like Mirador and the Canopy default Clover IIIF. To work around this, list them under `clientComponents` and point each key to a module with a default export. Those modules can handle any third-party widget or DOM API.
+
+```tsx filename="app/components/Example.client.tsx"
+import React, {useEffect, useState} from "react";
+
+export default function ExampleClient({text}: {text?: string}) {
+  const [viewportWidth, setViewportWidth] = useState<number | null>(null);
+
+  useEffect(() => {
+    const handle = () => setViewportWidth(window.innerWidth || null);
+    handle();
+    window.addEventListener("resize", handle);
+    return () => window.removeEventListener("resize", handle);
+  }, []);
+
+  return (
+    <div>
+      <p>
+        This component is running in browser only as it requires access to the
+        browser window and cannot safely be rendered at build time.
+      </p>
+      {text && <p>{text}</p>}
+      <em>Viewport width: {viewportWidth ? `${viewportWidth}px` : "..."}</em>
+    </div>
+  );
+}
+```
+
+```tsx filename="app/components/mdx.tsx"
+export const components = {
+  ExampleClient: "./Example.client.tsx",
+};
+```
+
+When ExampleClient is used in MDX, the builder replaces it with a placeholder `<div data-canopy-client-component="ExampleClient">` during the build. At runtime, Canopy fetches the bundled module, hydrates it, and mounts it into the placeholder. Props are passed from server to client as JSON:
+
+---
+
+```mdx
+<ExampleClient text="This text is passed as a prop from server to client." />
+```
+
+<ExampleClient text="This text is passed as a prop from server to client." />
+
+## Development notes
+
+- `npm run dev` watches `app/components/**/*.{js,jsx,ts,tsx,mjs,cjs}` and reloads without re-fetching IIIF data.
+- Keep `jsx: "react"` in `tsconfig.json` so `.tsx` files outside `content/` compile.
+- ESLint and Prettier already include `app/components/`.
+
+## Troubleshooting
+
+- **Component missing:** ensure the entry file exports the name used in MDX. The dev server logs `[components] change…` when it reloads.
+- **Client component stuck:** look for the `<div data-canopy-client-component="…">` element. If it is there, confirm the file path and default export.
+- **Props lost:** only JSON-friendly values move from server to browser. Convert complex props to JSON strings or refetch data inside `useEffect`.
+- **Reusing names:** avoid duplicating built-in component names like `Viewer` or `ReferencedItems` unless you want to override them.

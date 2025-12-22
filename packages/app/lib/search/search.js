@@ -278,7 +278,19 @@ async function buildSearchPage() {
       return rel;
     }
     const vendorTags = `<script src="${verRel(vendorReactAbs)}"></script><script src="${verRel(vendorFlexAbs)}"></script><script src="${verRel(vendorSearchFormAbs)}"></script>`;
-    let headExtra = vendorTags + head + importMap;
+    let customRuntimeTag = '';
+    if (body && body.indexOf('data-canopy-client-component') !== -1) {
+      try {
+        await mdx.ensureCustomClientRuntime();
+        const runtimeAbs = path.join(OUT_DIR, 'scripts', 'canopy-custom-components.js');
+        let rel = path.relative(path.dirname(outPath), runtimeAbs).split(path.sep).join('/');
+        try { const st = require('fs').statSync(runtimeAbs); rel += `?v=${Math.floor(st.mtimeMs || Date.now())}`; } catch (_) {}
+        customRuntimeTag = `<script type="module" src="${rel}"></script>`;
+      } catch (e) {
+        console.warn('[search] failed to build custom client runtime:', e && (e.message || e));
+      }
+    }
+    let headExtra = vendorTags + head + importMap + customRuntimeTag;
     try {
       const { BASE_PATH } = require('../common');
       if (BASE_PATH) {
