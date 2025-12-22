@@ -1,0 +1,48 @@
+---
+title: Analytics and SEO
+description: Learn how to set up analytics and improve SEO for your Canopy IIIF-powered site.
+---
+
+# Analytics and SEO
+
+When you are nearing launch for your Canopy IIIF-powered site, there are a few additional steps you can take to improve your site's visibility and track usage. This guide covers how to set up a sitemap, configure `robots.txt`, and integrate Google Analytics for tracking site traffic.
+
+## Sitemap
+
+On every page build, a `sitemap.xml` file is generated automatically at the root of your site. This file helps search engines discover and index your pages more effectively. If your URL is `https://example.com`, your sitemap will be accessible at `https://example.com/sitemap.xml`. Submitting this to search engines like Google Search Console can enhance your site's SEO.
+
+## Robots.txt
+
+A `robots.txt` file is also generated at the root of your site. This file provides instructions to web crawlers about which pages or sections of your site should not be crawled or indexed. The default configuration disallows all crawlers to access all parts of your site while it is in development. Once your site is live, you may want to modify this file to allow access to certain sections or the entire site.
+
+```txt filename="assets/robots.txt"
+User-agent: *
+Allow: /
+```
+
+## Google Analytics
+
+To track user interactions and gather insights about your site's traffic, you can integrate Google Analytics using the `<GoogleAnalytics>` component. This component simplifies the process of adding the necessary scripts to your site. The `<GoogleAnalytics>` component outputs an analytics loader script for the ID you provide. If you prefer a different analytics solution, you can manually add the required scripts in your site's global `Head` export.
+
+## Usage
+
+```mdx filename="content/_app.mdx" {1,8}
+import {CanopyHeader, CanopyFooter, GoogleAnalytics} from "@canopy-iiif/app/ui";
+
+export function Head() {
+  return (
+    <>
+      <Meta siteTitle="Site Title" />
+      <Stylesheet />
+      <GoogleAnalytics id="G-XXXXXXX" />
+    </>
+  );
+
+}
+```
+
+## Props
+
+| Prop | Type   | Required | Notes                                                                                  |
+| ---- | ------ | -------- | -------------------------------------------------------------------------------------- |
+| `id` | string | ✅       | Google Analytics 4 measurement ID (e.g., `G-XXXXXXXX`). When omitted, nothing renders. |

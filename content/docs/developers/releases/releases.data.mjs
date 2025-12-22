@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.2.4",
+    "date": "2025-12-22",
+    "summary": "Add GoogleAnalytics component and document SEO.",
+    "highlights": []
+  },
+  {
     "version": "1.2.3",
     "date": "2025-12-22",
     "summary": "Add template workflow robots.txt rewrite.",
