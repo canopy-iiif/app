@@ -12,6 +12,7 @@ const pages = require("./pages");
 const searchBuild = require("./search");
 const { buildSearchIndex } = require("./search-index");
 const runtimes = require("./runtimes");
+const { writeSitemap } = require("./sitemap");
 const {
   ensureSearchInitialized,
   finalizeSearch,
@@ -109,6 +110,20 @@ async function build(options = {}) {
     await finalizeSearch(combined);
   } catch (e) {
     logLine("✗ Search index creation failed", "red", { bright: true });
+    logLine("  " + String(e), "red");
+  }
+
+  /**
+   * Generate a sitemap so static hosts can discover every rendered page.
+   */
+  logLine("\nWrite sitemap", "magenta", {
+    bright: true,
+    underscore: true,
+  });
+  try {
+    await writeSitemap(iiifRecords, pageRecords);
+  } catch (e) {
+    logLine("✗ Failed to write sitemap.xml", "red", { bright: true });
     logLine("  " + String(e), "red");
   }
 

@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.2.2",
+    "date": "2025-12-22",
+    "summary": "Introduce sitemap.xml generation.",
+    "highlights": []
+  },
+  {
     "version": "1.2.1",
     "date": "2025-12-22",
     "summary": "Add Clover to template update workflow.",
