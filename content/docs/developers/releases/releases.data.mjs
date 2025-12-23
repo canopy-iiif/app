@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.2.8",
+    "date": "2025-12-23",
+    "summary": "Style horizontal rules.",
+    "highlights": []
+  },
+  {
     "version": "1.2.7",
     "date": "2025-12-23",
     "summary": "Update Viewer component docs.",

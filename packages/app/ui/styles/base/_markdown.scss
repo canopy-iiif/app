@@ -3,6 +3,12 @@ code {
   font-size: 0.922em;
 }
 
+hr {
+  display: block;
+  border-top: 3px solid var(--color-gray-200);
+  margin: 2.618rem 0;
+}
+
 .markdown-table__frame {
   width: 100%;
   margin: 1.618rem 0 2.618rem;
