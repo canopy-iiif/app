@@ -1,5 +1,11 @@
 # @canopy-iiif/app
 
+## 1.3.0
+
+### Minor Changes
+
+- chore: version bump (minor) via helper script.
+
 ## 1.2.9
 
 ### Patch Changes

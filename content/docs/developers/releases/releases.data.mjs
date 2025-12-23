@@ -1,5 +1,14 @@
 const releases = [
   {
+    "version": "1.3.0",
+    "date": "2025-12-23",
+    "summary": "Resolve build issues with IIIF Presentation 2.x material.",
+    "highlights": [
+      "Resolves Presentation 2.x collections",
+      "Normalizes and upgrades manifests to 3.0 `.cache`"
+    ]
+  },
+  {
     "version": "1.2.9",
     "date": "2025-12-23",
     "summary": "Increase contrast of 50-level color steps",

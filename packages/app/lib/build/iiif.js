@@ -440,6 +440,35 @@ async function normalizeToV3(resource) {
   return resource;
 }
 
+let upgradeModulePromise = null;
+async function loadUpgradeModule() {
+  if (!upgradeModulePromise) {
+    upgradeModulePromise = import("@iiif/parser/upgrader").catch(() => null);
+  }
+  return upgradeModulePromise;
+}
+
+async function upgradeIiifResource(resource) {
+  if (!resource) return resource;
+  try {
+    const mod = await loadUpgradeModule();
+    const upgrader = mod && (mod.upgrade || mod.default);
+    if (typeof upgrader === "function") {
+      let upgraded = upgrader(resource);
+      if (upgraded && typeof upgraded.then === "function") {
+        upgraded = await upgraded;
+      }
+      if (upgraded) return upgraded;
+    }
+  } catch (_) {}
+  return normalizeToV3(resource);
+}
+
+async function ensurePresentation3Manifest(manifest) {
+  const upgraded = await upgradeIiifResource(manifest);
+  return {manifest: upgraded, changed: upgraded !== manifest};
+}
+
 async function readJson(p) {
   const raw = await fsp.readFile(p, "utf8");
   return JSON.parse(raw);
@@ -459,6 +488,62 @@ function normalizeIiifId(raw) {
   } catch (_) {
     return String(raw || "");
   }
+}
+
+function normalizeIiifType(value) {
+  try {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    const lower = raw.toLowerCase();
+    const idx = lower.lastIndexOf(":");
+    if (idx >= 0 && idx < lower.length - 1) return lower.slice(idx + 1);
+    return lower;
+  } catch (_) {
+    return "";
+  }
+}
+
+function extractCollectionEntries(collection) {
+  if (!collection || typeof collection !== "object") return [];
+  const entries = [];
+  const seen = new Set();
+  const pushEntry = (raw, fallbackType) => {
+    if (!raw) return;
+    let id = "";
+    let type = "";
+    if (typeof raw === "string") {
+      id = raw;
+      type = fallbackType || "";
+    } else if (typeof raw === "object") {
+      id = raw.id || raw["@id"] || fallbackType || "";
+      type = raw.type || raw["@type"] || fallbackType || "";
+    }
+    const normalizedId = String(id || "").trim();
+    if (!normalizedId) return;
+    const normalizedType = normalizeIiifType(type || fallbackType || "");
+    const fallback = normalizeIiifType(fallbackType || "");
+    const key = `${normalizedType}::${normalizedId}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    entries.push({
+      id: normalizedId,
+      type: normalizedType,
+      fallback,
+      raw,
+    });
+  };
+
+  const sources = [
+    {list: collection.items, fallback: ""},
+    {list: collection.manifests, fallback: "manifest"},
+    {list: collection.collections, fallback: "collection"},
+    {list: collection.members, fallback: ""},
+  ];
+  for (const source of sources) {
+    const arr = Array.isArray(source.list) ? source.list : [];
+    for (const entry of arr) pushEntry(entry, source.fallback);
+  }
+  return entries;
 }
 
 async function readJsonFromUri(uri, options = {log: false}) {
@@ -720,23 +805,31 @@ async function loadCachedManifestById(id) {
     if (!slug) return null;
     const p = path.join(IIIF_CACHE_MANIFESTS_DIR, slug + ".json");
     if (!fs.existsSync(p)) return null;
-    return await readJson(p);
+    const raw = await readJson(p);
+    const {manifest: normalized, changed} = await ensurePresentation3Manifest(raw);
+    if (changed) {
+      try {
+        await fsp.writeFile(p, JSON.stringify(normalized, null, 2), "utf8");
+      } catch (_) {}
+    }
+    return normalized;
   } catch (_) {
     return null;
   }
 }
 
 async function saveCachedManifest(manifest, id, parentId) {
+  const {manifest: normalizedManifest} = await ensurePresentation3Manifest(manifest);
   try {
     const index = await loadManifestIndex();
-    const title = firstLabelString(manifest && manifest.label);
+    const title = firstLabelString(normalizedManifest && normalizedManifest.label);
     const baseSlug =
       slugify(title || "untitled", {lower: true, strict: true, trim: true}) ||
       "untitled";
     const slug = computeUniqueSlug(index, baseSlug, id, "Manifest");
     ensureDirSync(IIIF_CACHE_MANIFESTS_DIR);
     const dest = path.join(IIIF_CACHE_MANIFESTS_DIR, slug + ".json");
-    await fsp.writeFile(dest, JSON.stringify(manifest, null, 2), "utf8");
+    await fsp.writeFile(dest, JSON.stringify(normalizedManifest, null, 2), "utf8");
     index.byId = Array.isArray(index.byId) ? index.byId : [];
     const nid = normalizeIiifId(id);
     const existingEntryIdx = index.byId.findIndex(
@@ -751,7 +844,10 @@ async function saveCachedManifest(manifest, id, parentId) {
     if (existingEntryIdx >= 0) index.byId[existingEntryIdx] = entry;
     else index.byId.push(entry);
     await saveManifestIndex(index);
-  } catch (_) {}
+    return normalizedManifest;
+  } catch (_) {
+    return normalizedManifest;
+  }
 }
 
 // Ensure any configured featured manifests are present in the local cache
@@ -772,10 +868,10 @@ async function ensureFeaturedInCache(cfg) {
       if (!manifest) {
         const m = await readJsonFromUri(id).catch(() => null);
         if (!m) continue;
-        const v3 = await normalizeToV3(m);
-        if (!v3 || !v3.id) continue;
-        await saveCachedManifest(v3, id, "");
-        manifest = v3;
+        const upgraded = await upgradeIiifResource(m);
+        if (!upgraded || !upgraded.id) continue;
+        manifest = (await saveCachedManifest(upgraded, id, "")) || upgraded;
+        manifest = (await loadCachedManifestById(id)) || manifest;
       }
       // Ensure thumbnail fields exist in index for this manifest (if computable)
       try {
@@ -958,9 +1054,10 @@ async function loadCachedCollectionById(id) {
 
 async function saveCachedCollection(collection, id, parentId) {
   try {
+    const normalizedCollection = await upgradeIiifResource(collection);
     ensureDirSync(IIIF_CACHE_COLLECTIONS_DIR);
     const index = await loadManifestIndex();
-    const title = firstLabelString(collection && collection.label);
+    const title = firstLabelString(normalizedCollection && normalizedCollection.label);
     const baseSlug =
       slugify(title || "collection", {
         lower: true,
@@ -969,7 +1066,7 @@ async function saveCachedCollection(collection, id, parentId) {
       }) || "collection";
     const slug = computeUniqueSlug(index, baseSlug, id, "Collection");
     const dest = path.join(IIIF_CACHE_COLLECTIONS_DIR, slug + ".json");
-    await fsp.writeFile(dest, JSON.stringify(collection, null, 2), "utf8");
+    await fsp.writeFile(dest, JSON.stringify(normalizedCollection, null, 2), "utf8");
     try {
       if (process.env.CANOPY_IIIF_DEBUG === "1") {
         const {logLine} = require("./log");
@@ -1222,7 +1319,7 @@ async function buildIiifCollectionPages(CONFIG) {
           ? colLike
           : await readJsonFromUri(uri, {log: true});
       if (!col) return;
-      const ncol = await normalizeToV3(col);
+      const ncol = await upgradeIiifResource(col);
       const reportedId = String(
         (ncol && (ncol.id || ncol["@id"])) ||
           (typeof colLike === "object" &&
@@ -1237,15 +1334,15 @@ async function buildIiifCollectionPages(CONFIG) {
       try {
         await saveCachedCollection(ncol, collectionKey, parentId || "");
       } catch (_) {}
-      const itemsArr = Array.isArray(ncol.items) ? ncol.items : [];
-      for (const entry of itemsArr) {
-        if (!entry) continue;
-        const t = String(entry.type || entry["@type"] || "").toLowerCase();
-        const entryId = entry.id || entry["@id"] || "";
-        if (t === "manifest") {
+      const childEntries = extractCollectionEntries(ncol);
+      for (const entry of childEntries) {
+        const entryId = entry && entry.id;
+        if (!entryId) continue;
+        const entryType = normalizeIiifType(entry.type || entry.fallback || "");
+        if (entryType === "manifest") {
           tasks.push({id: entryId, parent: collectionKey});
-        } else if (t === "collection") {
-          await gatherFromCollection(entryId, collectionKey);
+        } else if (entryType === "collection") {
+          await gatherFromCollection(entry.raw || entryId, collectionKey);
         }
       }
       // Traverse strictly by parent/child hierarchy (Presentation 3): items → Manifest or Collection
@@ -1266,7 +1363,7 @@ async function buildIiifCollectionPages(CONFIG) {
       } catch (_) {}
       continue;
     }
-    const normalizedRoot = await normalizeToV3(root);
+    const normalizedRoot = await upgradeIiifResource(root);
     try {
       await saveCachedCollection(normalizedRoot, normalizedRoot.id || uri, "");
     } catch (_) {}
@@ -1352,13 +1449,15 @@ async function buildIiifCollectionPages(CONFIG) {
             if (res && res.ok) {
               lns.push([`↓ ${String(id)} → ${res.status}`, "yellow"]);
               const remote = await res.json();
-              const norm = await normalizeToV3(remote);
-              manifest = norm;
-              await saveCachedManifest(
+              manifest = await upgradeIiifResource(remote);
+              const saved = await saveCachedManifest(
                 manifest,
                 String(id),
                 String(it.parent || "")
               );
+              manifest = saved || manifest;
+              const cached = await loadCachedManifestById(String(id));
+              if (cached) manifest = cached;
             } else {
               lns.push([
                 `⊘ ${String(id)} → ${res ? res.status : "ERR"}`,
@@ -1377,13 +1476,15 @@ async function buildIiifCollectionPages(CONFIG) {
               lns.push([`⊘ ${String(id)} → ERR`, "red"]);
               continue;
             }
-            const norm = await normalizeToV3(local);
-            manifest = norm;
-            await saveCachedManifest(
+            manifest = await upgradeIiifResource(local);
+            const saved = await saveCachedManifest(
               manifest,
               String(id),
               String(it.parent || "")
             );
+            manifest = saved || manifest;
+            const cached = await loadCachedManifestById(String(id));
+            if (cached) manifest = cached;
             lns.push([`↓ ${String(id)} → Cached`, "yellow"]);
           } catch (_) {
             lns.push([`⊘ ${String(id)} → ERR`, "red"]);
@@ -1394,7 +1495,8 @@ async function buildIiifCollectionPages(CONFIG) {
           continue;
         }
         if (!manifest) continue;
-        manifest = await normalizeToV3(manifest);
+        const ensured = await ensurePresentation3Manifest(manifest);
+        manifest = ensured.manifest;
         const title = firstLabelString(manifest.label);
         let summaryRaw = '';
         try {
