@@ -113,7 +113,7 @@ export default function DocsCodeBlock(props = {}) {
     margin: "1.5rem 0",
     background: "var(--color-accent-100)",
     fontFamily: "var(--font-mono)",
-    fontSize: "0.85rem",
+    fontSize: "0.8333rem",
   };
 
   const headerStyle = {
@@ -130,7 +130,7 @@ export default function DocsCodeBlock(props = {}) {
   const preStyle = {
     margin: 0,
     background: "var(--color-accent-100)",
-    color: "var(--color-accent-800)",
+    color: "var(--color-accent-700)",
     lineHeight: 1.55,
     padding: "1rem 0",
     overflowX: "auto",

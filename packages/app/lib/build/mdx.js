@@ -1148,8 +1148,13 @@ function createReactShimPlugin() {
     const ReactDOM = (typeof window !== 'undefined' && window.ReactDOM) || {};
     export default ReactDOM;
     export const render = ReactDOM.render;
-    export const unmountComponentAtNode = ReactDOM.unmountComponentAtNode;
+    export const hydrate = ReactDOM.hydrate;
     export const findDOMNode = ReactDOM.findDOMNode;
+    export const unmountComponentAtNode = ReactDOM.unmountComponentAtNode;
+    export const createPortal = ReactDOM.createPortal;
+    export const flushSync = ReactDOM.flushSync;
+    export const unstable_batchedUpdates = ReactDOM.unstable_batchedUpdates;
+    export const unstable_renderSubtreeIntoContainer = ReactDOM.unstable_renderSubtreeIntoContainer;
   `;
   const rdomClientShim = `
     const RDC = (typeof window !== 'undefined' && window.ReactDOMClient) || {};
@@ -1682,6 +1687,18 @@ async function ensureTimelineRuntime() {
     export const useReducer = React.useReducer;
     export const useId = React.useId;
   `;
+  const rdomShim = `
+    const ReactDOM = (typeof window !== 'undefined' && window.ReactDOM) || {};
+    export default ReactDOM;
+    export const render = ReactDOM.render;
+    export const hydrate = ReactDOM.hydrate;
+    export const findDOMNode = ReactDOM.findDOMNode;
+    export const unmountComponentAtNode = ReactDOM.unmountComponentAtNode;
+    export const createPortal = ReactDOM.createPortal;
+    export const flushSync = ReactDOM.flushSync;
+    export const unstable_batchedUpdates = ReactDOM.unstable_batchedUpdates;
+    export const unstable_renderSubtreeIntoContainer = ReactDOM.unstable_renderSubtreeIntoContainer;
+  `;
   const rdomClientShim = `
     const RDC = (typeof window !== 'undefined' && window.ReactDOMClient) || {};
     export const createRoot = RDC.createRoot;
@@ -1702,7 +1719,7 @@ async function ensureTimelineRuntime() {
         loader: "js",
       }));
       build.onLoad({filter: /^react-dom$/, namespace: ns}, () => ({
-        contents: "export default (typeof window !== 'undefined' && window.ReactDOM) || {};",
+        contents: rdomShim,
         loader: "js",
       }));
       build.onLoad({filter: /^react-dom-client$/, namespace: ns}, () => ({
