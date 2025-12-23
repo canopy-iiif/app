@@ -11,8 +11,8 @@
     --hero-height: 520px;
     --hero-bg-start: var(--color-gray-50);
     --hero-bg-mid: var(--color-accent-100);
-    --hero-bg-end: var(--color-accent-200);
-    --hero-dot-bg: var(--color-accent-300);
+    --hero-bg-end: var(--color-accent-300);
+    --hero-dot-bg: var(--color-accent-400);
     --hero-dot-active-bg: var(--color-accent-700);
 
     background: linear-gradient(
@@ -137,8 +137,9 @@
     }
 
     .canopy-interstitial__description {
-      font-size: 0.8333rem;
-      color: var(--color-accent-800);
+      font-size: 0.9222rem;
+      font-weight: 700;
+      color: var(--color-accent-700);
       font-family: var(--font-mono);
     }
   }
