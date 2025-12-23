@@ -219,9 +219,6 @@ function toTailwindScale(name, options = {}) {
     if (!value) return null;
     scale[lvl] = value;
   }
-  if (scale["50"] && scale["100"]) {
-    scale["50"] = mixHexColors(scale["50"], scale["100"], 0.6);
-  }
   const saturate700 = options.saturate700 !== false;
   if (scale["700"]) {
     let adjusted =

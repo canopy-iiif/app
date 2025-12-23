@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.2.9",
+    "date": "2025-12-23",
+    "summary": "Increase contrast of 50-level color steps",
+    "highlights": []
+  },
+  {
     "version": "1.2.8",
     "date": "2025-12-23",
     "summary": "Style horizontal rules.",
