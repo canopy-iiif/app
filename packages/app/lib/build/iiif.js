@@ -1160,6 +1160,23 @@ async function buildIiifCollectionPages(CONFIG) {
       .map((label) => normalizeMetadataLabel(String(label || "")))
       .filter(Boolean)
   );
+  const metadataFacetLabels = (() => {
+    if (!Array.isArray(metadataLabelsRaw) || !metadataLabelsRaw.length)
+      return [];
+    const seen = new Set();
+    const entries = [];
+    for (const label of metadataLabelsRaw) {
+      const raw = typeof label === "string" ? label.trim() : String(label || "");
+      if (!raw) continue;
+      const normalized = normalizeMetadataLabel(raw);
+      if (!normalized || seen.has(normalized)) continue;
+      const slug = slugify(raw, {lower: true, strict: true, trim: true});
+      if (!slug) continue;
+      seen.add(normalized);
+      entries.push({label: raw, slug, normalized});
+    }
+    return entries;
+  })();
   const metadataOptions = {
     enabled:
       metadataEnabled &&
@@ -1479,6 +1496,18 @@ async function buildIiifCollectionPages(CONFIG) {
             pageDetails.meta.ogImage = ogImageForPage;
           }
           const pageContextValue = { navigation: null, page: pageDetails };
+          if (metadataFacetLabels.length && manifest && typeof manifest === "object") {
+            try {
+              Object.defineProperty(manifest, "__canopyMetadataFacets", {
+                configurable: true,
+                enumerable: false,
+                writable: true,
+                value: metadataFacetLabels,
+              });
+            } catch (_) {
+              manifest.__canopyMetadataFacets = metadataFacetLabels;
+            }
+          }
           const mdxContent = React.createElement(WorksLayoutComp, {
             manifest,
             references,
