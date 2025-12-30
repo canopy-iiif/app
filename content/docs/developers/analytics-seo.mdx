@@ -9,7 +9,23 @@ When you are nearing launch for your Canopy IIIF-powered site, there are a few a
 
 ## Sitemap
 
-On every build, a `sitemap.xml` file is generated automatically at the root of your site. This file helps search engines discover and index your pages more effectively. If your URL is `https://example.com`, your sitemap will be accessible at `https://example.com/sitemap.xml`. Submitting this to search engines like Google Search Console can enhance your site's SEO.
+On every build, a sitemap is generated automatically at the root of your site. This helps search engines discover and index your pages more effectively. If your site URL is `https://example.com`, your sitemap entry point remains `https://example.com/sitemap.xml`, making it easy to submit to Google Search Console or other webmaster tools.
+
+Canopy automatically breaks sitemaps into chunks of 1,000 URLs, per search engine recommendations. Each chunk is written to a numbered file (`sitemap-1.xml`, `sitemap-2.xml`, etc.), and `sitemap.xml` is always a sitemap index that points to the generated files even when you only need a single chunk:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://example.com/sitemap-1.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://example.com/sitemap-2.xml</loc>
+  </sitemap>
+</sitemapindex>
+```
+
+If you only have a single chunk, the index simply references `sitemap-1.xml`, so search engines still find your complete list with the standard entry point.
 
 ## Robots.txt
 

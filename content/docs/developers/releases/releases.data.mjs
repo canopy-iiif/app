@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.3.2",
+    "date": "2025-12-30",
+    "summary": "Refine sitemaps to stem from index.",
+    "highlights": []
+  },
+  {
     "version": "1.3.1",
     "date": "2025-12-23",
     "summary": "Normalize breadcrumb styling.",

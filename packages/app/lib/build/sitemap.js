@@ -3,6 +3,8 @@ const { logLine } = require('./log');
 
 const DEFAULT_CHANGEFREQ = 'monthly';
 const DEFAULT_PRIORITY = '0.5';
+const MAX_URLS_PER_SITEMAP = 1000;
+const SITEMAP_INDEX_BASENAME = 'sitemap.xml';
 
 function escapeXml(value) {
   return String(value || '')
@@ -44,12 +46,7 @@ function collectAbsoluteUrls(iiifRecords, pageRecords) {
   return Array.from(urls.values()).sort((a, b) => a.localeCompare(b));
 }
 
-async function writeSitemap(iiifRecords, pageRecords) {
-  const urls = collectAbsoluteUrls(iiifRecords, pageRecords);
-  if (!urls.length) {
-    logLine('• No URLs to write to sitemap', 'yellow');
-    return;
-  }
+function buildUrlsetXml(urls) {
   const rows = urls.map((loc) => {
     const escapedLoc = escapeXml(loc);
     return [
@@ -60,16 +57,79 @@ async function writeSitemap(iiifRecords, pageRecords) {
       '  </url>',
     ].join('\n');
   });
-  const xml = [
+  return [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
     rows.join('\n'),
     '</urlset>',
     '',
   ].join('\n');
-  const dest = path.join(OUT_DIR, 'sitemap.xml');
-  await fsp.writeFile(dest, xml, 'utf8');
-  logLine(`✓ Wrote sitemap.xml (${urls.length} urls)`, 'cyan');
+}
+
+function buildSitemapIndexXml(entries) {
+  const rows = entries.map((entry) => {
+    const escapedLoc = escapeXml(entry.loc);
+    return ['  <sitemap>', `    <loc>${escapedLoc}</loc>`, '  </sitemap>'].join('\n');
+  });
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    rows.join('\n'),
+    '</sitemapindex>',
+    '',
+  ].join('\n');
+}
+
+function chunkList(list, chunkSize) {
+  const chunks = [];
+  if (!Array.isArray(list) || chunkSize <= 0) return chunks;
+  for (let i = 0; i < list.length; i += chunkSize) {
+    chunks.push(list.slice(i, i + chunkSize));
+  }
+  return chunks;
+}
+
+async function cleanupLegacySitemaps() {
+  let entries;
+  try {
+    entries = await fsp.readdir(OUT_DIR);
+  } catch (_) {
+    return;
+  }
+  const deletions = entries
+    .filter((name) => /^sitemap-\d+\.xml$/i.test(name))
+    .map((name) =>
+      fsp
+        .unlink(path.join(OUT_DIR, name))
+        .catch(() => {})
+    );
+  await Promise.all(deletions);
+}
+
+async function writeSitemap(iiifRecords, pageRecords) {
+  const urls = collectAbsoluteUrls(iiifRecords, pageRecords);
+  if (!urls.length) {
+    await cleanupLegacySitemaps();
+    logLine('• No URLs to write to sitemap', 'yellow');
+    return;
+  }
+  await cleanupLegacySitemaps();
+
+  const chunks = chunkList(urls, MAX_URLS_PER_SITEMAP);
+  const indexEntries = [];
+  for (let i = 0; i < chunks.length; i += 1) {
+    const fileName = `sitemap-${i + 1}.xml`;
+    const dest = path.join(OUT_DIR, fileName);
+    await fsp.writeFile(dest, buildUrlsetXml(chunks[i]), 'utf8');
+    indexEntries.push({ loc: absoluteUrl(fileName) });
+  }
+
+  const indexDest = path.join(OUT_DIR, SITEMAP_INDEX_BASENAME);
+  await fsp.writeFile(indexDest, buildSitemapIndexXml(indexEntries), 'utf8');
+  logLine(
+    `✓ Wrote sitemap index (${chunks.length} files, ${urls.length} urls total)`,
+    'cyan'
+  );
 }
 
 module.exports = { writeSitemap };
