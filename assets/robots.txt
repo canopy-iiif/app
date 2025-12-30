@@ -1,2 +1,4 @@
 User-agent: *
-Allow: /
+Disallow:
+
+Sitemap: https://canopy-iiif.github.io/app/sitemap.xml
