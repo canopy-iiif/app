@@ -40,3 +40,4 @@ Logbook
 - 2025-09-26 / chatgpt: Removed fallback behaviour from helper CLIs—`run-changeset` now requires a local @changesets/cli install and `build-tailwind` throws when the Tailwind CLI is missing or fails; template rewrite now pins Tailwind `^4.1.13`.
 - 2025-10-19 / chatgpt: Template prep no longer copies or generates `tailwind.config.*`; the template relies on the built-in Canopy Tailwind config and falls back to the CSS-first `@import 'tailwindcss';` entry when no custom stylesheet exists.
 - 2025-10-19 / chatgpt: Template builder now copies every `.css` under `app/styles/` so additional imports like `custom.css` survive into the published template.
+- 2025-10-20 / chatgpt: Template workflow now deletes any stale `package-lock.json`, runs `npm install --package-lock-only --ignore-scripts`, and keeps the regenerated lockfile so template repos always track the rewritten dependencies.

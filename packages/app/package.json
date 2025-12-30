@@ -1,13 +1,13 @@
 {
   "name": "@canopy-iiif/app",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "private": false,
   "license": "MIT",
   "author": "Mat Jordan <mat@northwestern.edu>",
   "homepage": "https://canopy-iiif.github.io/app/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/canopy-iiif/app.git",
+    "url": "git+https://github.com/canopy-iiif/app.git",
     "directory": "packages/app"
   },
   "type": "commonjs",

@@ -59,6 +59,14 @@ function copyRepoToTemplate() {
   execFileSync('rsync', args, { stdio: 'inherit' });
 }
 
+function regeneratePackageLock() {
+  const lockPath = path.join(OUTPUT_ROOT, 'package-lock.json');
+  rmrf(lockPath);
+  const npmArgs = ['install', '--package-lock-only', '--ignore-scripts'];
+  execFileSync('npm', npmArgs, { cwd: OUTPUT_ROOT, stdio: 'inherit' });
+  rmrf(path.join(OUTPUT_ROOT, 'node_modules'));
+}
+
 function applyTemplateOverrides() {
   const distRoot = OUTPUT_ROOT;
   const templateRoot = __dirname;
@@ -203,6 +211,7 @@ function main() {
   copyRepoToTemplate();
   applyTemplateOverrides();
   rewritePackageJson(appVersion);
+  regeneratePackageLock();
   const writeTemplateDeploy = require('./write-template-deploy');
   writeTemplateDeploy(OUTPUT_ROOT);
   writeTailwindFiles();
