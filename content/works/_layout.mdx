@@ -10,11 +10,11 @@ import {
   References,
 } from "@canopy-iiif/app/ui/server";
 
-<Container variant="wide" style={{display: "flex", gap: "2.618rem"}}>
-  <div style={{width: "50%", flexShrink: 0}}>
+<Container variant="wide" className="canopy-work--layout">
+  <div className="canopy-work--primary">
     <Viewer iiifContent={props.manifest.id} />
   </div>
-  <div>
+  <div className="canopy-work--secondary">
     <header>
       <Label manifest={props.manifest} as="h1" />
       <Summary manifest={props.manifest} as="p" className="canopy-lead" />

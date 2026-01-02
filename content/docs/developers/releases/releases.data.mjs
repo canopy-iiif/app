@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.3.4",
+    "date": "2026-01-02",
+    "summary": "Apply responsive fixes to work layouts.",
+    "highlights": []
+  },
+  {
     "version": "1.3.3",
     "date": "2025-12-30",
     "summary": "Regenerate clean lock files for templates.",

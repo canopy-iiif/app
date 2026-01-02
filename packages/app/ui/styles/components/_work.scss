@@ -1,4 +1,34 @@
 @layer components {
+  .canopy-work--layout {
+    --canopy-work-gap: clamp(1.5rem, 3vw, 2.75rem);
+    display: flex;
+    gap: var(--canopy-work-gap);
+    align-items: flex-start;
+    flex-wrap: nowrap;
+  }
+
+  .canopy-work--layout > * {
+    flex: 1 1 50%;
+    min-width: 0;
+  }
+
+  .canopy-work--primary,
+  .canopy-work--secondary {
+    flex: 1 1 50%;
+  }
+
+  @media (max-width: 960px) {
+    .canopy-work--layout {
+      flex-direction: column;
+    }
+
+    .canopy-work--primary,
+    .canopy-work--secondary {
+      flex-basis: 100%;
+      width: 100%;
+    }
+  }
+
   body.canopy-type-work {
     main {
       h1 {
