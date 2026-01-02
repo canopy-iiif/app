@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.3.5",
+    "date": "2026-01-02",
+    "summary": "Update Clover viewer to address multiple instances bug.",
+    "highlights": []
+  },
+  {
     "version": "1.3.4",
     "date": "2026-01-02",
     "summary": "Apply responsive fixes to work layouts.",
