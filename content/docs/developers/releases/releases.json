@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.3.6",
+    "date": "2026-01-03",
+    "summary": "Add .nojekyll marker and discontinue .xml aliasing.",
+    "highlights": []
+  },
+  {
     "version": "1.3.5",
     "date": "2026-01-02",
     "summary": "Update Clover viewer to address multiple instances bug.",

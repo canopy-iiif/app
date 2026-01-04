@@ -1,5 +1,6 @@
 const {
   fs,
+  fsp,
   path,
   CONTENT_DIR,
   OUT_DIR,
@@ -27,6 +28,14 @@ const referenced = require("../components/referenced");
 let iiifRecordsCache = [];
 let pageRecords = [];
 
+async function ensureNoJekyllMarker() {
+  try {
+    await fsp.mkdir(OUT_DIR, { recursive: true });
+    const markerPath = path.join(OUT_DIR, '.nojekyll');
+    await fsp.writeFile(markerPath, '', 'utf8');
+  } catch (_) {}
+}
+
 async function build(options = {}) {
   const skipIiif = !!(options?.skipIiif || process.env.CANOPY_SKIP_IIIF === '1' || process.env.CANOPY_SKIP_IIIF === 'true');
   if (!fs.existsSync(CONTENT_DIR)) {
@@ -47,9 +56,13 @@ async function build(options = {}) {
   referenced?.resetReferenceIndex?.();
   if (!skipIiif) {
     await cleanDir(OUT_DIR);
+    await ensureNoJekyllMarker();
     logLine(`• Cleaned output directory`, "blue", { dim: true });
   } else {
     logLine("• Retaining cache (skipping IIIF rebuild)", "blue", { dim: true });
+  }
+  if (skipIiif) {
+    await ensureNoJekyllMarker();
   }
 
   /**
