@@ -55,15 +55,14 @@ Wrap `MapPoint` children inside `<Map>` to add arbitrary coordinates (including 
 
 ## `<MapPoint>` props
 
-| Prop                                 | Type             | Description                                                      |
-| ------------------------------------ | ---------------- | ---------------------------------------------------------------- |
-| `lat`                                | number \| string | Required latitude coordinates in decimal degrees.                |
-| `lng`                                | number \| string | Required longitude coordinates in decimal degrees.               |
-| `title`                              | string           | Marker title and popup heading.                                  |
-| `summary`                            | string           | Short description rendered inside the popup.                     |
-| `href`                               | string           | Optional link target (absolute, root-relative, or `/works/...`). |
-| `thumbnail`                          | string           | Optional image URL displayed in the popup.                       |
-| `thumbnailWidth` / `thumbnailHeight` | number           | Dimensions for the thumbnail (improves layout).                  |
-| `children`                           | MDX              | Additional markup rendered below the summary.                    |
+| Prop        | Type             | Description                                                      |
+| ----------- | ---------------- | ---------------------------------------------------------------- |
+| `lat`       | number \| string | Required latitude coordinates in decimal degrees.                |
+| `lng`       | number \| string | Required longitude coordinates in decimal degrees.               |
+| `title`     | string           | Marker title and popup heading.                                  |
+| `summary`   | string           | Short description rendered inside the popup.                     |
+| `href`      | string           | Optional link target (absolute, root-relative, or `/works/...`). |
+| `thumbnail` | string           | Optional image URL displayed in the popup.                       |
+| `children`  | MDX              | Additional markup rendered below the summary.                    |
 
 > NavPlace markers automatically inherit manifest titles, summaries, and thumbnails. To populate the dataset, ensure your IIIF manifests include `navPlace` with `Point` geometries before running `npm run build`.

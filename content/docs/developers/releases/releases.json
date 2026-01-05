@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.4.1",
+    "date": "2026-01-05",
+    "summary": "Refine styling of Map markers.",
+    "highlights": []
+  },
+  {
     "version": "1.4.0",
     "date": "2026-01-05",
     "summary": "Introduce Map component.",

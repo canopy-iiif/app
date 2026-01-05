@@ -46,8 +46,6 @@ function normalizeCustomPoint(child, index) {
   const summary = props.summary || props.description || "";
   const href = props.href || props.link || "";
   const thumbnail = props.thumbnail || props.image || "";
-  const thumbnailWidth = normalizeNumber(props.thumbnailWidth || props.width);
-  const thumbnailHeight = normalizeNumber(props.thumbnailHeight || props.height);
   const detailsHtml = renderDetailsHtml(props.children);
   return {
     id,
@@ -55,8 +53,6 @@ function normalizeCustomPoint(child, index) {
     summary,
     href,
     thumbnail,
-    thumbnailWidth: Number.isFinite(thumbnailWidth) ? thumbnailWidth : undefined,
-    thumbnailHeight: Number.isFinite(thumbnailHeight) ? thumbnailHeight : undefined,
     lat: coords.lat,
     lng: coords.lng,
     detailsHtml,
