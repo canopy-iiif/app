@@ -1,4 +1,6 @@
 import React from "react";
+import {createRoot} from "react-dom/client";
+import ReferencedManifestCard from "../../layout/ReferencedManifestCard.jsx";
 
 const DEFAULT_TILE_LAYERS = [
   {
@@ -274,39 +276,116 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
-function renderPopup(marker) {
-  if (!marker) return "";
+function MapPopupContent({marker}) {
+  if (!marker) return null;
   const title = marker.title || marker.manifestTitle || "";
   const summary = marker.summary || marker.manifestSummary || "";
   const href = marker.href ? withBasePath(marker.href) : "";
   const thumbnail = marker.thumbnail || "";
   const thumbWidth = marker.thumbnailWidth;
   const thumbHeight = marker.thumbnailHeight;
-  const chunks = ["<div class=\"canopy-map__popup\">"];
-  if (thumbnail) {
-    const sizeAttrs = [];
-    if (typeof thumbWidth === "number" && thumbWidth > 0) sizeAttrs.push(`width=\"${thumbWidth}\"`);
-    if (typeof thumbHeight === "number" && thumbHeight > 0) sizeAttrs.push(`height=\"${thumbHeight}\"`);
-    chunks.push(
-      `<div class=\"canopy-map__popup-media\">` +
-        `<img src=\"${escapeHtml(thumbnail)}\" alt=\"\" loading=\"lazy\" ${sizeAttrs.join(" ")} />` +
-        `</div>`
-    );
+  const manifestLinks = Array.isArray(marker.manifests)
+    ? marker.manifests.filter((entry) => entry && (entry.href || entry.title))
+    : [];
+  const normalizedManifests = manifestLinks.map((manifest) => ({
+    ...manifest,
+    href: manifest.href ? withBasePath(manifest.href) : manifest.href || "",
+  }));
+
+  return (
+    <div className="canopy-map__popup">
+      {thumbnail ? (
+        <div className="canopy-map__popup-media">
+          <img
+            src={thumbnail}
+            alt=""
+            loading="lazy"
+            width={
+              typeof thumbWidth === "number" && thumbWidth > 0
+                ? thumbWidth
+                : undefined
+            }
+            height={
+              typeof thumbHeight === "number" && thumbHeight > 0
+                ? thumbHeight
+                : undefined
+            }
+          />
+        </div>
+      ) : null}
+      <div className="canopy-map__popup-body">
+        {title ? (
+          href ? (
+            <a href={href} className="canopy-map__popup-title">
+              {title}
+            </a>
+          ) : (
+            <span className="canopy-map__popup-title">{title}</span>
+          )
+        ) : null}
+        {summary ? (
+          <p className="canopy-map__popup-summary">{summary}</p>
+        ) : null}
+        {marker.detailsHtml ? (
+          <div
+            className="canopy-map__popup-details"
+            dangerouslySetInnerHTML={{__html: marker.detailsHtml}}
+          />
+        ) : null}
+        {!summary && !marker.detailsHtml && href && !title ? (
+          <a href={href} className="canopy-map__popup-link">
+            View item
+          </a>
+        ) : null}
+        {normalizedManifests.length ? (
+          <div className="canopy-map__popup-manifests">
+            <div className="canopy-map__popup-manifests-list">
+              {normalizedManifests.map((manifest, index) => (
+                <div
+                  key={manifest.id || manifest.href || `manifest-${index}`}
+                  className="canopy-map__popup-manifests-item"
+                >
+                  <ReferencedManifestCard manifest={manifest} />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function renderPopup(marker) {
+  if (!marker || typeof document === "undefined") return null;
+  const container = document.createElement("div");
+  let root = null;
+  try {
+    root = createRoot(container);
+    root.render(<MapPopupContent marker={marker} />);
+  } catch (error) {
+    if (root) {
+      try {
+        root.unmount();
+      } catch (_) {}
+      root = null;
+    }
+    const fallbackTitle = marker.title || marker.summary || marker.href || "Location";
+    container.innerHTML =
+      `<div class=\"canopy-map__popup\"><div class=\"canopy-map__popup-body\">` +
+      `<span class=\"canopy-map__popup-title\">${escapeHtml(fallbackTitle)}</span>` +
+      `</div></div>`;
   }
-  chunks.push('<div class="canopy-map__popup-body">');
-  if (title) {
-    const heading = href
-      ? `<a href=\"${escapeHtml(href)}\" class=\"canopy-map__popup-title\">${escapeHtml(title)}</a>`
-      : `<span class=\"canopy-map__popup-title\">${escapeHtml(title)}</span>`;
-    chunks.push(heading);
-  }
-  if (summary) chunks.push(`<p class=\"canopy-map__popup-summary\">${escapeHtml(summary)}</p>`);
-  if (marker.detailsHtml) chunks.push(`<div class=\"canopy-map__popup-details\">${marker.detailsHtml}</div>`);
-  if (!summary && !marker.detailsHtml && href && !title) {
-    chunks.push(`<a href=\"${escapeHtml(href)}\" class=\"canopy-map__popup-link\">View item</a>`);
-  }
-  chunks.push("</div></div>");
-  return chunks.join("");
+  return {
+    element: container,
+    destroy() {
+      if (!root) return;
+      try {
+        root.unmount();
+      } catch (_) {}
+      root = null;
+    },
+  };
 }
 
 function normalizeCustomMarkers(points) {
@@ -328,6 +407,7 @@ function normalizeCustomMarkers(points) {
         thumbnail: point.thumbnail || "",
         thumbnailWidth: point.thumbnailWidth,
         thumbnailHeight: point.thumbnailHeight,
+        manifests: Array.isArray(point.manifests) ? point.manifests : [],
         type: "custom",
       };
     })
@@ -620,10 +700,32 @@ export default function Map({
       const icon = buildMarkerIcon(marker, leafletLib);
       const leafletMarker = leafletLib.marker(latlng, icon ? {icon} : undefined);
       const popup = renderPopup(marker);
-      if (popup) {
+      if (popup && popup.element) {
         try {
-          leafletMarker.bindPopup(popup);
-        } catch (_) {}
+          leafletMarker.bindPopup(popup.element);
+          if (typeof popup.destroy === "function") {
+            let disposed = false;
+            const cleanup = () => {
+              if (disposed) return;
+              disposed = true;
+              try {
+                leafletMarker.off("popupclose", cleanup);
+                leafletMarker.off("popupremove", cleanup);
+                leafletMarker.off("remove", cleanup);
+              } catch (_) {}
+              popup.destroy();
+            };
+            leafletMarker.on("popupclose", cleanup);
+            leafletMarker.on("popupremove", cleanup);
+            leafletMarker.on("remove", cleanup);
+          }
+        } catch (_) {
+          if (typeof popup.destroy === "function") {
+            popup.destroy();
+          }
+        }
+      } else if (popup && typeof popup.destroy === "function") {
+        popup.destroy();
       }
       try {
         layer.addLayer(leafletMarker);

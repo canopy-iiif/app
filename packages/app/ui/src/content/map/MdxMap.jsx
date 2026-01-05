@@ -2,6 +2,10 @@ import React from "react";
 import ReactDOMServer from "react-dom/server";
 import MapPoint from "./MapPoint.jsx";
 import navPlaceHelpers from "../../../../lib/components/nav-place.js";
+import {
+  useReferencedManifestMap,
+  resolveManifestReferences,
+} from "../../utils/manifestReferences.js";
 
 function normalizeNumber(value) {
   if (value == null) return null;
@@ -35,7 +39,7 @@ function renderDetailsHtml(children) {
   }
 }
 
-function normalizeCustomPoint(child, index) {
+function normalizeCustomPoint(child, index, manifestMap) {
   if (!React.isValidElement(child)) return null;
   if (child.type !== MapPoint && child.type?.displayName !== "MapPoint") return null;
   const coords = normalizeCoordinates(child.props || {});
@@ -45,24 +49,59 @@ function normalizeCustomPoint(child, index) {
   const title = props.title || props.label || `Point ${index + 1}`;
   const summary = props.summary || props.description || "";
   const href = props.href || props.link || "";
-  const thumbnail = props.thumbnail || props.image || "";
+  let thumbnail = props.thumbnail || props.image || "";
+  let thumbnailWidth = normalizeNumber(props.thumbnailWidth);
+  let thumbnailHeight = normalizeNumber(props.thumbnailHeight);
   const detailsHtml = renderDetailsHtml(props.children);
+  const manifestValues = Array.isArray(props.referencedManifests)
+    ? props.referencedManifests
+    : props.manifest
+    ? [props.manifest]
+    : Array.isArray(props.manifests)
+    ? props.manifests
+    : [];
+  const manifests = resolveManifestReferences(manifestValues, manifestMap);
+  if (!thumbnail && manifests.length) {
+    const manifestWithThumb = manifests.find(
+      (manifest) => manifest && manifest.thumbnail
+    );
+    if (manifestWithThumb) {
+      thumbnail = manifestWithThumb.thumbnail || "";
+      if (
+        thumbnail &&
+        thumbnailWidth == null &&
+        typeof manifestWithThumb.thumbnailWidth === "number"
+      ) {
+        thumbnailWidth = manifestWithThumb.thumbnailWidth;
+      }
+      if (
+        thumbnail &&
+        thumbnailHeight == null &&
+        typeof manifestWithThumb.thumbnailHeight === "number"
+      ) {
+        thumbnailHeight = manifestWithThumb.thumbnailHeight;
+      }
+    }
+  }
   return {
     id,
     title,
     summary,
     href,
     thumbnail,
+    thumbnailWidth,
+    thumbnailHeight,
     lat: coords.lat,
     lng: coords.lng,
     detailsHtml,
+    manifests,
     type: "custom",
   };
 }
 
-function normalizeCustomPoints(children) {
+function normalizeCustomPoints(children, manifestMap) {
   return React.Children.toArray(children)
-    .map((child, index) => normalizeCustomPoint(child, index))
+    .map((child, index) => normalizeCustomPoint(child, index, manifestMap))
     .filter(Boolean);
 }
 
@@ -180,7 +219,8 @@ function getDatasetInfo() {
 }
 
 export default function MdxMap({children, ...rest}) {
-  const customPoints = normalizeCustomPoints(children);
+  const manifestMap = useReferencedManifestMap();
+  const customPoints = normalizeCustomPoints(children, manifestMap);
   const datasetInfo = getDatasetInfo();
   const navDataset = {
     hasFeatures: Boolean(datasetInfo && datasetInfo.hasFeatures),

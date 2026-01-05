@@ -73,6 +73,22 @@ Each `MapPoint` supports:
 - `title`, `summary`, `href`, `thumbnail`.
 - Child MDX content for longer descriptions (`<MapPoint>…</MapPoint>`).
 
+Custom points leave their titles unlinked by default so the popup stays informational. Add `href` when you want the heading to navigate elsewhere. If you omit the `thumbnail` prop, the map reuses the first referenced manifest thumbnail so you still get a visual teaser.
+
+When a point should drive the reader to one or more works, pass `referencedManifests` (or `manifest` / `manifests`) with the manifest IDs/URLs. Pair those values with the page’s `referencedManifests` front matter so Canopy already knows the local `/works/*.html` hrefs.
+
+```mdx
+<Map height="420px">
+  <MapPoint
+    lat="30.6181"
+    lng="-96.3387"
+    title="Foster Hall"
+    summary="Dormitory completed in 1899."
+    referencedManifests={['https://tamulib-dc-labs.github.io/sesquicentennial-manifests/building_history/Foster_Hall.json']}
+  />
+</Map>
+```
+
 ## 4. Build or restart the dev server
 
 Run your usual workflow so the navPlace dataset stays in sync:

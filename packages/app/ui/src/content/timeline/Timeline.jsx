@@ -6,6 +6,7 @@ import {
   formatDateLabel,
 } from "./date-utils.js";
 import TeaserCard from "../../layout/TeaserCard.jsx";
+import ReferencedManifestCard from "../../layout/ReferencedManifestCard.jsx";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_TRACK_HEIGHT = 640;
@@ -234,20 +235,7 @@ function renderResourceSection(point) {
       <div className="canopy-timeline__resources-list">
         {manifestCards.map((manifest) => (
           <div key={manifest.id || manifest.href}>
-            <TeaserCard
-              href={manifest.href}
-              title={manifest.title || manifest.href}
-              summary={manifest.summary}
-              metadata={
-                Array.isArray(manifest.metadata) && manifest.metadata.length
-                  ? manifest.metadata
-                  : manifest.summary
-                    ? [manifest.summary]
-                    : []
-              }
-              thumbnail={manifest.thumbnail}
-              type={manifest.type || "work"}
-            />
+            <ReferencedManifestCard manifest={manifest} />
           </div>
         ))}
         {legacyResources.map((resource, idx) => (

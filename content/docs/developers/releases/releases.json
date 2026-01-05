@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.4.2",
+    "date": "2026-01-05",
+    "summary": "Add referenced manifests cards to MapPoints.",
+    "highlights": []
+  },
+  {
     "version": "1.4.1",
     "date": "2026-01-05",
     "summary": "Refine styling of Map markers.",

@@ -1,6 +1,10 @@
 ---
 title: Map
 search: false
+referencedManifests:
+  - https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif
 ---
 
 # Map
@@ -19,7 +23,9 @@ Provide any IIIF Manifest or Collection URL via `iiifContent`. When a manifest i
 
 Wrap `MapPoint` children inside `<Map>` to add arbitrary coordinates (including non-IIIF records). Each `MapPoint` renders alongside the navPlace markers resolved from `iiifContent`. If you omit `iiifContent`, the map only displays your custom points.
 
-```mdx
+By default, custom `MapPoint` popups render their titles as plain text so visitors aren't pushed to another page. Pass an `href` prop to opt into a link. Both coordinates `lat` and `lng` are required.
+
+```mdx {3-4}
 <Map defaultZoom={12}>
   <MapPoint
     lat="26.8709"
@@ -41,6 +47,83 @@ Wrap `MapPoint` children inside `<Map>` to add arbitrary coordinates (including 
   />
 </Map>
 
+### Reference IIIF works from a custom point
+
+Attach `referencedManifests` to any `MapPoint` to render a list inside the marker. This links automatically resolve to that relative local page in `/works/` if available. You must also provide `referencedManifests` so each point pulls teaser data from the page’s cited works. When no `thumbnail` prop is supplied, the map reuses the first referenced manifest thumbnail so the popup still showcases artwork.
+
+```mdx
+---
+referencedManifests:
+  - https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif
+---
+```
+
+And inline within your content, render the Map component with custon points.
+
+```mdx
+<Map>
+  <MapPoint
+    lat="25.45126"
+    lng="75.63737"
+    title="Boondi / Bundi (1826–1830)"
+    summary="A hand-colored aquatint from East India Company sketches, depicting Bundi in a mountain pass, with the palace on the slope and fortifications rising to the summit."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif",
+    ]}
+  />
+  <MapPoint
+    lat="26.195"
+    lng="75.785"
+    title="Tonk (1826–1830)"
+    summary="A hand-colored aquatint from East India Company military sketches, showing Tonk and its hill-fort landscape in Rajpootana, near the Banas River."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b?as=iiif",
+    ]}
+  />
+  <MapPoint
+    lat="26.18"
+    lng="75.77"
+    title="Tonk (1826–1830)"
+    summary="A hand-colored aquatint drawn from East India Company military sketches (1826–1830), showing a riverside ghat and pavilion on the Banas River near Tonk in Rajpootana, with a hill-top fort/shrine in the distance."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif",
+    ]}
+  />
+</Map>
+```
+
+<Map>
+  <MapPoint
+    lat="25.45126"
+    lng="75.63737"
+    title="Boondi / Bundi (1826–1830)"
+    summar="A hand-colored aquatint from East India Company sketches, depicting Bundi in a mountain pass, with the palace on the slope and fortifications rising to the summit."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif",
+    ]}
+  />
+  <MapPoint
+    lat="26.195"
+    lng="75.785"
+    title="Tonk (1826–1830)"
+    summary="A hand-colored aquatint from East India Company military sketches, showing Tonk and its hill-fort landscape in Rajpootana, near the Banas River."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b?as=iiif",
+    ]}
+  />
+  <MapPoint
+    lat="26.18"
+    lng="75.77"
+    title="Tonk (1826–1830)"
+    summary="A hand-colored aquatint drawn from East India Company military sketches (1826–1830), showing a riverside ghat and pavilion on the Banas River near Tonk in Rajpootana, with a hill-top fort/shrine in the distance."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif",
+    ]}
+  />
+</Map>
+
 ## `<Map>` props
 
 | Prop              | Type                                                                 | Default       | Description                                                                                                       |
@@ -55,14 +138,15 @@ Wrap `MapPoint` children inside `<Map>` to add arbitrary coordinates (including 
 
 ## `<MapPoint>` props
 
-| Prop        | Type             | Description                                                      |
-| ----------- | ---------------- | ---------------------------------------------------------------- |
-| `lat`       | number \| string | Required latitude coordinates in decimal degrees.                |
-| `lng`       | number \| string | Required longitude coordinates in decimal degrees.               |
-| `title`     | string           | Marker title and popup heading.                                  |
-| `summary`   | string           | Short description rendered inside the popup.                     |
-| `href`      | string           | Optional link target (absolute, root-relative, or `/works/...`). |
-| `thumbnail` | string           | Optional image URL displayed in the popup.                       |
-| `children`  | MDX              | Additional markup rendered below the summary.                    |
+| Prop                                  | Type               | Description                                                                                                     |
+| ------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `lat`                                 | number \| string   | Required latitude coordinates in decimal degrees.                                                               |
+| `lng`                                 | number \| string   | Required longitude coordinates in decimal degrees.                                                              |
+| `title`                               | string             | Marker title and popup heading.                                                                                 |
+| `summary`                             | string             | Short description rendered inside the popup.                                                                    |
+| `href`                                | string             | Optional link target (absolute, root-relative, or `/works/...`). When omitted the popup title stays plain text. |
+| `thumbnail`                           | string             | Optional image URL displayed in the popup (defaults to the first referenced manifest thumbnail when omitted).   |
+| `referencedManifests` / `manifest(s)` | string \| string[] | Resolve one or more manifest IDs/URLs into linked work references inside the popup.                             |
+| `children`                            | MDX                | Additional markup rendered below the summary.                                                                   |
 
 > NavPlace markers automatically inherit manifest titles, summaries, and thumbnails. To populate the dataset, ensure your IIIF manifests include `navPlace` with `Point` geometries before running `npm run build`.
