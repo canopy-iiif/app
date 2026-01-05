@@ -1,5 +1,69 @@
 ---
 title: Map
 search: false
-roadmap: true
 ---
+
+# Map
+
+`<Map>` renders an interactive Leaflet view that plots navPlace `Point` features extracted from your IIIF manifests.
+
+## Using IIIF navPlace
+
+Provide any IIIF Manifest or Collection URL via `iiifContent`. When a manifest is supplied, the map plots only that record’s navPlace features. When a collection is supplied, the runtime inspects each manifest listed in the collection and includes every navPlace-enabled work it finds. Note that this currently only supports Collections their Manifests set in your `canopy.yml` file as the build process pre-fetches and caches those records.
+
+```mdx
+<Map iiifContent="https://tamulib-dc-labs.github.io/sesquicentennial-manifests/collections.json" />
+```
+
+## Custom locations with MapPoint
+
+Wrap `MapPoint` children inside `<Map>` to add arbitrary coordinates (including non-IIIF records). Each `MapPoint` renders alongside the navPlace markers resolved from `iiifContent`. If you omit `iiifContent`, the map only displays your custom points.
+
+```mdx
+<Map defaultZoom={12}>
+  <MapPoint
+    lat="26.8709"
+    lng="80.9129"
+    title="Lord Hastings' party entering the city of Lucknow on elephant back"
+    summary="Watercolour of a procession entering Lucknow from 'Views by Seeta Ram from Cawnpore to Mohumdy Vol. IV' produced for Lord Moira, afterwards the Marquess of Hastings, by Sita Ram between 1814-15."
+    thumbnail="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Lord_Hastings%27_party_entering_the_city_of_Lucknow_on_elephant_back_-_British_Library%2C_Add.Or.4749.jpg/640px-Lord_Hastings%27_party_entering_the_city_of_Lucknow_on_elephant_back_-_British_Library%2C_Add.Or.4749.jpg"
+  />
+</Map>
+```
+
+<Map defaultZoom={12}>
+  <MapPoint
+    lat="26.8709"
+    lng="80.9129"
+    title="Lord Hastings' party entering the city of Lucknow on elephant back"
+    summary="Watercolour of a procession entering Lucknow from 'Views by Seeta Ram from Cawnpore to Mohumdy Vol. IV' produced for Lord Moira, afterwards the Marquess of Hastings, by Sita Ram between 1814-15."
+    thumbnail="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Lord_Hastings%27_party_entering_the_city_of_Lucknow_on_elephant_back_-_British_Library%2C_Add.Or.4749.jpg/640px-Lord_Hastings%27_party_entering_the_city_of_Lucknow_on_elephant_back_-_British_Library%2C_Add.Or.4749.jpg"
+  />
+</Map>
+
+## `<Map>` props
+
+| Prop              | Type                                                                 | Default       | Description                                                                                                       |
+| ----------------- | -------------------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `iiifContent`     | string                                                               | `null`        | IIIF Manifest or Collection URL used to source navPlace markers.                                                  |
+| `height`          | string \| number                                                     | `600px`       | Fixed height applied to the Leaflet container. Numbers automatically add `px`.                                    |
+| `tileLayers`      | `Array<{ name, url, attribution, maxZoom?, minZoom?, subdomains? }>` | OpenStreetMap | One or more custom basemap definitions rendered via Leaflet tile layers.                                          |
+| `scrollWheelZoom` | boolean                                                              | `false`       | Enable or disable scroll-wheel zooming.                                                                           |
+| `cluster`         | boolean                                                              | `true`        | Toggle marker clustering (`leaflet.markercluster`).                                                               |
+| `defaultCenter`   | `{lat, lng}` \| `'lat,lng'`                                          | `null`        | Fallback map view when no markers are available.                                                                  |
+| `defaultZoom`     | number                                                               | `null`        | Overrides the automatic bounds fit and forces the map to use the provided zoom (optionally with `defaultCenter`). |
+
+## `<MapPoint>` props
+
+| Prop                                 | Type             | Description                                                      |
+| ------------------------------------ | ---------------- | ---------------------------------------------------------------- |
+| `lat`                                | number \| string | Required latitude coordinates in decimal degrees.                |
+| `lng`                                | number \| string | Required longitude coordinates in decimal degrees.               |
+| `title`                              | string           | Marker title and popup heading.                                  |
+| `summary`                            | string           | Short description rendered inside the popup.                     |
+| `href`                               | string           | Optional link target (absolute, root-relative, or `/works/...`). |
+| `thumbnail`                          | string           | Optional image URL displayed in the popup.                       |
+| `thumbnailWidth` / `thumbnailHeight` | number           | Dimensions for the thumbnail (improves layout).                  |
+| `children`                           | MDX              | Additional markup rendered below the summary.                    |
+
+> NavPlace markers automatically inherit manifest titles, summaries, and thumbnails. To populate the dataset, ensure your IIIF manifests include `navPlace` with `Point` geometries before running `npm run build`.

@@ -106,10 +106,68 @@ async function cleanupLegacySitemaps() {
   await Promise.all(deletions);
 }
 
+async function ensureNoExtensionGuards(fileNames) {
+  const guards = new Map();
+  (Array.isArray(fileNames) ? fileNames : []).forEach((file) => {
+    const raw = typeof file === 'string' ? file.trim() : '';
+    if (!raw || !/\.xml$/i.test(raw)) return;
+    const base = raw.replace(/\.xml$/i, '');
+    if (!base || base === raw) return;
+    guards.set(base, raw);
+  });
+
+  let entries;
+  try {
+    entries = await fsp.readdir(OUT_DIR, { withFileTypes: true });
+  } catch (_) {
+    entries = [];
+  }
+
+  const markerName = '.canopy-xml-guard';
+  const staleRemovals = [];
+  for (const entry of entries) {
+    if (!entry || !entry.isDirectory()) continue;
+    const dirName = entry.name;
+    const dirPath = path.join(OUT_DIR, dirName);
+    const markerPath = path.join(dirPath, markerName);
+    let hasMarker = false;
+    try {
+      const stat = await fsp.stat(markerPath);
+      hasMarker = stat.isFile();
+    } catch (_) {}
+    if (!hasMarker) continue;
+    if (guards.has(dirName)) {
+      guards.delete(dirName);
+      continue;
+    }
+    staleRemovals.push(
+      fsp
+        .rm(dirPath, { recursive: true, force: true })
+        .catch(() => {})
+    );
+  }
+  await Promise.all(staleRemovals);
+
+  if (!guards.size) return;
+
+  const creations = [];
+  for (const base of guards.keys()) {
+    const dirPath = path.join(OUT_DIR, base);
+    const markerPath = path.join(dirPath, markerName);
+    creations.push(
+      fsp
+        .mkdir(dirPath, { recursive: true })
+        .then(() => fsp.writeFile(markerPath, '', 'utf8').catch(() => {}))
+    );
+  }
+  await Promise.all(creations);
+}
+
 async function writeSitemap(iiifRecords, pageRecords) {
   const urls = collectAbsoluteUrls(iiifRecords, pageRecords);
   if (!urls.length) {
     await cleanupLegacySitemaps();
+    await ensureNoExtensionGuards([]);
     logLine('• No URLs to write to sitemap', 'yellow');
     return;
   }
@@ -117,15 +175,19 @@ async function writeSitemap(iiifRecords, pageRecords) {
 
   const chunks = chunkList(urls, MAX_URLS_PER_SITEMAP);
   const indexEntries = [];
+  const writtenFiles = [];
   for (let i = 0; i < chunks.length; i += 1) {
     const fileName = `sitemap-${i + 1}.xml`;
     const dest = path.join(OUT_DIR, fileName);
     await fsp.writeFile(dest, buildUrlsetXml(chunks[i]), 'utf8');
     indexEntries.push({ loc: absoluteUrl(fileName) });
+    writtenFiles.push(fileName);
   }
 
   const indexDest = path.join(OUT_DIR, SITEMAP_INDEX_BASENAME);
   await fsp.writeFile(indexDest, buildSitemapIndexXml(indexEntries), 'utf8');
+  writtenFiles.push(SITEMAP_INDEX_BASENAME);
+  await ensureNoExtensionGuards(writtenFiles);
   logLine(
     `✓ Wrote sitemap index (${chunks.length} files, ${urls.length} urls total)`,
     'cyan'

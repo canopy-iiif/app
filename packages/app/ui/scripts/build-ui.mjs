@@ -82,7 +82,7 @@ async function run() {
     format: 'esm',
     sourcemap: true,
     target: ['es2018'],
-    external: ['react', 'react-dom', 'react-dom/client', 'react-masonry-css', 'flexsearch', 'cmdk', '@samvera/clover-iiif/*'],
+    external: ['react', 'react-dom', 'react-dom/client', 'react-masonry-css', 'flexsearch', 'cmdk', 'leaflet', 'leaflet.markercluster', '@samvera/clover-iiif/*'],
     logLevel: 'info',
     outExtension: { '.js': '.mjs' },
     metafile: false
@@ -109,6 +109,8 @@ async function run() {
       'react-masonry-css',
       'flexsearch',
       'cmdk',
+      'leaflet',
+      'leaflet.markercluster',
       '@samvera/clover-iiif/*',
     ],
     mainFields: ['module', 'main'],
@@ -134,7 +136,7 @@ async function run() {
       format: 'esm',
       sourcemap: true,
       target: ['es2018'],
-      external: ['react', 'react-dom', 'react-dom/client', 'react-masonry-css', 'flexsearch', 'cmdk', '@samvera/clover-iiif/*'],
+      external: ['react', 'react-dom', 'react-dom/client', 'react-masonry-css', 'flexsearch', 'cmdk', 'leaflet', 'leaflet.markercluster', '@samvera/clover-iiif/*'],
       logLevel: 'info',
       outExtension: { '.js': '.mjs' }
     });
@@ -159,6 +161,8 @@ async function run() {
         'react-masonry-css',
         'flexsearch',
         'cmdk',
+        'leaflet',
+        'leaflet.markercluster',
         '@samvera/clover-iiif/*',
       ],
       mainFields: ['module', 'main'],

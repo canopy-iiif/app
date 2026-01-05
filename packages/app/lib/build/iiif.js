@@ -20,6 +20,7 @@ const {log, logLine, logResponse} = require("./log");
 const { getPageContext } = require("../page-context");
 const PageContext = getPageContext();
 const referenced = require("../components/referenced");
+const navPlace = require("../components/nav-place");
 const {
   getThumbnail,
   getRepresentativeImage,
@@ -1387,6 +1388,7 @@ async function buildIiifCollectionPages(CONFIG) {
     );
   } catch (_) {}
   const iiifRecords = [];
+  const navPlaceRecords = [];
   const {size: thumbSize, unsafe: unsafeThumbs} = resolveThumbnailPreferences();
 
   // Compile the works layout component once per run
@@ -1543,9 +1545,13 @@ async function buildIiifCollectionPages(CONFIG) {
         try {
           let components = {};
           try {
-            components = await import("@canopy-iiif/app/ui");
+            components = await import("@canopy-iiif/app/ui/server");
           } catch (_) {
-            components = {};
+            try {
+              components = await import("@canopy-iiif/app/ui");
+            } catch (_) {
+              components = {};
+            }
           }
           const {withBase} = require("../common");
           const Anchor = function A(props) {
@@ -1658,6 +1664,7 @@ async function buildIiifCollectionPages(CONFIG) {
           const needsRelated = body.includes("data-canopy-related-items");
           const needsHeroSlider = body.includes("data-canopy-hero-slider");
           const needsTimeline = body.includes("data-canopy-timeline");
+          const needsMap = body.includes("data-canopy-map");
           const needsSearchForm = body.includes("data-canopy-search-form");
           const needsHydrate =
             body.includes("data-canopy-hydrate") ||
@@ -1688,6 +1695,24 @@ async function buildIiifCollectionPages(CONFIG) {
                 .relative(
                   path.dirname(outPath),
                   path.join(OUT_DIR, "scripts", "canopy-timeline.js")
+                )
+                .split(path.sep)
+                .join("/")
+            : null;
+          const mapRel = needsMap
+            ? path
+                .relative(
+                  path.dirname(outPath),
+                  path.join(OUT_DIR, "scripts", "canopy-map.js")
+                )
+                .split(path.sep)
+                .join("/")
+            : null;
+          const mapCssRel = needsMap
+            ? path
+                .relative(
+                  path.dirname(outPath),
+                  path.join(OUT_DIR, "scripts", "canopy-map.css")
                 )
                 .split(path.sep)
                 .join("/")
@@ -1727,6 +1752,7 @@ async function buildIiifCollectionPages(CONFIG) {
           if (heroRel) primaryClassicScripts.push(heroRel);
           if (relatedRel) primaryClassicScripts.push(relatedRel);
           if (timelineRel) primaryClassicScripts.push(timelineRel);
+          if (mapRel) primaryClassicScripts.push(mapRel);
           const secondaryClassicScripts = [];
           if (searchFormRel) secondaryClassicScripts.push(searchFormRel);
           let jsRel = null;
@@ -1741,7 +1767,8 @@ async function buildIiifCollectionPages(CONFIG) {
           const needsReact = !!(
             needsHydrateViewer ||
             needsRelated ||
-            needsTimeline
+            needsTimeline ||
+            needsMap
           );
           let vendorTag = "";
           if (needsReact) {
@@ -1782,6 +1809,17 @@ async function buildIiifCollectionPages(CONFIG) {
                 )}</script>` + vendorTag;
           } catch (_) {}
           let pageBody = body;
+          const extraStyles = [];
+          if (mapCssRel) {
+            let rel = mapCssRel;
+            try {
+              const mapCssAbs = path.join(OUT_DIR, "scripts", "canopy-map.css");
+              const st = fs.statSync(mapCssAbs);
+              rel += `?v=${Math.floor(st.mtimeMs || Date.now())}`;
+            } catch (_) {}
+            extraStyles.push(`<link rel="stylesheet" href="${rel}">`);
+          }
+          if (extraStyles.length) headSegments.push(extraStyles.join(""));
           if (vendorTag) headSegments.push(vendorTag);
           if (extraScripts.length) headSegments.push(extraScripts.join(""));
           const headExtra = headSegments.join("");
@@ -1878,10 +1916,36 @@ async function buildIiifCollectionPages(CONFIG) {
               annotationValue = "";
             }
           }
+          const navThumbnail =
+            thumbUrl || (heroMedia && heroMedia.heroThumbnail) || "";
+          const navThumbWidth =
+            typeof thumbWidth === "number"
+              ? thumbWidth
+              : heroMedia && typeof heroMedia.heroThumbnailWidth === "number"
+              ? heroMedia.heroThumbnailWidth
+              : undefined;
+          const navThumbHeight =
+            typeof thumbHeight === "number"
+              ? thumbHeight
+              : heroMedia && typeof heroMedia.heroThumbnailHeight === "number"
+              ? heroMedia.heroThumbnailHeight
+              : undefined;
+          const navRecord = navPlace.buildManifestNavPlaceRecord({
+            manifest,
+            slug,
+            href: pageHref,
+            title,
+            summary: summaryRaw,
+            thumbnail: navThumbnail,
+            thumbnailWidth: navThumbWidth,
+            thumbnailHeight: navThumbHeight,
+          });
+          if (navRecord) navPlaceRecords.push(navRecord);
+
           iiifRecords.push({
             id: String(manifest.id || id),
             title,
-            href: rootRelativeHref(href.split(path.sep).join("/")),
+            href: pageHref,
             type: "work",
             thumbnail: thumbUrl || undefined,
             thumbnailWidth:
@@ -1914,6 +1978,16 @@ async function buildIiifCollectionPages(CONFIG) {
       () => worker()
     );
     await Promise.all(workers);
+  }
+  try {
+    await navPlace.writeNavPlaceDataset(navPlaceRecords);
+  } catch (error) {
+    try {
+      console.warn(
+        '[canopy][navPlace] failed to write dataset:',
+        error && error.message ? error.message : error
+      );
+    } catch (_) {}
   }
   return {iiifRecords};
 }

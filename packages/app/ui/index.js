@@ -42,3 +42,5 @@ export { default as DocsMarkdownTable } from "./src/docs/MarkdownTable.jsx";
 export { CanopyDiagram } from "./src/docs/Diagram.jsx";
 export { default as Timeline } from "./src/content/timeline/Timeline.jsx";
 export { default as TimelinePoint } from "./src/content/timeline/TimelinePoint.jsx";
+export { default as Map } from "./src/content/map/Map.jsx";
+export { default as MapPoint } from "./src/content/map/MapPoint.jsx";

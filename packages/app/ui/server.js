@@ -23,6 +23,8 @@ export { default as ReferencedItems } from "./src/content/ReferencedItems.jsx";
 export { default as References } from "./src/content/References.jsx";
 export { default as Timeline } from "./src/content/timeline/MdxTimeline.jsx";
 export { default as TimelinePoint } from "./src/content/timeline/TimelinePoint.jsx";
+export { default as Map } from "./src/content/map/MdxMap.jsx";
+export { default as MapPoint } from "./src/content/map/MapPoint.jsx";
 
 // SSR-safe MDX placeholders (do not import browser-only UI here)
 export { default as SearchResults } from "./src/search/MdxSearchResults.jsx";

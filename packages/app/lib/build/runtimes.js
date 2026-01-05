@@ -5,6 +5,7 @@ async function prepareAllRuntimes() {
   const mdx = require('./mdx');
   try { await mdx.ensureClientRuntime(); } catch (_) {}
   try { if (typeof mdx.ensureTimelineRuntime === 'function') await mdx.ensureTimelineRuntime(); } catch (_) {}
+  try { if (typeof mdx.ensureMapRuntime === 'function') await mdx.ensureMapRuntime(); } catch (_) {}
   try { if (typeof mdx.ensureHeroRuntime === 'function') await mdx.ensureHeroRuntime(); } catch (_) {}
   try { if (typeof mdx.ensureFacetsRuntime === 'function') await mdx.ensureFacetsRuntime(); } catch (_) {}
   try { if (typeof mdx.ensureReactGlobals === 'function') await mdx.ensureReactGlobals(); } catch (_) {}

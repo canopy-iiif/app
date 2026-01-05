@@ -1,0 +1,86 @@
+# Enable a map with navPlace
+
+Use the `<Map>` component to plot every Manifest that exposes IIIF Presentation 3 navPlace `Point` features. This guide walks through the prerequisites and shows how to embed a map on any MDX page.
+
+> navPlace is an IIIF extension for geographic context. Make sure your manifests contain `navPlace.features` entries before running the build so Canopy can extract coordinates.
+
+## 1. Add navPlace data to your manifests
+
+Each manifest must include `navPlace` with GeoJSON-like `Feature` objects. Only features with `geometry.type === "Point"` are plotted.
+
+```json
+{
+  "id": "https://example.org/iiif/manifest.json",
+  "type": "Manifest",
+  "label": {"en": ["Survey of Calcutta"]},
+  "navPlace": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [88.3639, 22.5726]
+        },
+        "properties": {
+          "label": {"en": ["Calcutta"]},
+          "summary": {"en": ["British survey depot"]}
+        }
+      }
+    ]
+  }
+}
+```
+
+Canopy collects these features, normalizes titles + thumbnails, and writes them to `site/api/navplace.json` during `npm run build` or `npm run dev`.
+
+## 2. Embed a Map in MDX
+
+Place `<Map iiifContent="…" />` on any MDX page (`content/**/*.mdx`) or in `content/works/_layout.mdx`. The component is SSR-safe: it renders a placeholder on the server and hydrates on the client with Leaflet + MarkerCluster.
+
+```mdx copy filename="content/about/maps.mdx"
+---
+title: Mapping the Collection
+---
+
+# Mapping the Collection
+
+Our manifests encode navPlace metadata, so we can show a geographic overview:
+
+<Map
+  iiifContent="https://tamulib-dc-labs.github.io/sesquicentennial-manifests/collections.json"
+  height="520px"
+/>
+```
+
+- `iiifContent` accepts a Manifest or Collection URL and determines which navPlace markers render.
+- `height` controls the rendered canvas (string or number). Default: `600px`.
+
+## 3. Add custom points with MapPoint
+
+You can mix in arbitrary coordinates for items that lack navPlace or for non-IIIF references. When `iiifContent` is omitted, the map only displays your custom points.
+
+```mdx copy filename="content/about/maps.mdx"
+<Map height="520px">
+  <MapPoint lat="41.8781" lng="-87.6298" title="Newberry Library" summary="Chicago, IL" href="/works/newberry-atlas" />
+  <MapPoint lat="22.5726" lng="88.3639" title="Calcutta" summary="Survey depot" />
+</Map>
+```
+
+Each `MapPoint` supports:
+
+- `lat` / `lng` (required) — decimal degrees.
+- `title`, `summary`, `href`, `thumbnail`, `thumbnailWidth`, `thumbnailHeight`.
+- Child MDX content for longer descriptions (`<MapPoint>…</MapPoint>`).
+
+## 4. Build or restart the dev server
+
+Run your usual workflow so the navPlace dataset stays in sync:
+
+```bash
+npm run dev   # watches navPlace changes and rebuilds the dataset
+# or
+npm run build
+```
+
+The viewer loads Leaflet + MarkerCluster automatically via `site/scripts/canopy-map.js`. Thumbnails, labels, and links in the popup come from each manifest’s cached metadata, so no extra authoring is required.

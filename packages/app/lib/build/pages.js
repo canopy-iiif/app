@@ -176,6 +176,7 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
   const needsHydrateSlider = body.includes('data-canopy-slider');
   const needsHeroSlider = body.includes('data-canopy-hero-slider');
   const needsTimeline = body.includes('data-canopy-timeline');
+  const needsMap = body.includes('data-canopy-map');
   const needsSearchForm = true; // search form runtime is global
   const needsFacets = body.includes('data-canopy-related-items');
   const needsCustomClients = body.includes('data-canopy-client-component');
@@ -193,6 +194,12 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
     : null;
   const timelineRel = needsTimeline
     ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-timeline.js')).split(path.sep).join('/')
+    : null;
+  const mapRel = needsMap
+    ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-map.js')).split(path.sep).join('/')
+    : null;
+  const mapCssRel = needsMap
+    ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-map.css')).split(path.sep).join('/')
     : null;
   const facetsRel = needsFacets
     ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-related-items.js')).split(path.sep).join('/')
@@ -226,6 +233,7 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
   const primaryClassicScripts = [];
   if (heroRel) primaryClassicScripts.push(heroRel);
   if (timelineRel) primaryClassicScripts.push(timelineRel);
+  if (mapRel) primaryClassicScripts.push(mapRel);
   if (facetsRel) primaryClassicScripts.push(facetsRel);
   const secondaryClassicScripts = [];
   if (searchFormRel) secondaryClassicScripts.push(searchFormRel);
@@ -239,6 +247,7 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
     needsHydrateSlider ||
     needsFacets ||
     needsTimeline ||
+    needsMap ||
     (customClientRel && needsCustomClients)
   );
   let vendorTag = '';
@@ -275,6 +284,15 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
     try {
       const heroCssAbs = path.join(OUT_DIR, 'scripts', 'canopy-hero-slider.css');
       const st = fs.statSync(heroCssAbs);
+      rel += `?v=${Math.floor(st.mtimeMs || Date.now())}`;
+    } catch (_) {}
+    extraStyles.push(`<link rel="stylesheet" href="${rel}">`);
+  }
+  if (mapCssRel) {
+    let rel = mapCssRel;
+    try {
+      const mapCssAbs = path.join(OUT_DIR, 'scripts', 'canopy-map.css');
+      const st = fs.statSync(mapCssAbs);
       rel += `?v=${Math.floor(st.mtimeMs || Date.now())}`;
     } catch (_) {}
     extraStyles.push(`<link rel="stylesheet" href="${rel}">`);
