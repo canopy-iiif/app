@@ -19,7 +19,7 @@ Below is a scrolling demo that covers 1750–1900. `range` keeps each point prop
 <Timeline
   title="Empire and Control in Colonial India"
   description="Famine, mapping, policy, and revolt across one and a half centuries."
-  range={{start: '1750', end: '1900', granularity: 'year'}}
+  range={{start: "1750", end: "1900", granularity: "year"}}
   threshold={5}
   steps={50}
   height="600px"
@@ -34,7 +34,7 @@ Below is a scrolling demo that covers 1750–1900. `range` keeps each point prop
     title="Bengal Atlas published"
     summary="James Rennell mapped Eastern India for Company campaigns."
     referencedManifests={[
-      'https://api.dc.library.northwestern.edu/api/v2/works/7a5dd871-d0bc-4d6f-8469-1c23a872fc29?as=iiif',
+      "https://api.dc.library.northwestern.edu/api/v2/works/7a5dd871-d0bc-4d6f-8469-1c23a872fc29?as=iiif",
     ]}
   />
   <TimelinePoint
@@ -43,7 +43,7 @@ Below is a scrolling demo that covers 1750–1900. `range` keeps each point prop
     summary="Indian regiments rebelled across the north."
     highlight
     referencedManifests={[
-      'https://api.dc.library.northwestern.edu/api/v2/works/c5a11577-a1f2-4288-95de-96ad616174ed?as=iiif',
+      "https://api.dc.library.northwestern.edu/api/v2/works/c5a11577-a1f2-4288-95de-96ad616174ed?as=iiif",
     ]}
   />
   <TimelinePoint
@@ -57,18 +57,22 @@ Below is a scrolling demo that covers 1750–1900. `range` keeps each point prop
 <Timeline
   title="Empire and Control in Colonial India"
   description="Famine, mapping, policy, and revolt across one and a half centuries."
-  range={{start: '1750', end: '1900', granularity: 'year'}}
+  range={{start: "1750", end: "1900", granularity: "year"}}
   threshold={5}
   steps={50}
   height="600px"
 >
-  <TimelinePoint date="1770" title="Great Bengal Famine" summary="Starvation ravaged Company-controlled Bengal." />
+  <TimelinePoint
+    date="1770"
+    title="Great Bengal Famine"
+    summary="Starvation ravaged Company-controlled Bengal."
+  />
   <TimelinePoint
     date="1781"
     title="Bengal Atlas published"
     summary="James Rennell mapped Eastern India for Company campaigns."
     referencedManifests={[
-      'https://api.dc.library.northwestern.edu/api/v2/works/7a5dd871-d0bc-4d6f-8469-1c23a872fc29?as=iiif',
+      "https://api.dc.library.northwestern.edu/api/v2/works/7a5dd871-d0bc-4d6f-8469-1c23a872fc29?as=iiif",
     ]}
   />
   <TimelinePoint
@@ -77,41 +81,45 @@ Below is a scrolling demo that covers 1750–1900. `range` keeps each point prop
     summary="Indian regiments rebelled across the north."
     highlight
     referencedManifests={[
-      'https://api.dc.library.northwestern.edu/api/v2/works/c5a11577-a1f2-4288-95de-96ad616174ed?as=iiif',
+      "https://api.dc.library.northwestern.edu/api/v2/works/c5a11577-a1f2-4288-95de-96ad616174ed?as=iiif",
     ]}
   />
-  <TimelinePoint date="1885" title="Indian National Congress founded" summary="A national movement for reform gained structure." />
+  <TimelinePoint
+    date="1885"
+    title="Indian National Congress founded"
+    summary="A national movement for reform gained structure."
+  />
 </Timeline>
 ```
 
-## Props
+## API
 
 ### Timeline
 
-| Prop | Type | Required | Notes |
-| --- | --- | --- | --- |
-| `title` | string | | Optional heading rendered above the track. |
-| `description` | string | | Short blurb shown under the heading. |
-| `range` | object | | `{start, end, granularity}` controls proportional spacing. Granularity accepts `year`, `month`, or `day`. |
-| `threshold` | number | | Collapse points that fall within this many units of the selected granularity. |
-| `steps` | number | | Draw evenly spaced tick marks along the spine. |
-| `height` | string or number | | Scrolling viewport height. Numbers are treated as pixels. |
-| `locale` | string | | Locale tag used for formatted dates. |
-| `children` | nodes | ✅ | One or more `<TimelinePoint>` elements. |
+| Prop          | Type             | Required | Notes                                                                                                     |
+| ------------- | ---------------- | -------- | --------------------------------------------------------------------------------------------------------- |
+| `title`       | string           |          | Optional heading rendered above the track.                                                                |
+| `description` | string           |          | Short blurb shown under the heading.                                                                      |
+| `range`       | object           |          | `{start, end, granularity}` controls proportional spacing. Granularity accepts `year`, `month`, or `day`. |
+| `threshold`   | number           |          | Collapse points that fall within this many units of the selected granularity.                             |
+| `steps`       | number           |          | Draw evenly spaced tick marks along the spine.                                                            |
+| `height`      | string or number |          | Scrolling viewport height. Numbers are treated as pixels.                                                 |
+| `locale`      | string           |          | Locale tag used for formatted dates.                                                                      |
+| `children`    | nodes            | ✅       | One or more `<TimelinePoint>` elements.                                                                   |
 
 ### TimelinePoint
 
-| Prop | Type | Required | Notes |
-| --- | --- | --- | --- |
-| `date` / `value` | string | ✅ | Accepts ISO dates (`1776-07-04`), months (`July 1776`), or bare years. |
-| `title` | string | ✅ | Label shown beside the point. |
-| `summary` | string | | Short sentence under the title. |
-| `description` | string | | Long-form copy shown inside the detail panel. |
-| `side` | `'left'` · `'right'` | | Pin the marker to a side; otherwise it alternates. |
-| `highlight` | boolean | | Draw the point with the accent color. |
-| `referencedManifests` | array | | List of manifest IDs to resolve into teaser cards. |
-| `iiifResources` | array | | Provide `{href, label}` entries for non-manifest resources. |
-| `children` | nodes | | Additional markup rendered in the detail drawer. |
+| Prop                  | Type                 | Required | Notes                                                                  |
+| --------------------- | -------------------- | -------- | ---------------------------------------------------------------------- |
+| `date` / `value`      | string               | ✅       | Accepts ISO dates (`1776-07-04`), months (`July 1776`), or bare years. |
+| `title`               | string               | ✅       | Label shown beside the point.                                          |
+| `summary`             | string               |          | Short sentence under the title.                                        |
+| `description`         | string               |          | Long-form copy shown inside the detail panel.                          |
+| `side`                | `'left'` · `'right'` |          | Pin the marker to a side; otherwise it alternates.                     |
+| `highlight`           | boolean              |          | Draw the point with the accent color.                                  |
+| `referencedManifests` | array                |          | List of manifest IDs to resolve into teaser cards.                     |
+| `iiifResources`       | array                |          | Provide `{href, label}` entries for non-manifest resources.            |
+| `children`            | nodes                |          | Additional markup rendered in the detail drawer.                       |
 
 ## Examples
 
@@ -122,28 +130,54 @@ Give the component a range so events sit in proportion to each other. Combine `t
 <Timeline
   title="Empire and Control in Colonial India"
   description="Moments of famine, conflict, and policy between 1750 and 1900."
-  range={{start: '1750', end: '1900', granularity: 'year'}}
+  range={{start: "1750", end: "1900", granularity: "year"}}
   threshold={5}
   steps={50}
   height="600px"
 >
-  <TimelinePoint date="1770" title="Great Bengal Famine" summary="Starvation ravaged Company territory." />
-  <TimelinePoint date="1781" title="Bengal Atlas" summary="Rennell mapped Bengal for Company campaigns." />
-  <TimelinePoint date="1857" title="Great Mutiny" summary="Indian regiments rebelled across the north." highlight />
+  <TimelinePoint
+    date="1770"
+    title="Great Bengal Famine"
+    summary="Starvation ravaged Company territory."
+  />
+  <TimelinePoint
+    date="1781"
+    title="Bengal Atlas"
+    summary="Rennell mapped Bengal for Company campaigns."
+  />
+  <TimelinePoint
+    date="1857"
+    title="Great Mutiny"
+    summary="Indian regiments rebelled across the north."
+    highlight
+  />
 </Timeline>
 
 ```mdx
 <Timeline
   title="Empire and Control in Colonial India"
   description="Moments of famine, conflict, and policy between 1750 and 1900."
-  range={{start: '1750', end: '1900', granularity: 'year'}}
+  range={{start: "1750", end: "1900", granularity: "year"}}
   threshold={5}
   steps={50}
   height="600px"
 >
-  <TimelinePoint date="1770" title="Great Bengal Famine" summary="Starvation ravaged Company territory." />
-  <TimelinePoint date="1781" title="Bengal Atlas" summary="Rennell mapped Bengal for Company campaigns." />
-  <TimelinePoint date="1857" title="Great Mutiny" summary="Indian regiments rebelled across the north." highlight />
+  <TimelinePoint
+    date="1770"
+    title="Great Bengal Famine"
+    summary="Starvation ravaged Company territory."
+  />
+  <TimelinePoint
+    date="1781"
+    title="Bengal Atlas"
+    summary="Rennell mapped Bengal for Company campaigns."
+  />
+  <TimelinePoint
+    date="1857"
+    title="Great Mutiny"
+    summary="Indian regiments rebelled across the north."
+    highlight
+  />
 </Timeline>
 ```
 
@@ -164,7 +198,7 @@ referencedManifests:
     title="Bengal Atlas published"
     summary="Maps of Eastern India shaped British campaigns."
     referencedManifests={[
-      'https://api.dc.library.northwestern.edu/api/v2/works/7a5dd871-d0bc-4d6f-8469-1c23a872fc29?as=iiif',
+      "https://api.dc.library.northwestern.edu/api/v2/works/7a5dd871-d0bc-4d6f-8469-1c23a872fc29?as=iiif",
     ]}
   />
 </Timeline>
@@ -176,7 +210,7 @@ referencedManifests:
     title="Bengal Atlas published"
     summary="Maps of Eastern India shaped British campaigns."
     referencedManifests={[
-      'https://api.dc.library.northwestern.edu/api/v2/works/7a5dd871-d0bc-4d6f-8469-1c23a872fc29?as=iiif',
+      "https://api.dc.library.northwestern.edu/api/v2/works/7a5dd871-d0bc-4d6f-8469-1c23a872fc29?as=iiif",
     ]}
   />
 </Timeline>
@@ -192,16 +226,18 @@ Use children to add inline prose and cite additional IIIF resources beyond the m
     title="Great Mutiny spreads"
     summary="Garrison towns erupt across North India."
     referencedManifests={[
-      'https://api.dc.library.northwestern.edu/api/v2/works/c5a11577-a1f2-4288-95de-96ad616174ed?as=iiif',
+      "https://api.dc.library.northwestern.edu/api/v2/works/c5a11577-a1f2-4288-95de-96ad616174ed?as=iiif",
     ]}
     iiifResources={[
       {
-        href: 'https://api.dc.library.northwestern.edu/api/v2/works/c5a11577-a1f2-4288-95de-96ad616174ed?as=iiif',
-        label: 'Great Mutiny, India',
+        href: "https://api.dc.library.northwestern.edu/api/v2/works/c5a11577-a1f2-4288-95de-96ad616174ed?as=iiif",
+        label: "Great Mutiny, India",
       },
     ]}
   >
-    <p>The rebellion surged across Delhi, Kanpur, and Lucknow in the first month.</p>
+    <p>
+      The rebellion surged across Delhi, Kanpur, and Lucknow in the first month.
+    </p>
   </TimelinePoint>
 </Timeline>
 
@@ -212,16 +248,18 @@ Use children to add inline prose and cite additional IIIF resources beyond the m
     title="Great Mutiny spreads"
     summary="Garrison towns erupt across North India."
     referencedManifests={[
-      'https://api.dc.library.northwestern.edu/api/v2/works/c5a11577-a1f2-4288-95de-96ad616174ed?as=iiif',
+      "https://api.dc.library.northwestern.edu/api/v2/works/c5a11577-a1f2-4288-95de-96ad616174ed?as=iiif",
     ]}
     iiifResources={[
       {
-        href: 'https://api.dc.library.northwestern.edu/api/v2/works/c5a11577-a1f2-4288-95de-96ad616174ed?as=iiif',
-        label: 'Great Mutiny, India',
+        href: "https://api.dc.library.northwestern.edu/api/v2/works/c5a11577-a1f2-4288-95de-96ad616174ed?as=iiif",
+        label: "Great Mutiny, India",
       },
     ]}
   >
-    <p>The rebellion surged across Delhi, Kanpur, and Lucknow in the first month.</p>
+    <p>
+      The rebellion surged across Delhi, Kanpur, and Lucknow in the first month.
+    </p>
   </TimelinePoint>
 </Timeline>
 ```
@@ -248,16 +286,46 @@ Pass `side="left"` or `side="right"` when a point should stay on one side of the
 
 Use `threshold` to group events that fall within a set number of years for the current granularity.
 
-<Timeline threshold={10} range={{start: '1800', end: '1850', granularity: 'year'}}>
-  <TimelinePoint date="1803" title="Capture of Delhi" summary="Company forces seize Delhi." />
-  <TimelinePoint date="1806" title="Vellore uprising" summary="Sepoys revolt in Vellore." />
-  <TimelinePoint date="1814" title="Gurkha War" summary="Gurkha forces confront the Company." />
+<Timeline
+  threshold={10}
+  range={{start: "1800", end: "1850", granularity: "year"}}
+>
+  <TimelinePoint
+    date="1803"
+    title="Capture of Delhi"
+    summary="Company forces seize Delhi."
+  />
+  <TimelinePoint
+    date="1806"
+    title="Vellore uprising"
+    summary="Sepoys revolt in Vellore."
+  />
+  <TimelinePoint
+    date="1814"
+    title="Gurkha War"
+    summary="Gurkha forces confront the Company."
+  />
 </Timeline>
 
 ```mdx
-<Timeline threshold={10} range={{start: '1800', end: '1850', granularity: 'year'}}>
-  <TimelinePoint date="1803" title="Capture of Delhi" summary="Company forces seize Delhi." />
-  <TimelinePoint date="1806" title="Vellore uprising" summary="Sepoys revolt in Vellore." />
-  <TimelinePoint date="1814" title="Gurkha War" summary="Gurkha forces confront the Company." />
+<Timeline
+  threshold={10}
+  range={{start: "1800", end: "1850", granularity: "year"}}
+>
+  <TimelinePoint
+    date="1803"
+    title="Capture of Delhi"
+    summary="Company forces seize Delhi."
+  />
+  <TimelinePoint
+    date="1806"
+    title="Vellore uprising"
+    summary="Sepoys revolt in Vellore."
+  />
+  <TimelinePoint
+    date="1814"
+    title="Gurkha War"
+    summary="Gurkha forces confront the Company."
+  />
 </Timeline>
 ```
