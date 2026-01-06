@@ -360,31 +360,44 @@ function renderPopup(marker) {
   if (!marker || typeof document === "undefined") return null;
   const container = document.createElement("div");
   let root = null;
-  try {
-    root = createRoot(container);
-    root.render(<MapPopupContent marker={marker} />);
-  } catch (error) {
-    if (root) {
-      try {
-        root.unmount();
-      } catch (_) {}
-      root = null;
+  let hadError = false;
+
+  const render = () => {
+    if (hadError) return;
+    try {
+      if (!root) root = createRoot(container);
+      root.render(<MapPopupContent marker={marker} />);
+    } catch (error) {
+      hadError = true;
+      if (root) {
+        try {
+          root.unmount();
+        } catch (_) {}
+        root = null;
+      }
+      const fallbackTitle =
+        marker.title || marker.summary || marker.href || "Location";
+      container.innerHTML =
+        `<div class=\"canopy-map__popup\"><div class=\"canopy-map__popup-body\">` +
+        `<span class=\"canopy-map__popup-title\">${escapeHtml(fallbackTitle)}</span>` +
+        `</div></div>`;
     }
-    const fallbackTitle = marker.title || marker.summary || marker.href || "Location";
-    container.innerHTML =
-      `<div class=\"canopy-map__popup\"><div class=\"canopy-map__popup-body\">` +
-      `<span class=\"canopy-map__popup-title\">${escapeHtml(fallbackTitle)}</span>` +
-      `</div></div>`;
-  }
+  };
+
+  const destroy = () => {
+    if (!root) return;
+    try {
+      root.unmount();
+    } catch (_) {}
+    root = null;
+  };
+
+  render();
+
   return {
     element: container,
-    destroy() {
-      if (!root) return;
-      try {
-        root.unmount();
-      } catch (_) {}
-      root = null;
-    },
+    render,
+    destroy,
   };
 }
 
@@ -693,7 +706,9 @@ export default function Map({
       layer.clearLayers();
     } catch (_) {}
     const bounds = [];
-    allMarkers.forEach((marker) => {
+  const popupCleanups = [];
+
+  allMarkers.forEach((marker) => {
       if (!marker || !Number.isFinite(marker.lat) || !Number.isFinite(marker.lng)) return;
       const latlng = leafletLib.latLng(marker.lat, marker.lng);
       bounds.push(latlng);
@@ -703,22 +718,19 @@ export default function Map({
       if (popup && popup.element) {
         try {
           leafletMarker.bindPopup(popup.element);
-          if (typeof popup.destroy === "function") {
-            let disposed = false;
-            const cleanup = () => {
-              if (disposed) return;
-              disposed = true;
-              try {
-                leafletMarker.off("popupclose", cleanup);
-                leafletMarker.off("popupremove", cleanup);
-                leafletMarker.off("remove", cleanup);
-              } catch (_) {}
-              popup.destroy();
-            };
-            leafletMarker.on("popupclose", cleanup);
-            leafletMarker.on("popupremove", cleanup);
-            leafletMarker.on("remove", cleanup);
+          if (typeof popup.render === "function") {
+            leafletMarker.on("popupopen", popup.render);
           }
+          popupCleanups.push(() => {
+            if (typeof popup.render === "function") {
+              try {
+                leafletMarker.off("popupopen", popup.render);
+              } catch (_) {}
+            }
+            if (typeof popup.destroy === "function") {
+              popup.destroy();
+            }
+          });
         } catch (_) {
           if (typeof popup.destroy === "function") {
             popup.destroy();
@@ -730,7 +742,7 @@ export default function Map({
       try {
         layer.addLayer(leafletMarker);
       } catch (_) {}
-    });
+  });
     const centerOverride = normalizeCenterInput(defaultCenter);
     const hasDefaultZoom = Number.isFinite(defaultZoom);
     if (hasDefaultZoom) {
@@ -763,6 +775,14 @@ export default function Map({
         map.setView([centerOverride.lat, centerOverride.lng], 2);
       } catch (_) {}
     }
+
+    return () => {
+      popupCleanups.forEach((cleanup) => {
+        try {
+          cleanup();
+        } catch (_) {}
+      });
+    };
   }, [allMarkers, defaultCenter, defaultZoom, leafletLib]);
 
   const isLoadingMarkers = iiifTargets.loading || navState.loading;

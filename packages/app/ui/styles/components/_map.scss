@@ -133,7 +133,7 @@
       &-summary {
         margin: 0.125rem 0 0;
         font-size: 0.8125rem;
-        color: var(--color-gray-600);
+        color: var(--color-gray-700);
       }
     }
   }
@@ -182,12 +182,13 @@
   }
 
   &__cluster {
+    font-size: 1rem;
+    font-weight: 400;
     width: 56px;
     height: 56px;
     border-radius: 999px;
-    background: var(--color-accent-600);
+    background: var(--color-accent-default);
     color: var(--color-gray-50);
-    font-weight: 600;
     display: flex;
     align-items: center;
     justify-content: center;
