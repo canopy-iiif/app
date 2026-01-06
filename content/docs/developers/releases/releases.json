@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.4.4",
+    "date": "2026-01-06",
+    "summary": "Add component examples to template example page.",
+    "highlights": []
+  },
+  {
     "version": "1.4.3",
     "date": "2026-01-05",
     "summary": "Address clean-up bug in MapPoint content.",

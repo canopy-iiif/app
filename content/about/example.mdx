@@ -2,11 +2,144 @@
 title: Example
 description: Example page packed with markdown formatting variations for Canopy IIIF authors.
 image: https://iiif.dc.library.northwestern.edu/iiif/3/138a94b0-175a-4152-98c7-df58661ce7d5/950,520,7100,4740/!1200,630/0/default.jpg
+referencedManifests:
+  - https://api.dc.library.northwestern.edu/api/v2/works/7a5dd871-d0bc-4d6f-8469-1c23a872fc29?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/c5a11577-a1f2-4288-95de-96ad616174ed?as=iiif
 ---
 
 # Markdown Content
 
 This demonstration page collects a dense set of markdown formatting examples so writers can scan common patterns, review syntax in context, and adapt the snippets when drafting their own Canopy IIIF content.
+
+<ButtonWrapper variant="interstitial" text="See how this page is authored">
+  <Button
+    href="https://github.com/canopy-iiif/template/blob/main/content/about/example.mdx?plain=1"
+    label="View source in GitHub"
+  />
+  <Button
+    href="https://canopy-iiif.github.io/app/docs"
+    label="Browse docs"
+    variant="secondary"
+  />
+</ButtonWrapper>
+
+## Component Sampler
+
+Use this quick sampler to see how core IIIF-aware components render inside MDX. Dive deeper in the component docs under `/docs/components` — for example [Image](https://canopy-iiif.github.io/app/docs/components/image), [Viewer](https://canopy-iiif.github.io/app/docs/components/viewer), [Map](https://canopy-iiif.github.io/app/docs/components/map), [Slider](https://canopy-iiif.github.io/app/docs/components/slider), and [Timeline](https://canopy-iiif.github.io/app/docs/components/timeline).
+
+### Image
+
+The `<Image>` component wraps Clover’s zoomable viewer so tiled IIIF imagery gains pan/zoom controls immediately. It’s ideal for highlighting details or pairing captions with large assets. Narratives can reference close-read details while the viewer keeps the render responsive, ensuring scholars can zoom into marginalia or annotations without leaving the flow of the prose.
+
+Exhibits often pair short anecdotes or curatorial notes alongside a zoomed crop to guide attention. This makes the component perfect for layering storytelling over technical documentation, letting authors bridge archival description with interpretive copy in a single sweep of paragraphs.
+
+<Image
+  src="https://iiif.dc.library.northwestern.edu/iiif/3/3d4a01f1-664d-48aa-89b7-a887d3843644"
+  isTiledImage
+  alt="Lithographs of historic buildings in Lucknow, India"
+  caption="The Image component wraps Clover's zoomable viewer for IIIF Image API sources but can also render standard image URLs."
+/>
+
+### Viewer
+
+`<Viewer>` renders full manifests or collections via Clover, making it the go-to component for explorations that require canvases, audio/video, or multi-page navigation without leaving the document. It keeps navigation controls close at hand so readers dive into folios, listen to embedded recordings, or compare canvases while still following the surrounding essay.
+
+Because the runtime reuses global viewer settings, editors can discuss sequencing decisions, cite particular canvases, or reference different manifestations of a work without duplicating markup. Use it when you want the narrative to feel like a guided tour that never requires a separate tab.
+
+<Viewer
+  iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/2826e1b9-d38c-413d-b46f-4cd28d916b6d?as=iiif"
+  options={{
+    showTitle: true,
+    informationPanel: {
+      open: true,
+      renderAbout: true,
+      renderToggle: true,
+    },
+  }}
+/>
+
+### Map
+
+Maps aggregate navPlace `Point` features and optional `MapPoint` callouts so geographic context sits alongside your prose. Use it for quick location overviews or to anchor itineraries. Authors can narrate journeys, trace expeditions, or compare regional clusters while markers update live, keeping spatial context woven into the storytelling.
+
+When essays discuss routes or cite multiple repositories, sprinkling `MapPoint` entries reinforces scale and direction. The additional paragraph space lets you describe historical setting, travel logistics, or archival provenance while readers pan across the map.
+
+<Map
+  tileLayers={[
+    {
+      name: "Stadia Watercolor",
+      url: "https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg",
+      minZoom: 1,
+      maxZoom: 16,
+    },
+  ]}
+>
+  <MapPoint
+    lat="42.3763"
+    lng="-71.0603"
+    title="The Death of General Warren at the Battle of Bunker's Hill - 1775"
+    summary="Lieutenant Rawdon can be seen prominently in the background standing on the American breastworks waving the British Ensign."
+    thumbnail="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/The_Death_of_General_Warren_at_the_Battle_of_Bunker%27s_Hill.jpg/960px-The_Death_of_General_Warren_at_the_Battle_of_Bunker%27s_Hill.jpg"
+  />
+  <MapPoint
+    lat="26.8709"
+    lng="80.9129"
+    title="Lucknow procession - 1814"
+    summary="Watercolour depicting Lord Francis Edward Rawdon-Hastings' party entering Lucknow on elephant back."
+    thumbnail="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Lord_Hastings%27_party_entering_the_city_of_Lucknow_on_elephant_back_-_British_Library%2C_Add.Or.4749.jpg/640px-Lord_Hastings%27_party_entering_the_city_of_Lucknow_on_elephant_back_-_British_Library%2C_Add.Or.4749.jpg"
+  />
+  <MapPoint
+    lat="35.8917"
+    lng="14.5050"
+    title="Tomb of Lord Hastings (d. 1826) - Valletta, Malta"
+    summary="Lord Hastings was appointed Governor of Malta in 1824, but died at sea near Naples (Napoli, Kingdom of the Two Sicilies) in 1826."
+    thumbnail="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Malta_-_Valletta_-_Triq_il-Papa_Piju_V_-_Hastings_Gardens_-_Monument_to_Lord_Hastings_01_ies.jpg/960px-Malta_-_Valletta_-_Triq_il-Papa_Piju_V_-_Hastings_Gardens_-_Monument_to_Lord_Hastings_01_ies.jpg"
+  />
+</Map>
+
+### Timeline
+
+The Timeline component spaces events proportionally and can cross-reference manifests, letting you mix narrative beats with IIIF resources for lightweight chronologies. Use it to anchor longer essays where context depends on precise sequencing, or to punctuate a dense narrative with milestones that remain interactive.
+
+Additional copy beneath the heading encourages readers to linger: outline curatorial themes, note historiographical debates, or call attention to metadata gaps that the timeline helps expose. It’s an easy way to pair transitional text with a structured visualization.
+
+<Timeline
+  title="Empire in Moughal India"
+  range={{start: "1750", end: "1900", granularity: "year"}}
+  steps={50}
+  height="500px"
+>
+  <TimelinePoint
+    date="1770"
+    title="Great Bengal Famine"
+    summary="Starvation ravaged Company-controlled Bengal."
+  />
+  <TimelinePoint
+    date="1781"
+    title="Bengal Atlas published"
+    summary="James Rennell mapped Eastern India for Company campaigns."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/7a5dd871-d0bc-4d6f-8469-1c23a872fc29?as=iiif",
+    ]}
+  />
+  <TimelinePoint
+    date="1857"
+    title="Great Mutiny"
+    summary="Indian regiments rebelled across the north."
+    highlight
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/c5a11577-a1f2-4288-95de-96ad616174ed?as=iiif",
+    ]}
+  />
+</Timeline>
+
+### Slider
+
+Sliders turn IIIF Collections or generated facet feeds into swipeable strips of cards that link back to work pages, perfect for highlighting themes without overwhelming the layout. They shine in sections where you want to highlight parallels—perhaps comparing textiles, portraits, or cartographic plates across decades—without building a bespoke gallery.
+
+Because each slide resolves to a local work page, you can write connective prose before and after the carousel, using the extra paragraph to explain why these records belong together, what facets tie them, or which metadata values curated the set.
+
+<Slider iiifContent="https://api.dc.library.northwestern.edu/api/v2/collections/7ac5769f-a1d9-4227-a350-bf8bd8b1cddc?as=iiif" />
 
 ## Basic Emphasis and Structure
 
