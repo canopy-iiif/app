@@ -1,6 +1,6 @@
 # Using with Tropy
 
-Canopy IIIF generates a browseable and searchable static site for digital collections and exhibits using a single IIIF Collection. If you're starting from scratch, you may not have a IIIF Collection, IIIF Manifests, or a IIIF Image server online. This guide will walk you through the process of starting from zero and leveraging [Tropy](https://tropy.org/), [Tropiiify](https://github.com/arkalab/tropiiify), and GitHub Pages with Canopy to deploy a full digital collection site.
+Canopy IIIF generates a browsable and searchable static site for digital collections and exhibits using a single IIIF Collection. If you're starting from scratch, you may not have a IIIF Collection, IIIF Manifests, or a IIIF Image server online. This guide will walk you through the process of starting from zero and leveraging [Tropy](https://tropy.org/), [Tropiiify](https://github.com/arkalab/tropiiify), and GitHub Pages with Canopy to deploy a full digital collection site.
 
 > **Note:** This walkthrough builds on posts by [Raffaele Messuti](https://literarymachin.es/iiif-tropy-canopy/) and [Shawn Graham](https://electricarchaeology.ca/2024/07/25/make-your-tropy-collection-and-annotations-available-with-canopy/). Read them for deeper dives.
 
@@ -52,13 +52,13 @@ manifests, and ultimately a IIIF collection object.
 
 > **Tip:** Tropiiify can map custom metadata templates. Check the [plugin docs](https://github.com/arkalab/tropiiify) if you need to tailor fields.
 
-### Add Your Files to to GitHub
+### Add Your Files to GitHub
 
 Now that we have all your images, image server responses, manifests, and collection, we need to get them
 into your GitHub repository. There are many ways to approach this, but one easy solution is:
 
-1. On the command line, add and commit with git all the files you just exported. The export stores all files in a directory called `iiif`. Make sure the root of your repository is this and not its parent that you exported it into.GitHub
-2. Push your existing repository by copying and pasting all the instructions beneathe **…or push an existing repository from the command line** in your GitHub repository to the command line and press "Return".
+1. On the command line, add and commit with git all the files you just exported. The export stores all files in a directory called `iiif`. Make sure the root of your repository is this directory and not its parent that you exported it into.
+2. Push your existing repository by copying and pasting all the instructions beneath **…or push an existing repository from the command line** in your GitHub repository to the command line and press "Return".
 
 ### Enable the Repository to be your Image Server
 

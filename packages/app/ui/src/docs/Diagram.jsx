@@ -53,7 +53,7 @@ export function CanopyDiagram() {
             <h4>Contextual content</h4>
             <ul>
               <li>Markdown &amp; MDX pages</li>
-              <li>Author narratives &amp; tours</li>
+              <li>Author narratives</li>
               <li>Reference manifests inline</li>
             </ul>
           </article>

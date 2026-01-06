@@ -31,12 +31,12 @@ Stand up a Canopy project in just a few minutes: use the template, drop in your 
 The template ships with a GitHub Pages workflow (`.github/workflows/pages.yml`) that will host your project without requirement of a server. After each commit to `main` it will build and deploy your site automatically. To enable Pages for the first time:
 
 1. Go to **Settings → Pages** in your new repository.
-2. In the Build an deployment section, ensure **GitHub Actions** is selected as the source (this may be already set).
+2. In the Build and deployment section, ensure **GitHub Actions** is selected as the source (this may be already set).
 3. Navigate back to the **Code** tab of your repository and select the _gear_ icon ⚙️ next to the _About_ section in the aside of the page.
 4. Select the **Use your GitHub Pages website** option and your unique site URL will appear.
 5. Click Save changes and you will see link to your site populate in the About section.
 
-That URL is will be your public and published Canopy deployment hosted entirely by GitHub Pages. We now need to configure it to point to your IIIF Collection and initialize rebuild of Canopy.
+That URL will be your public and published Canopy deployment hosted entirely by GitHub Pages. We now need to configure it to point to your IIIF Collection and initialize a rebuild of Canopy.
 
 ## 3. Configure `canopy.yml`
 
@@ -60,7 +60,7 @@ Every template includes `canopy.yml` at the repository root. This single file dr
 
 1. From the **Code** tab, click the `canopy.yml` file to open it in the file viewer. Then click the pencil icon ✏️ in the upper right to edit the file directly in GitHub’s web editor.
 2. Replace the demo URIs under `collection` and `featured` with your own Collection(s), Manifest(s), and desired metadata facets.
-3. Click the **Commit changes** button above the file viewer, and confirm then confirm the commit again to save your changes and trigger a rebuild.
+3. Click the **Commit changes** button above the file viewer, and then confirm the commit again to save your changes and trigger a rebuild.
 
 ## 4. Visit your new site
 
@@ -70,4 +70,4 @@ After a few moments, your GitHub Actions workflow will complete building and dep
 
 - Configure your `theme` in `canopy.yml` to customize the look and feel and explore customizing further with `TailwindCSS` in `/app/styles`.
 - Create your own contextual pages under `content/` and link to manifests via `referencedManifests` frontmatter.
-- Add components referencing items in your collections using `<Viewer />`, `<Image />`, and `<ReferencedItems />` to enrich the storytelling .
+- Add components referencing items in your collections using `<Viewer />`, `<Image />`, and `<ReferencedItems />` to enrich the storytelling.

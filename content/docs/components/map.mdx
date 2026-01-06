@@ -12,7 +12,7 @@ referencedManifests:
 
 ## Using IIIF navPlace
 
-Provide any IIIF Manifest or Collection URL via `iiifContent`. When a manifest is supplied, the map plots only that record’s navPlace features. When a collection is supplied, the runtime inspects each manifest listed in the collection and includes every navPlace-enabled work it finds. Note that this currently only supports Collections their Manifests set in your `canopy.yml` file as the build process pre-fetches and caches those records.
+Provide any IIIF Manifest or Collection URL via `iiifContent`. When a manifest is supplied, the map plots only that record’s navPlace features. When a collection is supplied, the runtime inspects each manifest listed in the collection and includes every navPlace-enabled work it finds. Note that this currently only supports Collections whose manifests are set in your `canopy.yml` file as the build process pre-fetches and caches those records.
 
 ```mdx
 <Map iiifContent="https://tamulib-dc-labs.github.io/sesquicentennial-manifests/collections.json" />
@@ -59,7 +59,7 @@ referencedManifests:
 ---
 ```
 
-And inline within your content, render the Map component with custon points.
+And inline within your content, render the Map component with custom points.
 
 ```mdx
 <Map>
@@ -98,7 +98,7 @@ And inline within your content, render the Map component with custon points.
     lat="25.45126"
     lng="75.63737"
     title="Boondi / Bundi (1826–1830)"
-    summar="A hand-colored aquatint from East India Company sketches, depicting Bundi in a mountain pass, with the palace on the slope and fortifications rising to the summit."
+    summary="A hand-colored aquatint from East India Company sketches, depicting Bundi in a mountain pass, with the palace on the slope and fortifications rising to the summit."
     referencedManifests={[
       "https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif",
     ]}
@@ -137,7 +137,7 @@ And inline within your content, render the Map component with custon points.
 | `defaultCenter`   | `{lat, lng}` \| `'lat,lng'`                                          | `null`        | Fallback map view when no markers are available.                                                                  |
 | `defaultZoom`     | number                                                               | `null`        | Overrides the automatic bounds fit and forces the map to use the provided zoom (optionally with `defaultCenter`). |
 
-## MapPoint
+### MapPoint
 
 | Prop                                  | Type               | Description                                                                                                     |
 | ------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------- |
