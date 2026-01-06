@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.4.5",
+    "date": "2026-01-06",
+    "summary": "Hotfix: Remove unauthenticated tile layer from docs example.",
+    "highlights": []
+  },
+  {
     "version": "1.4.4",
     "date": "2026-01-06",
     "summary": "Add component examples to template example page.",

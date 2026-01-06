@@ -64,21 +64,12 @@ Maps aggregate navPlace `Point` features and optional `MapPoint` callouts so geo
 
 When essays discuss routes or cite multiple repositories, sprinkling `MapPoint` entries reinforces scale and direction. The additional paragraph space lets you describe historical setting, travel logistics, or archival provenance while readers pan across the map.
 
-<Map
-  tileLayers={[
-    {
-      name: "Stadia Watercolor",
-      url: "https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg",
-      minZoom: 1,
-      maxZoom: 16,
-    },
-  ]}
->
+<Map>
   <MapPoint
     lat="42.3763"
     lng="-71.0603"
     title="The Death of General Warren at the Battle of Bunker's Hill - 1775"
-    summary="Lieutenant Rawdon can be seen prominently in the background standing on the American breastworks waving the British Ensign."
+    summary="A young Lieutenant Francis Rawdon, later Lord Hastings, is depicted prominently in the background, standing upon the American breastworks and waving the British ensign."
     thumbnail="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/The_Death_of_General_Warren_at_the_Battle_of_Bunker%27s_Hill.jpg/960px-The_Death_of_General_Warren_at_the_Battle_of_Bunker%27s_Hill.jpg"
   />
   <MapPoint
