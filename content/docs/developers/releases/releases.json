@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.4.11",
+    "date": "2026-01-07",
+    "summary": "Expose common base path helper.",
+    "highlights": []
+  },
+  {
     "version": "1.4.10",
     "date": "2026-01-07",
     "summary": "Add StoryMapJS component example.",

@@ -1,4 +1,5 @@
-import {useEffect, useId, useRef} from 'react';
+import {withBasePath} from '@canopy-iiif/app/base-path';
+import React, {useEffect, useId, useMemo, useRef} from 'react';
 
 type StoryMapData = string | Record<string, unknown>;
 type StoryMapOptions = Record<string, unknown>;
@@ -54,6 +55,10 @@ export default function StoryMapJS({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const rawId = useId();
   const elementId = rawId.replace(/[^a-zA-Z0-9_-]/g, '');
+  const resolvedData = useMemo<StoryMapData>(() => {
+    if (typeof data !== 'string') return data;
+    return withBasePath(data);
+  }, [data]);
 
   useEffect(() => {
     let storymap: {updateDisplay: () => void; destroy?: () => void} | null = null;
@@ -70,7 +75,7 @@ export default function StoryMapJS({
       };
       if (!KLStoryMap || !containerRef.current) return;
 
-      storymap = new KLStoryMap.StoryMap(elementId, data, options ?? {});
+      storymap = new KLStoryMap.StoryMap(elementId, resolvedData, options ?? {});
       window.addEventListener('resize', handleResize);
     };
 
@@ -81,7 +86,7 @@ export default function StoryMapJS({
       storymap?.destroy?.();
       storymap = null;
     };
-  }, [data, options, elementId]);
+  }, [resolvedData, options, elementId]);
 
   return (
     <div

@@ -80,7 +80,8 @@ Because we have determined that StoryMap requires browser resources, we create `
 Here's what the finished wrapper looks like, but keep in mind it could have been a component of any variety:
 
 ```tsx filename="app/components/StoryMapJS.client.tsx" copy
-import {useEffect, useId, useRef} from "react";
+import {withBasePath} from "@canopy-iiif/app/base-path";
+import React, {useEffect, useId, useMemo, useRef} from "react";
 
 type StoryMapData = string | Record<string, unknown>;
 type StoryMapOptions = Record<string, unknown>;
@@ -140,6 +141,10 @@ export default function StoryMapJS({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const rawId = useId();
   const elementId = rawId.replace(/[^a-zA-Z0-9_-]/g, "");
+  const resolvedData = useMemo<StoryMapData>(() => {
+    if (typeof data !== "string") return data;
+    return withBasePath(data);
+  }, [data]);
 
   useEffect(() => {
     let storymap: {updateDisplay: () => void; destroy?: () => void} | null =
@@ -157,7 +162,11 @@ export default function StoryMapJS({
       };
       if (!KLStoryMap || !containerRef.current) return;
 
-      storymap = new KLStoryMap.StoryMap(elementId, data, options ?? {});
+      storymap = new KLStoryMap.StoryMap(
+        elementId,
+        resolvedData,
+        options ?? {}
+      );
       window.addEventListener("resize", handleResize);
     };
 
@@ -168,7 +177,7 @@ export default function StoryMapJS({
       storymap?.destroy?.();
       storymap = null;
     };
-  }, [data, options, elementId]);
+  }, [resolvedData, options, elementId]);
 
   return (
     <div
@@ -224,6 +233,10 @@ Now the component is globally available. Add it it your `content/` pages. In thi
   }}
   height={640}
 />
+
+> Need to support deployments at `/some/base`? Import `withBasePath` from
+> `@canopy-iiif/app/base-path` and wrap any site-relative URL so it automatically
+> respects `CANOPY_BASE_PATH` without reimplementing the logic yourself.
 
 ### 5. Prepare optional JSON data
 

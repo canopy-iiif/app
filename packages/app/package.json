@@ -1,6 +1,6 @@
 {
   "name": "@canopy-iiif/app",
-  "version": "1.4.10",
+  "version": "1.4.11",
   "private": false,
   "license": "MIT",
   "author": "Mat Jordan <mat@northwestern.edu>",
@@ -33,6 +33,11 @@
     "./ui/theme": "./ui/theme.js",
     "./lib/components/*": "./lib/components/*",
     "./head": "./lib/head.js",
+    "./base-path": {
+      "types": "./types/base-path.d.ts",
+      "default": "./lib/base-path.js",
+      "require": "./lib/base-path.js"
+    },
     "./orchestrator": {
       "types": "./types/orchestrator.d.ts",
       "import": "./lib/orchestrator.js",

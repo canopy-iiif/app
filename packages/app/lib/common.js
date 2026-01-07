@@ -8,7 +8,9 @@ const OUT_DIR = path.resolve('site');
 const CACHE_DIR = path.resolve('.cache/mdx');
 const ASSETS_DIR = path.resolve('assets');
 
-const BASE_PATH = String(process.env.CANOPY_BASE_PATH || '').replace(/\/$/, '');
+const { readBasePath, withBasePath } = require('./base-path');
+
+const BASE_PATH = readBasePath();
 let cachedAppearance = null;
 
 function resolveThemeAppearance() {
@@ -107,10 +109,7 @@ function htmlShell({ title, body, cssHref, scriptHref, headExtra, bodyClass }) {
 }
 
 function withBase(href) {
-  if (!href) return href;
-  if (!BASE_PATH) return href;
-  if (typeof href === 'string' && href.startsWith('/')) return `${BASE_PATH}${href}`;
-  return href;
+  return withBasePath(href);
 }
 
 function rootRelativeHref(href) {
