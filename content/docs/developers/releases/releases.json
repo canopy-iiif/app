@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.4.6",
+    "date": "2026-01-06",
+    "summary": "Minor style updates and extend examples.",
+    "highlights": []
+  },
+  {
     "version": "1.4.5",
     "date": "2026-01-06",
     "summary": "Hotfix: Remove unauthenticated tile layer from docs example.",

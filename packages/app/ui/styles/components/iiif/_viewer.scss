@@ -1,0 +1,28 @@
+.clover-viewer-information-panel {
+  font-size: 0.9222rem;
+  font-weight: 300;
+
+  dt {
+    font-weight: 600;
+  }
+
+  a,
+  dd {
+    font-size: 0.9222rem;
+    font-weight: 300;
+  }
+}
+
+.clover-viewer-media-navigation {
+  margin: 0 !important;
+  font-family: var(--font-sans) !important;
+}
+
+.clover-viewer-media-search {
+  display: none !important;
+}
+
+.clover-viewer-header .label {
+  font-size: 1.1111rem;
+  font-weight: 600;
+}

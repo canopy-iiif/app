@@ -1,5 +1,5 @@
 ---
-title: Example
+title: Content Example
 description: Example page packed with markdown formatting variations for Canopy IIIF authors.
 image: https://iiif.dc.library.northwestern.edu/iiif/3/138a94b0-175a-4152-98c7-df58661ce7d5/950,520,7100,4740/!1200,630/0/default.jpg
 referencedManifests:
@@ -7,9 +7,9 @@ referencedManifests:
   - https://api.dc.library.northwestern.edu/api/v2/works/c5a11577-a1f2-4288-95de-96ad616174ed?as=iiif
 ---
 
-# Markdown Content
+# Content Example
 
-This demonstration page collects a dense set of markdown formatting examples so writers can scan common patterns, review syntax in context, and adapt the snippets when drafting their own Canopy IIIF content.
+This demonstration page collects a dense set of markdown formatting examples so writers can scan common patterns, review syntax in context, and adapt the snippets when drafting their own Canopy IIIF content. Use this example page to see how core you can easily add IIIF-aware components inside your markdown content and learn how to use [Image](https://canopy-iiif.github.io/app/docs/components/image), [Viewer](https://canopy-iiif.github.io/app/docs/components/viewer), [Map](https://canopy-iiif.github.io/app/docs/components/map), [Slider](https://canopy-iiif.github.io/app/docs/components/slider), and [Timeline](https://canopy-iiif.github.io/app/docs/components/timeline).
 
 <ButtonWrapper variant="interstitial" text="See how this page is authored">
   <Button
@@ -23,9 +23,7 @@ This demonstration page collects a dense set of markdown formatting examples so 
   />
 </ButtonWrapper>
 
-## Component Sampler
-
-Use this quick sampler to see how core IIIF-aware components render inside MDX. Dive deeper in the component docs under `/docs/components` — for example [Image](https://canopy-iiif.github.io/app/docs/components/image), [Viewer](https://canopy-iiif.github.io/app/docs/components/viewer), [Map](https://canopy-iiif.github.io/app/docs/components/map), [Slider](https://canopy-iiif.github.io/app/docs/components/slider), and [Timeline](https://canopy-iiif.github.io/app/docs/components/timeline).
+## Components
 
 ### Image
 
@@ -53,7 +51,6 @@ Because the runtime reuses global viewer settings, editors can discuss sequencin
     informationPanel: {
       open: true,
       renderAbout: true,
-      renderToggle: true,
     },
   }}
 />
@@ -193,37 +190,63 @@ and include optional filename and copy attributes for enhanced display.
 
 > **Note:** Donec fermentum libero et laoreet dictum. Integer hendrerit efficitur nisl, sed convallis sem.
 
-## Extended Content Blocks
+## Long Form Content
 
-### Section Alpha
+### Paragraph Section
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus scelerisque, mi sed lacinia posuere, nulla augue aliquet arcu, nec pharetra augue nisi non erat. Nunc a augue ultricies risus tempor volutpat. Mauris non metus ac neque interdum porta, curabitur laoreet. Integer posuere interdum sem, ac porttitor arcu pellentesque id. Duis elementum dui vitae magna fermentum, non euismod tellus ullamcorper. Sed vehicula libero vel sapien tempor sodales. Maecenas in lectus ac felis hendrerit congue non nec lectus. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Integer blandit mauris id ligula porttitor, eget rutrum magna convallis. Phasellus facilisis elit sed felis aliquet convallis. Donec sit amet luctus odio, eget dignissim justo. Ut consequat ipsum sed arcu commodo finibus a nec libero. Duis at ligula porttitor, dapibus ex sit amet, ullamcorper neque.
 
 Proin venenatis fermentum vulputate. Sed tristique elit libero, sed efficitur quam aliquam id. Sed risus magna, aliquam id ex ac, gravida luctus mi. Vestibulum viverra aliquam mi eget tincidunt. Pellentesque eu egestas risus. Nam facilisis viverra nibh, id gravida augue malesuada ac. Ut sagittis pretium leo, eget sollicitudin arcu facilisis in. Pellentesque vel imperdiet dui. Integer ut lorem et justo rhoncus faucibus consectetur ut velit. Sed sed condimentum sem. Etiam tempor sagittis odio quis tincidunt. Nam nec volutpat ex. Fusce aliquam vestibulum mauris, ac lobortis tellus facilisis non. Mauris facilisis tincidunt neque, eget fermentum sapien fringilla sed. Pellentesque sollicitudin, enim ac elementum luctus, lacus nisi lacinia erat, vitae dapibus nisi diam vitae est.
 
-### Section Beta
+<Timeline
+  title="Road to Indian Independence"
+  range={{ start: "1910", end: "1950", granularity: "year" }}
+  height="700px"
+>
+  <TimelinePoint
+    date="1919"
+    title="Jallianwala Bagh Massacre"
+    summary="British troops fired on peaceful protestors in Amritsar, accelerating nationalist resistance."
+  />
+
+<TimelinePoint
+  date="1920"
+  title="Non-Cooperation Movement"
+  summary="Gandhi led a mass boycott of British institutions, making the movement nationwide."
+/>
+
+<TimelinePoint
+  date="1930"
+  title="Salt March (Dandi March)"
+  summary="Gandhi led a 240-mile march to the sea to protest the British salt tax, sparking civil disobedience."
+/>
+
+<TimelinePoint
+  date="1942"
+  title="Quit India Movement"
+  summary="The Congress Party demanded immediate British withdrawal; mass arrests followed but pressure intensified."
+/>
+
+  <TimelinePoint
+    date="1947"
+    highlight
+    title="Independence & Partition"
+    summary="British rule ended; India and Pakistan were created amid mass migration and violence."
+  />
+</Timeline>
+
+### Another Paragraph Section
 
 Curabitur lobortis risus velit, quis sagittis sem dignissim non. Phasellus feugiat massa et lacus facilisis viverra. Donec metus quam, lacinia sed gravida eget, ullamcorper nec dui. Vivamus faucibus tortor sit amet libero venenatis accumsan. Vivamus mattis, nisl quis laoreet bibendum, velit ligula laoreet magna, ac interdum dui turpis a arcu. Aenean diam velit, convallis nec gravida sed, maximus ultrices erat. Integer scelerisque orci metus, condimentum ultricies ligula varius vel. Pellentesque semper eros sit amet hendrerit imperdiet. Proin porttitor bibendum augue vitae imperdiet. Nam vulputate nisi maximus facilisis porttitor. Suspendisse imperdiet mauris vitae metus ornare tristique. Integer posuere aliquam lorem non ultrices. Vestibulum facilisis sodales commodo. Duis vestibulum mauris nec sem suscipit tincidunt. Suspendisse porttitor orci pellentesque augue commodo tempus.
 
+<Image
+  src="https://iiif.dc.library.northwestern.edu/iiif/3/3d4a01f1-664d-48aa-89b7-a887d3843644"
+  isTiledImage
+  alt="Lithographs of historic buildings in Lucknow, India"
+  caption="The Image component wraps Clover's zoomable viewer for IIIF Image API sources but can also render standard image URLs."
+/>
+
 Aliquam et lectus lacinia, vestibulum lectus sed, dignissim ipsum. Nullam tincidunt feugiat dapibus. Duis pharetra nisl justo, id hendrerit odio pretium id. Donec dignissim vulputate arcu vitae cursus. Cras pretium fringilla risus, eget viverra quam suscipit a. In eu scelerisque arcu. Sed viverra, risus vitae aliquet gravida, risus lectus tincidunt justo, quis aliquet lectus augue ut odio. Aenean elementum diam urna. Ut sed gravida velit. Suspendisse lacus eros, vulputate at risus nec, laoreet sollicitudin leo. Vivamus scelerisque dignissim volutpat. Nullam bibendum ante ante, ac faucibus justo interdum vitae. Sed vitae dictum ligula, nec faucibus augue. Vivamus quis ante diam.[^3]
-
-### Section Gamma
-
-Ut cursus erat eget pulvinar dapibus. Integer lacinia tempor cursus. Aenean dapibus mollis ligula, ac congue mi luctus sit amet. Phasellus pulvinar purus vel tortor sollicitudin rhoncus. Curabitur fringilla metus lacus, nec interdum tortor finibus nec. Vestibulum aliquam et mauris vel ultricies. Integer dictum leo non molestie laoreet. Integer ut tortor vitae est aliquet porta ut ut massa. Mauris malesuada luctus leo commodo laoreet. Pellentesque a augue et urna varius pulvinar id quis lorem. Nam sed sollicitudin nibh. Integer nisi metus, pharetra ac leo volutpat, volutpat pharetra arcu. Integer luctus fringilla lorem, mattis vehicula leo aliquam in. Integer finibus et enim a ornare.
-
-Morbi interdum ultricies magna, in lacinia eros ultricies sit amet. Sed placerat imperdiet risus et viverra. Sed suscipit pulvinar ligula, vitae tristique nisi pulvinar nec. Integer molestie finibus tortor, et gravida enim efficitur vitae. Etiam eget risus nec diam bibendum pellentesque. Sed finibus eros leo, id tempor ante mattis sit amet. In ipsum lectus, consectetur venenatis consectetur sit amet, tincidunt non massa. Pellentesque vulputate semper nibh, sit amet gravida enim. Pellentesque fermentum nec massa ut consequat. Quisque tincidunt vestibulum ornare. Duis eu lacinia odio, at feugiat neque. Pellentesque maximus ipsum vitae felis sodales, ut rutrum augue bibendum. Integer sit amet magna urna. Aliquam erat volutpat. Suspendisse eleifend dictum mi, sit amet varius turpis sodales eget.[^4]
-
-### Section Delta
-
-Nulla facilisi. Integer auctor mauris odio, facilisis volutpat dolor lobortis quis. Sed sagittis aliquam enim quis volutpat. Aliquam erat volutpat. Pellentesque at felis faucibus, varius mi non, ultrices nunc. Suspendisse vulputate vehicula turpis vel maximus. Sed id velit a risus rhoncus aliquet id nec est. Curabitur consectetur tortor egestas orci aliquam fermentum. Morbi dictum, nisl nec lacinia varius, neque ligula vulputate purus, vitae fringilla nulla erat nec dolor. Suspendisse potenti. Aliquam erat volutpat. Proin felis lorem, maximus vitae mi non, pharetra gravida libero. Curabitur gravida purus et laoreet vehicula. Ut at felis augue. Mauris non viverra lacus. Donec eu odio ultrices, porta lacus sit amet, consequat mi.
-
-Vestibulum tristique, mi nec mollis dictum, diam ipsum laoreet eros, ac aliquet odio libero eget ante. Suspendisse imperdiet vehicula tincidunt. Nullam tincidunt, arcu congue tempor vulputate, turpis risus suscipit urna, ut feugiat lacus dolor vel orci. In nec magna justo. Nullam mattis pulvinar turpis, sed egestas metus elementum et. Sed pulvinar sed neque eget tincidunt. Vivamus laoreet justo quis justo accumsan bibendum. Donec commodo felis sed egestas efficitur. Nulla convallis vestibulum tempor. Praesent malesuada iaculis est, id ornare eros faucibus a. Sed facilisis arcu at laoreet rhoncus. Sed malesuada vitae odio sed posuere.
-
-### Section Epsilon
-
-Sed congue a massa non volutpat. Pellentesque finibus odio quis odio ornare, ut cursus nibh lobortis. Mauris pretium a urna eu congue. Praesent malesuada diam et mi facilisis hendrerit. Sed mollis sit amet dolor vel ullamcorper. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Pellentesque cursus nulla odio, ac pellentesque eros egestas nec. Nullam in purus a nisl tristique facilisis et id magna. Maecenas id eros sit amet ligula vestibulum rhoncus non quis nibh. Integer condimentum convallis libero, vel bibendum justo. Curabitur non justo nec est finibus ultrices sit amet non massa. Pellentesque sapien orci, posuere vitae feugiat id, finibus vel mauris. Sed pretium, lorem eget tempor elementum, arcu libero rhoncus augue, et sollicitudin erat mi vitae lacus. Donec aliquet nisl in purus vulputate, vitae convallis lacus volutpat.
-
-Nam vitae magna at libero bibendum mollis. Sed in lacus hendrerit, ornare tortor in, interdum velit. Praesent vestibulum leo eget erat bibendum auctor. Etiam aliquet felis eu maximus ultrices. Nulla aliquam, eros sollicitudin faucibus lobortis, mauris nisl tristique nisl, et fringilla neque lorem eu nisl. Sed eu porttitor ex. Maecenas mollis felis vel ipsum pharetra varius. Nam vestibulum in turpis non mattis. Nullam consequat metus id ipsum fermentum, id accumsan mi aliquet. Suspendisse potenti. Duis condimentum venenatis condimentum. Cras augue nunc, ultrices in blandit eget, malesuada sed purus. Integer tempor, libero eget sodales vulputate, risus justo faucibus mi, vitae lobortis nulla nisl ut eros. Vivamus porttitor maximus dictum.
 
 ## Tabled Content
 

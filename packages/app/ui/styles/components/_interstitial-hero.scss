@@ -11,9 +11,9 @@
     --hero-height: 520px;
     --hero-bg-start: var(--color-gray-50);
     --hero-bg-mid: var(--color-accent-100);
-    --hero-bg-end: var(--color-accent-300);
-    --hero-dot-bg: var(--color-accent-400);
-    --hero-dot-active-bg: var(--color-accent-700);
+    --hero-bg-end: var(--color-accent-100);
+    --hero-dot-bg: var(--color-accent-300);
+    --hero-dot-active-bg: var(--color-accent-default);
 
     background: linear-gradient(
       173deg,
