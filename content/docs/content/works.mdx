@@ -40,17 +40,18 @@ layout: works
     <p>{props.manifest.summary?.none?.[0]}</p>
   </header>
 
-  <Viewer iiifContent={props.manifest.id} />
+<Viewer iiifContent={props.manifest.id} />
 
-  <section>
-    <h2>Metadata</h2>
-    <Metadata manifest={props.manifest} />
-  </section>
+<section>
+  <h2>Metadata</h2>
+  <Metadata manifest={props.manifest} />
+  <Id id={props.manifest.id} />
+</section>
 
-  <section>
-    <h2>Contextual references</h2>
-    <References emptyLabel="Essays will appear here when they cite this work." />
-  </section>
+<section>
+  <h2>Contextual references</h2>
+  <References emptyLabel="Essays will appear here when they cite this work." />
+</section>
 
   <RelatedItems top={3} />
 </section>

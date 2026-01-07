@@ -5,13 +5,13 @@ description: Aggregate every MDX footnote into a single bibliography.
 
 # Bibliography
 
-Content authors may add footnotes anywhere in a page using standard markdown syntax. The footnotes will be collected and displayed at the bottom of the respective page automatically. `<Biblography />` reads every Markdown file in `content/`, gathers each footnote, and prints them in one clean list. Using the component generate single source for citations on your site.
+Content authors may add footnotes anywhere in a page using standard markdown syntax. The footnotes will be collected and displayed at the bottom of the respective page automatically. `<Bibliography />` reads every Markdown file in `content/`, gathers each footnote, and prints them in one clean list. Using the component generate single source for citations on your site.
 
 ```mdx
-<Biblography />
+<Bibliography />
 ```
 
-<Biblography />
+<Bibliography />
 
 ## Writing footnotes
 
@@ -23,7 +23,7 @@ By the 1770s the East India Company controlled Bengal's revenue, reshaping trade
 [^5]: Seema Alavi, _Company to Crown: Power and Politics in India_, 2019.
 ```
 
-`<Biblography />` groups entries by page and preserves the note numbers so readers can follow each citation back to its essay.
+`<Bibliography />` groups entries by page and preserves the note numbers so readers can follow each citation back to its essay.
 
 ## API
 
