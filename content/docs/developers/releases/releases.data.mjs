@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.4.10",
+    "date": "2026-01-07",
+    "summary": "Add StoryMapJS component example.",
+    "highlights": []
+  },
+  {
     "version": "1.4.9",
     "date": "2026-01-07",
     "summary": "Address bad link in get started guide.",

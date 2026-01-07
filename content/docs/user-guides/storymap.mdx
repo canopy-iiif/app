@@ -1,0 +1,325 @@
+---
+title: Defining Custom Components
+description: Walk through a real example of wiring an external widget into Canopy’s client component pipeline.
+---
+
+# Defining custom components
+
+This guide doubles as a pattern for **any** custom component that needs browser-only code. We start with the stock `Example` components that ship in every Canopy project, then remix the same conventions to integrate [Knight Lab’s StoryMapJS](https://storymap.knightlab.com/). Every example below already lives in Canopy IIIF so you can copy/paste as needed.
+
+## Example components
+
+The fastest way to understand Canopy’s split between server-safe and browser-only components is to open `app/components/Example.tsx` and `app/components/Example.client.tsx`. They match the [Developers → Components guide](https://canopy-iiif.github.io/app/docs/developers/components.html) verbatim.
+
+```tsx filename="app/components/Example.tsx" copy
+import React from "react";
+
+export default function Example({
+  title,
+  children,
+}: {
+  title: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <article>
+      <strong>{title}</strong>
+      <p>{children}</p>
+    </article>
+  );
+}
+```
+
+`Example` renders entirely at build time, so you can nest it inside MDX without adding any hydration costs.
+
+```tsx filename="app/components/Example.client.tsx" copy
+import React, {useEffect, useState} from "react";
+
+export default function ExampleClient({text}: {text?: string}) {
+  const [viewportWidth, setViewportWidth] = useState<number | null>(null);
+
+  useEffect(() => {
+    const handle = () => setViewportWidth(window.innerWidth || null);
+    handle();
+    window.addEventListener("resize", handle);
+    return () => window.removeEventListener("resize", handle);
+  }, []);
+
+  return (
+    <div>
+      <p>
+        This component is running in browser only as it requires access to the
+        browser window and cannot safely be rendered at build time.
+      </p>
+      {text && <p>{text}</p>}
+      <em>Viewport width: {viewportWidth ? `${viewportWidth}px` : "..."}</em>
+    </div>
+  );
+}
+```
+
+## Case: StoryMapJS
+
+These two files illustrate the core rule: server components go in `components`, browser-only components go in `clientComponents`. The rest of this page applies the same structure to StoryMapJS so you can replicate the pattern for more advanced widgets.
+
+### 1. Determine what belongs where
+
+| Concern                       | Canopy convention                                                                                    |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Reusable component code       | `app/components/` (compiled with esbuild)                                                            |
+| Browser-only widgets          | Export them from `clientComponents` so the builder renders placeholders and hydrates in the browser. |
+| Static datasets, fonts, media | Store them under `assets/` so every build copies them to `site/`.                                    |
+| MDX usage examples            | Put finished snippets directly in `content/` so they’re versioned and demoable.                      |
+
+StoryMapJS requires `window`, inserts `<link>`/`<script>` tags, and can optionally consume JSON data. Not every component needs an asset pipeline, so we’ll focus on the wrapper first and cover StoryMapJS-specific JSON at the end.
+
+### 2. Build a component wrapper
+
+Because we have determined that StoryMap requires browser resources, we create `app/components/StoryMapJS.client.tsx` with a default export. The wrapper does four things that every Canopy client component should consider:
+
+Here's what the finished wrapper looks like, but keep in mind it could have been a component of any variety:
+
+```tsx filename="app/components/StoryMapJS.client.tsx" copy
+import {useEffect, useId, useRef} from "react";
+
+type StoryMapData = string | Record<string, unknown>;
+type StoryMapOptions = Record<string, unknown>;
+
+type KnightLabStoryMap = {
+  StoryMap: new (
+    id: string,
+    data: StoryMapData,
+    options?: StoryMapOptions
+  ) => {updateDisplay: () => void; destroy?: () => void};
+};
+
+const STORYMAP_STYLE =
+  "https://cdn.knightlab.com/libs/storymapjs/latest/css/storymap.css";
+const STORYMAP_SCRIPT =
+  "https://cdn.knightlab.com/libs/storymapjs/latest/js/storymap-min.js";
+
+const loaders = new Map<string, Promise<void>>();
+
+function loadAsset(kind: "script" | "style", url: string) {
+  if (!loaders.has(url)) {
+    loaders.set(
+      url,
+      new Promise<void>((resolve, reject) => {
+        const tag = document.createElement(
+          kind === "script" ? "script" : "link"
+        );
+        if (kind === "script") {
+          tag.setAttribute("src", url);
+          tag.setAttribute("async", "true");
+        } else {
+          tag.setAttribute("rel", "stylesheet");
+          tag.setAttribute("href", url);
+        }
+        tag.addEventListener("load", () => resolve(), {once: true});
+        tag.addEventListener(
+          "error",
+          () => reject(new Error(`Failed to load ${url}`)),
+          {once: true}
+        );
+        document.head.appendChild(tag);
+      })
+    );
+  }
+  return loaders.get(url)!;
+}
+
+export default function StoryMapJS({
+  data,
+  options,
+  height = 600,
+}: {
+  data: StoryMapData;
+  options?: StoryMapOptions;
+  height?: number | string;
+}) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const rawId = useId();
+  const elementId = rawId.replace(/[^a-zA-Z0-9_-]/g, "");
+
+  useEffect(() => {
+    let storymap: {updateDisplay: () => void; destroy?: () => void} | null =
+      null;
+    const handleResize = () => storymap?.updateDisplay();
+
+    const mount = async () => {
+      await Promise.all([
+        loadAsset("style", STORYMAP_STYLE),
+        loadAsset("script", STORYMAP_SCRIPT),
+      ]);
+
+      const {KLStoryMap} = window as typeof window & {
+        KLStoryMap?: KnightLabStoryMap;
+      };
+      if (!KLStoryMap || !containerRef.current) return;
+
+      storymap = new KLStoryMap.StoryMap(elementId, data, options ?? {});
+      window.addEventListener("resize", handleResize);
+    };
+
+    mount();
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      storymap?.destroy?.();
+      storymap = null;
+    };
+  }, [data, options, elementId]);
+
+  return (
+    <div
+      id={elementId}
+      ref={containerRef}
+      style={{
+        width: "100%",
+        height: typeof height === "number" ? `${height}px` : height,
+      }}
+      data-canopy-storymap
+    />
+  );
+}
+```
+
+### 3. Register the component
+
+Every component must be exported from `app/components/mdx.tsx`. Adding StoryMapJS looks like this:
+
+```tsx filename="app/components/mdx.tsx"
+export const clientComponents = {
+  ExampleClient: "./Example.client.tsx",
+  StoryMapJS: "./StoryMapJS.client.tsx",
+};
+```
+
+Restart `npm run dev` if it was already running; the watcher only picks up new files on boot.
+
+### 4. Drop it into your Markdown content
+
+Now the component is globally available. Add it it your `content/` pages. In this case we are referencing the `data` file externally at `storymaps/overland-trails.json` which would be placed under `assets/` (covered in the next step).
+
+```mdx filename="content/docs/user-guides/storymap.mdx" copy
+<StoryMapJS
+  data="/storymaps/overland-trails.json"
+  options={{
+    language: "en",
+    map_type: "stamen:toner-lite",
+    call_to_action: true,
+    call_to_action_text: "Begin the Overland Trails tour",
+  }}
+  height={640}
+/>
+```
+
+<StoryMapJS
+  data="/storymaps/overland-trails.json"
+  options={{
+    language: "en",
+    map_type: "stamen:toner-lite",
+    call_to_action: true,
+    call_to_action_text: "Begin the Overland Trails tour",
+  }}
+  height={640}
+/>
+
+### 5. Prepare optional JSON data
+
+If your component needs static configuration, it's could be best to store it under `assets/` so it deploys alongside the site. StoryMapJS consumes a complex JSON file with top-level dimensions (`width`, `height`, `font_css`) and a `storymap` object containing `language`, `map_type`, and `slides`. We keep the demo payload at `assets/storymaps/overland-trails.json`, which becomes `/storymaps/overland-trails.json` in the browser.
+
+```json filename="assets/storymaps/overland-trails.json" copy
+{
+  "width": 1200,
+  "height": 640,
+  "font_css": "stock:abril-dosis",
+  "calculate_zoom": true,
+  "storymap": {
+    "language": "en",
+    "map_type": "stamen:toner-lite",
+    "map_as_image": false,
+    "slides": [
+      {
+        "type": "overview",
+        "text": {
+          "headline": "Overland Trails",
+          "text": "Explore a few key stops from a 19th-century overland trip across the United States."
+        }
+      },
+      {
+        "location": {"lat": 41.879, "lon": -87.623},
+        "text": {
+          "headline": "Chicago",
+          "text": "The trip begins near the southern shore of Lake Michigan, where travelers stocked up on supplies."
+        },
+        "media": {
+          "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Bird%27s_eye_view_of_Chicago%2C_1892._LOC_75693206.tif/lossy-page1-1024px-Bird%27s_eye_view_of_Chicago%2C_1892._LOC_75693206.tif.jpg",
+          "caption": "Bird's-eye view of Chicago in the 1890s",
+          "credit": "Library of Congress"
+        }
+      },
+      {
+        "location": {"lat": 39.7392, "lon": -104.9903},
+        "text": {
+          "headline": "Denver",
+          "text": "Mountain passes forced travelers to slow down, but the view over the Rockies was worth the effort."
+        },
+        "media": {
+          "url": "https://upload.wikimedia.org/wikipedia/commons/6/6c/Denver_Welcome_Arch_1910.jpg",
+          "caption": "Denver circa 1910",
+          "credit": "Detroit Publishing Co."
+        }
+      },
+      {
+        "location": {"lat": 37.7749, "lon": -122.4194},
+        "text": {
+          "headline": "San Francisco",
+          "text": "The route ends at the Pacific coast, where gold-rush era investment transformed the shoreline."
+        },
+        "media": {
+          "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/San_Francisco_blue_book_and_Pacific_Coast_elite_directory_%281890%29_%2814759261276%29.jpg/960px-San_Francisco_blue_book_and_Pacific_Coast_elite_directory_%281890%29_%2814759261276%29.jpg",
+          "caption": "San Francisco shoreline",
+          "credit": "Library of Congress"
+        }
+      }
+    ]
+  }
+}
+```
+
+### 6. StoryMap-specific reference
+
+If you keep StoryMapJS, here are the most useful settings:
+
+- `map_type`: `stamen:toner-lite` (default), `stamen:toner`, `stamen:watercolor`, `osm:standard`, or `mapbox:map-id`.
+- `map_subdomains`: string of tile subdomains for custom Leaflet templates.
+- `map_as_image`: `true` converts to the gigapixel workflow; combine with a `zoomify` block (`path`, `width`, `height`, `tolerance`).
+- `calculate_zoom`: when `false`, set `zoom` on each slide.
+- `language`: ISO 639‑1 code for UI strings.
+- `call_to_action` / `call_to_action_text`: toggle the overlay prompt.
+- `font_css`: URL or `stock:code`; load custom fonts globally via `content/_app.mdx`.
+
+Slides live inside `storymap.slides`:
+
+- Optional `type: "overview"` slide shows every marker.
+- Standard slides require `location.lat`/`location.lon` plus `text` and/or `media`.
+- Add `zoom` per slide when you disable `calculate_zoom`.
+
+## Extend the pattern for your own components
+
+1. **Component scope** → anything that touches `window` belongs in `clientComponents`.
+2. **Hydration safety** → wrap side effects in `useEffect`, cache external scripts, and tear down listeners.
+3. **Props** → stick to JSON-serializable values so MDX can pass them during SSR.
+4. **Data** → keep static configs in `assets/` and reference them with root-relative URLs.
+
+Following those rules means you can swap StoryMapJS for a timeline, charting library, or any other interactive widget.
+
+## Troubleshooting
+
+- **Blank canvas:** Check the browser console for blocked CDN requests or failing JSON fetches. Because the wrapper logs errors when scripts fail to load, you’ll see a descriptive message.
+- **Multiple embeds conflicting:** Each instance auto-generates its own ID. Avoid hard-coding IDs so StoryMapJS mounts to the right container.
+- **Fonts missing:** Host your own `font_css` file under `assets/` or add `<link>` tags in `_app.mdx`.
+- **SSR build errors:** If you accidentally export StoryMapJS from `components` (not `clientComponents`), the builder will try to import `window`. Move it back under `clientComponents`.
+
+Once you’re comfortable with this workflow, swap StoryMapJS for any other runtime widget and follow the same “data → component → registration → MDX” rhythm to keep your project organized.
