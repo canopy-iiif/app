@@ -23,6 +23,7 @@ const { copyAssets } = require("./assets");
 const { logLine } = require("./log");
 const navigation = require("../components/navigation");
 const referenced = require("../components/referenced");
+const bibliography = require("../components/bibliography");
 
 // hold records between builds if skipping IIIF
 let iiifRecordsCache = [];
@@ -54,6 +55,7 @@ async function build(options = {}) {
   mdx?.resetMdxCaches();
   navigation?.resetNavigationCache?.();
   referenced?.resetReferenceIndex?.();
+  bibliography?.resetBibliographyIndex?.();
   if (!skipIiif) {
     await cleanDir(OUT_DIR);
     await ensureNoJekyllMarker();
@@ -104,6 +106,15 @@ async function build(options = {}) {
     underscore: true,
   });
   // Interstitials read directly from the local IIIF cache; no API file needed
+  try {
+    bibliography?.buildBibliographyIndexSync?.();
+  } catch (err) {
+    logLine(
+      "• Failed to build bibliography index: " + String(err && err.message ? err.message : err),
+      "red",
+      { dim: true }
+    );
+  }
   pageRecords = await searchBuild.collectMdxPageRecords();
   await pages.buildContentTree(CONTENT_DIR, pageRecords);
   logLine("✓ MDX pages built", "green");

@@ -21,6 +21,7 @@ export { default as ButtonWrapper } from "./src/layout/ButtonWrapper.jsx";
 export { default as Card } from "./src/layout/Card.jsx";
 export { default as ReferencedItems } from "./src/content/ReferencedItems.jsx";
 export { default as References } from "./src/content/References.jsx";
+export { default as Biblography } from "./src/content/Biblography.jsx";
 export { default as Timeline } from "./src/content/timeline/MdxTimeline.jsx";
 export { default as TimelinePoint } from "./src/content/timeline/TimelinePoint.jsx";
 export { default as Map } from "./src/content/map/MdxMap.jsx";

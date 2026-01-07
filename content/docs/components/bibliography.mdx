@@ -1,0 +1,32 @@
+---
+title: Bibliography
+description: Aggregate every MDX footnote into a single bibliography.
+---
+
+# Bibliography
+
+Content authors may add footnotes anywhere in a page using standard markdown syntax. The footnotes will be collected and displayed at the bottom of the respective page automatically. `<Biblography />` reads every Markdown file in `content/`, gathers each footnote, and prints them in one clean list. Using the component generate single source for citations on your site.
+
+```mdx
+<Biblography />
+```
+
+<Biblography />
+
+## Writing footnotes
+
+Use standard markdown [footnote](https://pandoc.org/demo/example33/8.19-footnotes.html) syntax to add citations anywhere in your content.
+
+```mdx filename="content/about/example.mdx"
+By the 1770s the East India Company controlled Bengal's revenue, reshaping trade and taxation across colonial India.[^5]
+
+[^5]: Seema Alavi, _Company to Crown: Power and Politics in India_, 2019.
+```
+
+`<Biblography />` groups entries by page and preserves the note numbers so readers can follow each citation back to its essay.
+
+## API
+
+| Prop             | Type   | Default | Notes                                              |
+| ---------------- | ------ | ------- | -------------------------------------------------- |
+| `pageHeadingTag` | string | `h3`    | Element for the per-page headings inside the list. |
