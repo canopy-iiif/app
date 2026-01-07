@@ -2,7 +2,7 @@
   position: relative;
   display: inline-flex;
   gap: 0.5rem;
-  border-bottom: 1px solid #e2e8f0; /* subtle bottom border */
+  border-bottom: 3px solid var(--color-gray-200); /* subtle bottom border */
   padding-bottom: 0.25rem;
 }
 
@@ -13,21 +13,21 @@
   padding: 0.25rem 0.75rem 0.5rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--color-gray-muted);
   cursor: pointer;
 }
 
 .canopy-search-tab.is-active {
-  color: #0f172a;
+  color: var(--color-gray-900);
 }
 
 .canopy-search-tabs__highlight {
   position: absolute;
-  bottom: 0;
+  bottom: -3px;
   left: 0;
-  height: 2px; /* underline */
+  height: 3px; /* underline */
   border-radius: 999px;
-  background: #2563eb; /* brand-ish blue */
+  background: var(--color-accent-default);
   pointer-events: none;
   opacity: 0;
   transform: translateX(0);
