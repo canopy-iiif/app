@@ -4,6 +4,7 @@ description: Configure Radix-backed colors plus extend styling with CSS and Tail
 ---
 
 import {ThemeShowcase} from "@canopy-iiif/app/ui/server";
+import ThemeShowcaseScript from "@canopy-iiif/helpers/docs/ThemeShowcaseScript.js";
 
 # Theme
 
@@ -22,7 +23,14 @@ theme:
 - **`accentColor`** drives buttons, links, checkboxes, and focus rings.
 - **`grayColor`** sets the base neutral ramp used for page backgrounds, card borders, and typography.
 
+Click any accent or gray swatch below to temporarily override those palettes,
+or flip between light/dark using the appearance buttons. The overrides inject a
+small helper script (scoped to this docs page) that forces the relevant CSS
+variables with `!important` so you can preview combinations without editing
+`canopy.yml`. **Reset overrides** jumps back to the default light/indigo/slate preview.
+
 <ThemeShowcase />
+<ThemeShowcaseScript />
 
 ## Typography
 
