@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.4.13",
+    "date": "2026-01-07",
+    "summary": "Refine accessibility of theme colors.",
+    "highlights": []
+  },
+  {
     "version": "1.4.12",
     "date": "2026-01-07",
     "summary": "Add ID to works and fix Bibliography misnomer.",

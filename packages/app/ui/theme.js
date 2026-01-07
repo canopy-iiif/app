@@ -88,121 +88,6 @@ function resolveRadixPalette(name, appearance) {
   return fallback && fallback[`${name}1`] ? fallback : null;
 }
 
-function darkenHex(hex, amount = 0.15) {
-  if (!hex) return hex;
-  const normalized = hex.replace("#", "");
-  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return hex;
-  const num = parseInt(normalized, 16);
-  const r = (num >> 16) & 255;
-  const g = (num >> 8) & 255;
-  const b = num & 255;
-  const clamp = (value) => Math.max(0, Math.min(255, Math.round(value)));
-  const toHex = (value) => clamp(value).toString(16).padStart(2, "0");
-  const factor = 1 - amount;
-  return `#${toHex(r * factor)}${toHex(g * factor)}${toHex(b * factor)}`;
-}
-
-function lightenHex(hex, amount = 0.15) {
-  if (!hex) return hex;
-  const normalized = hex.replace("#", "");
-  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return hex;
-  const num = parseInt(normalized, 16);
-  const r = (num >> 16) & 255;
-  const g = (num >> 8) & 255;
-  const b = num & 255;
-  const clamp = (value) => Math.max(0, Math.min(255, Math.round(value)));
-  const toHex = (value) => clamp(value).toString(16).padStart(2, "0");
-  const adjust = (value) => value + (255 - value) * amount;
-  return `#${toHex(adjust(r))}${toHex(adjust(g))}${toHex(adjust(b))}`;
-}
-
-function adjustSaturation(hex, amount = 0.15) {
-  if (!hex) return hex;
-  const normalized = hex.replace("#", "");
-  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return hex;
-  const num = parseInt(normalized, 16);
-  let r = ((num >> 16) & 255) / 255;
-  let g = ((num >> 8) & 255) / 255;
-  let b = (num & 255) / 255;
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  let h = 0;
-  let s = 0;
-  const l = (max + min) / 2;
-  if (max !== min) {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    switch (max) {
-      case r:
-        h = (g - b) / d + (g < b ? 6 : 0);
-        break;
-      case g:
-        h = (b - r) / d + 2;
-        break;
-      default:
-        h = (r - g) / d + 4;
-    }
-    h /= 6;
-  }
-  const delta = Number(amount);
-  if (!Number.isFinite(delta) || delta === 0) return hex;
-  s = Math.max(0, Math.min(1, s + delta));
-  const hueToRgb = (p, q, t) => {
-    if (t < 0) t += 1;
-    if (t > 1) t -= 1;
-    if (t < 1 / 6) return p + (q - p) * 6 * t;
-    if (t < 1 / 2) return q;
-    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-    return p;
-  };
-  let rOut;
-  let gOut;
-  let bOut;
-  if (s === 0) {
-    rOut = gOut = bOut = l;
-  } else {
-    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-    const p = 2 * l - q;
-    rOut = hueToRgb(p, q, h + 1 / 3);
-    gOut = hueToRgb(p, q, h);
-    bOut = hueToRgb(p, q, h - 1 / 3);
-  }
-  const toHex = (value) =>
-    Math.round(Math.max(0, Math.min(1, value)) * 255)
-      .toString(16)
-      .padStart(2, "0");
-  return `#${toHex(rOut)}${toHex(gOut)}${toHex(bOut)}`;
-}
-
-function mixHexColors(colorA, colorB, amount = 0.5) {
-  const normalize = (hex) =>
-    hex && /^[0-9a-fA-F]{6}$/.test(hex.replace("#", ""))
-      ? hex.replace("#", "")
-      : null;
-  const first = normalize(colorA);
-  const second = normalize(colorB);
-  if (!first || !second) return colorA || colorB || null;
-  const a = parseInt(first, 16);
-  const b = parseInt(second, 16);
-  const clampAmount = Math.max(0, Math.min(1, Number(amount) || 0));
-  const mixChannel = (shift) =>
-    Math.round(
-      ((a >> shift) & 255) +
-        (((b >> shift) & 255) - ((a >> shift) & 255)) * clampAmount
-    );
-  const toHex = (value) => value.toString(16).padStart(2, "0");
-  const r = mixChannel(16);
-  const g = mixChannel(8);
-  const bl = mixChannel(0);
-  return `#${toHex(r)}${toHex(g)}${toHex(bl)}`;
-}
-
-function normalizeDarkenAmount(raw) {
-  const value = Number(raw);
-  if (!Number.isFinite(value)) return null;
-  return Math.min(0.95, Math.max(0, value));
-}
-
 function toTailwindScale(name, options = {}) {
   if (!name || !AVAILABLE.has(name)) return null;
   const appearance = normalizeAppearance(options.appearance);
@@ -210,7 +95,6 @@ function toTailwindScale(name, options = {}) {
   if (!palette) return null;
   const prefix = name;
   const scale = {};
-  const darken900Amount = normalizeDarkenAmount(options.darken900Amount);
   const steps = STEP_MAP;
   for (const lvl of LEVELS) {
     const radixStep = steps[lvl];
@@ -218,26 +102,6 @@ function toTailwindScale(name, options = {}) {
     const value = palette[key];
     if (!value) return null;
     scale[lvl] = value;
-  }
-  const saturate700 = options.saturate700 !== false;
-  if (scale["700"]) {
-    let adjusted =
-      appearance === "dark"
-        ? lightenHex(scale["700"], 0.15)
-        : darkenHex(scale["700"], 0.15);
-    if (saturate700) adjusted = adjustSaturation(adjusted, 0.15);
-    scale["700"] = adjusted;
-  }
-  const darkestKey = `${prefix}${steps["900"]}`;
-  if (scale["800"] && palette[darkestKey]) {
-    const amount = darken900Amount != null ? darken900Amount : 0.25;
-    scale["900"] =
-      appearance === "dark"
-        ? lightenHex(palette[darkestKey], amount)
-        : darkenHex(palette[darkestKey], amount);
-  }
-  if (scale["800"] && scale["900"]) {
-    scale["800"] = mixHexColors(scale["800"], scale["900"], 0.65);
   }
   return scale;
 }

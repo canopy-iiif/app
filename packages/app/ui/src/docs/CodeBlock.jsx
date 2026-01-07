@@ -124,13 +124,13 @@ export default function DocsCodeBlock(props = {}) {
     fontWeight: 700,
     background: "var(--color-accent-100)",
     borderBottom: "1px solid var(--color-accent-200)",
-    color: "var(--color-accent-900)",
+    color: "var(--color-gray-900)",
   };
 
   const preStyle = {
     margin: 0,
     background: "var(--color-accent-100)",
-    color: "var(--color-accent-700)",
+    color: "var(--color-accent-800)",
     lineHeight: 1.55,
     padding: "1rem 0",
     overflowX: "auto",
@@ -181,13 +181,11 @@ export default function DocsCodeBlock(props = {}) {
                   type: "button",
                   onClick: handleCopy,
                   style: {
-                    border: "1px solid var(--color-accent-300, #bfdbfe)",
+                    border: "1px solid var(--color-accent-200, )",
                     borderRadius: "6px",
                     padding: "0.2rem 0.55rem",
                     fontSize: "0.7rem",
                     fontWeight: 500,
-                    background:
-                      "color-mix(in srgb, var(--color-accent-100, #e0f2ff) 55%, #ffffff)",
                     color: "var(--color-accent-700, #1d4ed8)",
                     cursor: "pointer",
                   },

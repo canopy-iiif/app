@@ -246,33 +246,12 @@ function toTailwindScale(name, options = {}) {
   const palette = resolveRadixPalette(name, appearance);
   if (!palette) return null;
   const scale = {};
-  const darken900Amount = normalizeDarkenAmount(options.darken900Amount);
   for (const lvl of LEVELS) {
     const radixStep = STEP_MAP[lvl];
     const key = `${name}${radixStep}`;
     const value = palette[key];
     if (!value) return null;
     scale[lvl] = value;
-  }
-  const saturate700 = options.saturate700 !== false;
-  if (scale["700"]) {
-    let adjusted =
-      appearance === "dark"
-        ? lightenHex(scale["700"], 0.15)
-        : darkenHex(scale["700"], 0.15);
-    if (saturate700) adjusted = adjustSaturation(adjusted, 0.15);
-    scale["700"] = adjusted;
-  }
-  const darkestKey = `${name}${STEP_MAP["900"]}`;
-  if (scale["800"] && palette[darkestKey]) {
-    const amount = darken900Amount != null ? darken900Amount : 0.25;
-    scale["900"] =
-      appearance === "dark"
-        ? lightenHex(palette[darkestKey], amount)
-        : darkenHex(palette[darkestKey], amount);
-  }
-  if (scale["800"] && scale["900"]) {
-    scale["800"] = mixHexColors(scale["800"], scale["900"], 0.65);
   }
   return scale;
 }
@@ -350,10 +329,6 @@ export default function ThemeShowcase() {
   const styles = `
     .canopy-theme-showcase {
       margin: 2.618rem 0;
-      padding: 1.5rem;
-      border: 1px solid color-mix(in srgb, var(--color-gray-400) 40%, transparent);
-      border-radius: 0.85rem;
-      background: color-mix(in srgb, var(--color-gray-50) 78%, transparent);
     }
     .canopy-theme-showcase__appearance-buttons {
       display: inline-flex;
@@ -468,7 +443,8 @@ export default function ThemeShowcase() {
       align-items: center;
       gap: 0.35rem;
       cursor: pointer;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease background 0.2s ease, color 0.2s ease;
+      font-weight: 300;
     }
     .canopy-theme-showcase__swatch:focus-visible {
       outline: 2px solid var(--color-accent-default);
@@ -477,6 +453,14 @@ export default function ThemeShowcase() {
     .canopy-theme-showcase__swatch[data-swatch-active="true"] {
       border-color: var(--color-accent-default);
       box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent-200) 70%, transparent);
+      background: linear-gradient(135deg, var(--color-accent-50), var(--color-accent-100));
+      color: var(--color-gray-900);
+      font-weight: 400;
+    }
+    .canopy-theme-showcase__swatch[data-swatch-active="true"][data-theme-swatch-type="gray"]  {
+      border-color: var(--color-gray-default);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-gray-200) 70%, transparent);
+      background: linear-gradient(135deg, var(--color-gray-50), var(--color-gray-100));
     }
     .canopy-theme-showcase__swatch-chip {
       width: 100%;
@@ -484,10 +468,8 @@ export default function ThemeShowcase() {
       border-radius: 0.5rem;
     }
     .canopy-theme-showcase__swatch-label {
-      font-size: 0.8333rem;
+      font-size: 0.9222rem;
       margin-top: 0.1rem;
-      font-weight: 500;
-      text-transform: capitalize;
     }
     .canopy-theme-showcase__swatch-controls { display: none; }
     .canopy-theme-showcase__clear-button { display: none; }
@@ -496,7 +478,15 @@ export default function ThemeShowcase() {
   return (
     <div className="canopy-theme-showcase" data-theme-showcase>
       <style dangerouslySetInnerHTML={{__html: styles}} />
-      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1rem'}}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          gap: "1rem",
+          marginBottom: "1rem",
+        }}
+      >
         <Section
           title="Appearance"
           description="Pick the base light or dark mode for the theme preview."
@@ -506,7 +496,9 @@ export default function ThemeShowcase() {
               const label = `${mode.charAt(0).toUpperCase()}${mode.slice(1)}`;
               const baseClass = "canopy-theme-showcase__appearance-button";
               const isDefault = mode === DEFAULTS.appearance;
-              const className = isDefault ? `${baseClass} is-active` : baseClass;
+              const className = isDefault
+                ? `${baseClass} is-active`
+                : baseClass;
               return (
                 <button
                   key={mode}
@@ -546,13 +538,21 @@ export default function ThemeShowcase() {
         title="Accent color palette options"
         description="Click a swatch to temporarily override the accent palette."
       >
-        <ColorsLabeled colors={accentColors} type="accent" getRadixSwatch={getRadixSwatch} />
+        <ColorsLabeled
+          colors={accentColors}
+          type="accent"
+          getRadixSwatch={getRadixSwatch}
+        />
       </Section>
       <Section
         title="Gray color palette options"
         description="Click a swatch to preview the neutral ramp for surfaces and text."
       >
-        <ColorsLabeled colors={grayColors} type="gray" getRadixSwatch={getRadixSwatch} />
+        <ColorsLabeled
+          colors={grayColors}
+          type="gray"
+          getRadixSwatch={getRadixSwatch}
+        />
       </Section>
       <script
         type="application/json"
