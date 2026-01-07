@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.4.7",
+    "date": "2026-01-06",
+    "summary": "Add theme preview to docs.",
+    "highlights": []
+  },
+  {
     "version": "1.4.6",
     "date": "2026-01-06",
     "summary": "Minor style updates and extend examples.",

@@ -8,6 +8,7 @@ const FALLBACK_DEFAULTS = {
 };
 
 function themeShowcaseRuntime(levels) {
+  const STORAGE_KEY = 'canopy_content_theme_preview';
   const baseDefaults = Object.assign({}, FALLBACK_DEFAULTS);
   const html = typeof document !== 'undefined' ? document.documentElement : null;
   if (!html) return;
@@ -97,6 +98,45 @@ function themeShowcaseRuntime(levels) {
     return value.charAt(0).toUpperCase() + value.slice(1);
   }
 
+  function loadStored() {
+    try {
+      if (typeof localStorage === 'undefined') return null;
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') return null;
+      return parsed;
+    } catch (error) {
+      console.warn('[canopy-theme-showcase] Failed to read stored theme', error);
+      return null;
+    }
+  }
+
+  function persistState(state, defaults, cssText, appliedAppearance) {
+    try {
+      if (typeof localStorage === 'undefined') return;
+      const matchesDefaults =
+        state.appearance === defaults.appearance &&
+        state.accent === defaults.accentColor &&
+        state.gray === defaults.grayColor;
+      if (matchesDefaults) {
+        localStorage.removeItem(STORAGE_KEY);
+        return;
+      }
+      const payload = {
+        appearance: state.appearance || null,
+        accent: state.accent || null,
+        gray: state.gray || null,
+        css: cssText || '',
+        appliedAppearance:
+          appliedAppearance || state.appearance || defaults.appearance || 'light',
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch (error) {
+      console.warn('[canopy-theme-showcase] Failed to persist theme', error);
+    }
+  }
+
   function activateHtmlAppearance(mode) {
     if (mode === 'dark') html.classList.add('dark');
     else html.classList.remove('dark');
@@ -117,18 +157,19 @@ function themeShowcaseRuntime(levels) {
     }
 
     const defaults = Object.assign({}, baseDefaults, dataset.defaults || {});
+    const stored = loadStored();
     const state = {
-      appearance: defaults.appearance,
-      accent: defaults.accentColor,
-      gray: defaults.grayColor,
+      appearance: stored && stored.appearance ? stored.appearance : defaults.appearance,
+      accent: stored && stored.accent ? stored.accent : defaults.accentColor,
+      gray: stored && stored.gray ? stored.gray : defaults.grayColor,
     };
 
     const statusEl = root.querySelector('[data-theme-showcase-status]');
+    const appearanceLabel = root.querySelector('[data-theme-active-label="appearance"]');
     const accentLabel = root.querySelector('[data-theme-active-label="accent"]');
     const grayLabel = root.querySelector('[data-theme-active-label="gray"]');
     const appearanceButtons = Array.from(root.querySelectorAll('[data-theme-appearance]'));
     const swatches = Array.from(root.querySelectorAll('[data-theme-swatch]'));
-    const clearButtons = Array.from(root.querySelectorAll('[data-theme-clear]'));
     const resetBtn = root.querySelector('[data-theme-reset]');
 
     function updateAppearanceButtons() {
@@ -153,6 +194,7 @@ function themeShowcaseRuntime(levels) {
     }
 
     function updateLabels() {
+      if (appearanceLabel) appearanceLabel.textContent = titleCase(state.appearance);
       if (accentLabel) accentLabel.textContent = titleCase(state.accent);
       if (grayLabel) grayLabel.textContent = titleCase(state.gray);
     }
@@ -192,6 +234,7 @@ function themeShowcaseRuntime(levels) {
       updateLabels();
       updateSwatchIndicators();
       updateAppearanceButtons();
+      persistState(state, defaults, css, activeAppearance);
     }
 
     swatches.forEach((swatch) => {
@@ -204,15 +247,6 @@ function themeShowcaseRuntime(levels) {
         } else {
           state[type] = value;
         }
-        apply();
-      });
-    });
-
-    clearButtons.forEach((button) => {
-      button.addEventListener('click', () => {
-        const type = button.getAttribute('data-theme-clear');
-        if (!type) return;
-        state[type] = null;
         apply();
       });
     });

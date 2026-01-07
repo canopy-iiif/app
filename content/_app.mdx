@@ -4,6 +4,7 @@ import {
   CanopyFooter,
   GoogleAnalytics,
 } from "@canopy-iiif/app/ui";
+import ThemeStorageHydrator from "@canopy-iiif/helpers/docs/ThemeStorageHydrator.js";
 
 export function Head() {
   return (
@@ -25,6 +26,7 @@ export function Head() {
         rel="stylesheet"
       />
       <GoogleAnalytics id="G-YPJRYY7848" />
+      <ThemeStorageHydrator />
     </>
 
 );

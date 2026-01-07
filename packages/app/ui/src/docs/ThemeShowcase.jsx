@@ -355,46 +355,12 @@ export default function ThemeShowcase() {
       border-radius: 0.85rem;
       background: color-mix(in srgb, var(--color-gray-50) 78%, transparent);
     }
-    .canopy-theme-showcase__toolbar {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      border-bottom: 1px solid var(--color-gray-200);
-      padding-bottom: 1.25rem;
-      margin-bottom: 2rem;
-    }
-    @media (min-width: 720px) {
-      .canopy-theme-showcase__toolbar {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-      }
-    }
-    .canopy-theme-showcase__toolbar-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-    .canopy-theme-showcase__toolbar-group--right {
-      align-items: flex-start;
-    }
-    @media (min-width: 720px) {
-      .canopy-theme-showcase__toolbar-group--right {
-        align-items: flex-end;
-      }
-    }
-    .canopy-theme-showcase__toolbar-label {
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--color-gray-muted);
-    }
-    .canopy-theme-showcase__toolbar-buttons {
+    .canopy-theme-showcase__appearance-buttons {
       display: inline-flex;
       gap: 0.35rem;
       flex-wrap: wrap;
     }
-    .canopy-theme-showcase__toolbar-button {
+    .canopy-theme-showcase__appearance-button {
       border-radius: 999px;
       border: 1px solid var(--color-gray-300);
       background: var(--color-gray-50);
@@ -404,12 +370,12 @@ export default function ThemeShowcase() {
       cursor: pointer;
       transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
     }
-    .canopy-theme-showcase__toolbar-button.is-active {
+    .canopy-theme-showcase__appearance-button.is-active {
       border-color: var(--color-accent-default);
       color: var(--color-accent-default);
       background: color-mix(in srgb, var(--color-accent-100) 65%, transparent);
     }
-    .canopy-theme-showcase__toolbar-reset {
+    .canopy-theme-showcase__reset {
       border-radius: 999px;
       border: 1px solid var(--color-gray-400);
       background: transparent;
@@ -417,10 +383,6 @@ export default function ThemeShowcase() {
       font-size: 0.85rem;
       cursor: pointer;
       color: var(--color-gray-900);
-    }
-    .canopy-theme-showcase__status {
-      font-size: 0.85rem;
-      color: var(--color-gray-muted);
     }
     .canopy-theme-showcase__section {
       margin: 2.618rem 0;
@@ -527,42 +489,22 @@ export default function ThemeShowcase() {
       font-weight: 500;
       text-transform: capitalize;
     }
-    .canopy-theme-showcase__swatch-controls {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-      font-size: 0.9rem;
-    }
-    @media (min-width: 520px) {
-      .canopy-theme-showcase__swatch-controls {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-      }
-    }
-    .canopy-theme-showcase__clear-button {
-      border: none;
-      background: none;
-      color: var(--color-accent-default);
-      font-size: 0.85rem;
-      cursor: pointer;
-      text-decoration: underline;
-    }
+    .canopy-theme-showcase__swatch-controls { display: none; }
+    .canopy-theme-showcase__clear-button { display: none; }
   `;
 
   return (
     <div className="canopy-theme-showcase" data-theme-showcase>
       <style dangerouslySetInnerHTML={{__html: styles}} />
-      <div className="canopy-theme-showcase__toolbar">
-        <div className="canopy-theme-showcase__toolbar-group">
-          <span className="canopy-theme-showcase__toolbar-label">
-            Appearance preview
-          </span>
-          <div className="canopy-theme-showcase__toolbar-buttons">
+      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1rem'}}>
+        <Section
+          title="Appearance"
+          description="Pick the base light or dark mode for the theme preview."
+        >
+          <div className="canopy-theme-showcase__appearance-buttons">
             {["light", "dark"].map((mode) => {
               const label = `${mode.charAt(0).toUpperCase()}${mode.slice(1)}`;
-              const baseClass = "canopy-theme-showcase__toolbar-button";
+              const baseClass = "canopy-theme-showcase__appearance-button";
               const isDefault = mode === DEFAULTS.appearance;
               const className = isDefault ? `${baseClass} is-active` : baseClass;
               return (
@@ -577,19 +519,14 @@ export default function ThemeShowcase() {
               );
             })}
           </div>
-        </div>
-        <div className="canopy-theme-showcase__toolbar-group canopy-theme-showcase__toolbar-group--right">
-          <button
-            type="button"
-            className="canopy-theme-showcase__toolbar-reset"
-            data-theme-reset
-          >
-            Reset overrides
-          </button>
-          <span className="canopy-theme-showcase__status" data-theme-showcase-status>
-            No overrides active
-          </span>
-        </div>
+        </Section>
+        <button
+          type="button"
+          className="canopy-theme-showcase__reset"
+          data-theme-reset
+        >
+          Reset
+        </button>
       </div>
       <Section
         title="Color scales"
@@ -609,40 +546,12 @@ export default function ThemeShowcase() {
         title="Accent color palette options"
         description="Click a swatch to temporarily override the accent palette."
       >
-        <div className="canopy-theme-showcase__swatch-controls">
-          <span>
-            Active accent: {" "}
-            <strong data-theme-active-label="accent">
-              {DEFAULTS.accentColor}
-            </strong>
-          </span>
-          <button
-            type="button"
-            className="canopy-theme-showcase__clear-button"
-            data-theme-clear="accent"
-          >
-            Clear accent override
-          </button>
-        </div>
         <ColorsLabeled colors={accentColors} type="accent" getRadixSwatch={getRadixSwatch} />
       </Section>
       <Section
         title="Gray color palette options"
         description="Click a swatch to preview the neutral ramp for surfaces and text."
       >
-        <div className="canopy-theme-showcase__swatch-controls">
-          <span>
-            Active gray: {" "}
-            <strong data-theme-active-label="gray">{DEFAULTS.grayColor}</strong>
-          </span>
-          <button
-            type="button"
-            className="canopy-theme-showcase__clear-button"
-            data-theme-clear="gray"
-          >
-            Clear gray override
-          </button>
-        </div>
         <ColorsLabeled colors={grayColors} type="gray" getRadixSwatch={getRadixSwatch} />
       </Section>
       <script
