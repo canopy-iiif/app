@@ -4,6 +4,8 @@ description: Create fast & light digital projects with natural markdown
 image: https://iiif.dc.library.northwestern.edu/iiif/3/138a94b0-175a-4152-98c7-df58661ce7d5/950,520,7100,4740/!1200,630/0/default.jpg
 ---
 
+import MarkdownAuthoringInterstitial from "@canopy-iiif/helpers/docs/components/MarkdownAuthoring.jsx";
+
 <Interstitials.Hero
   headline="Create fast & light digital projects with natural markdown"
   description="Canopy IIIF helps you add context and narratives to IIIF material provided by Libraries, Archives, and Museums. Don't worry about derivatives and storage. Just create Markdown projects that are easy to build and maintain."
@@ -30,9 +32,14 @@ image: https://iiif.dc.library.northwestern.edu/iiif/3/138a94b0-175a-4152-98c7-d
   ]}
 />
 
+<MarkdownAuthoringInterstitial
+  heading="Easily author content with Canopy"
+  description="Transform your narratives to markdown, add rich components in the same document, and quickly publish your ideas with interactive image viewers, maps, and timelines."
+/>
+
 <Container>
 
-## Start authoring with Canopy
+## What is Canopy?
 
 Canopy helps researchers, libraries, archives, and museums create polished digital projects with intuitive tools that showcase [IIIF](https://iiif.io) resources. It lets scholars and digital humanists curate works from many sources and add _context and narrative_. Built on IIIF’s decentralized and interoperable APIs, Canopy provides a customizable modern front end that needs no backend or database, allowing quick setup and low maintenance. The only requirement is access to [IIIF Collections](https://iiif.io/api/presentation/3.0/#51-collection) with the desired objects. In minutes, users can generate **_fast, lightweight static sites_** that are easy to host and draw on IIIF’s rich metadata and media.
 
@@ -44,7 +51,16 @@ Canopy helps researchers, libraries, archives, and museums create polished digit
 - Runs entirely without an integrated database or backend.
 - Produces fast, lightweight, low-maintenance sites that are easy to host.
 
-## Highlighted Items
+<ButtonWrapper variant="interstitial" text="Have an idea for a project?">
+  <Button href="/about/get-started" label="Get started" />
+  <Button
+    href="https://canopy-iiif.github.io/app/docs/"
+    label="Documentation"
+    variant="secondary"
+  />
+</ButtonWrapper>
+
+## Highlighted items
 
 This section features an organized selection of IIIF manifests referenced in this project. Each slider displays items matching the most common results for metadata labels such as _Genre_, _Language_, and _Subject_, linking resources across the project.
 
