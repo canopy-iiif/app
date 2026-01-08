@@ -93,6 +93,7 @@ function Meta(props = {}) {
   if (fullTitle) nodes.push(React.createElement('meta', { key: 'og-title', property: 'og:title', content: fullTitle }));
   if (description) nodes.push(React.createElement('meta', { key: 'og-description', property: 'og:description', content: description }));
   if (absolute) nodes.push(React.createElement('meta', { key: 'og-url', property: 'og:url', content: absolute }));
+  if (absolute) nodes.push(React.createElement('link', { key: 'canonical', rel: 'canonical', href: absolute }));
   if (ogType) nodes.push(React.createElement('meta', { key: 'og-type', property: 'og:type', content: ogType }));
   if (image) nodes.push(React.createElement('meta', { key: 'og-image', property: 'og:image', content: image }));
   if (twitterCard) nodes.push(React.createElement('meta', { key: 'twitter-card', name: 'twitter:card', content: twitterCard }));

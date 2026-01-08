@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.4.14",
+    "date": "2026-01-08",
+    "summary": "Add canonical link in head.",
+    "highlights": []
+  },
+  {
     "version": "1.4.13",
     "date": "2026-01-07",
     "summary": "Refine accessibility of theme colors.",
