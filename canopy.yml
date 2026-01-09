@@ -1,11 +1,36 @@
 collection:
-  - https://iiif-set-creator.fly.dev/sets/works-of-winslow-homer/collection.json
+  - https://api.dc.library.northwestern.edu/api/v2/collections/7ac5769f-a1d9-4227-a350-bf8bd8b1cddc?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/collections/94536627-cfdf-413c-852b-0cb16d986da3?as=iiif
 metadata:
-  - Medium
+  - Subject
+  - Date
+  - Language
+  - Genre
 featured:
-  - https://api.artic.edu/api/v1/artworks/25865/manifest.json
-  - https://iiif.harvardartmuseums.org/manifests/object/299837
+  - https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/e0d60273-e64c-49d8-99dc-d1af8f4c6266?as=iiif
+search:
+  results:
+    work:
+      layout: grid
+      result: figure
+    page:
+      layout: list
+      result: article
+  index:
+    metadata:
+      enabled: true
+      all: false
+    summary:
+      enabled: true
+    annotations:
+      enabled: false
+      motivation:
+        - commenting
+        - tagging
 theme:
-  appearance: dark
-  accentColor: brown
-  grayColor: sand
+  appearance: light
+  accentColor: indigo
+  grayColor: slate

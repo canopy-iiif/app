@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.4.17",
+    "date": "2026-01-09",
+    "summary": "Reset base collection.",
+    "highlights": []
+  },
+  {
     "version": "1.4.16",
     "date": "2026-01-09",
     "summary": "Add fallback for thumbnails.",
