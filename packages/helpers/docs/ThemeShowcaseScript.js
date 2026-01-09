@@ -12,6 +12,12 @@ function themeShowcaseRuntime(levels) {
   const baseDefaults = Object.assign({}, FALLBACK_DEFAULTS);
   const html = typeof document !== 'undefined' ? document.documentElement : null;
   if (!html) return;
+  const htmlDefaultAccent = html.getAttribute('data-accent');
+  const htmlDefaultAppearance = html.classList.contains('dark') ? 'dark' : baseDefaults.appearance;
+  const documentDefaults = Object.assign({}, baseDefaults, {
+    appearance: htmlDefaultAppearance || baseDefaults.appearance,
+    accentColor: htmlDefaultAccent || baseDefaults.accentColor,
+  });
   const styleSelector = '[data-theme-showcase-style]';
   let styleEl = document.querySelector(styleSelector);
   if (!styleEl) {
@@ -142,22 +148,52 @@ function themeShowcaseRuntime(levels) {
     else html.classList.remove('dark');
   }
 
-  const roots = document.querySelectorAll('[data-theme-showcase]');
-  if (!roots.length) return;
+  function updateHtmlAccent(accentName, fallback) {
+    const fallbackName = fallback || baseDefaults.accentColor || 'indigo';
+    const normalized = (accentName || '')
+      .toString()
+      .trim()
+      .toLowerCase();
+    html.setAttribute('data-accent', normalized || fallbackName);
+  }
+
+  function hydrateStoredTheme(stored, defaults) {
+    const resolvedDefaults = Object.assign({}, baseDefaults, defaults || {});
+    const appliedAppearance =
+      (stored && (stored.appliedAppearance || stored.appearance)) ||
+      resolvedDefaults.appearance ||
+      baseDefaults.appearance;
+    const storedAccent = stored && stored.accent ? stored.accent : null;
+    const activeAccent = storedAccent || resolvedDefaults.accentColor || baseDefaults.accentColor;
+    activateHtmlAppearance(appliedAppearance);
+    updateHtmlAccent(activeAccent, resolvedDefaults.accentColor);
+    if (stored && typeof stored.css === 'string' && stored.css) {
+      styleEl.textContent = stored.css;
+    }
+  }
+
+  const roots = Array.from(document.querySelectorAll('[data-theme-showcase]'));
+  const contexts = [];
 
   roots.forEach((root) => {
     const dataEl = root.querySelector('[data-theme-showcase-values]');
     if (!dataEl) return;
-    let dataset = null;
     try {
-      dataset = JSON.parse(dataEl.textContent || '{}');
+      const dataset = JSON.parse(dataEl.textContent || '{}');
+      contexts.push({ root, dataset });
     } catch (error) {
       console.error('[canopy-theme-showcase] Failed to parse preview data', error);
-      return;
     }
+  });
 
-    const defaults = Object.assign({}, baseDefaults, dataset.defaults || {});
-    const stored = loadStored();
+  const storedPreferences = loadStored();
+  hydrateStoredTheme(storedPreferences, documentDefaults);
+
+  if (!contexts.length) return;
+
+  contexts.forEach(({ root, dataset }) => {
+    const defaults = Object.assign({}, documentDefaults, dataset.defaults || {});
+    const stored = storedPreferences;
     const state = {
       appearance: stored && stored.appearance ? stored.appearance : defaults.appearance,
       accent: stored && stored.accent ? stored.accent : defaults.accentColor,
@@ -212,6 +248,7 @@ function themeShowcaseRuntime(levels) {
 
     function apply() {
       const activeAppearance = state.appearance || defaults.appearance;
+      const activeAccentName = state.accent || defaults.accentColor || 'indigo';
       const accentScale = state.accent
         ? lookupScale(dataset, activeAppearance, 'accent', state.accent)
         : null;
@@ -230,6 +267,7 @@ function themeShowcaseRuntime(levels) {
       );
       styleEl.textContent = css;
       activateHtmlAppearance(state.appearance || defaults.appearance);
+      updateHtmlAccent(activeAccentName, defaults.accentColor);
       updateStatus();
       updateLabels();
       updateSwatchIndicators();

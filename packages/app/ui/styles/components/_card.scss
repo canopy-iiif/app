@@ -19,7 +19,7 @@
     position: relative;
     width: 100%;
     padding-bottom: var(--canopy-card-padding);
-    background-color: rgb(229 231 235); /* slate-200 */
+    background-color: var(--color-gray-100);
     overflow: hidden;
 
     > img {

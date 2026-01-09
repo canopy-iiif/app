@@ -12,6 +12,7 @@ const { readBasePath, withBasePath } = require('./base-path');
 
 const BASE_PATH = readBasePath();
 let cachedAppearance = null;
+let cachedAccent = null;
 
 function resolveThemeAppearance() {
   if (cachedAppearance) return cachedAppearance;
@@ -27,6 +28,21 @@ function resolveThemeAppearance() {
     }
   } catch (_) {}
   return cachedAppearance;
+}
+
+function resolveThemeAccent() {
+  if (cachedAccent) return cachedAccent;
+  cachedAccent = 'indigo';
+  try {
+    const { loadCanopyTheme } = require('@canopy-iiif/app/ui/theme');
+    if (typeof loadCanopyTheme === 'function') {
+      const theme = loadCanopyTheme();
+      const accent = theme && theme.accent && theme.accent.name ? String(theme.accent.name) : '';
+      const normalized = accent.trim().toLowerCase();
+      if (normalized) cachedAccent = normalized;
+    }
+  } catch (_) {}
+  return cachedAccent;
 }
 
 function readYamlConfigBaseUrl() {
@@ -100,12 +116,16 @@ function htmlShell({ title, body, cssHref, scriptHref, headExtra, bodyClass }) {
   const extra = headExtra ? String(headExtra) : '';
   const cssTag = cssHref ? `<link rel="stylesheet" href="${cssHref}">` : '';
   const appearance = resolveThemeAppearance();
-  const htmlClass = appearance === 'dark' ? ' class="dark"' : '';
+  const accent = resolveThemeAccent();
+  const htmlAttrs = [];
+  if (appearance === 'dark') htmlAttrs.push('class="dark"');
+  htmlAttrs.push(`data-accent="${accent || 'indigo'}"`);
+  const htmlAttr = htmlAttrs.length ? ` ${htmlAttrs.join(' ')}` : '';
   const hasCustomTitle = /<title\b/i.test(extra);
   const titleTag = hasCustomTitle ? '' : `<title>${title}</title>`;
   const bodyClassName = normalizeClassList(bodyClass);
   const bodyAttr = bodyClassName ? ` class="${bodyClassName}"` : '';
-  return `<!doctype html><html lang="en"${htmlClass}><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>${titleTag}${extra}${cssTag}${scriptTag}</head><body${bodyAttr}>${body}</body></html>`;
+  return `<!doctype html><html lang="en"${htmlAttr}><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>${titleTag}${extra}${cssTag}${scriptTag}</head><body${bodyAttr}>${body}</body></html>`;
 }
 
 function withBase(href) {

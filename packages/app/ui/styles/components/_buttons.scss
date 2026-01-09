@@ -22,8 +22,7 @@
 
       &:hover,
       &:focus-visible {
-        background-color: var(--color-accent-800);
-        color: var(--color-gray-50);
+        background-color: var(--color-accent-600);
       }
     }
 
@@ -42,10 +41,36 @@
         );
         background-color: color-mix(
           in srgb,
-          var(--color-accent-200) 25%,
+          var(--color-accent-300) 25%,
           transparent
         );
-        color: var(--color-accent-700);
+        color: var(--color-accent-900);
+      }
+    }
+  }
+
+  html[data-accent="amber"],
+  html[data-accent="yellow"],
+  html[data-accent="lime"],
+  html[data-accent="mint"],
+  html[data-accent="sky"] {
+    .canopy-button--primary {
+      color: var(--color-gray-900);
+    }
+  }
+
+  html.dark {
+    .canopy-button--primary {
+      color: var(--color-gray-900);
+    }
+
+    &[data-accent="amber"],
+    &[data-accent="yellow"],
+    &[data-accent="lime"],
+    &[data-accent="mint"],
+    &[data-accent="sky"] {
+      .canopy-button--primary {
+        color: var(--color-gray-50);
       }
     }
   }

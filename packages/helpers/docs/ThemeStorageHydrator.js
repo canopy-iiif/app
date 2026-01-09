@@ -8,6 +8,8 @@ function ThemeStorageHydrator() {
     const STYLE_ATTR = 'data-theme-storage-style';
     if (typeof document === 'undefined') return;
     const html = document.documentElement;
+    const DEFAULT_APPEARANCE = html.classList.contains('dark') ? 'dark' : 'light';
+    const DEFAULT_ACCENT = (html.getAttribute('data-accent') || 'indigo').trim().toLowerCase() || 'indigo';
 
     function parseStored() {
       try {
@@ -22,12 +24,24 @@ function ThemeStorageHydrator() {
       }
     }
 
+    function applyAppearance(value) {
+      const mode = (value || '').toLowerCase() || DEFAULT_APPEARANCE;
+      if (mode === 'dark') html.classList.add('dark');
+      else html.classList.remove('dark');
+    }
+
+    function applyAccent(value) {
+      const normalized = (value || '').toString().trim().toLowerCase();
+      html.setAttribute('data-accent', normalized || DEFAULT_ACCENT);
+    }
+
     function applyStoredTheme() {
       const payload = parseStored();
       let styleEl = document.querySelector('style[' + STYLE_ATTR + ']');
       if (!payload || !payload.css) {
         if (styleEl) styleEl.remove();
-        html.classList.remove('dark');
+        applyAppearance(null);
+        applyAccent(null);
         return;
       }
       if (!styleEl) {
@@ -36,9 +50,9 @@ function ThemeStorageHydrator() {
         document.head.appendChild(styleEl);
       }
       styleEl.textContent = payload.css;
-      const appearance = payload.appliedAppearance || payload.appearance || 'light';
-      if (appearance === 'dark') html.classList.add('dark');
-      else html.classList.remove('dark');
+      const appearance = payload.appliedAppearance || payload.appearance;
+      applyAppearance(appearance);
+      applyAccent(payload.accent);
     }
 
     applyStoredTheme();
