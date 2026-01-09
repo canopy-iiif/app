@@ -76,6 +76,35 @@ const componentStyles = `
   justify-content: center;
 }
 
+.markdown-authoring__content {
+  position: relative;
+  padding: 1.618rem;
+}
+
+.markdown-authoring__content::before,
+.markdown-authoring__content::after {
+  position: absolute;
+  font-size: 3.618rem;
+  line-height: 1;
+  color: var(--color-midtown-accent, var(--color-accent-700));
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.markdown-authoring__content::before {
+  content: "“";
+  top: 4rem;
+  left: -0.5rem;
+  transform: translate(-40%, -40%);
+}
+
+.markdown-authoring__content::after {
+  content: "”";
+  bottom: 1rem;
+  right: 0.5rem;
+  transform: translate(40%, 40%);
+}
+
 @media (max-width: 1024px) {
   .markdown-authoring__grid {
     flex-direction: column;
