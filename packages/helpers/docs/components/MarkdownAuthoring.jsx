@@ -33,10 +33,6 @@ local authority, resistance, and the uneven realities of
 Company rule.`;
 
 const componentStyles = `
-.markdown-authoring {
-  padding: 1.618rem 0;
-}
-
 .markdown-authoring__container {
   position: relative;
   display: flex;
@@ -221,7 +217,6 @@ function MarkdownAuthoring({
         suppressHydrationWarning
         dangerouslySetInnerHTML={{__html: componentStyles}}
       />
-      <div className="markdown-authoring__background" aria-hidden="true" />
       <Container variant="wide" className="markdown-authoring__container">
         <div className="markdown-authoring__grid" data-nosnippet="true">
           <div className="markdown-authoring__panel">
