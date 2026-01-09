@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.4.16",
+    "date": "2026-01-09",
+    "summary": "Add fallback for thumbnails.",
+    "highlights": []
+  },
+  {
     "version": "1.4.15",
     "date": "2026-01-08",
     "summary": "Refine button contrast accessibility.",

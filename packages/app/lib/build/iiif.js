@@ -138,6 +138,23 @@ function resolveThumbnailPreferences() {
   };
 }
 
+function ensureThumbnailValue(target, url, width, height) {
+  if (!target) return false;
+  const current = target.thumbnail;
+  const hasCurrent =
+    typeof current === "string" ? current.trim().length > 0 : Boolean(current);
+  if (hasCurrent) return false;
+  if (!url) return false;
+  const normalized = String(url || "").trim();
+  if (!normalized) return false;
+  target.thumbnail = normalized;
+  if (typeof width === "number" && Number.isFinite(width) && width > 0)
+    target.thumbnailWidth = width;
+  if (typeof height === "number" && Number.isFinite(height) && height > 0)
+    target.thumbnailHeight = height;
+  return true;
+}
+
 async function resolveHeroMedia(manifest) {
   if (!manifest) return null;
   try {
@@ -959,6 +976,16 @@ async function ensureFeaturedInCache(cfg) {
             delete entry.ogImageHeight;
             touched = true;
           }
+          if (
+            ensureThumbnailValue(
+              entry,
+              heroMedia && heroMedia.heroThumbnail,
+              heroMedia && heroMedia.heroThumbnailWidth,
+              heroMedia && heroMedia.heroThumbnailHeight
+            )
+          ) {
+            touched = true;
+          }
         } catch (_) {}
 
         if (touched) await saveManifestIndex(idx);
@@ -1191,6 +1218,12 @@ async function rebuildManifestIndexFromCache() {
             entry.ogImageWidth = OG_IMAGE_WIDTH;
             entry.ogImageHeight = OG_IMAGE_HEIGHT;
           }
+          ensureThumbnailValue(
+            entry,
+            heroMedia.heroThumbnail,
+            heroMedia.heroThumbnailWidth,
+            heroMedia.heroThumbnailHeight
+          );
         }
       } catch (_) {}
       nextIndex.byId.push(entry);
@@ -1850,46 +1883,133 @@ async function buildIiifCollectionPages(CONFIG) {
               thumbUrl = String(t.url);
               thumbWidth = typeof t.width === "number" ? t.width : undefined;
               thumbHeight = typeof t.height === "number" ? t.height : undefined;
-              const idx = await loadManifestIndex();
-              if (Array.isArray(idx.byId)) {
-                const entry = idx.byId.find(
-                  (e) =>
-                    e &&
-                    e.id === String(manifest.id || id) &&
-                    e.type === "Manifest"
-                );
+            }
+          } catch (_) {}
+          try {
+            const idx = await loadManifestIndex();
+            if (Array.isArray(idx.byId)) {
+              const entry = idx.byId.find(
+                (e) =>
+                  e &&
+                  e.id === String(manifest.id || id) &&
+                  e.type === "Manifest"
+              );
               if (entry) {
-                entry.thumbnail = String(thumbUrl);
-                if (typeof thumbWidth === "number")
-                  entry.thumbnailWidth = thumbWidth;
-                if (typeof thumbHeight === "number")
-                  entry.thumbnailHeight = thumbHeight;
+                let touched = false;
+                if (thumbUrl) {
+                  const nextThumb = String(thumbUrl);
+                  if (entry.thumbnail !== nextThumb) {
+                    entry.thumbnail = nextThumb;
+                    touched = true;
+                  }
+                  if (
+                    typeof thumbWidth === "number" &&
+                    entry.thumbnailWidth !== thumbWidth
+                  ) {
+                    entry.thumbnailWidth = thumbWidth;
+                    touched = true;
+                  }
+                  if (
+                    typeof thumbHeight === "number" &&
+                    entry.thumbnailHeight !== thumbHeight
+                  ) {
+                    entry.thumbnailHeight = thumbHeight;
+                    touched = true;
+                  }
+                }
                 if (heroMedia && heroMedia.heroThumbnail) {
-                  entry.heroThumbnail = heroMedia.heroThumbnail;
-                  if (typeof heroMedia.heroThumbnailWidth === "number")
+                  if (entry.heroThumbnail !== heroMedia.heroThumbnail) {
+                    entry.heroThumbnail = heroMedia.heroThumbnail;
+                    touched = true;
+                  }
+                  if (
+                    typeof heroMedia.heroThumbnailWidth === "number" &&
+                    entry.heroThumbnailWidth !== heroMedia.heroThumbnailWidth
+                  ) {
                     entry.heroThumbnailWidth = heroMedia.heroThumbnailWidth;
-                  if (typeof heroMedia.heroThumbnailHeight === "number")
+                    touched = true;
+                  }
+                  if (
+                    typeof heroMedia.heroThumbnailHeight === "number" &&
+                    entry.heroThumbnailHeight !== heroMedia.heroThumbnailHeight
+                  ) {
                     entry.heroThumbnailHeight = heroMedia.heroThumbnailHeight;
+                    touched = true;
+                  }
                   if (heroMedia.heroThumbnailSrcset) {
-                    entry.heroThumbnailSrcset = heroMedia.heroThumbnailSrcset;
-                    entry.heroThumbnailSizes = HERO_IMAGE_SIZES_ATTR;
+                    if (
+                      entry.heroThumbnailSrcset !== heroMedia.heroThumbnailSrcset
+                    ) {
+                      entry.heroThumbnailSrcset = heroMedia.heroThumbnailSrcset;
+                      touched = true;
+                    }
+                    if (entry.heroThumbnailSizes !== HERO_IMAGE_SIZES_ATTR) {
+                      entry.heroThumbnailSizes = HERO_IMAGE_SIZES_ATTR;
+                      touched = true;
+                    }
+                  }
+                } else {
+                  if (entry.heroThumbnail !== undefined) {
+                    delete entry.heroThumbnail;
+                    touched = true;
+                  }
+                  if (entry.heroThumbnailWidth !== undefined) {
+                    delete entry.heroThumbnailWidth;
+                    touched = true;
+                  }
+                  if (entry.heroThumbnailHeight !== undefined) {
+                    delete entry.heroThumbnailHeight;
+                    touched = true;
+                  }
+                  if (entry.heroThumbnailSrcset !== undefined) {
+                    delete entry.heroThumbnailSrcset;
+                    touched = true;
+                  }
+                  if (entry.heroThumbnailSizes !== undefined) {
+                    delete entry.heroThumbnailSizes;
+                    touched = true;
                   }
                 }
                 if (heroMedia && heroMedia.ogImage) {
-                  entry.ogImage = heroMedia.ogImage;
-                  entry.ogImageWidth = OG_IMAGE_WIDTH;
-                  entry.ogImageHeight = OG_IMAGE_HEIGHT;
+                  if (entry.ogImage !== heroMedia.ogImage) {
+                    entry.ogImage = heroMedia.ogImage;
+                    touched = true;
+                  }
+                  if (entry.ogImageWidth !== OG_IMAGE_WIDTH) {
+                    entry.ogImageWidth = OG_IMAGE_WIDTH;
+                    touched = true;
+                  }
+                  if (entry.ogImageHeight !== OG_IMAGE_HEIGHT) {
+                    entry.ogImageHeight = OG_IMAGE_HEIGHT;
+                    touched = true;
+                  }
                 } else {
                   try {
-                    if (entry.ogImage !== undefined) delete entry.ogImage;
-                    if (entry.ogImageWidth !== undefined)
+                    if (entry.ogImage !== undefined) {
+                      delete entry.ogImage;
+                      touched = true;
+                    }
+                    if (entry.ogImageWidth !== undefined) {
                       delete entry.ogImageWidth;
-                    if (entry.ogImageHeight !== undefined)
+                      touched = true;
+                    }
+                    if (entry.ogImageHeight !== undefined) {
                       delete entry.ogImageHeight;
+                      touched = true;
+                    }
                   } catch (_) {}
                 }
-                await saveManifestIndex(idx);
-              }
+                if (
+                  ensureThumbnailValue(
+                    entry,
+                    heroMedia && heroMedia.heroThumbnail,
+                    heroMedia && heroMedia.heroThumbnailWidth,
+                    heroMedia && heroMedia.heroThumbnailHeight
+                  )
+                ) {
+                  touched = true;
+                }
+                if (touched) await saveManifestIndex(idx);
               }
             }
           } catch (_) {}
@@ -1916,20 +2036,21 @@ async function buildIiifCollectionPages(CONFIG) {
               annotationValue = "";
             }
           }
-          const navThumbnail =
-            thumbUrl || (heroMedia && heroMedia.heroThumbnail) || "";
-          const navThumbWidth =
-            typeof thumbWidth === "number"
-              ? thumbWidth
-              : heroMedia && typeof heroMedia.heroThumbnailWidth === "number"
+          const fallbackThumbnail =
+            (heroMedia && heroMedia.heroThumbnail) || "";
+          const fallbackThumbWidth =
+            heroMedia && typeof heroMedia.heroThumbnailWidth === "number"
               ? heroMedia.heroThumbnailWidth
               : undefined;
-          const navThumbHeight =
-            typeof thumbHeight === "number"
-              ? thumbHeight
-              : heroMedia && typeof heroMedia.heroThumbnailHeight === "number"
+          const fallbackThumbHeight =
+            heroMedia && typeof heroMedia.heroThumbnailHeight === "number"
               ? heroMedia.heroThumbnailHeight
               : undefined;
+          const navThumbnail = thumbUrl || fallbackThumbnail;
+          const navThumbWidth =
+            typeof thumbWidth === "number" ? thumbWidth : fallbackThumbWidth;
+          const navThumbHeight =
+            typeof thumbHeight === "number" ? thumbHeight : fallbackThumbHeight;
           const navRecord = navPlace.buildManifestNavPlaceRecord({
             manifest,
             slug,
@@ -1942,16 +2063,19 @@ async function buildIiifCollectionPages(CONFIG) {
           });
           if (navRecord) navPlaceRecords.push(navRecord);
 
+          const recordThumbnail = navThumbnail;
+          const recordThumbWidth = navThumbWidth;
+          const recordThumbHeight = navThumbHeight;
           iiifRecords.push({
             id: String(manifest.id || id),
             title,
             href: pageHref,
             type: "work",
-            thumbnail: thumbUrl || undefined,
+            thumbnail: recordThumbnail || undefined,
             thumbnailWidth:
-              typeof thumbWidth === "number" ? thumbWidth : undefined,
+              typeof recordThumbWidth === "number" ? recordThumbWidth : undefined,
             thumbnailHeight:
-              typeof thumbHeight === "number" ? thumbHeight : undefined,
+              typeof recordThumbHeight === "number" ? recordThumbHeight : undefined,
             searchMetadataValues:
               metadataValues && metadataValues.length
                 ? metadataValues
