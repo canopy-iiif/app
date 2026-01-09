@@ -58,5 +58,5 @@ jobs:
         env:
           # Trim down IIIF build in CI if desired
           CANOPY_CHUNK_SIZE: '10'
-          CANOPY_FETCH_CONCURRENCY: '6'
+          CANOPY_FETCH_CONCURRENCY: '1'
         run: npm run test:e2e

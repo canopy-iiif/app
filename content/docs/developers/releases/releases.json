@@ -1,5 +1,15 @@
 [
   {
+    "version": "1.5.0",
+    "date": "2026-01-09",
+    "summary": "Make build time more efficient.",
+    "highlights": [
+      "Set default build concurrency to 1",
+      "Allow disabling of build concurrency",
+      "Add phased telemetry for build times"
+    ]
+  },
+  {
     "version": "1.4.17",
     "date": "2026-01-09",
     "summary": "Reset base collection.",

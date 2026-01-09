@@ -18,7 +18,7 @@ module.exports = defineConfig({
     env: {
       CANOPY_MOCK_SEARCH: "1",
       CANOPY_CHUNK_SIZE: "10",
-      CANOPY_FETCH_CONCURRENCY: "6",
+      CANOPY_FETCH_CONCURRENCY: "1",
       CANOPY_SKIP_IIIF: "1",
     },
   },

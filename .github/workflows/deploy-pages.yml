@@ -72,7 +72,7 @@ jobs:
         env:
           # Optional: tune IIIF build performance in CI
           CANOPY_CHUNK_SIZE: "10"
-          CANOPY_FETCH_CONCURRENCY: "6"
+          CANOPY_FETCH_CONCURRENCY: "1"
           # Optional: override collection in CI to reduce build time
           # CANOPY_COLLECTION_URI: https://iiif.io/api/cookbook/recipe/0032-collection/collection.json
         run: npm run build

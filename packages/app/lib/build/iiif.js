@@ -47,8 +47,8 @@ const IIIF_CACHE_INDEX_MANIFESTS = path.join(
 );
 
 const DEFAULT_THUMBNAIL_SIZE = 400;
-const DEFAULT_CHUNK_SIZE = 20;
-const DEFAULT_FETCH_CONCURRENCY = 5;
+const DEFAULT_CHUNK_SIZE = 10;
+const DEFAULT_FETCH_CONCURRENCY = 1;
 const HERO_THUMBNAIL_SIZE = 800;
 const HERO_IMAGE_SIZES_ATTR = "(min-width: 1024px) 1280px, 100vw";
 const OG_IMAGE_WIDTH = 1200;
@@ -56,10 +56,22 @@ const OG_IMAGE_HEIGHT = 630;
 const HERO_REPRESENTATIVE_SIZE = Math.max(HERO_THUMBNAIL_SIZE, OG_IMAGE_WIDTH);
 const MAX_ENTRY_SLUG_LENGTH = 50;
 
-function resolvePositiveInteger(value, fallback) {
+function resolvePositiveInteger(value, fallback, options = {}) {
+  const allowZero = Boolean(options && options.allowZero);
   const num = Number(value);
-  if (Number.isFinite(num) && num > 0) return Math.max(1, Math.floor(num));
-  return Math.max(1, Math.floor(fallback));
+  if (Number.isFinite(num)) {
+    if (allowZero && num === 0) return 0;
+    if (num > 0) return Math.max(1, Math.floor(num));
+  }
+  const normalizedFallback = Number(fallback);
+  if (allowZero && normalizedFallback === 0) return 0;
+  return Math.max(1, Math.floor(normalizedFallback));
+}
+
+function formatDurationMs(ms) {
+  if (!Number.isFinite(ms) || ms < 0) return '0ms';
+  if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
+  return `${Math.round(ms)}ms`;
 }
 
 function resolveBoolean(value) {
@@ -1411,6 +1423,11 @@ async function buildIiifCollectionPages(CONFIG) {
     DEFAULT_CHUNK_SIZE
   );
   const chunks = Math.ceil(tasks.length / chunkSize);
+  const requestedConcurrency = resolvePositiveInteger(
+    process.env.CANOPY_FETCH_CONCURRENCY,
+    DEFAULT_FETCH_CONCURRENCY,
+    {allowZero: true}
+  );
   // Summary before processing chunks
   try {
     const collectionsCount = visitedCollections.size || 0;
@@ -1419,6 +1436,11 @@ async function buildIiifCollectionPages(CONFIG) {
       "blue",
       {dim: true}
     );
+    const concurrencySummary =
+      requestedConcurrency === 0
+        ? "auto (no explicit cap)"
+        : String(requestedConcurrency);
+    logLine(`• Fetch concurrency: ${concurrencySummary}`, "blue", { dim: true });
   } catch (_) {}
   const iiifRecords = [];
   const navPlaceRecords = [];
@@ -1441,14 +1463,14 @@ async function buildIiifCollectionPages(CONFIG) {
 
   referenced.ensureReferenceIndex();
 
+  const chunkMetrics = [];
   for (let ci = 0; ci < chunks; ci++) {
     const chunk = tasks.slice(ci * chunkSize, (ci + 1) * chunkSize);
     logLine(`• Chunk ${ci + 1}/${chunks}`, "blue", {dim: true});
+    const chunkStart = Date.now();
 
-    const concurrency = resolvePositiveInteger(
-      process.env.CANOPY_FETCH_CONCURRENCY,
-      DEFAULT_FETCH_CONCURRENCY
-    );
+    const concurrency =
+      requestedConcurrency === 0 ? Math.max(1, chunk.length) : requestedConcurrency;
     let next = 0;
     const logs = new Array(chunk.length);
     let nextPrint = 0;
@@ -2102,6 +2124,42 @@ async function buildIiifCollectionPages(CONFIG) {
       () => worker()
     );
     await Promise.all(workers);
+    tryFlush();
+    const chunkDuration = Date.now() - chunkStart;
+    chunkMetrics.push({
+      index: ci + 1,
+      count: chunk.length,
+      durationMs: chunkDuration,
+      concurrency,
+    });
+    try {
+      const concurrencyLabel =
+        requestedConcurrency === 0 ? `${concurrency} (auto)` : String(concurrency);
+      logLine(
+        `⏱ Chunk ${ci + 1}/${chunks}: processed ${chunk.length} Manifest(s) in ${formatDurationMs(chunkDuration)} (concurrency ${concurrencyLabel})`,
+        "cyan",
+        { dim: true }
+      );
+    } catch (_) {}
+  }
+  if (chunkMetrics.length) {
+    const totalDuration = chunkMetrics.reduce(
+      (sum, entry) => sum + (entry.durationMs || 0),
+      0
+    );
+    const totalItems = chunkMetrics.reduce((sum, entry) => sum + (entry.count || 0), 0);
+    const avgDuration = chunkMetrics.length
+      ? totalDuration / chunkMetrics.length
+      : 0;
+    const rate = totalDuration > 0 ? totalItems / (totalDuration / 1000) : 0;
+    try {
+      const rateLabel = rate ? `${rate.toFixed(1)} manifest(s)/s` : 'n/a';
+      logLine(
+        `IIIF chunk summary: ${totalItems} Manifest(s) in ${formatDurationMs(totalDuration)} (avg chunk ${formatDurationMs(avgDuration)}, ${rateLabel})`,
+        "cyan",
+        { dim: true }
+      );
+    } catch (_) {}
   }
   try {
     await navPlace.writeNavPlaceDataset(navPlaceRecords);
