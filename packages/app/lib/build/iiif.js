@@ -711,6 +711,15 @@ const MEMO_ID_TO_SLUG = new Map();
 // collections/manifests share the same base title but mappings aren't yet saved.
 const RESERVED_SLUGS = {Manifest: new Set(), Collection: new Set()};
 
+function resetReservedSlugs() {
+  try {
+    Object.keys(RESERVED_SLUGS).forEach((key) => {
+      const set = RESERVED_SLUGS[key];
+      if (set && typeof set.clear === "function") set.clear();
+    });
+  } catch (_) {}
+}
+
 function computeUniqueSlug(index, baseSlug, id, type) {
   const byId = Array.isArray(index && index.byId) ? index.byId : [];
   const normId = normalizeIiifId(String(id || ""));
@@ -2184,6 +2193,38 @@ module.exports = {
   saveCachedManifest,
   ensureFeaturedInCache,
   rebuildManifestIndexFromCache,
+};
+
+// Expose a stable set of pure helper utilities for unit testing.
+module.exports.__TESTING__ = {
+  resolvePositiveInteger,
+  formatDurationMs,
+  resolveBoolean,
+  normalizeCollectionUris,
+  clampSlugLength,
+  isSlugTooLong,
+  normalizeSlugBase,
+  buildSlugWithSuffix,
+  normalizeStringList,
+  ensureThumbnailValue,
+  extractSummaryValues,
+  truncateSummary,
+  extractMetadataValues,
+  extractAnnotationText,
+  normalizeIiifId,
+  normalizeIiifType,
+  resolveParentFromPartOf,
+  computeUniqueSlug,
+  ensureBaseSlugFor,
+  resetReservedSlugs,
+  resolveThumbnailPreferences,
+  loadManifestIndex,
+  saveManifestIndex,
+  paths: {
+    IIIF_CACHE_INDEX,
+    IIIF_CACHE_INDEX_LEGACY,
+    IIIF_CACHE_INDEX_MANIFESTS,
+  },
 };
 
 // Debug: list collections cache after traversal
