@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.5.1",
+    "date": "2026-01-12",
+    "summary": "Update Clover components to filter annotations.",
+    "highlights": []
+  },
+  {
     "version": "1.5.0",
     "date": "2026-01-09",
     "summary": "Make build time more efficient.",
