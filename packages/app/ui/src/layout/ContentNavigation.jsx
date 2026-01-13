@@ -22,12 +22,17 @@ export default function ContentNavigation({
 }) {
   const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
   const savedDepthsRef = React.useRef(null);
+  const [isExpanded, setIsExpanded] = React.useState(false);
+
+  const handleToggle = React.useCallback(() => {
+    setIsExpanded((prev) => !prev);
+  }, []);
 
   if ((!items || !items.length) && !headingId) return null;
 
   const combinedClassName = [
     'canopy-sub-navigation canopy-content-navigation',
-    'canopy-content-navigation--collapsed',
+    isExpanded ? 'canopy-content-navigation--expanded' : 'canopy-content-navigation--collapsed',
     className,
   ]
     .filter(Boolean)
@@ -264,16 +269,17 @@ export default function ContentNavigation({
       <button
         type="button"
         className="canopy-content-navigation__toggle"
-        aria-expanded="false"
-        aria-label="Show section navigation"
-        title="Show section navigation"
+        aria-expanded={isExpanded}
+        aria-label={isExpanded ? 'Hide section navigation' : 'Show section navigation'}
+        title={isExpanded ? 'Hide section navigation' : 'Show section navigation'}
+        onClick={handleToggle}
         data-canopy-content-nav-toggle="true"
         data-show-label="Show"
         data-hide-label="Hide"
         data-show-full-label="Show section navigation"
         data-hide-full-label="Hide section navigation"
       >
-        Show
+        {isExpanded ? 'Hide' : 'Show'}
       </button>
       <ul className="canopy-sub-navigation__list" role="list">
         {topLink || nestedItems}
