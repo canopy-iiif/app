@@ -287,7 +287,7 @@ export default function Hero({
             const content = !isLast && item.href ? (
               <a href={item.href}>{item.title}</a>
             ) : (
-              <span className="canopy-interstitial__breadcrumb-current">
+              <span className="canopy-interstitial__breadcrumb-current" aria-current="page">
                 {item.title}
               </span>
             );

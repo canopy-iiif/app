@@ -162,7 +162,6 @@ export default function SearchPanelForm(props = {}) {
           data-canopy-search-form-input
           placeholder={placeholder}
           className="canopy-search-form__input"
-          aria-label="Search"
           ref={inputRef}
           onChange={handleInputChange}
           onInput={handleInputChange}
