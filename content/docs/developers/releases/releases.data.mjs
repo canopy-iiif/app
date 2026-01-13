@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.5.2",
+    "date": "2026-01-13",
+    "summary": "Add styled blockquote.",
+    "highlights": []
+  },
+  {
     "version": "1.5.1",
     "date": "2026-01-12",
     "summary": "Update Clover components to filter annotations.",
