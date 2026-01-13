@@ -153,6 +153,7 @@ export default function SearchPanelForm(props = {}) {
     >
       <label htmlFor={inputId} className="canopy-search-form__label">
         <MagnifyingGlassIcon className="canopy-search-form__icon" />
+        <span className="sr-only">Search</span>
         <input
           id={inputId}
           type="search"
