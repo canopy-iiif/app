@@ -20,6 +20,8 @@ jobs:
     outputs:
       published: ${{ steps.changesets.outputs.published }}
       publishedPackages: ${{ steps.changesets.outputs.publishedPackages }}
+      releaseVersion: ${{ steps.release_version.outputs.version }}
+      releaseNotes: ${{ steps.release_notes.outputs.payload }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -52,6 +54,64 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Resolve release version
+        id: release_version
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          echo "version=$(node -p \"require('./packages/app/package.json').version\")" >> "$GITHUB_OUTPUT"
+
+      - name: Read release notes from docs data
+        id: release_notes
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          notes=$(node packages/helpers/release-notes-from-docs.js "${{ steps.release_version.outputs.version }}")
+          echo "payload=${notes}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub release
+        if: steps.changesets.outputs.published == 'true'
+        uses: actions/github-script@v7
+        env:
+          RELEASE_VERSION: ${{ steps.release_version.outputs.version }}
+          RELEASE_NOTES: ${{ steps.release_notes.outputs.payload }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const notes = JSON.parse(process.env.RELEASE_NOTES || '{}');
+            const version = process.env.RELEASE_VERSION;
+            const tag = `v${version}`;
+            const body = notes.body && notes.body.trim()
+              ? notes.body.trim()
+              : 'Release details are tracked in content/docs/developers/releases/releases.data.mjs.';
+            const name = `v${version}`;
+            try {
+              const existing = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag,
+              });
+              await github.rest.repos.updateRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                release_id: existing.data.id,
+                tag_name: tag,
+                name,
+                body,
+                draft: false,
+                prerelease: false,
+              });
+            } catch (error) {
+              if (error.status !== 404) throw error;
+              await github.rest.repos.createRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag_name: tag,
+                name,
+                body,
+                draft: false,
+                prerelease: false,
+              });
+            }
+
   template:
     needs: release
     if: needs.release.result == 'success' && needs.release.outputs.published == 'true'
@@ -74,6 +134,14 @@ jobs:
           npm config set audit false
           npm ci --no-audit --no-fund || npm install --no-audit --no-fund
 
+      - name: Build template commit message
+        id: template_commit
+        run: |
+          node -e "const notes = process.env.NOTES ? JSON.parse(process.env.NOTES) : {}; const summary = notes.summary ? ` – ${notes.summary}` : ''; const message = `Update template for v${process.env.VERSION}${summary}`; process.stdout.write(`text=${message}\n`);" >> "$GITHUB_OUTPUT"
+        env:
+          VERSION: ${{ needs.release.outputs.releaseVersion }}
+          NOTES: ${{ needs.release.outputs.releaseNotes }}
+
       - name: Resolve published version
         id: ver
         run: |
@@ -88,4 +156,5 @@ jobs:
         env:
           TEMPLATE_PUSH_TOKEN: ${{ secrets.TEMPLATE_PUSH_TOKEN }}
           TARGET_REPO: ${{ github.repository_owner }}/template
+          TEMPLATE_COMMIT_MESSAGE: ${{ steps.template_commit.outputs.text }}
         run: node packages/helpers/template/push-template.js

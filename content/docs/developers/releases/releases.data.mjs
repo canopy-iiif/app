@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.5.3",
+    "date": "2026-01-13",
+    "summary": "Update release workflow.",
+    "highlights": []
+  },
+  {
     "version": "1.5.2",
     "date": "2026-01-13",
     "summary": "Add styled blockquote.",

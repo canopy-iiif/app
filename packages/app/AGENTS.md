@@ -5,14 +5,14 @@ Mission
 -------
 - Represents the published workspace `@canopy-iiif/app` that ships both builder logic and UI assets.
 - Coordinates the contract between SSR/build-time code in `lib/` and browser code in `ui/`.
-- Owns release quality: tests, build scripts, changelog, and workspace metadata live here.
+- Owns release quality: tests, build scripts, release log data, and workspace metadata live here.
 
 Structure at a Glance
 ---------------------
 - `lib/`: Node-side builder and runtimes (see `packages/app/lib/AGENTS.md`).
 - `ui/`: Browser bundle + SSR-safe entry (see `packages/app/ui/AGENTS.md`).
 - `package.json`: Publishes `lib/` as CommonJS and exports UI entrypoints; `prepublishOnly` builds UI.
-- `CHANGELOG.md`: Managed by Changesets; keep entries tidy and scoped.
+- Release notes: maintained via `content/docs/developers/releases/releases.data.mjs` and surfaced in the docs + workflows.
 
 Active Cleanup Goals
 --------------------

@@ -24,7 +24,11 @@ function main() {
   run('git config user.name "Mat Jordan"', { cwd });
   run('git config user.email "mat@northwestern.edu"', { cwd });
   run('git add .', { cwd });
-  run('git commit -m "Update template from app/main"', { cwd });
+  const commitMessage = process.env.TEMPLATE_COMMIT_MESSAGE || 'Update template from app/main';
+  run('git commit -m "$TEMPLATE_COMMIT_MESSAGE"', {
+    cwd,
+    env: { ...process.env, TEMPLATE_COMMIT_MESSAGE: commitMessage },
+  });
   run(
     `git remote add origin https://x-access-token:${token}@github.com/${target}.git`,
     { cwd }
