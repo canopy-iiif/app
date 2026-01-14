@@ -34,5 +34,3 @@ theme:
   appearance: light
   accentColor: indigo
   grayColor: slate
-site:
-  baseUrl: http://iiif.website/
