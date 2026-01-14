@@ -142,13 +142,7 @@ jobs:
       - name: Build template commit message
         id: template_commit
         run: |
-          MESSAGE=$(node <<'NODE'
-const notes = process.env.NOTES ? JSON.parse(process.env.NOTES) : {};
-const summary = notes.summary ? ` – ${notes.summary}` : '';
-const version = process.env.VERSION || '';
-process.stdout.write(`Update template for v${version}${summary}`);
-NODE
-)
+          MESSAGE=$(node -e "const notes = process.env.NOTES ? JSON.parse(process.env.NOTES) : {}; const summary = notes.summary ? ' – ' + notes.summary : ''; const version = process.env.VERSION || ''; process.stdout.write('Update template for v' + version + summary);")
           {
             echo 'text<<EOF'
             echo "$MESSAGE"
