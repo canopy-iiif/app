@@ -58,14 +58,19 @@ jobs:
         id: release_version
         if: steps.changesets.outputs.published == 'true'
         run: |
-          echo "version=$(node -p \"require('./packages/app/package.json').version\")" >> "$GITHUB_OUTPUT"
+          VERSION=$(node -p "require('./packages/app/package.json').version")
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
       - name: Read release notes from docs data
         id: release_notes
         if: steps.changesets.outputs.published == 'true'
         run: |
-          notes=$(node packages/helpers/release-notes-from-docs.js "${{ steps.release_version.outputs.version }}")
-          echo "payload=${notes}" >> "$GITHUB_OUTPUT"
+          NOTES=$(node packages/helpers/release-notes-from-docs.js "${{ steps.release_version.outputs.version }}")
+          {
+            echo 'payload<<EOF'
+            echo "$NOTES"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
 
       - name: Publish GitHub release
         if: steps.changesets.outputs.published == 'true'
@@ -137,7 +142,18 @@ jobs:
       - name: Build template commit message
         id: template_commit
         run: |
-          node -e "const notes = process.env.NOTES ? JSON.parse(process.env.NOTES) : {}; const summary = notes.summary ? ` – ${notes.summary}` : ''; const message = `Update template for v${process.env.VERSION}${summary}`; process.stdout.write(`text=${message}\n`);" >> "$GITHUB_OUTPUT"
+          MESSAGE=$(node <<'NODE'
+const notes = process.env.NOTES ? JSON.parse(process.env.NOTES) : {};
+const summary = notes.summary ? ` – ${notes.summary}` : '';
+const version = process.env.VERSION || '';
+process.stdout.write(`Update template for v${version}${summary}`);
+NODE
+)
+          {
+            echo 'text<<EOF'
+            echo "$MESSAGE"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
         env:
           VERSION: ${{ needs.release.outputs.releaseVersion }}
           NOTES: ${{ needs.release.outputs.releaseNotes }}
