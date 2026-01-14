@@ -28,6 +28,7 @@ const {
   buildIiifImageUrlForDimensions,
   findPrimaryCanvasImage,
   buildIiifImageSrcset,
+  isLevel0Service,
 } = require("../iiif/thumbnail");
 
 const IIIF_CACHE_DIR = path.resolve(".cache/iiif");
@@ -167,9 +168,29 @@ function ensureThumbnailValue(target, url, width, height) {
   return true;
 }
 
+function extractResourceThumbnail(resource) {
+  try {
+    const rawThumb = resource && resource.thumbnail;
+    const first = Array.isArray(rawThumb) ? rawThumb[0] : rawThumb;
+    if (!first) return null;
+    if (typeof first === "string") {
+      const trimmed = first.trim();
+      return trimmed ? {url: trimmed} : null;
+    }
+    const id = first.id || first["@id"];
+    if (!id) return null;
+    const width = typeof first.width === "number" ? first.width : undefined;
+    const height = typeof first.height === "number" ? first.height : undefined;
+    return {url: String(id), width, height};
+  } catch (_) {
+    return null;
+  }
+}
+
 async function resolveHeroMedia(manifest) {
   if (!manifest) return null;
   try {
+    const manifestThumb = extractResourceThumbnail(manifest);
     const heroSource = (() => {
       if (manifest && manifest.thumbnail) {
         const clone = { ...manifest };
@@ -191,15 +212,11 @@ async function resolveHeroMedia(manifest) {
     const heroService =
       (canvasImage && canvasImage.service) ||
       (heroRep && heroRep.service);
+    const serviceIsLevel0 = isLevel0Service(heroService);
     const heroPreferred = buildIiifImageUrlFromService(
-      heroService,
+      serviceIsLevel0 ? null : heroService,
       HERO_THUMBNAIL_SIZE
     );
-    const heroFallbackId = (() => {
-      if (canvasImage && canvasImage.id) return String(canvasImage.id);
-      if (heroRep && heroRep.id) return String(heroRep.id);
-      return '';
-    })();
     const heroWidth = (() => {
       if (canvasImage && typeof canvasImage.width === 'number')
         return canvasImage.width;
@@ -213,21 +230,59 @@ async function resolveHeroMedia(manifest) {
         return heroRep.height;
       return undefined;
     })();
-    const heroSrcset = buildIiifImageSrcset(heroService);
-    const ogImage = heroService
-      ? buildIiifImageUrlForDimensions(
-          heroService,
-          OG_IMAGE_WIDTH,
-          OG_IMAGE_HEIGHT
-        )
-      : '';
+    const heroSrcset = serviceIsLevel0
+      ? ''
+      : buildIiifImageSrcset(heroService);
+    const ogFromService =
+      !serviceIsLevel0 && heroService
+        ? buildIiifImageUrlForDimensions(
+            heroService,
+            OG_IMAGE_WIDTH,
+            OG_IMAGE_HEIGHT
+          )
+        : '';
+    const annotationImageId =
+      canvasImage && canvasImage.isImageBody && canvasImage.id
+        ? String(canvasImage.id)
+        : '';
+    let heroThumbnail = heroPreferred || '';
+    let heroThumbWidth = heroWidth;
+    let heroThumbHeight = heroHeight;
+    if (!heroThumbnail && manifestThumb && manifestThumb.url) {
+      heroThumbnail = manifestThumb.url;
+      if (typeof manifestThumb.width === 'number')
+        heroThumbWidth = manifestThumb.width;
+      if (typeof manifestThumb.height === 'number')
+        heroThumbHeight = manifestThumb.height;
+    }
+    if (!heroThumbnail) {
+      if (annotationImageId) {
+        heroThumbnail = annotationImageId;
+      } else if (!serviceIsLevel0 && heroRep && heroRep.id) {
+        heroThumbnail = String(heroRep.id);
+      }
+    }
+    let ogImage = '';
+    let ogImageWidth;
+    let ogImageHeight;
+    if (ogFromService) {
+      ogImage = ogFromService;
+      ogImageWidth = OG_IMAGE_WIDTH;
+      ogImageHeight = OG_IMAGE_HEIGHT;
+    } else if (heroThumbnail) {
+      ogImage = heroThumbnail;
+      if (typeof heroThumbWidth === 'number') ogImageWidth = heroThumbWidth;
+      if (typeof heroThumbHeight === 'number') ogImageHeight = heroThumbHeight;
+    }
     return {
-      heroThumbnail: heroPreferred || heroFallbackId || '',
-      heroThumbnailWidth: heroWidth,
-      heroThumbnailHeight: heroHeight,
+      heroThumbnail: heroThumbnail || '',
+      heroThumbnailWidth: heroThumbWidth,
+      heroThumbnailHeight: heroThumbHeight,
       heroThumbnailSrcset: heroSrcset || '',
       heroThumbnailSizes: heroSrcset ? HERO_IMAGE_SIZES_ATTR : '',
       ogImage: ogImage || '',
+      ogImageWidth,
+      ogImageHeight,
     };
   } catch (_) {
     return null;
@@ -987,14 +1042,28 @@ async function ensureFeaturedInCache(cfg) {
             }
           }
           if (heroMedia && heroMedia.ogImage) {
-            if (entry.ogImage !== heroMedia.ogImage) touched = true;
-            entry.ogImage = heroMedia.ogImage;
-            entry.ogImageWidth = OG_IMAGE_WIDTH;
-            entry.ogImageHeight = OG_IMAGE_HEIGHT;
+            if (entry.ogImage !== heroMedia.ogImage) {
+              entry.ogImage = heroMedia.ogImage;
+              touched = true;
+            }
+            if (typeof heroMedia.ogImageWidth === 'number') {
+              if (entry.ogImageWidth !== heroMedia.ogImageWidth) touched = true;
+              entry.ogImageWidth = heroMedia.ogImageWidth;
+            } else if (entry.ogImageWidth !== undefined) {
+              delete entry.ogImageWidth;
+              touched = true;
+            }
+            if (typeof heroMedia.ogImageHeight === 'number') {
+              if (entry.ogImageHeight !== heroMedia.ogImageHeight) touched = true;
+              entry.ogImageHeight = heroMedia.ogImageHeight;
+            } else if (entry.ogImageHeight !== undefined) {
+              delete entry.ogImageHeight;
+              touched = true;
+            }
           } else if (entry.ogImage !== undefined) {
             delete entry.ogImage;
-            delete entry.ogImageWidth;
-            delete entry.ogImageHeight;
+            if (entry.ogImageWidth !== undefined) delete entry.ogImageWidth;
+            if (entry.ogImageHeight !== undefined) delete entry.ogImageHeight;
             touched = true;
           }
           if (
@@ -1236,8 +1305,12 @@ async function rebuildManifestIndexFromCache() {
           }
           if (heroMedia.ogImage) {
             entry.ogImage = heroMedia.ogImage;
-            entry.ogImageWidth = OG_IMAGE_WIDTH;
-            entry.ogImageHeight = OG_IMAGE_HEIGHT;
+            if (typeof heroMedia.ogImageWidth === 'number')
+              entry.ogImageWidth = heroMedia.ogImageWidth;
+            else delete entry.ogImageWidth;
+            if (typeof heroMedia.ogImageHeight === 'number')
+              entry.ogImageHeight = heroMedia.ogImageHeight;
+            else delete entry.ogImageHeight;
           }
           ensureThumbnailValue(
             entry,
@@ -2006,12 +2079,18 @@ async function buildIiifCollectionPages(CONFIG) {
                     entry.ogImage = heroMedia.ogImage;
                     touched = true;
                   }
-                  if (entry.ogImageWidth !== OG_IMAGE_WIDTH) {
-                    entry.ogImageWidth = OG_IMAGE_WIDTH;
+                  if (typeof heroMedia.ogImageWidth === 'number') {
+                    if (entry.ogImageWidth !== heroMedia.ogImageWidth) touched = true;
+                    entry.ogImageWidth = heroMedia.ogImageWidth;
+                  } else if (entry.ogImageWidth !== undefined) {
+                    delete entry.ogImageWidth;
                     touched = true;
                   }
-                  if (entry.ogImageHeight !== OG_IMAGE_HEIGHT) {
-                    entry.ogImageHeight = OG_IMAGE_HEIGHT;
+                  if (typeof heroMedia.ogImageHeight === 'number') {
+                    if (entry.ogImageHeight !== heroMedia.ogImageHeight) touched = true;
+                    entry.ogImageHeight = heroMedia.ogImageHeight;
+                  } else if (entry.ogImageHeight !== undefined) {
+                    delete entry.ogImageHeight;
                     touched = true;
                   }
                 } else {

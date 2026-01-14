@@ -12,6 +12,30 @@ function arrayify(value) {
   return Array.isArray(value) ? value : [value];
 }
 
+function normalizeBodyType(value) {
+  if (!value) return '';
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed;
+  }
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      const normalized = normalizeBodyType(entry);
+      if (normalized) return normalized;
+    }
+  }
+  return '';
+}
+
+function isImageBodyType(value) {
+  if (!value) return false;
+  try {
+    return /image/i.test(String(value));
+  } catch (_) {
+    return false;
+  }
+}
+
 function normalizeImageServiceCandidate(candidate) {
   if (!candidate || typeof candidate !== 'object') return null;
   const id = candidate.id || candidate['@id'];
@@ -39,6 +63,23 @@ function normalizeImageServiceCandidate(candidate) {
     preferredFormats,
     qualities,
   };
+}
+
+function isLevel0Profile(profile) {
+  if (!profile) return false;
+  try {
+    return /level0/i.test(String(profile));
+  } catch (_) {
+    return false;
+  }
+}
+
+function isLevel0Service(candidate) {
+  if (!candidate || typeof candidate !== 'object') return false;
+  if (candidate.profile && isLevel0Profile(candidate.profile)) return true;
+  const normalized = normalizeImageServiceCandidate(candidate);
+  if (!normalized) return false;
+  return Boolean(normalized.profile && isLevel0Profile(normalized.profile));
 }
 
 function isIiifImageService(candidate) {
@@ -77,6 +118,7 @@ function extractImageService(value, seen = new Set()) {
 function normalizeImagePayload(body, canvas) {
   if (!body || typeof body !== 'object') return null;
   const id = body.id || body['@id'];
+  const bodyType = normalizeBodyType(body.type || body['@type']);
   const width =
     typeof body.width === 'number'
       ? body.width
@@ -95,6 +137,8 @@ function normalizeImagePayload(body, canvas) {
     width,
     height,
     service: service || undefined,
+    bodyType: bodyType || undefined,
+    isImageBody: Boolean(bodyType && isImageBodyType(bodyType)),
   };
 }
 
@@ -185,6 +229,7 @@ function selectServiceQuality(candidate) {
 
 function buildIiifImageUrlFromNormalizedService(service, preferredSize = 800) {
   if (!service || !isIiifImageService(service)) return '';
+  if (isLevel0Profile(service.profile)) return '';
   const baseId = normalizeServiceBaseId(service.id);
   if (!baseId) return '';
   const size = preferredSize && preferredSize > 0 ? preferredSize : 800;
@@ -202,6 +247,7 @@ function buildIiifImageUrlFromService(service, preferredSize = 800) {
 function buildIiifImageUrlForDimensions(service, width = 1200, height = 630) {
   const normalized = normalizeImageServiceCandidate(service);
   if (!normalized || !isIiifImageService(normalized)) return '';
+  if (isLevel0Profile(normalized.profile)) return '';
   const baseId = normalizeServiceBaseId(normalized.id);
   if (!baseId) return '';
   const safeWidth = Math.max(1, Math.floor(Number(width) || 0));
@@ -214,6 +260,7 @@ function buildIiifImageUrlForDimensions(service, width = 1200, height = 630) {
 function buildIiifImageSrcset(service, steps = [360, 640, 960, 1280, 1600]) {
   const normalized = normalizeImageServiceCandidate(service);
   if (!normalized || !isIiifImageService(normalized)) return '';
+  if (isLevel0Profile(normalized.profile)) return '';
   const uniqueSteps = Array.from(
     new Set(
       (Array.isArray(steps) ? steps : [])
@@ -354,4 +401,5 @@ module.exports = {
   buildIiifImageUrlForDimensions,
   findPrimaryCanvasImage,
   buildIiifImageSrcset,
+  isLevel0Service,
 };

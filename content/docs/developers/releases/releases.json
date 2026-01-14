@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.5.5",
+    "date": "2026-01-14",
+    "summary": "Respect level0 IIIF images.",
+    "highlights": []
+  },
+  {
     "version": "1.5.4",
     "date": "2026-01-13",
     "summary": "Revise release workflow.",
