@@ -2,8 +2,6 @@
 
 Every MDX file can start with a YAML block to set page metadata, connect to works, or toggle special layouts. This guide consolidates every supported key so you do not have to hunt through other docs.
 
-## Supported keys
-
 | Key                   | Purpose                                                                     |
 | --------------------- | --------------------------------------------------------------------------- |
 | `title`               | Page title used for `<h1>` and `<title>`.                                   |
@@ -14,7 +12,7 @@ Every MDX file can start with a YAML block to set page metadata, connect to work
 | `canonical`           | Absolute or relative canonical URL for the page.                            |
 | `image`               | URL or path to a image for and open graph and search results.               |
 
-### Title and Description
+## Title and Description
 
 Provide a human-readable title and a short description for every page. Titles drive the `<h1>` inside the body, the document `<title>`, navigation labels, and search results. Descriptions are trimmed to roughly 240 characters and power the `<meta name="description">`, Open Graph cards, and search snippets when no `searchSummary` is set. When omitted, Canopy falls back to structural data (file name, first heading, or extracted Markdown text), but filling them explicitly ensures consistent SEO across contexts.
 
@@ -25,7 +23,7 @@ description: Letters between Amanda Ira Aldridge and Mihailo Kovačević documen
 ---
 ```
 
-### Referenced Manifest
+## Referenced Manifests
 
 Link essays or exhibition notes back to IIIF works and unlock the `<ReferencedItems />` / `<References />` components. Provide one or more manifest URLs (Presentation 2 or 3) and Canopy resolves them to cached manifests during the build. Work pages automatically render backlinks whenever they detect a page referencing the same manifest.
 
@@ -39,7 +37,7 @@ referencedManifests:
 ---
 ```
 
-### Image
+## Image
 
 Point to an image that represents the page in search results, cards, or any component that lists MDX-driven content. Use absolute URLs or site-relative paths (`/images/featured.jpg`). When omitted, cards render without an image and the search runtime falls back to a text-only layout.
 
@@ -51,7 +49,7 @@ image: https://iiif.example.org/iiif/3/hero-canvas/full/!800,800/0/default.jpg
 ---
 ```
 
-## Excluding content from search
+## Search Index
 
 MDX pages contribute `type: 'page'` records unless explicitly excluded. The build process scans every `.mdx` file in your content directory. Any file with the frontmatter `search: false` is excluded. This is useful for content that does not add scholarly value to your digital project.
 
