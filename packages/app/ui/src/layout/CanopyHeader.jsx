@@ -338,7 +338,11 @@ export default function CanopyHeader(props = {}) {
           aria-label="Primary navigation"
         >
           {navLinks.map((link) => (
-            <a key={link.href} href={link.href}>
+            <a
+              key={link.href}
+              href={link.href}
+              aria-current={link.isActive ? "page" : undefined}
+            >
               {link.label || link.href}
             </a>
           ))}
@@ -409,7 +413,11 @@ export default function CanopyHeader(props = {}) {
           aria-label="Primary navigation"
         >
           {navLinks.map((link) => (
-            <a key={link.href} href={link.href}>
+            <a
+              key={link.href}
+              href={link.href}
+              aria-current={link.isActive ? "page" : undefined}
+            >
               {link.label || link.href}
             </a>
           ))}

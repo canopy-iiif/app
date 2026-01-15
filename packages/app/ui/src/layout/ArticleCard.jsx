@@ -183,6 +183,7 @@ function renderMarkdownTokens(tokens, query, keyPrefix = "token") {
         return (
           <a key={key} href={token.href} target="_blank" rel="noreferrer">
             {renderMarkdownTokens(token.children || [], query, key)}
+            <span className="sr-only"> (opens in new tab)</span>
           </a>
         );
       case "break":
