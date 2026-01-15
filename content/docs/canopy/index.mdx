@@ -163,22 +163,11 @@ search:
         - tagging
 ```
 
-### Excluding content
-
-MDX pages contribute `type: 'page'` records unless explicitly excluded. The build process scans every `.mdx` file in your content directory. Any file with the frontmatter `search: false` is excluded. This is useful for content that does not add scholarly value to your digital project.
-
-```mdx filename="content/privacy-policy.mdx"
----
-title: Privacy Policy
-search: false
----
-
-# Privacy Policy
-
-Your privacy is important to us...
-```
-
 ## Extras
+
+### Frontmatter reference
+
+Control search inclusion, canonical overrides, and metadata per page via front matter. The [Content → Frontmatter guide](/docs/content/frontmatter) documents every supported key along with examples.
 
 ### Base URL
 

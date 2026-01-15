@@ -14,7 +14,7 @@ files) share a single FlexSearch store so filters and type tabs stay in sync.
 - **Works** — every manifest pulled from `collection` URIs becomes a `type: 'work'` record with
   `id`, `title`, and `href` pointing at `/works/<slug>.html`. Metadata fields listed in
   `search.index.metadata` are flattened for indexing.
-- **Pages** — MDX files contribute `type: 'page'` records when they have no front matter or when
+- **Pages** — MDX files contribute `type: 'page'` records when they have no [front matter](./frontmatter) or when
   they explicitly set `type`. Add `search: false` to opt out. Optional `searchSummary` and
   `searchSummaryMarkdown` fields override the teaser.
 
@@ -74,8 +74,8 @@ search:
 ## Filtering and URL state
 
 The runtime watches `?q` and `?type` query params, so deep links remain stable when you switch
-between tabs or refine a search. When you add more record types via front matter (`searchType:
-example`), include them in `search.results` and `tabs.order` to expose dedicated tabs.
+between tabs or refine a search. When you add more record types via [front matter](./frontmatter)
+(`searchType: example`), include them in `search.results` and `tabs.order` to expose dedicated tabs.
 
 ## Styling hooks
 
@@ -88,7 +88,7 @@ example`), include them in `search.results` and `tabs.order` to expose dedicated
 
 ## Debugging tips
 
-- Inspect `site/api/search-index.json` to confirm front-matter summaries and metadata labels are
+- Inspect `site/api/search-index.json` to confirm [front-matter](./frontmatter) summaries and metadata labels are
   being indexed.
 - When the browser console logs `Dynamic require of 'react' is not supported`, make sure the UI
   build marks `react`, `react-dom`, `react-dom/client`, `react-masonry-css`, and `flexsearch` as

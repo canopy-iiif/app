@@ -7,6 +7,7 @@ const {
   ensureDirSync,
   htmlShell,
   canopyBodyClassForType,
+  rootRelativeHref,
 } = require('../common');
 const { log } = require('./log');
 const mdx = require('./mdx');
@@ -82,6 +83,7 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
   const source = typeof sourceRaw === 'string' ? sourceRaw : String(sourceRaw || '');
   const title = mdx.extractTitle(source);
   const relContentPath = path.relative(CONTENT_DIR, filePath);
+  const relOutputPath = relContentPath.replace(/\.mdx$/i, '.html');
   const normalizedRel = navigation.normalizeRelativePath(relContentPath);
   const pageInfo = navigation.getPageInfo(normalizedRel);
   const navData = navigation.buildNavigationForFile(normalizedRel);
@@ -127,6 +129,17 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
   if (resolvedType) basePage.type = resolvedType;
   if (resolvedDescription) basePage.description = resolvedDescription;
   if (basePage.href && !basePage.url) basePage.url = basePage.href;
+  const frontmatterCanonical = readFrontmatterString(frontmatterData, 'canonical');
+  const fallbackCanonical = rootRelativeHref(
+    relOutputPath.split(path.sep).join('/')
+  );
+  const canonicalValue =
+    frontmatterCanonical ||
+    (basePage && basePage.canonical) ||
+    basePage.url ||
+    basePage.href ||
+    fallbackCanonical;
+  if (canonicalValue) basePage.canonical = canonicalValue;
   if (resolvedImage) {
     basePage.image = resolvedImage;
     basePage.ogImage = ogImageFrontmatter || resolvedImage;
@@ -137,6 +150,7 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
   if (resolvedDescription) pageMeta.description = resolvedDescription;
   if (resolvedType) pageMeta.type = resolvedType;
   if (basePage.url || basePage.href) pageMeta.url = basePage.url || basePage.href || pageMeta.url;
+  if (canonicalValue) pageMeta.canonical = canonicalValue;
   if (resolvedImage) {
     pageMeta.image = resolvedImage;
     if (!pageMeta.ogImage) pageMeta.ogImage = resolvedImage;

@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.5.6",
+    "date": "2026-01-14",
+    "summary": "Add canonical URLs to head.",
+    "highlights": []
+  },
+  {
     "version": "1.5.5",
     "date": "2026-01-14",
     "summary": "Respect level0 IIIF images.",

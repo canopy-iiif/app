@@ -8,46 +8,9 @@ Every page in `content/` is an `.mdx` file: Markdown plus JSX components. The qu
 - `index.mdx` inside any directory becomes that directory’s landing page.
 - Run `npm run dev` to preview changes with live reload.
 
-## Supported front matter
+## Front matter reference
 
-Add YAML at the top of each file to set metadata and opt into search or reference features. These are the keys Canopy reads today—older fields like `image` are ignored and can be deleted.
-
-| Key                                       | Purpose                                                                     |
-| ----------------------------------------- | --------------------------------------------------------------------------- |
-| `title`                                   | Page title used for `<h1>` and `<title>`.                                   |
-| `description`                             | Optional blurb for `<meta name="description">`.                             |
-| `referencedManifests`                     | List of manifest URLs consumed by `<ReferencedItems />` / `<References />`. |
-| `search`                                  | When set to `false`, removes the page from the search index.                |
-| `searchType`                              | Overrides the record type (e.g., `docs`).                                   |
-| `searchSummary` / `searchSummaryMarkdown` | Custom blurb shown in search results.                                       |
-
-Example:
-
-```mdx
----
-title: January 1955 Correspondence
-description: Seven letters between Amanda Ira Aldridge and Mihailo Kovačević
-referencedManifests:
-  - https://api.dc.library.northwestern.edu/api/v2/works/46de2c91-3a29-4525-939e-ee17073f3a7e?as=iiif
-  - https://api.dc.library.northwestern.edu/api/v2/works/bb968afb-7857-46bd-9392-d8617a93cc9f?as=iiif
-searchSummary: Letters exchanged during January 1955.
----
-```
-
-### Home page flags
-
-`content/index.mdx` recognizes two more keys:
-
-- `showHero`: show the featured-manifest hero (`true`/`false`).
-- `showHighlighted`: render metadata sliders beneath the hero.
-
-```mdx
----
-title: Amanda Ira Aldridge Correspondences
-showHero: true
-showHighlighted: true
----
-```
+Use YAML blocks to control metadata, canonical links, referenced manifests, and search behavior. The [Frontmatter guide](./frontmatter) lists every supported key plus examples for the home page toggles.
 
 ## Core Markdown patterns
 
@@ -132,14 +95,18 @@ Because MDX is just React, you can pass props directly in the markup. Keep compo
 
 ## Home page content
 
-`content/index.mdx` controls the landing page. Front matter toggles the hero interstitial sourced from featured manifests and the highlighted metadata sliders that render below it.
+`content/index.mdx` controls the landing page. Compose Markdown and drop components wherever you need them—most sites lead with `<Interstitials.Hero />`, then follow up with `<Container>` sections, sliders, or bespoke CTAs.
 
 ```mdx filename="content/index.mdx"
 ---
 title: Amanda Ira Aldridge Correspondence
-showHero: true
-showHighlighted: true
 ---
+
+<Interstitials.Hero
+  headline="Plan your visit"
+  description="Preview your favorites, bookmark upcoming tours, and read the latest from the archives."
+  links={[{ title: 'Browse works', href: '/works' }]}
+/>
 
 <Container>
   <p>Introduce the collection, cite your institution, or drop inline media.</p>
@@ -152,7 +119,7 @@ showHighlighted: true
 
 ### Hero interstitial
 
-When `showHero` is `true`, `<Interstitials.Hero />` renders at the top of the page and rotates through the `featured` manifests listed in `canopy.yml`.
+`<Interstitials.Hero />` renders at the top of the page and rotates through the `featured` manifests listed in `canopy.yml`.
 
 ```yaml filename="canopy.yml" {5-10}
 collection:
@@ -184,11 +151,9 @@ Behavior notes:
 
 ### Custom content region
 
-Everything beneath the hero comes from the Markdown body. Compose `<Container />` wrappers, prose, or IIIF components (Viewer, Slider, ReferencedItems) to introduce the project. The docs layout wrapper provides typography defaults so you can focus on the content itself.
+Everything beneath the hero comes from the Markdown body. Compose `<Container />` wrappers, prose, `<RelatedItems />`, or IIIF components (Viewer, Slider, ReferencedItems) to introduce the project. The docs layout wrapper provides typography defaults so you can focus on the content itself.
 
-### Highlighted metadata sliders
-
-When `showHighlighted` is `true`, `<RelatedItems />` rows render one slider per metadata label defined in `canopy.yml`. Each slider fetches a generated `/api/facet/<label>/<value>.json` collection and links cards back to the related work page.
+`<RelatedItems top={3} />` renders one slider per metadata label defined in `canopy.yml`. Each slider fetches a generated `/api/facet/<label>/<value>.json` collection and links cards back to the related work page.
 
 Tips:
 

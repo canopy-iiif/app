@@ -119,6 +119,67 @@ function normalizeSlugBase(value, fallback) {
   return clampSlugLength(safeFallback, MAX_ENTRY_SLUG_LENGTH) || safeFallback;
 }
 
+function manifestHrefFromSlug(slug) {
+  if (!slug) return "";
+  const rel = `works/${String(slug).trim()}.html`;
+  return rootRelativeHref(rel);
+}
+
+function extractHomepageId(resource) {
+  if (!resource) return "";
+  const homepageRaw = resource.homepage;
+  const list = Array.isArray(homepageRaw)
+    ? homepageRaw
+    : homepageRaw
+    ? [homepageRaw]
+    : [];
+  for (const entry of list) {
+    if (!entry) continue;
+    if (typeof entry === "string") {
+      const trimmed = entry.trim();
+      if (trimmed) return trimmed;
+      continue;
+    }
+    if (typeof entry === "object") {
+      const id = entry.id || entry["@id"];
+      if (typeof id === "string" && id.trim()) return id.trim();
+    }
+  }
+  return "";
+}
+
+function resolveManifestCanonical(manifest, slug) {
+  const homepageId = extractHomepageId(manifest);
+  if (homepageId) return homepageId;
+  return manifestHrefFromSlug(slug);
+}
+
+function resolveCollectionCanonical(collection) {
+  const homepageId = extractHomepageId(collection);
+  if (homepageId) return homepageId;
+  const id = collection && (collection.id || collection["@id"]);
+  return typeof id === "string" ? id : "";
+}
+
+function assignEntryCanonical(entry, canonical) {
+  if (!entry || typeof entry !== "object") return "";
+  const value = canonical ? String(canonical) : "";
+  entry.canonical = value;
+  return value;
+}
+
+function applyManifestEntryCanonical(entry, manifest, slug) {
+  if (!entry || entry.type !== "Manifest") return "";
+  const canonical = resolveManifestCanonical(manifest, slug);
+  return assignEntryCanonical(entry, canonical);
+}
+
+function applyCollectionEntryCanonical(entry, collection) {
+  if (!entry || entry.type !== "Collection") return "";
+  const canonical = resolveCollectionCanonical(collection);
+  return assignEntryCanonical(entry, canonical);
+}
+
 function buildSlugWithSuffix(base, fallback, counter) {
   const suffix = `-${counter}`;
   const baseLimit = Math.max(1, MAX_ENTRY_SLUG_LENGTH - suffix.length);
@@ -889,6 +950,7 @@ async function loadCachedManifestById(id) {
               slug,
               parent: "",
             };
+            applyManifestEntryCanonical(entry, null, slug);
             if (existingEntryIdx >= 0) index.byId[existingEntryIdx] = entry;
             else index.byId.push(entry);
             await saveManifestIndex(index);
@@ -906,6 +968,21 @@ async function loadCachedManifestById(id) {
         await fsp.writeFile(p, JSON.stringify(normalized, null, 2), "utf8");
       } catch (_) {}
     }
+    try {
+      index.byId = Array.isArray(index.byId) ? index.byId : [];
+      const nid = normalizeIiifId(id);
+      const existingEntryIdx = index.byId.findIndex(
+        (e) => e && normalizeIiifId(e.id) === nid && e.type === "Manifest"
+      );
+      if (existingEntryIdx >= 0) {
+        const entry = index.byId[existingEntryIdx];
+        const prevCanonical = entry && entry.canonical ? String(entry.canonical) : "";
+        const nextCanonical = applyManifestEntryCanonical(entry, normalized, slug);
+        if (nextCanonical !== prevCanonical) {
+          await saveManifestIndex(index);
+        }
+      }
+    } catch (_) {}
     return normalized;
   } catch (_) {
     return null;
@@ -935,6 +1012,7 @@ async function saveCachedManifest(manifest, id, parentId) {
       slug,
       parent: parentId ? String(parentId) : "",
     };
+    applyManifestEntryCanonical(entry, normalizedManifest, slug);
     if (existingEntryIdx >= 0) index.byId[existingEntryIdx] = entry;
     else index.byId.push(entry);
     await saveManifestIndex(index);
@@ -1150,6 +1228,7 @@ async function loadCachedCollectionById(id) {
                     slug,
                     parent: "",
                   };
+                  applyCollectionEntryCanonical(entry, null);
                   if (existing >= 0) index.byId[existing] = entry;
                   else index.byId.push(entry);
                   await saveManifestIndex(index);
@@ -1164,7 +1243,23 @@ async function loadCachedCollectionById(id) {
     if (!slug) return null;
     const p = path.join(IIIF_CACHE_COLLECTIONS_DIR, slug + ".json");
     if (!fs.existsSync(p)) return null;
-    return await readJson(p);
+    const data = await readJson(p);
+    try {
+      index.byId = Array.isArray(index.byId) ? index.byId : [];
+      const nid = normalizeIiifId(id);
+      const existingEntryIdx = index.byId.findIndex(
+        (e) => e && normalizeIiifId(e.id) === nid && e.type === "Collection"
+      );
+      if (existingEntryIdx >= 0) {
+        const entry = index.byId[existingEntryIdx];
+        const prevCanonical = entry && entry.canonical ? String(entry.canonical) : "";
+        const nextCanonical = applyCollectionEntryCanonical(entry, data);
+        if (nextCanonical !== prevCanonical) {
+          await saveManifestIndex(index);
+        }
+      }
+    } catch (_) {}
+    return data;
   } catch (_) {
     return null;
   }
@@ -1202,6 +1297,7 @@ async function saveCachedCollection(collection, id, parentId) {
       slug,
       parent: parentId ? String(parentId) : "",
     };
+    applyCollectionEntryCanonical(entry, normalizedCollection);
     if (existingEntryIdx >= 0) index.byId[existingEntryIdx] = entry;
     else index.byId.push(entry);
     await saveManifestIndex(index);
@@ -1252,12 +1348,14 @@ async function rebuildManifestIndexFromCache() {
       const key = `Collection:${nid}`;
       const fallback = priorMap.get(key) || {};
       const parent = resolveParentFromPartOf(data) || fallback.parent || "";
-      nextIndex.byId.push({
+      const entry = {
         id: String(nid),
         type: "Collection",
         slug,
         parent,
-      });
+      };
+      applyCollectionEntryCanonical(entry, data);
+      nextIndex.byId.push(entry);
     }
 
     for (const name of manifestFiles) {
@@ -1283,6 +1381,7 @@ async function rebuildManifestIndexFromCache() {
         slug,
         parent,
       };
+      applyManifestEntryCanonical(entry, manifest, slug);
       try {
         const thumb = await getThumbnail(manifest, thumbSize, unsafeThumbs);
         if (thumb && thumb.url) {
@@ -1667,12 +1766,20 @@ async function buildIiifCollectionPages(CONFIG) {
             slug,
             parent: parentNorm,
           };
+          applyManifestEntryCanonical(newEntry, manifest, slug);
           const existingIdx = idxMap.byId.findIndex(
             (e) => e && e.type === "Manifest" && normalizeIiifId(e.id) === nid
           );
           if (existingIdx >= 0) idxMap.byId[existingIdx] = newEntry;
           else idxMap.byId.push(newEntry);
           await saveManifestIndex(idxMap);
+          mEntry = newEntry;
+        } else if (mEntry) {
+          const prevCanonical = mEntry.canonical || "";
+          const nextCanonical = applyManifestEntryCanonical(mEntry, manifest, slug);
+          if (nextCanonical !== prevCanonical) {
+            await saveManifestIndex(idxMap);
+          }
         }
         const manifestId = manifest && manifest.id ? manifest.id : id;
         const references = referenced.getReferencesForManifest(manifestId);
@@ -1717,6 +1824,7 @@ async function buildIiifCollectionPages(CONFIG) {
           const normalizedHref = href.split(path.sep).join("/");
           const pageHref = rootRelativeHref(normalizedHref);
           const pageDescription = summaryForMeta || title;
+          const canonical = resolveManifestCanonical(manifest, slug);
           const pageDetails = {
             title,
             href: pageHref,
@@ -1726,11 +1834,13 @@ async function buildIiifCollectionPages(CONFIG) {
             description: pageDescription,
             manifestId,
             referencedBy: references,
+            canonical,
             meta: {
               title,
               description: pageDescription,
               type: "work",
               url: pageHref,
+              canonical,
             },
           };
           const ogImageForPage = heroMedia && heroMedia.ogImage ? heroMedia.ogImage : '';
