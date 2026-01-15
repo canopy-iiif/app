@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.5.8",
+    "date": "2026-01-15",
+    "summary": "Refine responsive menu and modal styling.",
+    "highlights": []
+  },
+  {
     "version": "1.5.7",
     "date": "2026-01-14",
     "summary": "Define absolute canonical URLs for template.",
