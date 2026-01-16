@@ -157,7 +157,7 @@ const componentStyles = `
 .collection-example__caption {
   font-size: 0.5rem;
   line-height: 1.1;
-  color: var(--color-gray-700);
+  color: var(--color-gray-800);
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
