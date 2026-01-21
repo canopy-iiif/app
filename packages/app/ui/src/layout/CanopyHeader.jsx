@@ -30,7 +30,7 @@ function HeaderScript() {
     if (doc.readyState === 'loading') {
       doc.addEventListener('DOMContentLoaded', fn, { once: true });
     } else {
-      fn();
+      fn(); 
     }
   }
 
@@ -570,7 +570,6 @@ export default function CanopyHeader(props = {}) {
                 <li
                   className="canopy-modal__nav-item"
                   key={link.href}
-                  aria-current={link.isActive ? "page" : undefined}
                   data-canopy-nav-item={hasChildren ? "true" : undefined}
                   data-expanded={defaultExpanded ? "true" : "false"}
                   data-default-expanded={defaultExpanded ? "true" : undefined}
