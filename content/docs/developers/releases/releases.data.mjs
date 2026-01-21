@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.5.9",
+    "date": "2026-01-21",
+    "summary": "Improve accessibility with additional ARIA labels, screen reader announcements, and form label fixes.",
+    "highlights": []
+  },
+  {
     "version": "1.5.8",
     "date": "2026-01-15",
     "summary": "Refine responsive menu and modal styling.",

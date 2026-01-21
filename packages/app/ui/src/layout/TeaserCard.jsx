@@ -44,6 +44,7 @@ export default function TeaserCard({
           <img
             src={thumbnail}
             alt=""
+            aria-hidden="true"
             loading="lazy"
             className="canopy-search-teaser__thumb-img"
           />

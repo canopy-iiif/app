@@ -131,6 +131,7 @@ export default function Card({
                 <img
                   src={src}
                   alt={alt || title || ""}
+                  aria-hidden={!alt && !title ? "true" : undefined}
                   loading="lazy"
                   onLoad={() => setImageLoaded(true)}
                   onError={() => setImageLoaded(true)}
@@ -141,6 +142,7 @@ export default function Card({
             <img
               src={src}
               alt={alt || title || ""}
+              aria-hidden={!alt && !title ? "true" : undefined}
               loading="lazy"
               onLoad={() => setImageLoaded(true)}
               onError={() => setImageLoaded(true)}

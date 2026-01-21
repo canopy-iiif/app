@@ -77,6 +77,7 @@ function FacetSection({facet, selected, onToggle}) {
               type="button"
               onClick={() => setQuickQuery("")}
               className="canopy-search-filters__quick-clear"
+              aria-label={`Clear ${label} filter search`}
             >
               Clear
             </button>

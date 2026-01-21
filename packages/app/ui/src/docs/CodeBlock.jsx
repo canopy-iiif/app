@@ -180,6 +180,8 @@ export default function DocsCodeBlock(props = {}) {
                 {
                   type: "button",
                   onClick: handleCopy,
+                  "aria-live": "polite",
+                  "aria-label": copied ? "Copied to clipboard" : "Copy code to clipboard",
                   style: {
                     border: "1px solid var(--color-accent-200, )",
                     borderRadius: "6px",

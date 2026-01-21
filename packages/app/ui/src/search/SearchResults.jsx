@@ -69,7 +69,7 @@ export default function SearchResults({
 
   if (isAnnotationView) {
     return (
-      <div id="search-results" className="space-y-4">
+      <div id="search-results" className="space-y-4" role="region" aria-label="Search results">
         {results.map((r, i) => {
           if (!r) return null;
           return (
@@ -95,7 +95,7 @@ export default function SearchResults({
 
   if (layout === "list") {
     return (
-      <div id="search-results" className="space-y-6">
+      <div id="search-results" className="space-y-6" role="region" aria-label="Search results">
         {results.map((r, i) => {
           if (shouldRenderAsArticle(r)) {
             return (
@@ -133,7 +133,7 @@ export default function SearchResults({
 
   // Default: grid (masonry)
   return (
-    <div id="search-results">
+    <div id="search-results" role="region" aria-label="Search results">
       <Grid>
         {results.map((r, i) => {
           if (shouldRenderAsArticle(r)) {

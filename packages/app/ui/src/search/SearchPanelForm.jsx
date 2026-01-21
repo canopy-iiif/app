@@ -153,6 +153,7 @@ export default function SearchPanelForm(props = {}) {
     >
       <label htmlFor={inputId} className="canopy-search-form__label">
         <MagnifyingGlassIcon className="canopy-search-form__icon" />
+        <span className="sr-only">Search</span>
         <input
           id={inputId}
           type="search"
@@ -161,7 +162,6 @@ export default function SearchPanelForm(props = {}) {
           data-canopy-search-form-input
           placeholder={placeholder}
           className="canopy-search-form__input"
-          aria-label="Search"
           ref={inputRef}
           onChange={handleInputChange}
           onInput={handleInputChange}
