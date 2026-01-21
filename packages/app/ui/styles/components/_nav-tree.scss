@@ -1,0 +1,67 @@
+@layer components {
+  .canopy-nav-tree {
+    color: inherit;
+  }
+
+  .canopy-nav-tree__heading {
+    font-weight: 600;
+    margin-bottom: 0.618rem;
+  }
+
+  .canopy-nav-tree__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .canopy-nav-tree__item {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .canopy-nav-tree__row {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .canopy-nav-tree__row .canopy-nav-tree__link {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .canopy-nav-tree__link {
+    text-decoration: none;
+  }
+
+  .canopy-nav-tree__toggle {
+    appearance: none;
+    border: none;
+    background: transparent;
+    padding: 0.25rem;
+    margin: -0.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .canopy-nav-tree__toggle:focus-visible {
+    outline: 2px solid var(--color-accent-default);
+    outline-offset: 2px;
+  }
+
+  .canopy-nav-tree__toggle-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    transition: transform 150ms ease;
+  }
+
+  .canopy-nav-tree__children {
+    margin-top: 0.25rem;
+  }
+
+  .canopy-nav-tree__item[data-expanded='true'] .canopy-nav-tree__toggle-icon {
+    transform: rotate(180deg);
+  }
+}

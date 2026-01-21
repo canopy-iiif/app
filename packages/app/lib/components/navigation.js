@@ -313,6 +313,26 @@ function buildNavigationForFile(relativePath) {
   };
 }
 
+function buildNavigationRoots(currentSlug) {
+  const cache = getNavigationCache();
+  const result = {};
+  const normalizedSlug = typeof currentSlug === "string" ? currentSlug : "";
+  for (const [segment, rootNode] of cache.roots.entries()) {
+    if (!segment || EXCLUDED_ROOTS.has(segment)) continue;
+    const shouldExpand =
+      normalizedSlug &&
+      (normalizedSlug === segment || normalizedSlug.startsWith(segment + "/"));
+    const clone = cloneNode(rootNode, shouldExpand ? normalizedSlug : null);
+    if (!clone) continue;
+    result[segment] = {
+      rootSegment: segment,
+      root: clone,
+      title: clone.title,
+    };
+  }
+  return result;
+}
+
 function resetNavigationCache() {
   NAV_CACHE = null;
 }
@@ -321,6 +341,7 @@ module.exports = {
   normalizeRelativePath,
   getPageInfo,
   buildNavigationForFile,
+  buildNavigationRoots,
   resetNavigationCache,
   getPageContext,
 };

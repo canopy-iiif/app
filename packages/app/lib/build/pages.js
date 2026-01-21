@@ -87,6 +87,9 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
   const normalizedRel = navigation.normalizeRelativePath(relContentPath);
   const pageInfo = navigation.getPageInfo(normalizedRel);
   const navData = navigation.buildNavigationForFile(normalizedRel);
+  const allNavigationRoots = navigation.buildNavigationRoots(
+    pageInfo && pageInfo.slug ? pageInfo.slug : ""
+  );
   const mergedProps = { ...(extraProps || {}) };
   const frontmatter =
     typeof mdx.parseFrontmatter === 'function'
@@ -174,8 +177,23 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
   if (referencedItems.length) {
     mergedProps.referencedItems = referencedItems;
   }
-  if (navData && !mergedProps.navigation) {
-    mergedProps.navigation = navData;
+  if (!mergedProps.navigation) {
+    if (navData || (allNavigationRoots && Object.keys(allNavigationRoots).length)) {
+      const navigationPayload = navData ? {...navData} : {};
+      if (allNavigationRoots && Object.keys(allNavigationRoots).length) {
+        navigationPayload.allRoots = allNavigationRoots;
+      }
+      mergedProps.navigation = Object.keys(navigationPayload).length
+        ? navigationPayload
+        : null;
+    }
+  } else if (
+    mergedProps.navigation &&
+    allNavigationRoots &&
+    Object.keys(allNavigationRoots).length &&
+    !mergedProps.navigation.allRoots
+  ) {
+    mergedProps.navigation.allRoots = allNavigationRoots;
   }
   if (headings && headings.length) {
     mergedProps.page = mergedProps.page

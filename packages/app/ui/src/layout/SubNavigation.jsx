@@ -1,5 +1,6 @@
 import React from "react";
 import navigationHelpers from "../../../lib/components/navigation.js";
+import NavigationTree from "./NavigationTree.jsx";
 
 function resolveRelativeCandidate(page, current) {
   if (page && typeof page.relativePath === "string" && page.relativePath)
@@ -7,51 +8,6 @@ function resolveRelativeCandidate(page, current) {
   if (page && typeof page.slug === "string" && page.slug) return page.slug;
   if (typeof current === "string" && current) return current;
   return "";
-}
-
-function renderNodes(nodes, parentKey = "node") {
-  if (!Array.isArray(nodes) || !nodes.length) return null;
-  return nodes.map((node, index) => {
-    if (!node) return null;
-    const key = node.slug || node.relativePath || `${parentKey}-${index}`;
-    const hasChildren =
-      Array.isArray(node.children) && node.children.length > 0;
-    const showChildren = hasChildren && (node.isExpanded || node.depth === 0);
-    const depth = typeof node.depth === "number" ? Math.max(0, node.depth) : 0;
-    const depthClass = `depth-${Math.min(depth, 5)}`;
-    const isRoadmap = !!node.isRoadmap;
-    const isInteractive = !!(node.href && !isRoadmap);
-    const classes = ["canopy-sub-navigation__link", depthClass];
-    if (!node.href && !isRoadmap) classes.push("is-label");
-    if (isRoadmap) classes.push("is-disabled");
-    if (node.isActive) classes.push("is-active");
-    const linkClass = classes.join(" ");
-    const Tag = isInteractive ? "a" : "span";
-    const badge = isRoadmap ? (
-      <span className="canopy-sub-navigation__badge">Roadmap</span>
-    ) : null;
-    return (
-      <li key={key} className="canopy-sub-navigation__item" data-depth={depth}>
-        <Tag
-          className={linkClass}
-          href={isInteractive ? node.href : undefined}
-          aria-current={node.isActive ? "page" : undefined}
-          tabIndex={isInteractive ? undefined : -1}
-        >
-          {node.title || node.slug}
-          {badge}
-        </Tag>
-        {showChildren ? (
-          <ul
-            className="canopy-sub-navigation__list canopy-sub-navigation__list--nested"
-            role="list"
-          >
-            {renderNodes(node.children, key)}
-          </ul>
-        ) : null}
-      </li>
-    );
-  });
 }
 
 export default function SubNavigation({
@@ -117,12 +73,14 @@ export default function SubNavigation({
       style={inlineStyle}
       aria-label={navLabel}
     >
-      {finalHeading ? (
-        <div className="canopy-sub-navigation__heading">{finalHeading}</div>
-      ) : null}
-      <ul className="canopy-sub-navigation__list" role="list">
-        {renderNodes([rootNode], rootNode.slug || "root")}
-      </ul>
+      <NavigationTree
+        root={rootNode}
+        includeRoot
+        component="div"
+        className="canopy-sub-navigation__tree"
+        parentKey={rootNode.slug || "root"}
+        heading={finalHeading || undefined}
+      />
     </nav>
   );
 }

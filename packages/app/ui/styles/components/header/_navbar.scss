@@ -1,3 +1,5 @@
+@use "../../settings/breakpoints" as bp;
+
 @layer components {
   .canopy-nav-links {
     display: flex;
@@ -6,9 +8,12 @@
     font-size: 1rem;
   }
 
+  .canopy-nav-links.canopy-header__desktop-nav {
+    display: none;
+  }
+
   .canopy-nav-links a {
     color: var(--color-gray-900);
-    font-weight: 500;
     text-decoration: none;
     padding: 0.25rem 0;
     transition: color 150ms ease;
@@ -27,20 +32,76 @@
   .canopy-modal--nav .canopy-modal__body {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem;
   }
 
   .canopy-modal--nav .canopy-nav-links {
     flex-direction: column;
     align-items: stretch;
-    gap: 0.75rem;
-    font-size: 1.125rem;
+    gap: 0.618rem;
+    font-size: 1.111rem;
+  }
+
+  .canopy-modal__nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.618rem;
+  }
+
+  .canopy-modal__nav-item {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .canopy-modal__nav-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .canopy-modal__nav-row a {
+    flex: 1;
+    min-width: 0;
   }
 
   .canopy-modal--nav .canopy-nav-links a {
-    display: block;
-    padding: 0.75rem 0;
-    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.618rem 0;
+  }
+
+  .canopy-modal__nav-toggle {
+    appearance: none;
+    border: none;
+    background: transparent;
+    padding: 0.25rem;
+    margin: -0.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-gray-700);
+  }
+
+  .canopy-modal__nav-toggle:focus-visible {
+    outline: 2px solid var(--color-accent-default);
+    outline-offset: 2px;
+  }
+
+  .canopy-modal__nav-toggle-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    transition: transform 150ms ease;
+  }
+
+  .canopy-modal__nav-item[data-expanded="true"] .canopy-modal__nav-toggle-icon {
+    transform: rotate(180deg);
   }
 
   .canopy-modal--nav .canopy-modal__section-nav {
@@ -48,65 +109,19 @@
     padding-top: 1rem;
   }
 
-  .canopy-modal--nav .canopy-modal__section-label {
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--color-gray-500);
-    margin-bottom: 0.5rem;
+  .canopy-modal__section-nav--nested {
+    border-top: none;
+    padding-top: 0;
+    margin-top: -0.25rem;
   }
 
-  .canopy-modal__section-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .canopy-modal__section-item {
-    margin: 0;
-    padding: 0;
-  }
-
-  .canopy-modal__section-link {
-    display: block;
-    padding: 0.25rem 0;
-    text-decoration: none;
-    color: var(--color-gray-900);
-    font-weight: 500;
-  }
-
-  .canopy-modal__section-link:hover,
-  .canopy-modal__section-link:focus-visible {
-    color: var(--color-accent-default);
-    outline: none;
-  }
-
-  .canopy-modal__section-link.is-active {
-    font-weight: 600;
-  }
-
-  .canopy-modal__section-link.is-label {
-    color: var(--color-gray-600);
-    font-weight: 600;
-    cursor: default;
-  }
-
-  .canopy-modal__section-list--nested {
-    margin: 0.25rem 0 0.25rem 0.75rem;
-    padding-left: 0.5rem;
-    border-left: 1px solid var(--color-gray-200);
-  }
-
-  @media (max-width: 48rem) {
-    .canopy-header__desktop-nav {
-      display: none;
-    }
-  }
-
-  @media (min-width: 48rem) {
+  @media (min-width: bp.$canopy-desktop-breakpoint) {
     .canopy-modal--nav {
       display: none !important;
+    }
+
+    .canopy-nav-links.canopy-header__desktop-nav {
+      display: flex;
     }
   }
 }

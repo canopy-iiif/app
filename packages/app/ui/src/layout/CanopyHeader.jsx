@@ -2,6 +2,7 @@ import React from "react";
 import SearchPanel from "../search/SearchPanel.jsx";
 import CanopyBrand from "./CanopyBrand.jsx";
 import CanopyModal from "./CanopyModal.jsx";
+import NavigationTree from "./NavigationTree.jsx";
 
 function HeaderScript() {
   const code = `
@@ -11,6 +12,19 @@ function HeaderScript() {
   var doc = document;
   var body = doc.body;
   var root = doc.documentElement;
+
+  function desktopBreakpointQuery() {
+    if (typeof window === 'undefined') return '(min-width: 70rem)';
+    try {
+      var styles = window.getComputedStyle ? window.getComputedStyle(root) : null;
+      var value = styles ? styles.getPropertyValue('--canopy-desktop-breakpoint') : '';
+      if (typeof value === 'string') value = value.trim();
+      if (!value) value = '70rem';
+      return '(min-width: ' + value + ')';
+    } catch (error) {
+      return '(min-width: 70rem)';
+    }
+  }
 
   function ready(fn) {
     if (doc.readyState === 'loading') {
@@ -26,6 +40,8 @@ function HeaderScript() {
 
     var NAV_ATTR = 'data-mobile-nav';
     var SEARCH_ATTR = 'data-mobile-search';
+    var NAV_ITEM_ATTR = 'data-canopy-nav-item';
+    var NAV_ITEM_TOGGLE_ATTR = 'data-canopy-nav-item-toggle';
 
     function modalFor(type) {
       return doc.querySelector('[data-canopy-modal="' + type + '"]');
@@ -107,6 +123,51 @@ function HeaderScript() {
       });
     }
 
+    function forEachNavTree(scope, fn) {
+      if (typeof fn !== 'function') return;
+      var rootNode = scope || doc;
+      var trees = rootNode.querySelectorAll('[data-canopy-nav-tree]');
+      each(trees, function (tree) {
+        fn(tree);
+      });
+    }
+
+    function resetNavItemToggles(scope) {
+      forEachNavTree(scope, function (tree) {
+        var toggles = tree.querySelectorAll('[' + NAV_ITEM_TOGGLE_ATTR + ']');
+        each(toggles, function (btn) {
+          btn.setAttribute('aria-expanded', 'false');
+          var targetId = btn.getAttribute(NAV_ITEM_TOGGLE_ATTR);
+          var panel = targetId ? doc.getElementById(targetId) : null;
+          var parent = btn.closest('[' + NAV_ITEM_ATTR + ']');
+          if (panel) {
+            panel.hidden = true;
+            panel.setAttribute('aria-hidden', 'true');
+            panel.setAttribute('hidden', '');
+          }
+          if (parent) parent.setAttribute('data-expanded', 'false');
+        });
+      });
+    }
+
+    function applyDefaultNavItemState(scope) {
+      forEachNavTree(scope, function (tree) {
+        var defaults = tree.querySelectorAll('[data-default-expanded="true"]');
+        each(defaults, function (item) {
+          var toggle = item.querySelector('[' + NAV_ITEM_TOGGLE_ATTR + ']');
+          var targetId = toggle ? toggle.getAttribute(NAV_ITEM_TOGGLE_ATTR) : null;
+          var panel = targetId ? doc.getElementById(targetId) : null;
+          item.setAttribute('data-expanded', 'true');
+          if (toggle) toggle.setAttribute('aria-expanded', 'true');
+          if (panel) {
+            panel.hidden = false;
+            panel.removeAttribute('hidden');
+            panel.setAttribute('aria-hidden', 'false');
+          }
+        });
+      });
+    }
+
     function setState(type, next) {
       if (type === 'nav') header.setAttribute(NAV_ATTR, next);
       if (type === 'search') header.setAttribute(SEARCH_ATTR, next);
@@ -114,6 +175,13 @@ function HeaderScript() {
       var navOpen = header.getAttribute(NAV_ATTR) === 'open';
       var searchOpen = header.getAttribute(SEARCH_ATTR) === 'open';
       lockScroll(navOpen || searchOpen);
+      if (type === 'nav') {
+        if (next !== 'open') {
+          resetNavItemToggles(modalFor('nav'));
+        } else {
+          applyDefaultNavItemState(modalFor('nav'));
+        }
+      }
     }
 
     function toggle(type, force) {
@@ -124,6 +192,35 @@ function HeaderScript() {
       setState(type, shouldOpen ? 'open' : 'closed');
       if (type === 'search' && shouldOpen) focusSearchForm();
       if (type === 'nav' && shouldOpen) focusNavMenu();
+    }
+
+    function setupNavItemToggles() {
+      var toggles = doc.querySelectorAll('[' + NAV_ITEM_TOGGLE_ATTR + ']');
+      each(toggles, function (btn) {
+        if (btn.__canopyNavReady) return;
+        btn.__canopyNavReady = true;
+        btn.addEventListener('click', function (event) {
+          event.preventDefault();
+          event.stopPropagation();
+          var targetId = btn.getAttribute(NAV_ITEM_TOGGLE_ATTR);
+          if (!targetId) return;
+          var panel = doc.getElementById(targetId);
+          var parent = btn.closest('[' + NAV_ITEM_ATTR + ']');
+          var expanded = btn.getAttribute('aria-expanded') === 'true';
+          var next = !expanded;
+          btn.setAttribute('aria-expanded', next ? 'true' : 'false');
+          if (panel) {
+            panel.hidden = !next;
+            panel.setAttribute('aria-hidden', next ? 'false' : 'true');
+            if (next) {
+              panel.removeAttribute('hidden');
+            } else {
+              panel.setAttribute('hidden', '');
+            }
+          }
+          if (parent) parent.setAttribute('data-expanded', next ? 'true' : 'false');
+        });
+      });
     }
 
     each(header.querySelectorAll('[data-canopy-header-toggle]'), function (btn) {
@@ -173,7 +270,7 @@ function HeaderScript() {
       toggle('search', false);
     });
 
-    var mq = window.matchMedia('(min-width: 48rem)');
+    var mq = window.matchMedia(desktopBreakpointQuery());
     function syncDesktopState() {
       if (mq.matches) {
         setState('nav', 'closed');
@@ -190,6 +287,8 @@ function HeaderScript() {
       mq.addListener(syncDesktopState);
     }
 
+    setupNavItemToggles();
+    applyDefaultNavItemState(null);
     syncDesktopState();
   });
 })();
@@ -219,7 +318,7 @@ function getSharedRoot() {
 function getSafePageContext() {
   const root = getSharedRoot();
   if (root && root[CONTEXT_KEY]) return root[CONTEXT_KEY];
-  const ctx = React.createContext({ navigation: null, page: null });
+  const ctx = React.createContext({navigation: null, page: null});
   if (root) root[CONTEXT_KEY] = ctx;
   return ctx;
 }
@@ -227,50 +326,65 @@ function getSafePageContext() {
 function ensureArray(navLinks) {
   if (!Array.isArray(navLinks)) return [];
   return navLinks.filter(
-    (link) => link && typeof link === "object" && typeof link.href === "string"
+    (link) => link && typeof link === "object" && typeof link.href === "string",
   );
 }
 
-function SectionNavList({ root }) {
-  if (!root || !Array.isArray(root.children) || !root.children.length) return null;
-  return (
-    <ul className="canopy-modal__section-list" role="list">
-      {root.children.map((node) => (
-        <SectionNavItem key={node.slug || node.href || node.title} node={node} depth={0} />
-      ))}
-    </ul>
-  );
+function normalizeHref(href) {
+  if (typeof href !== "string") return "";
+  let next = href.trim();
+  if (!next) return "";
+  try {
+    const parsed = new URL(next, "https://canopy.local");
+    next = parsed.pathname || "/";
+  } catch (_) {
+    next = next.replace(/[?#].*$/, "");
+  }
+  next = next.replace(/[?#].*$/, "");
+  if (next.length > 1) {
+    next = next.replace(/\/+$/, "");
+  }
+  if (!next) return "/";
+  return next;
 }
 
-function SectionNavItem({ node, depth }) {
-  if (!node) return null;
-  const hasChildren = Array.isArray(node.children) && node.children.length > 0;
-  const Tag = node.href ? "a" : "span";
-  const classes = [
-    "canopy-modal__section-link",
-    `depth-${Math.min(5, Math.max(0, depth + 1))}`,
-  ];
-  if (!node.href) classes.push("is-label");
-  if (node.isActive) classes.push("is-active");
+function doesLinkMatchSection(linkHref, sectionNavigation) {
+  if (!sectionNavigation || !sectionNavigation.root || !linkHref) return false;
+  const normalizedLink = normalizeHref(linkHref);
+  if (!normalizedLink) return false;
+  const root = sectionNavigation.root;
+  if (
+    typeof root.href === "string" &&
+    normalizeHref(root.href) === normalizedLink
+  ) {
+    return true;
+  }
+  if (root.slug) {
+    const slugPath = normalizeHref(`/${root.slug}`);
+    if (slugPath && normalizedLink === slugPath) {
+      return true;
+    }
+  }
+  return false;
+}
 
-  return (
-    <li className="canopy-modal__section-item" data-depth={depth}>
-      <Tag
-        className={classes.join(" ")}
-        href={node.href || undefined}
-        aria-current={node.isActive ? "page" : undefined}
-      >
-        {node.title || node.slug}
-      </Tag>
-      {hasChildren ? (
-        <ul className="canopy-modal__section-list canopy-modal__section-list--nested" role="list">
-          {node.children.map((child) => (
-            <SectionNavItem key={child.slug || child.href || child.title} node={child} depth={depth + 1} />
-          ))}
-        </ul>
-      ) : null}
-    </li>
-  );
+function rootSegmentFromHref(href) {
+  const normalized = normalizeHref(href);
+  if (!normalized || normalized === "/") return "";
+  const trimmed = normalized.replace(/^\/+/, "");
+  return trimmed.split("/")[0] || "";
+}
+
+function getLinkNavigationData(link, navigationRoots, sectionNavigation) {
+  if (!link || typeof link.href !== "string") return null;
+  const segment = rootSegmentFromHref(link.href);
+  if (navigationRoots && segment && navigationRoots[segment]) {
+    return navigationRoots[segment];
+  }
+  if (sectionNavigation && doesLinkMatchSection(link.href, sectionNavigation)) {
+    return sectionNavigation;
+  }
+  return null;
 }
 
 export default function CanopyHeader(props = {}) {
@@ -287,9 +401,13 @@ export default function CanopyHeader(props = {}) {
   const navLinks = ensureArray(navLinksProp);
   const PageContext = getSafePageContext();
   const context = React.useContext(PageContext);
+  const contextNavigation =
+    context && context.navigation ? context.navigation : null;
   const sectionNavigation =
-    context && context.navigation && context.navigation.root
-      ? context.navigation
+    contextNavigation && contextNavigation.root ? contextNavigation : null;
+  const navigationRoots =
+    contextNavigation && contextNavigation.allRoots
+      ? contextNavigation.allRoots
       : null;
   const sectionHeading =
     (sectionNavigation && sectionNavigation.title) ||
@@ -308,6 +426,22 @@ export default function CanopyHeader(props = {}) {
   const sectionAriaLabel = sectionHeading
     ? `${sectionHeading} section navigation`
     : "Section navigation";
+  const defaultSectionLabel = sectionLabel;
+  const defaultSectionAriaLabel = sectionAriaLabel;
+  const shouldAttachSectionNav = (link) => {
+    const navData = getLinkNavigationData(
+      link,
+      navigationRoots,
+      sectionNavigation,
+    );
+    const rootNode = navData && navData.root;
+    return !!(
+      rootNode &&
+      Array.isArray(rootNode.children) &&
+      rootNode.children.length
+    );
+  };
+  const hasIntegratedSectionNav = navLinks.some(shouldAttachSectionNav);
 
   return (
     <>
@@ -412,24 +546,97 @@ export default function CanopyHeader(props = {}) {
           className="canopy-nav-links canopy-modal__nav"
           aria-label="Primary navigation"
         >
-          {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              aria-current={link.isActive ? "page" : undefined}
-            >
-              {link.label || link.href}
-            </a>
-          ))}
+          <ul className="canopy-modal__nav-list" role="list">
+            {navLinks.map((link, index) => {
+              const navData = getLinkNavigationData(
+                link,
+                navigationRoots,
+                sectionNavigation,
+              );
+              const navRoot = navData && navData.root ? navData.root : null;
+              const hasChildren = !!(
+                navRoot &&
+                Array.isArray(navRoot.children) &&
+                navRoot.children.length
+              );
+              const nestedId = hasChildren
+                ? `canopy-modal-section-${index}`
+                : null;
+              const toggleLabel = link.label
+                ? `Toggle ${link.label} menu`
+                : "Toggle section menu";
+              const defaultExpanded = hasChildren && !!navRoot.isExpanded;
+              return (
+                <li
+                  className="canopy-modal__nav-item"
+                  key={link.href}
+                  aria-current={link.isActive ? "page" : undefined}
+                  data-canopy-nav-item={hasChildren ? "true" : undefined}
+                  data-expanded={defaultExpanded ? "true" : "false"}
+                  data-default-expanded={defaultExpanded ? "true" : undefined}
+                >
+                  <div className="canopy-modal__nav-row">
+                    <a href={link.href}>{link.label || link.href}</a>
+                    {hasChildren ? (
+                      <button
+                        type="button"
+                        className="canopy-modal__nav-toggle"
+                        aria-expanded={defaultExpanded ? "true" : "false"}
+                        aria-controls={nestedId || undefined}
+                        aria-label={toggleLabel}
+                        data-canopy-nav-item-toggle={nestedId || undefined}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          className="canopy-modal__nav-toggle-icon"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M5 9l7 7 7-7"
+                          />
+                        </svg>
+                        <span className="sr-only">{toggleLabel}</span>
+                      </button>
+                    ) : null}
+                  </div>
+                  {hasChildren ? (
+                    <NavigationTree
+                      root={navRoot}
+                      parentKey={
+                        navData && navData.rootSegment
+                          ? navData.rootSegment
+                          : `root-${index}`
+                      }
+                      component="div"
+                      className="canopy-modal__section-nav canopy-modal__section-nav--nested"
+                      aria-label={
+                        navData && navData.title
+                          ? `${navData.title} section navigation`
+                          : defaultSectionAriaLabel
+                      }
+                      aria-hidden={defaultExpanded ? "false" : "true"}
+                      hidden={!defaultExpanded}
+                      id={nestedId || undefined}
+                    />
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
         </nav>
-        {hasSectionNav ? (
-          <nav
+        {hasSectionNav && !hasIntegratedSectionNav ? (
+          <NavigationTree
+            root={sectionNavigation.root}
+            component="nav"
             className="canopy-modal__section-nav"
-            aria-label={sectionAriaLabel}
-          >
-            <div className="canopy-modal__section-label">{sectionLabel}</div>
-            <SectionNavList root={sectionNavigation.root} />
-          </nav>
+            aria-label={defaultSectionAriaLabel}
+            parentKey="fallback-nav"
+          />
         ) : null}
       </CanopyModal>
 
