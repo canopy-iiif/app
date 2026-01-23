@@ -1,10 +1,12 @@
 const React = require('react');
 
 const STORAGE_KEY = 'canopy_content_theme_preview';
+const STORAGE_VERSION = 2;
 
 function ThemeStorageHydrator() {
   const source = `(() => {
     const STORAGE_KEY = '${STORAGE_KEY}';
+    const STORAGE_VERSION = ${STORAGE_VERSION};
     const STYLE_ATTR = 'data-theme-storage-style';
     if (typeof document === 'undefined') return;
     const html = document.documentElement;
@@ -18,6 +20,10 @@ function ThemeStorageHydrator() {
         if (!raw) return null;
         const parsed = JSON.parse(raw);
         if (!parsed || typeof parsed !== 'object') return null;
+        if (parsed.version !== STORAGE_VERSION) {
+          localStorage.removeItem(STORAGE_KEY);
+          return null;
+        }
         return parsed;
       } catch (_) {
         return null;

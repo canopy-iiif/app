@@ -1,28 +1,44 @@
-const React = require('react');
+const React = require("react");
 
-const LEVELS = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900'];
+const LEVELS = [
+  "50",
+  "100",
+  "200",
+  "300",
+  "400",
+  "500",
+  "600",
+  "700",
+  "800",
+  "900",
+];
 const FALLBACK_DEFAULTS = {
-  appearance: 'light',
-  accentColor: 'indigo',
-  grayColor: 'slate',
+  appearance: "light",
+  accentColor: "indigo",
+  grayColor: "slate",
 };
+const STORAGE_VERSION = 2;
 
-function themeShowcaseRuntime(levels) {
-  const STORAGE_KEY = 'canopy_content_theme_preview';
+function themeShowcaseRuntime(levels, storageVersion) {
+  const STORAGE_KEY = "canopy_content_theme_preview";
+  const STORAGE_VERSION = Number(storageVersion) || 1;
   const baseDefaults = Object.assign({}, FALLBACK_DEFAULTS);
-  const html = typeof document !== 'undefined' ? document.documentElement : null;
+  const html =
+    typeof document !== "undefined" ? document.documentElement : null;
   if (!html) return;
-  const htmlDefaultAccent = html.getAttribute('data-accent');
-  const htmlDefaultAppearance = html.classList.contains('dark') ? 'dark' : baseDefaults.appearance;
+  const htmlDefaultAccent = html.getAttribute("data-accent");
+  const htmlDefaultAppearance = html.classList.contains("dark")
+    ? "dark"
+    : baseDefaults.appearance;
   const documentDefaults = Object.assign({}, baseDefaults, {
     appearance: htmlDefaultAppearance || baseDefaults.appearance,
     accentColor: htmlDefaultAccent || baseDefaults.accentColor,
   });
-  const styleSelector = '[data-theme-showcase-style]';
+  const styleSelector = "[data-theme-showcase-style]";
   let styleEl = document.querySelector(styleSelector);
   if (!styleEl) {
-    styleEl = document.createElement('style');
-    styleEl.setAttribute('data-theme-showcase-style', 'true');
+    styleEl = document.createElement("style");
+    styleEl.setAttribute("data-theme-showcase-style", "true");
     document.head.appendChild(styleEl);
   }
 
@@ -42,8 +58,9 @@ function themeShowcaseRuntime(levels) {
         const value = options.accentScale[level];
         if (value) vars[`--color-accent-${level}`] = `${value} !important`;
       }
-      if (options.accentScale['700']) {
-        vars['--color-accent-default'] = `${options.accentScale['700']} !important`;
+      if (options.accentScale["800"]) {
+        vars["--color-accent-default"] =
+          `${options.accentScale["800"]} !important`;
       }
     }
     if (options.grayActive && options.grayScale) {
@@ -51,11 +68,11 @@ function themeShowcaseRuntime(levels) {
         const value = options.grayScale[level];
         if (value) vars[`--color-gray-${level}`] = `${value} !important`;
       }
-      if (options.grayScale['900']) {
-        vars['--color-gray-default'] = `${options.grayScale['900']} !important`;
+      if (options.grayScale["900"]) {
+        vars["--color-gray-default"] = `${options.grayScale["900"]} !important`;
       }
-      if (options.grayScale['600']) {
-        vars['--color-gray-muted'] = `${options.grayScale['600']} !important`;
+      if (options.grayScale["800"]) {
+        vars["--color-gray-muted"] = `${options.grayScale["800"]} !important`;
       }
     }
     if (
@@ -64,63 +81,75 @@ function themeShowcaseRuntime(levels) {
       options.accentScale &&
       options.grayScale
     ) {
-      if (options.accentScale['700']) {
-        vars['--colors-accent'] = `${options.accentScale['700']} !important`;
+      if (options.accentScale["800"]) {
+        vars["--colors-accent"] = `${options.accentScale["800"]} !important`;
       }
-      if (options.accentScale['800']) {
-        vars['--colors-accentAlt'] = `${options.accentScale['800']} !important`;
+      if (options.accentScale["900"]) {
+        vars["--colors-accentAlt"] = `${options.accentScale["900"]} !important`;
       }
-      if (options.accentScale['400']) {
-        vars['--colors-accentMuted'] = `${options.accentScale['400']} !important`;
+      if (options.accentScale["600"]) {
+        vars["--colors-accentMuted"] =
+          `${options.accentScale["600"]} !important`;
       }
-      if (options.grayScale['900']) {
-        const primary = `${options.grayScale['900']} !important`;
-        vars['--colors-primary'] = primary;
-        vars['--colors-primaryAlt'] = primary;
-        vars['--colors-primaryMuted'] = primary;
+      if (options.grayScale["900"]) {
+        const primary = `${options.grayScale["900"]} !important`;
+        vars["--colors-primary"] = primary;
+        vars["--colors-primaryAlt"] = primary;
+        vars["--colors-primaryMuted"] = primary;
       }
-      if (options.grayScale['50']) {
-        const secondary = `${options.grayScale['50']} !important`;
-        vars['--colors-secondary'] = secondary;
-        vars['--colors-secondaryAlt'] = secondary;
-        vars['--colors-secondaryMuted'] = secondary;
+      if (options.grayScale["50"]) {
+        const secondary = `${options.grayScale["50"]} !important`;
+        vars["--colors-secondary"] = secondary;
+        vars["--colors-secondaryAlt"] = secondary;
+        vars["--colors-secondaryMuted"] = secondary;
       }
     }
     if (options.appearanceActive && options.appearance) {
-      vars['color-scheme'] = options.appearance === 'dark' ? 'dark' : 'light';
+      vars["color-scheme"] = options.appearance === "dark" ? "dark" : "light";
     }
     return vars;
   }
 
   function formatCss(vars) {
-    const entries = Object.entries(vars).filter(([, value]) => value != null && value !== '');
-    if (!entries.length) return '';
-    const body = entries.map(([prop, value]) => `  ${prop}: ${value};`).join('\n');
+    const entries = Object.entries(vars).filter(
+      ([, value]) => value != null && value !== "",
+    );
+    if (!entries.length) return "";
+    const body = entries
+      .map(([prop, value]) => `  ${prop}: ${value};`)
+      .join("\n");
     return `@layer properties {\n  :root {\n${body}\n  }\n  :host {\n${body}\n  }\n}`;
   }
 
   function titleCase(value) {
-    if (!value) return 'None';
+    if (!value) return "None";
     return value.charAt(0).toUpperCase() + value.slice(1);
   }
 
   function loadStored() {
     try {
-      if (typeof localStorage === 'undefined') return null;
+      if (typeof localStorage === "undefined") return null;
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return null;
       const parsed = JSON.parse(raw);
-      if (!parsed || typeof parsed !== 'object') return null;
+      if (!parsed || typeof parsed !== "object") return null;
+      if (parsed.version !== STORAGE_VERSION) {
+        localStorage.removeItem(STORAGE_KEY);
+        return null;
+      }
       return parsed;
     } catch (error) {
-      console.warn('[canopy-theme-showcase] Failed to read stored theme', error);
+      console.warn(
+        "[canopy-theme-showcase] Failed to read stored theme",
+        error,
+      );
       return null;
     }
   }
 
   function persistState(state, defaults, cssText, appliedAppearance) {
     try {
-      if (typeof localStorage === 'undefined') return;
+      if (typeof localStorage === "undefined") return;
       const matchesDefaults =
         state.appearance === defaults.appearance &&
         state.accent === defaults.accentColor &&
@@ -133,28 +162,29 @@ function themeShowcaseRuntime(levels) {
         appearance: state.appearance || null,
         accent: state.accent || null,
         gray: state.gray || null,
-        css: cssText || '',
+        css: cssText || "",
         appliedAppearance:
-          appliedAppearance || state.appearance || defaults.appearance || 'light',
+          appliedAppearance ||
+          state.appearance ||
+          defaults.appearance ||
+          "light",
+        version: STORAGE_VERSION,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     } catch (error) {
-      console.warn('[canopy-theme-showcase] Failed to persist theme', error);
+      console.warn("[canopy-theme-showcase] Failed to persist theme", error);
     }
   }
 
   function activateHtmlAppearance(mode) {
-    if (mode === 'dark') html.classList.add('dark');
-    else html.classList.remove('dark');
+    if (mode === "dark") html.classList.add("dark");
+    else html.classList.remove("dark");
   }
 
   function updateHtmlAccent(accentName, fallback) {
-    const fallbackName = fallback || baseDefaults.accentColor || 'indigo';
-    const normalized = (accentName || '')
-      .toString()
-      .trim()
-      .toLowerCase();
-    html.setAttribute('data-accent', normalized || fallbackName);
+    const fallbackName = fallback || baseDefaults.accentColor || "indigo";
+    const normalized = (accentName || "").toString().trim().toLowerCase();
+    html.setAttribute("data-accent", normalized || fallbackName);
   }
 
   function hydrateStoredTheme(stored, defaults) {
@@ -164,25 +194,29 @@ function themeShowcaseRuntime(levels) {
       resolvedDefaults.appearance ||
       baseDefaults.appearance;
     const storedAccent = stored && stored.accent ? stored.accent : null;
-    const activeAccent = storedAccent || resolvedDefaults.accentColor || baseDefaults.accentColor;
+    const activeAccent =
+      storedAccent || resolvedDefaults.accentColor || baseDefaults.accentColor;
     activateHtmlAppearance(appliedAppearance);
     updateHtmlAccent(activeAccent, resolvedDefaults.accentColor);
-    if (stored && typeof stored.css === 'string' && stored.css) {
+    if (stored && typeof stored.css === "string" && stored.css) {
       styleEl.textContent = stored.css;
     }
   }
 
-  const roots = Array.from(document.querySelectorAll('[data-theme-showcase]'));
+  const roots = Array.from(document.querySelectorAll("[data-theme-showcase]"));
   const contexts = [];
 
   roots.forEach((root) => {
-    const dataEl = root.querySelector('[data-theme-showcase-values]');
+    const dataEl = root.querySelector("[data-theme-showcase-values]");
     if (!dataEl) return;
     try {
-      const dataset = JSON.parse(dataEl.textContent || '{}');
-      contexts.push({ root, dataset });
+      const dataset = JSON.parse(dataEl.textContent || "{}");
+      contexts.push({root, dataset});
     } catch (error) {
-      console.error('[canopy-theme-showcase] Failed to parse preview data', error);
+      console.error(
+        "[canopy-theme-showcase] Failed to parse preview data",
+        error,
+      );
     }
   });
 
@@ -191,46 +225,58 @@ function themeShowcaseRuntime(levels) {
 
   if (!contexts.length) return;
 
-  contexts.forEach(({ root, dataset }) => {
-    const defaults = Object.assign({}, documentDefaults, dataset.defaults || {});
+  contexts.forEach(({root, dataset}) => {
+    const defaults = Object.assign(
+      {},
+      documentDefaults,
+      dataset.defaults || {},
+    );
     const stored = storedPreferences;
     const state = {
-      appearance: stored && stored.appearance ? stored.appearance : defaults.appearance,
+      appearance:
+        stored && stored.appearance ? stored.appearance : defaults.appearance,
       accent: stored && stored.accent ? stored.accent : defaults.accentColor,
       gray: stored && stored.gray ? stored.gray : defaults.grayColor,
     };
 
-    const statusEl = root.querySelector('[data-theme-showcase-status]');
-    const appearanceLabel = root.querySelector('[data-theme-active-label="appearance"]');
-    const accentLabel = root.querySelector('[data-theme-active-label="accent"]');
+    const statusEl = root.querySelector("[data-theme-showcase-status]");
+    const appearanceLabel = root.querySelector(
+      '[data-theme-active-label="appearance"]',
+    );
+    const accentLabel = root.querySelector(
+      '[data-theme-active-label="accent"]',
+    );
     const grayLabel = root.querySelector('[data-theme-active-label="gray"]');
-    const appearanceButtons = Array.from(root.querySelectorAll('[data-theme-appearance]'));
-    const swatches = Array.from(root.querySelectorAll('[data-theme-swatch]'));
-    const resetBtn = root.querySelector('[data-theme-reset]');
+    const appearanceButtons = Array.from(
+      root.querySelectorAll("[data-theme-appearance]"),
+    );
+    const swatches = Array.from(root.querySelectorAll("[data-theme-swatch]"));
+    const resetBtn = root.querySelector("[data-theme-reset]");
 
     function updateAppearanceButtons() {
       appearanceButtons.forEach((button) => {
-        const value = button.getAttribute('data-theme-appearance');
+        const value = button.getAttribute("data-theme-appearance");
         if (!value) return;
         const isActive = value === state.appearance;
-        if (isActive) button.classList.add('is-active');
-        else button.classList.remove('is-active');
+        if (isActive) button.classList.add("is-active");
+        else button.classList.remove("is-active");
       });
     }
 
     function updateSwatchIndicators() {
       swatches.forEach((swatch) => {
-        const type = swatch.getAttribute('data-theme-swatch-type');
-        const value = swatch.getAttribute('data-theme-swatch-value');
+        const type = swatch.getAttribute("data-theme-swatch-type");
+        const value = swatch.getAttribute("data-theme-swatch-value");
         if (!type || !value) return;
         const isActive = state[type] === value;
-        swatch.setAttribute('data-swatch-active', isActive ? 'true' : 'false');
-        swatch.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        swatch.setAttribute("data-swatch-active", isActive ? "true" : "false");
+        swatch.setAttribute("aria-pressed", isActive ? "true" : "false");
       });
     }
 
     function updateLabels() {
-      if (appearanceLabel) appearanceLabel.textContent = titleCase(state.appearance);
+      if (appearanceLabel)
+        appearanceLabel.textContent = titleCase(state.appearance);
       if (accentLabel) accentLabel.textContent = titleCase(state.accent);
       if (grayLabel) grayLabel.textContent = titleCase(state.gray);
     }
@@ -242,18 +288,18 @@ function themeShowcaseRuntime(levels) {
       if (state.accent) parts.push(`accent: ${state.accent}`);
       if (state.gray) parts.push(`gray: ${state.gray}`);
       statusEl.textContent = parts.length
-        ? `Overrides → ${parts.join(' • ')}`
-        : 'No overrides active';
+        ? `Overrides → ${parts.join(" • ")}`
+        : "No overrides active";
     }
 
     function apply() {
       const activeAppearance = state.appearance || defaults.appearance;
-      const activeAccentName = state.accent || defaults.accentColor || 'indigo';
+      const activeAccentName = state.accent || defaults.accentColor || "indigo";
       const accentScale = state.accent
-        ? lookupScale(dataset, activeAppearance, 'accent', state.accent)
+        ? lookupScale(dataset, activeAppearance, "accent", state.accent)
         : null;
       const grayScale = state.gray
-        ? lookupScale(dataset, activeAppearance, 'gray', state.gray)
+        ? lookupScale(dataset, activeAppearance, "gray", state.gray)
         : null;
       const css = formatCss(
         buildOverrideVars({
@@ -263,7 +309,7 @@ function themeShowcaseRuntime(levels) {
           appearance: activeAppearance,
           accentScale,
           grayScale,
-        })
+        }),
       );
       styleEl.textContent = css;
       activateHtmlAppearance(state.appearance || defaults.appearance);
@@ -276,9 +322,9 @@ function themeShowcaseRuntime(levels) {
     }
 
     swatches.forEach((swatch) => {
-      swatch.addEventListener('click', () => {
-        const type = swatch.getAttribute('data-theme-swatch-type');
-        const value = swatch.getAttribute('data-theme-swatch-value');
+      swatch.addEventListener("click", () => {
+        const type = swatch.getAttribute("data-theme-swatch-type");
+        const value = swatch.getAttribute("data-theme-swatch-value");
         if (!type || !value) return;
         if (state[type] === value) {
           state[type] = null;
@@ -290,8 +336,8 @@ function themeShowcaseRuntime(levels) {
     });
 
     appearanceButtons.forEach((button) => {
-      button.addEventListener('click', () => {
-        const value = button.getAttribute('data-theme-appearance');
+      button.addEventListener("click", () => {
+        const value = button.getAttribute("data-theme-appearance");
         if (!value) return;
         state.appearance = value;
         apply();
@@ -299,7 +345,7 @@ function themeShowcaseRuntime(levels) {
     });
 
     if (resetBtn) {
-      resetBtn.addEventListener('click', () => {
+      resetBtn.addEventListener("click", () => {
         state.appearance = defaults.appearance;
         state.accent = defaults.accentColor;
         state.gray = defaults.grayColor;
@@ -314,13 +360,16 @@ function themeShowcaseRuntime(levels) {
 const SCRIPT = (() => {
   const runtimeSource = themeShowcaseRuntime
     .toString()
-    .replace('const baseDefaults = Object.assign({}, FALLBACK_DEFAULTS);', `const baseDefaults = ${JSON.stringify(FALLBACK_DEFAULTS)};`);
-  const raw = `(${runtimeSource})(${JSON.stringify(LEVELS)});`;
-  return raw.replace(/<\/script/gi, '<\\/script');
+    .replace(
+      "const baseDefaults = Object.assign({}, FALLBACK_DEFAULTS);",
+      `const baseDefaults = ${JSON.stringify(FALLBACK_DEFAULTS)};`,
+    );
+  const raw = `(${runtimeSource})(${JSON.stringify(LEVELS)}, ${JSON.stringify(STORAGE_VERSION)});`;
+  return raw.replace(/<\/script/gi, "<\\/script");
 })();
 
 function ThemeShowcaseScript() {
-  return React.createElement('script', {
+  return React.createElement("script", {
     dangerouslySetInnerHTML: {__html: SCRIPT},
   });
 }

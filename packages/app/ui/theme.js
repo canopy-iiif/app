@@ -30,9 +30,9 @@ const LEVELS = [
 ];
 const STEP_MAP = {
   50: 1,
-  100: 3,
-  200: 4,
-  300: 6,
+  100: 2,
+  200: 3,
+  300: 4,
   400: 7,
   500: 8,
   600: 9,
@@ -185,8 +185,6 @@ function loadCanopyTheme(options = {}) {
   let grayScale = grayName
     ? toTailwindScale(grayName, {
         appearance,
-        darken900Amount: 0.4,
-        saturate700: false,
       })
     : null;
   let grayFallback = false;
@@ -195,8 +193,6 @@ function loadCanopyTheme(options = {}) {
     grayName = DEFAULT_GRAY;
     grayScale = toTailwindScale(DEFAULT_GRAY, {
       appearance,
-      darken900Amount: 0.4,
-      saturate700: false,
     });
   }
 

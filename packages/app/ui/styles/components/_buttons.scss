@@ -17,7 +17,7 @@
 
     &--primary {
       background-color: var(--color-accent-default);
-      color: var(--color-gray-50);
+      color: var(--color-accent-50);
       box-shadow: 0 18px 32px -22px rgba(15, 23, 42, 0.55);
 
       &:hover,
@@ -27,8 +27,7 @@
     }
 
     &--secondary {
-      border: 1px solid
-        color-mix(in srgb, var(--color-gray-300) 60%, transparent);
+      border: 1px solid var(--color-gray-200);
       color: color-mix(in srgb, var(--color-gray-900) 92%, transparent);
       background-color: var(--color-gray-50);
 
@@ -45,32 +44,6 @@
           transparent
         );
         color: var(--color-accent-900);
-      }
-    }
-  }
-
-  html[data-accent="amber"],
-  html[data-accent="yellow"],
-  html[data-accent="lime"],
-  html[data-accent="mint"],
-  html[data-accent="sky"] {
-    .canopy-button--primary {
-      color: var(--color-gray-900);
-    }
-  }
-
-  html.dark {
-    .canopy-button--primary {
-      color: var(--color-gray-900);
-    }
-
-    &[data-accent="amber"],
-    &[data-accent="yellow"],
-    &[data-accent="lime"],
-    &[data-accent="mint"],
-    &[data-accent="sky"] {
-      .canopy-button--primary {
-        color: var(--color-gray-50);
       }
     }
   }

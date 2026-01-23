@@ -50,7 +50,7 @@ const componentStyles = `
 }
 
 .markdown-authoring__heading {
-  color: var(--color-accent-700);
+  color: var(--color-accent-default);
   font-weight: 300;
   margin: 0;
 }
@@ -82,7 +82,7 @@ const componentStyles = `
   position: absolute;
   font-size: 3.618rem;
   line-height: 1;
-  color: var(--color-midtown-accent, var(--color-accent-700));
+  color: var(--color-accent-default);
   font-weight: 600;
   pointer-events: none;
 }

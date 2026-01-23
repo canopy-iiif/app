@@ -162,7 +162,7 @@ export default function DocsCodeBlock(props = {}) {
     return React.createElement(
       "span",
       {key: lineNumber, style},
-      React.createElement("span", {style: lineContentStyle}, displayLine)
+      React.createElement("span", {style: lineContentStyle}, displayLine),
     );
   });
 
@@ -181,26 +181,28 @@ export default function DocsCodeBlock(props = {}) {
                   type: "button",
                   onClick: handleCopy,
                   "aria-live": "polite",
-                  "aria-label": copied ? "Copied to clipboard" : "Copy code to clipboard",
+                  "aria-label": copied
+                    ? "Copied to clipboard"
+                    : "Copy code to clipboard",
                   style: {
                     border: "1px solid var(--color-accent-200, )",
                     borderRadius: "6px",
                     padding: "0.2rem 0.55rem",
                     fontSize: "0.7rem",
                     fontWeight: 500,
-                    color: "var(--color-accent-700, #1d4ed8)",
+                    color: "var(--color-accent-default)",
                     cursor: "pointer",
                   },
                 },
-                copied ? "Copied" : "Copy"
+                copied ? "Copied" : "Copy",
               )
-            : null
+            : null,
         )
       : null,
     React.createElement(
       "pre",
       {...preRest, className: preClassName, style: mergedPreStyle},
-      React.createElement("code", {style: codeStyle}, lineElements)
-    )
+      React.createElement("code", {style: codeStyle}, lineElements),
+    ),
   );
 }

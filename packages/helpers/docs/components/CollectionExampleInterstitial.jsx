@@ -64,7 +64,7 @@ const componentStyles = `
 }
 
 .collection-example__heading {
-  color: var(--color-accent-700);
+  color: var(--color-accent-default);
   font-weight: 300;
   margin: 0;
 }
@@ -260,7 +260,7 @@ function normalizeLabel(label) {
       }
     }
     const firstEntry = Object.values(label).find(
-      (value) => Array.isArray(value) && value.length
+      (value) => Array.isArray(value) && value.length,
     );
     return firstEntry ? firstEntry[0] : null;
   }
