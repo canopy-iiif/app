@@ -4,7 +4,7 @@ import MapPoint from "./MapPoint.jsx";
 import navPlaceHelpers from "../../../../lib/components/nav-place.js";
 import {
   useReferencedManifestMap,
-  resolveManifestReferences,
+  resolveReferencedManifests,
 } from "../../utils/manifestReferences.js";
 
 function normalizeNumber(value) {
@@ -60,7 +60,7 @@ function normalizeCustomPoint(child, index, manifestMap) {
     : Array.isArray(props.manifests)
     ? props.manifests
     : [];
-  const manifests = resolveManifestReferences(manifestValues, manifestMap);
+  const manifests = resolveReferencedManifests(manifestValues, manifestMap);
   if (!thumbnail && manifests.length) {
     const manifestWithThumb = manifests.find(
       (manifest) => manifest && manifest.thumbnail

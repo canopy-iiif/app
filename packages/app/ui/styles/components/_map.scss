@@ -150,22 +150,24 @@
 
   &__marker-thumb,
   &__marker-solid {
-    width: 56px;
-    height: 56px;
+    width: 40px;
+    height: 40px;
     border-radius: 999px;
-    border: 2px solid var(--color-gray-50);
     box-shadow: 0 4px 10px rgba(15, 23, 42, 0.35);
     overflow: hidden;
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: var(--color-gray-900);
   }
 
   &__marker-thumb {
     img {
       display: block;
-      width: 100%;
-      height: 100%;
+      width: 105%;
+      height: 105%;
       object-fit: cover;
+      object-position: 50% 50%;
     }
   }
 
@@ -182,10 +184,11 @@
   }
 
   &__cluster {
-    font-size: 1rem;
-    font-weight: 400;
-    width: 56px;
-    height: 56px;
+    font-size: 0.8333rem;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    width: 40px;
+    height: 40px;
     border-radius: 999px;
     background: var(--color-accent-default);
     color: var(--color-gray-50);
@@ -193,6 +196,6 @@
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 12px rgba(15, 23, 42, 0.35);
-    border: 2px solid var(--color-gray-50);
+    box-sizing: content-box;
   }
 }

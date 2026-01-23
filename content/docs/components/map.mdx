@@ -1,9 +1,5 @@
 ---
 title: Map
-referencedManifests:
-  - https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b?as=iiif
-  - https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif
-  - https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif
 ---
 
 # Map
@@ -48,18 +44,7 @@ By default, custom `MapPoint` popups render their titles as plain text so visito
 
 ### Reference IIIF works from a custom point
 
-Attach `referencedManifests` to any `MapPoint` to render a list inside the marker. This links automatically resolve to that relative local page in `/works/` if available. You must also provide `referencedManifests` so each point pulls teaser data from the page’s cited works. When no `thumbnail` prop is supplied, the map reuses the first referenced manifest thumbnail so the popup still showcases artwork.
-
-```mdx
----
-referencedManifests:
-  - https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b?as=iiif
-  - https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif
-  - https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif
----
-```
-
-And inline within your content, render the Map component with custom points.
+Attach `referencedManifests` to any `MapPoint` to render a list inside the marker. This automatically resolves links to a relative local in `/works/` if available. Additionally a thumbnail is used from the referenced manifest if no `thumbnail` prop is provided.
 
 ```mdx
 <Map>

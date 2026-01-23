@@ -8,7 +8,7 @@ import {
 } from "./date-utils.js";
 import {
   useReferencedManifestMap,
-  resolveManifestReferences,
+  resolveReferencedManifests,
 } from "../../utils/manifestReferences.js";
 
 function normalizeResource(resource, index) {
@@ -68,7 +68,7 @@ function normalizePoint(child, index, options) {
     : Array.isArray(props.manifests)
     ? props.manifests
     : [];
-  const manifests = resolveManifestReferences(manifestValues, options.manifestMap);
+  const manifests = resolveReferencedManifests(manifestValues, options.manifestMap);
   return {
     id,
     title: props.title || props.label || `Point ${index + 1}`,

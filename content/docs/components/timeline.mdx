@@ -1,9 +1,6 @@
 ---
 title: Timeline
 description: Scrollable chronology with proportional spacing and manifest callouts.
-referencedManifests:
-  - https://api.dc.library.northwestern.edu/api/v2/works/7a5dd871-d0bc-4d6f-8469-1c23a872fc29?as=iiif
-  - https://api.dc.library.northwestern.edu/api/v2/works/c5a11577-a1f2-4288-95de-96ad616174ed?as=iiif
 ---
 
 # Timeline
@@ -183,14 +180,7 @@ Give the component a range so events sit in proportion to each other. Combine `t
 
 ### Referenced manifests
 
-Provide `referencedManifests` so each point pulls teaser data from the page’s cited works.
-
-```mdx
----
-referencedManifests:
-  - https://api.dc.library.northwestern.edu/api/v2/works/7a5dd871-d0bc-4d6f-8469-1c23a872fc29?as=iiif
----
-```
+Directly referenced works in your timeline be adding `referencedManifests` to a point. This automatically resolves links to a relative local in `/works/` if available.
 
 <Timeline>
   <TimelinePoint

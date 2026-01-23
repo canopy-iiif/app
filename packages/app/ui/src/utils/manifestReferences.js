@@ -1,7 +1,22 @@
 import React from "react";
 import navigationHelpers from "../../../lib/components/navigation.js";
+import referencedHelpers from "../../../lib/components/referenced.js";
 
-function normalizeManifestId(raw) {
+const referencedModule =
+  referencedHelpers && typeof referencedHelpers === "object"
+    ? referencedHelpers
+    : null;
+const buildReferencedItems =
+  referencedModule && typeof referencedModule.buildReferencedItems === "function"
+    ? referencedModule.buildReferencedItems
+    : null;
+const normalizeReferencedManifestList =
+  referencedModule &&
+  typeof referencedModule.normalizeReferencedManifestList === "function"
+    ? referencedModule.normalizeReferencedManifestList
+    : null;
+
+export function normalizeManifestId(raw) {
   if (!raw) return "";
   try {
     const url = new URL(String(raw));
@@ -69,4 +84,65 @@ export function resolveManifestReferences(ids, manifestMap) {
     });
   });
   return out;
+}
+
+export function resolveReferencedManifests(ids, manifestMap) {
+  if (!Array.isArray(ids) || !ids.length) return [];
+  const order = [];
+  const seen = new Set();
+  ids.forEach((value) => {
+    const normalized = normalizeManifestId(value);
+    if (!normalized || seen.has(normalized)) return;
+    seen.add(normalized);
+    order.push(normalized);
+  });
+  if (!order.length) return [];
+  const manifestRecords = new Map();
+  if (manifestMap) {
+    const resolved = resolveManifestReferences(ids, manifestMap);
+    resolved.forEach((entry) => {
+      const key = normalizeManifestId(entry && (entry.id || entry.href));
+      if (key && !manifestRecords.has(key)) {
+        manifestRecords.set(key, entry);
+      }
+    });
+  }
+  const missing = order.filter((key) => key && !manifestRecords.has(key));
+  if (missing.length && buildReferencedItems) {
+    let fallbackItems = [];
+    try {
+      const normalizedMissing = normalizeReferencedManifestList
+        ? normalizeReferencedManifestList(missing)
+        : missing;
+      if (normalizedMissing && normalizedMissing.length) {
+        fallbackItems = buildReferencedItems(normalizedMissing) || [];
+      }
+    } catch (_) {
+      fallbackItems = [];
+    }
+    fallbackItems.forEach((item) => {
+      if (!item) return;
+      const fallbackKey = normalizeManifestId(item.id || item.href);
+      if (!fallbackKey || manifestRecords.has(fallbackKey)) return;
+      manifestRecords.set(fallbackKey, {
+        id: item.id || item.href || fallbackKey,
+        href: item.href || null,
+        title: item.title || item.href || "",
+        summary: item.summary || "",
+        thumbnail: item.thumbnail || null,
+        thumbnailWidth: item.thumbnailWidth,
+        thumbnailHeight: item.thumbnailHeight,
+        type: item.type || "work",
+        metadata:
+          Array.isArray(item.metadata) && item.metadata.length
+            ? item.metadata
+            : item.summary
+            ? [item.summary]
+            : [],
+      });
+    });
+  }
+  return order
+    .map((key) => manifestRecords.get(key))
+    .filter(Boolean);
 }
