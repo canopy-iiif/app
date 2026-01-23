@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.5.12",
+    "date": "2026-01-23",
+    "summary": "Style refinements.",
+    "highlights": []
+  },
+  {
     "version": "1.5.11",
     "date": "2026-01-23",
     "summary": "Refine color contrast.",

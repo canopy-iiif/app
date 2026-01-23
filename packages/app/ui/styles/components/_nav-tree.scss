@@ -43,7 +43,14 @@
     margin: -0.25rem;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
+    cursor: pointer;
+    flex-grow: 1;
+
+    &:hover,
+    &:focus {
+      color: var(--color-accent-default);
+    }
   }
 
   .canopy-nav-tree__toggle:focus-visible {
@@ -61,7 +68,7 @@
     margin-top: 0.25rem;
   }
 
-  .canopy-nav-tree__item[data-expanded='true'] .canopy-nav-tree__toggle-icon {
+  .canopy-nav-tree__item[data-expanded="true"] .canopy-nav-tree__toggle-icon {
     transform: rotate(180deg);
   }
 }

@@ -21,7 +21,7 @@
 .canopy-sub-navigation__link,
 .canopy-sub-navigation__tree .canopy-nav-tree__link,
 .canopy-modal__section-nav .canopy-nav-tree__link {
-  display: block;
+  display: inline;
   padding: 0.382rem 0.618;
   border-radius: 0.382rem;
   color: inherit;
@@ -30,6 +30,7 @@
   transition:
     background-color 120ms ease,
     color 120ms ease;
+  flex-shrink: 1;
 }
 
 .canopy-sub-navigation__link:hover,

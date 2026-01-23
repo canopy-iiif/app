@@ -48,7 +48,6 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.618rem;
   }
 
   .canopy-modal__nav-item {
@@ -86,7 +85,14 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: var(--color-gray-muted);
+    justify-content: flex-end;
+    cursor: pointer;
+    flex-grow: 1;
+
+    &:hover,
+    &:focus {
+      color: var(--color-accent-default);
+    }
   }
 
   .canopy-modal__nav-toggle:focus-visible {
