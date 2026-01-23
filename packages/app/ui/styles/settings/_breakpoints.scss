@@ -1,0 +1,7 @@
+$canopy-desktop-breakpoint: 70rem !default;
+
+@layer base {
+  :root {
+    --canopy-desktop-breakpoint: #{$canopy-desktop-breakpoint};
+  }
+}

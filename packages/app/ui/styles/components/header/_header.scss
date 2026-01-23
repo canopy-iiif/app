@@ -1,3 +1,5 @@
+@use "../../settings/breakpoints" as bp;
+
 @layer components {
   .canopy-header {
     position: relative;
@@ -135,7 +137,7 @@
     padding: 0.25rem 0;
   }
 
-  @media (min-width: 48rem) {
+  @media (min-width: bp.$canopy-desktop-breakpoint) {
     .canopy-header__menu {
       display: none;
     }

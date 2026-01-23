@@ -21,6 +21,7 @@ const { getPageContext } = require("../page-context");
 const PageContext = getPageContext();
 const referenced = require("../components/referenced");
 const navPlace = require("../components/nav-place");
+const navigation = require("../components/navigation.js");
 const {
   getThumbnail,
   getRepresentativeImage,
@@ -1850,7 +1851,11 @@ async function buildIiifCollectionPages(CONFIG) {
             pageDetails.meta.image = ogImageForPage;
             pageDetails.meta.ogImage = ogImageForPage;
           }
-          const pageContextValue = { navigation: null, page: pageDetails };
+          const navigationRoots = navigation.buildNavigationRoots(slug || "");
+          const navigationContext = navigationRoots && Object.keys(navigationRoots).length
+            ? { allRoots: navigationRoots }
+            : null;
+          const pageContextValue = { navigation: navigationContext, page: pageDetails };
           if (metadataFacetLabels.length && manifest && typeof manifest === "object") {
             try {
               Object.defineProperty(manifest, "__canopyMetadataFacets", {
@@ -1893,7 +1898,7 @@ async function buildIiifCollectionPages(CONFIG) {
           if (app && app.Head) {
             const headElement = React.createElement(app.Head, {
               page: pageContextValue.page,
-              navigation: null,
+              navigation: pageContextValue.navigation,
             });
             const wrappedHead = PageContext
               ? React.createElement(
