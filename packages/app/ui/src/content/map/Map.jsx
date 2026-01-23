@@ -11,6 +11,11 @@ const DEFAULT_TILE_LAYERS = [
   },
 ];
 
+const CUSTOM_MARKER_SIZE = 40;
+const CUSTOM_MARKER_RADIUS = CUSTOM_MARKER_SIZE / 2;
+// Keep popup stems hovering just above the 40px markers.
+const CUSTOM_MARKER_POPUP_OFFSET = -CUSTOM_MARKER_RADIUS + 6;
+
 function resolveGlobalLeaflet() {
   try {
     if (typeof globalThis !== "undefined" && globalThis.L) return globalThis.L;
@@ -226,8 +231,8 @@ function buildTileLayers(inputLayers, leaflet) {
 function buildMarkerIcon(marker, leaflet) {
   if (!leaflet) return null;
   const hasThumbnail = Boolean(marker && marker.thumbnail);
-  const size = 56;
-  const anchor = size / 2;
+  const size = CUSTOM_MARKER_SIZE;
+  const anchor = CUSTOM_MARKER_RADIUS;
   const html = hasThumbnail
     ? `<div class="canopy-map__marker-thumb"><img src="${escapeHtml(
         marker.thumbnail
@@ -238,7 +243,7 @@ function buildMarkerIcon(marker, leaflet) {
       className: "canopy-map__marker",
       iconSize: [size, size],
       iconAnchor: [anchor, anchor],
-      popupAnchor: [0, -anchor + 10],
+      popupAnchor: [0, CUSTOM_MARKER_POPUP_OFFSET],
       html,
     });
   } catch (_) {
@@ -248,8 +253,8 @@ function buildMarkerIcon(marker, leaflet) {
 
 function buildClusterOptions(leaflet) {
   if (!leaflet) return null;
-  const size = 56;
-  const anchor = size / 2;
+  const size = CUSTOM_MARKER_SIZE;
+  const anchor = CUSTOM_MARKER_RADIUS;
   return {
     chunkedLoading: true,
     iconCreateFunction: (cluster) => {

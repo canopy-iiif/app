@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.5.14",
+    "date": "2026-01-23",
+    "summary": "Adjust Map marker math.",
+    "highlights": []
+  },
+  {
     "version": "1.5.13",
     "date": "2026-01-23",
     "summary": "Simplify manifest referencing in Map and Timeline.",
