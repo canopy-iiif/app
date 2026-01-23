@@ -139,7 +139,7 @@
     .canopy-interstitial__description {
       font-size: 0.9222rem;
       font-weight: 700;
-      color: var(--color-accent-700);
+      color: var(--color-accent-default);
       font-family: var(--font-mono);
     }
   }
@@ -153,12 +153,12 @@
   &__breadcrumb a {
     color: inherit;
     text-decoration: none;
-    color: var(--color-gray-700);
+    color: var(--color-gray-muted);
   }
 
   &__breadcrumb a:hover,
   &__breadcrumb a:focus-visible {
-    color: var(--color-accent-700);
+    color: var(--color-accent-default);
     outline: none;
   }
 

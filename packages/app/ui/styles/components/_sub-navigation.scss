@@ -42,14 +42,14 @@
 .canopy-sub-navigation__tree .canopy-nav-tree__link.is-label,
 .canopy-modal__section-nav .canopy-nav-tree__link.is-label {
   cursor: default;
-  color: var(--color-gray-600);
+  color: var(--color-gray-muted);
 }
 
 .canopy-sub-navigation__link.is-disabled,
 .canopy-sub-navigation__tree .canopy-nav-tree__link.is-disabled,
 .canopy-modal__section-nav .canopy-nav-tree__link.is-disabled {
   cursor: default;
-  color: var(--color-gray-700);
+  color: var(--color-gray-muted);
   font-style: italic;
 }
 
@@ -66,7 +66,7 @@
   z-index: 0;
   position: relative;
   background: var(--color-accent-200);
-  color: var(--color-accent-700);
+  color: var(--color-accent-default);
   font-family: var(--font-sans);
   padding: 0.175rem 0.175rem;
   top: -1px;
@@ -139,7 +139,7 @@
     var(--color-accent-200) 25%,
     transparent
   );
-  color: var(--color-accent-700);
+  color: var(--color-accent-default);
 }
 
 .canopy-layout__content-nav.is-collapsed .canopy-content-navigation {

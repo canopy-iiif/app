@@ -17,12 +17,12 @@
 .canopy-timeline__description {
   margin: 0;
   font-size: 0.9222rem;
-  color: var(--color-gray-700);
+  color: var(--color-gray-muted);
 }
 
 .canopy-timeline__range {
   margin: 0;
-  color: var(--color-accent-700);
+  color: var(--color-accent-default);
   font-size: 1.382rem;
   font-weight: 600;
 }
@@ -90,7 +90,7 @@
 .canopy-timeline__step-label {
   font-size: 0.8333rem;
   font-weight: 300;
-  color: var(--color-gray-700);
+  color: var(--color-gray-muted);
   transform: translateX(0.5rem);
   margin-top: -0.618rem;
   margin-left: -0.382rem;
@@ -137,7 +137,7 @@
 .canopy-timeline__group-point-date {
   font-size: 1.111rem;
   letter-spacing: 0.0125em;
-  color: var(--color-gray-700);
+  color: var(--color-gray-muted);
   font-weight: 300;
   margin-bottom: 0.382rem;
 }
@@ -155,7 +155,7 @@
 .canopy-timeline__group-count {
   font-size: 0.9222rem;
   font-weight: 300;
-  color: var(--color-gray-700);
+  color: var(--color-gray-muted);
 }
 
 .canopy-timeline__connector {
@@ -168,22 +168,22 @@
   width: clamp(2.618rem, 6vw, 2.618rem);
   height: 0.125rem;
   border-radius: 999px;
-  background: var(--color-accent-700);
+  background: var(--color-accent-default);
 }
 
 .canopy-timeline__connector-dot {
   width: 0.618rem;
   height: 0.618rem;
   border-radius: 50%;
-  background: var(--color-accent-700);
-  border: 2px solid var(--color-accent-700);
+  background: var(--color-accent-default);
+  border: 2px solid var(--color-accent-default);
 }
 
 .canopy-timeline__connector-dot.is-active {
   width: 1rem;
   height: 1rem;
-  background: var(--color-accent-700);
-  border-color: var(--color-accent-700);
+  background: var(--color-accent-default);
+  border-color: var(--color-accent-default);
 }
 
 .canopy-timeline__resources {

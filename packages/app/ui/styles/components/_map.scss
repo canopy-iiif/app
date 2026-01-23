@@ -75,7 +75,7 @@
       padding: 0;
       font-size: 0.9222rem;
       line-height: 1.4;
-      color: var(--color-gray-700);
+      color: var(--color-gray-muted);
     }
 
     &-link {
@@ -96,7 +96,7 @@
         font-weight: 600;
         letter-spacing: 0.05em;
         text-transform: uppercase;
-        color: var(--color-gray-600);
+        color: var(--color-gray-muted);
       }
 
       &-list {
@@ -127,13 +127,13 @@
       }
 
       &-text {
-        color: var(--color-gray-800);
+        color: var(--color-gray-muted);
       }
 
       &-summary {
         margin: 0.125rem 0 0;
         font-size: 0.8125rem;
-        color: var(--color-gray-700);
+        color: var(--color-gray-muted);
       }
     }
   }

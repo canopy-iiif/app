@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.5.11",
+    "date": "2026-01-23",
+    "summary": "Refine color contrast.",
+    "highlights": []
+  },
+  {
     "version": "1.5.10",
     "date": "2026-01-23",
     "summary": "Normalize responsive navigation trees.",

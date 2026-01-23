@@ -70,11 +70,10 @@
 .bibliography__note-label {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
-  color: var(--color-gray-500);
+  color: var(--color-gray-muted);
 }
 
 .bibliography__note-body {
-  color: var(--color-gray-900);
   font-size: 0.95rem;
   line-height: 1.5;
 }

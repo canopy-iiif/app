@@ -44,8 +44,8 @@ const STEP_MAP = {
 const AVAILABLE = new Set(
   Object.keys(radixColors).filter(
     (key) =>
-      /^[a-z]+$/.test(key) && radixColors[key] && radixColors[key][`${key}1`]
-  )
+      /^[a-z]+$/.test(key) && radixColors[key] && radixColors[key][`${key}1`],
+  ),
 );
 
 const APPEARANCES = new Set(["light", "dark"]);
@@ -114,7 +114,7 @@ function buildVariablesMap(brandScale, grayScale, options = {}) {
       const value = brandScale[lvl];
       if (value) vars[`--color-accent-${lvl}`] = value;
     }
-    if (brandScale["700"]) vars["--color-accent-default"] = brandScale["700"];
+    if (brandScale["800"]) vars["--color-accent-default"] = brandScale["800"];
   }
   if (grayScale) {
     for (const lvl of LEVELS) {
@@ -122,15 +122,15 @@ function buildVariablesMap(brandScale, grayScale, options = {}) {
       if (value) vars[`--color-gray-${lvl}`] = value;
     }
     if (grayScale["900"]) vars["--color-gray-default"] = grayScale["900"];
-    if (grayScale["600"]) vars["--color-gray-muted"] = grayScale["600"];
+    if (grayScale["800"]) vars["--color-gray-muted"] = grayScale["800"];
   }
   if (brandScale && grayScale) {
-    if (brandScale["700"])
-      vars["--colors-accent"] = `${brandScale["700"]} !important`;
     if (brandScale["800"])
-      vars["--colors-accentAlt"] = `${brandScale["800"]} !important`;
-    if (brandScale["400"])
-      vars["--colors-accentMuted"] = `${brandScale["400"]} !important`;
+      vars["--colors-accent"] = `${brandScale["800"]} !important`;
+    if (brandScale["900"])
+      vars["--colors-accentAlt"] = `${brandScale["900"]} !important`;
+    if (brandScale["600"])
+      vars["--colors-accentMuted"] = `${brandScale["600"]} !important`;
     if (grayScale["900"]) {
       const primary = `${grayScale["900"]} !important`;
       vars["--colors-primary"] = primary;
