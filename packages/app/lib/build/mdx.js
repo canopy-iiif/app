@@ -11,6 +11,7 @@ const {
   CACHE_DIR,
   ensureDirSync,
   withBase,
+  readSiteMetadata,
 } = require("../common");
 let remarkGfm = null;
 try {
@@ -1043,10 +1044,12 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
     : contentNode;
   const withApp = React.createElement(app.App, null, withLayout);
   const PageContext = getPageContext();
+  const siteMeta = readSiteMetadata();
   const contextValue = {
     navigation:
       extraProps && extraProps.navigation ? extraProps.navigation : null,
     page: extraProps && extraProps.page ? extraProps.page : null,
+    site: siteMeta ? {...siteMeta} : null,
   };
   const withContext = PageContext
     ? React.createElement(PageContext.Provider, {value: contextValue}, withApp)

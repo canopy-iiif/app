@@ -1,5 +1,5 @@
 const React = require('react');
-const { withBase, rootRelativeHref, absoluteUrl } = require('./common');
+const { withBase, rootRelativeHref, absoluteUrl, getSiteTitle } = require('./common');
 const { getPageContext } = require('./page-context');
 
 const DEFAULT_STYLESHEET_PATH = '/styles/styles.css';
@@ -56,10 +56,16 @@ function Meta(props = {}) {
     page.title ||
     fallbackTitle;
   const pageTitle = normalizeText(rawTitle);
-  const siteTitle = normalizeText(props.siteTitle) || '';
-  const defaultTitle = siteTitle || 'Canopy IIIF';
+  const fallbackSiteTitle = normalizeText(getSiteTitle()) || '';
+  const explicitSiteTitle = normalizeText(props.siteTitle) || '';
+  const siteTitle = explicitSiteTitle || fallbackSiteTitle;
+  const defaultTitle = siteTitle || fallbackSiteTitle || 'Site title';
   const title = pageTitle ? pageTitle : defaultTitle;
-  const fullTitle = siteTitle ? (pageTitle ? `${pageTitle} | ${siteTitle}` : siteTitle) : title;
+  const fullTitle = siteTitle
+    ? pageTitle
+      ? `${pageTitle} | ${siteTitle}`
+      : siteTitle
+    : title;
   const rawDescription =
     props.description ||
     (metaFromPage && metaFromPage.description) ||
@@ -107,6 +113,35 @@ function Meta(props = {}) {
   if (fullTitle) nodes.push(React.createElement('meta', { key: 'twitter-title', name: 'twitter:title', content: fullTitle }));
   if (description) nodes.push(React.createElement('meta', { key: 'twitter-description', name: 'twitter:description', content: description }));
   if (twitterImage) nodes.push(React.createElement('meta', { key: 'twitter-image', name: 'twitter:image', content: twitterImage }));
+
+  const slug = typeof page.slug === 'string' ? page.slug : '';
+  const relPath = typeof page.relativePath === 'string' ? page.relativePath : '';
+  const hrefRaw = page && typeof page.href === 'string' ? page.href : '';
+  const urlRaw = page && typeof page.url === 'string' ? page.url : '';
+  const normalizedHref = hrefRaw ? rootRelativeHref(hrefRaw) : '';
+  const normalizedUrl = urlRaw ? rootRelativeHref(urlRaw) : '';
+  const isHomepage = !!(
+    (slug === '' && page && page.isIndex) ||
+    relPath === 'index.mdx' ||
+    normalizedHref === '/' ||
+    normalizedUrl === '/'
+  );
+  const siteTitleForJsonLd = siteTitle || fallbackSiteTitle || 'Site title';
+  if (isHomepage && siteTitleForJsonLd) {
+    const ldPayload = {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: siteTitleForJsonLd,
+      url: absoluteUrl('/'),
+    };
+    nodes.push(
+      React.createElement('script', {
+        key: 'canopy-website-json-ld',
+        type: 'application/ld+json',
+        dangerouslySetInnerHTML: { __html: JSON.stringify(ldPayload) },
+      })
+    );
+  }
 
   return React.createElement(React.Fragment, null, nodes);
 }

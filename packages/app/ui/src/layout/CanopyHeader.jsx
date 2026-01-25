@@ -318,7 +318,7 @@ function getSharedRoot() {
 function getSafePageContext() {
   const root = getSharedRoot();
   if (root && root[CONTEXT_KEY]) return root[CONTEXT_KEY];
-  const ctx = React.createContext({navigation: null, page: null});
+  const ctx = React.createContext({navigation: null, page: null, site: null});
   if (root) root[CONTEXT_KEY] = ctx;
   return ctx;
 }
@@ -394,7 +394,7 @@ export default function CanopyHeader(props = {}) {
     searchHotkey = "mod+k",
     searchPlaceholder = "Search…",
     brandHref = "/",
-    title = "Canopy IIIF",
+    title: titleProp,
     logo: SiteLogo,
   } = props;
 
@@ -403,6 +403,15 @@ export default function CanopyHeader(props = {}) {
   const context = React.useContext(PageContext);
   const contextNavigation =
     context && context.navigation ? context.navigation : null;
+  const contextSite = context && context.site ? context.site : null;
+  const contextSiteTitle =
+    contextSite && typeof contextSite.title === "string"
+      ? contextSite.title.trim()
+      : "";
+  const defaultHeaderTitle = contextSiteTitle || "Site title";
+  const normalizedTitleProp =
+    typeof titleProp === "string" ? titleProp.trim() : "";
+  const resolvedTitle = normalizedTitleProp || defaultHeaderTitle;
   const sectionNavigation =
     contextNavigation && contextNavigation.root ? contextNavigation : null;
   const navigationRoots =
@@ -452,7 +461,7 @@ export default function CanopyHeader(props = {}) {
       >
         <div className="canopy-header__brand">
           <CanopyBrand
-            label={title}
+            label={resolvedTitle}
             href={brandHref}
             className="canopy-header__brand-link"
             Logo={SiteLogo}
@@ -536,7 +545,7 @@ export default function CanopyHeader(props = {}) {
         id="canopy-modal-nav"
         variant="nav"
         labelledBy="canopy-modal-nav-label"
-        label={title}
+        label={resolvedTitle}
         logo={SiteLogo}
         href={brandHref}
         closeLabel="Close navigation"
@@ -643,7 +652,7 @@ export default function CanopyHeader(props = {}) {
         id="canopy-modal-search"
         variant="search"
         labelledBy="canopy-modal-search-label"
-        label={title}
+        label={resolvedTitle}
         logo={SiteLogo}
         href={brandHref}
         closeLabel="Close search"

@@ -13,7 +13,7 @@ function getGlobalRoot() {
 function getPageContext() {
   const root = getGlobalRoot();
   if (root[CONTEXT_KEY]) return root[CONTEXT_KEY];
-  const ctx = React.createContext({ navigation: null, page: null });
+  const ctx = React.createContext({ navigation: null, page: null, site: null });
   root[CONTEXT_KEY] = ctx;
   return ctx;
 }

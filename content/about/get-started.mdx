@@ -48,6 +48,7 @@ That URL will be your public and published Canopy deployment hosted entirely by 
 ## 3. Configure `canopy.yml`
 
 ```yaml copy filename="canopy.yml"
+title: Korean Collections
 collection:
   - https://digitalcollections.lib.washington.edu/iiif/2/korean/manifest.json
 featured:
@@ -61,6 +62,7 @@ Every template includes `canopy.yml` at the repository root. This single file dr
 
 | Syntax       | Purpose                                                                                                       |          |
 | ------------ | ------------------------------------------------------------------------------------------------------------- | -------- |
+| `title`      | The global site title.                                                                                        | Optional |
 | `collection` | A list of IIIF Collection URI(s) that Canopy will ingest.                                                     | Required |
 | `featured`   | A list of IIIF Manifest URI(s) to highlight on the homepage. These should be part of the Collection(s) above. | Optional |
 | `metadata`   | A list of Metadata label names you want to turn into search facets and UI components in your project.         | Optional |

@@ -4,9 +4,10 @@ title: Configuration
 
 # Canopy Configuration
 
-Canopy reads settings from `canopy.yml` in the repository root. Edit this file after walking through the [Get Started guide](/get-started). The minimal `canopy.yml` includes a list of IIIF Collection URIs, metadata fields to index, featured items, and a theme block. These settings are not strictly required, yet they form the basis of most Canopy sites.
+Canopy reads settings from `canopy.yml` in the repository root. Edit this file after walking through the [Get Started guide](/get-started). The minimal `canopy.yml` includes a global site title, a list of IIIF Collection URIs, metadata fields to index, featured items, and a theme block. These settings are not strictly required, yet they form the basis of most Canopy sites.
 
 ```yaml filename="canopy.yml" copy
+title: Example Site
 collection:
   - https://example.org/iiif/collections/a
   - https://example.org/iiif/collections/b
@@ -23,6 +24,16 @@ theme:
 ```
 
 ## Basic
+
+### Title
+
+```yaml
+title: Example Site
+```
+
+- Optional label applied across the site when components don’t provide their own titles.
+- Funnels into `<Meta siteTitle>` and `<CanopyHeader title>` automatically, so most projects can omit those props inside `_app.mdx`.
+- Defaults to `Site title` when the key is missing.
 
 ### Collection
 

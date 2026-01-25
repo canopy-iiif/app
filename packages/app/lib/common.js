@@ -1,6 +1,7 @@
 const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
+const yaml = require('js-yaml');
 const { resolveCanopyConfigPath } = require('./config-path');
 
 const CONTENT_DIR = path.resolve('content');
@@ -13,6 +14,8 @@ const { readBasePath, withBasePath } = require('./base-path');
 const BASE_PATH = readBasePath();
 let cachedAppearance = null;
 let cachedAccent = null;
+let cachedSiteMetadata = null;
+const DEFAULT_SITE_TITLE = 'Site title';
 
 function resolveThemeAppearance() {
   if (cachedAppearance) return cachedAppearance;
@@ -47,15 +50,41 @@ function resolveThemeAccent() {
 
 function readYamlConfigBaseUrl() {
   try {
-    const y = require('js-yaml');
     const p = resolveCanopyConfigPath();
     if (!fs.existsSync(p)) return '';
     const raw = fs.readFileSync(p, 'utf8');
-    const data = y.load(raw) || {};
+    const data = yaml.load(raw) || {};
     const site = data && data.site;
     const url = site && site.baseUrl ? String(site.baseUrl) : '';
     return url;
   } catch (_) { return ''; }
+}
+
+function readSiteMetadata() {
+  if (cachedSiteMetadata) return cachedSiteMetadata;
+  cachedSiteMetadata = { title: DEFAULT_SITE_TITLE };
+  try {
+    const cfgPath = resolveCanopyConfigPath();
+    if (!fs.existsSync(cfgPath)) return cachedSiteMetadata;
+    const raw = fs.readFileSync(cfgPath, 'utf8');
+    const data = yaml.load(raw) || {};
+    const directTitle = data && typeof data.title === 'string' ? data.title.trim() : '';
+    const nestedTitle =
+      data && data.site && typeof data.site.title === 'string'
+        ? data.site.title.trim()
+        : '';
+    const resolved = directTitle || nestedTitle || DEFAULT_SITE_TITLE;
+    cachedSiteMetadata = { title: resolved };
+  } catch (_) {}
+  return cachedSiteMetadata;
+}
+
+function getSiteTitle() {
+  const site = readSiteMetadata();
+  if (site && typeof site.title === 'string' && site.title.trim()) {
+    return site.title.trim();
+  }
+  return DEFAULT_SITE_TITLE;
 }
 
 // Determine the absolute site origin (scheme + host[:port])
@@ -224,4 +253,7 @@ module.exports = {
   applyBaseToHtml,
   rootRelativeHref,
   canopyBodyClassForType,
+  readSiteMetadata,
+  getSiteTitle,
+  DEFAULT_SITE_TITLE,
 };
