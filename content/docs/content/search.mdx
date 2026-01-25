@@ -45,6 +45,17 @@ title: Search
 If you omit `_layout.mdx`, Canopy renders a fallback layout that stacks the form, summary, and
 results vertically.
 
+## Page metadata
+
+Configure the browser `<title>` and meta description via `search.page` inside `canopy.yml`:
+
+```yaml filename="canopy.yml"
+search:
+  page:
+    title: Discover everything
+    description: Browse every work and story in one place.
+```
+
 ## Tabs, layouts, and templates
 
 Control the rendered tabs and markup via `search.results` in `canopy.yml`:
@@ -53,8 +64,8 @@ Control the rendered tabs and markup via `search.results` in `canopy.yml`:
 search:
   results:
     work:
-      layout: grid      # grid | list
-      result: figure    # figure | article
+      layout: grid # grid | list
+      result: figure # figure | article
     page:
       layout: list
       result: article

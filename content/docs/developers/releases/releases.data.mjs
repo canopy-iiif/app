@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.5.17",
+    "date": "2026-01-25",
+    "summary": "Add search page title and description.",
+    "highlights": []
+  },
+  {
     "version": "1.5.16",
     "date": "2026-01-25",
     "summary": "Add title property for global site name.",

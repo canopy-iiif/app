@@ -15,7 +15,10 @@ const BASE_PATH = readBasePath();
 let cachedAppearance = null;
 let cachedAccent = null;
 let cachedSiteMetadata = null;
+let cachedSearchPageMetadata = null;
 const DEFAULT_SITE_TITLE = 'Site title';
+const DEFAULT_SEARCH_PAGE_TITLE = 'Search';
+const DEFAULT_SEARCH_PAGE_DESCRIPTION = '';
 
 function resolveThemeAppearance() {
   if (cachedAppearance) return cachedAppearance;
@@ -85,6 +88,32 @@ function getSiteTitle() {
     return site.title.trim();
   }
   return DEFAULT_SITE_TITLE;
+}
+
+function readSearchPageMetadata() {
+  if (cachedSearchPageMetadata) return cachedSearchPageMetadata;
+  cachedSearchPageMetadata = {
+    title: DEFAULT_SEARCH_PAGE_TITLE,
+    description: DEFAULT_SEARCH_PAGE_DESCRIPTION,
+  };
+  try {
+    const cfgPath = resolveCanopyConfigPath();
+    if (!fs.existsSync(cfgPath)) return cachedSearchPageMetadata;
+    const raw = fs.readFileSync(cfgPath, 'utf8');
+    const data = yaml.load(raw) || {};
+    const searchCfg = data && data.search ? data.search : null;
+    const pageCfg = searchCfg && searchCfg.page ? searchCfg.page : null;
+    const title = pageCfg && typeof pageCfg.title === 'string' ? pageCfg.title.trim() : '';
+    const description =
+      pageCfg && typeof pageCfg.description === 'string'
+        ? pageCfg.description.trim()
+        : '';
+    cachedSearchPageMetadata = {
+      title: title || DEFAULT_SEARCH_PAGE_TITLE,
+      description: description || DEFAULT_SEARCH_PAGE_DESCRIPTION,
+    };
+  } catch (_) {}
+  return cachedSearchPageMetadata;
 }
 
 // Determine the absolute site origin (scheme + host[:port])
@@ -256,4 +285,7 @@ module.exports = {
   readSiteMetadata,
   getSiteTitle,
   DEFAULT_SITE_TITLE,
+  readSearchPageMetadata,
+  DEFAULT_SEARCH_PAGE_TITLE,
+  DEFAULT_SEARCH_PAGE_DESCRIPTION,
 };

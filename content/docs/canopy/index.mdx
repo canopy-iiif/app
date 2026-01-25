@@ -31,9 +31,10 @@ theme:
 title: Example Site
 ```
 
-- Optional label applied across the site when components don’t provide their own titles.
-- Funnels into `<Meta siteTitle>` and `<CanopyHeader title>` automatically, so most projects can omit those props inside `_app.mdx`.
+- Applied across the site.
+- Feeds title in header and `head` element automatically.
 - Defaults to `Site title` when the key is missing.
+- Can be overriden in `content/_app.mdx` via the `title` prop on the `CanopyHeader` component and in `Meta` component via the `siteTitle` prop.
 
 ### Collection
 
@@ -96,6 +97,9 @@ Search settings live in the `search` block. The build uses them to control FlexS
 
 ```yaml
 search:
+  page:
+    title: Discover everything
+    description: Browse every work and MDX page in one place.
   results:
     work:
       layout: grid
@@ -127,8 +131,17 @@ search:
 
 A team developing a project with contextual essays might want to add a custom `essay` type tab with a dedicated layout. This would correspond to all content documents with the `type` value of `essay`, ex:
 
+### Page metadata
+
+- `search.page.title` sets the `<title>`/OpenGraph title for `/search` whenever `_layout.mdx` does not render custom front matter.
+- `search.page.description` feeds `<meta name="description">`, OpenGraph/Twitter descriptions, and the JSON-LD block on the search page.
+- Leave either value blank to fall back to the defaults (`Search` with no description) or update the strings in `canopy.yml` to localize the copy.
+
 ```yaml
 search:
+  page:
+    title: Discover works
+    description: Search every narrative and work.
   results:
     work:
       layout: grid

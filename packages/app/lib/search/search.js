@@ -11,6 +11,7 @@ const {
   OUT_DIR,
   htmlShell,
   canopyBodyClassForType,
+  readSearchPageMetadata,
 } = require('../common');
 const { resolveCanopyConfigPath } = require('../config-path');
 
@@ -259,14 +260,25 @@ async function buildSearchPage() {
     }
     const mdx = require('../build/mdx');
     const searchHref = rootRelativeHref('search.html');
+    const searchPageMeta = readSearchPageMetadata() || {};
+    const pageTitle =
+      typeof searchPageMeta.title === 'string' && searchPageMeta.title.trim()
+        ? searchPageMeta.title.trim()
+        : 'Search';
+    const pageDescription =
+      typeof searchPageMeta.description === 'string'
+        ? searchPageMeta.description
+        : '';
     const pageDetails = {
-      title: 'Search',
+      title: pageTitle,
+      description: pageDescription,
       href: searchHref,
       url: searchHref,
       type: 'search',
       canonical: searchHref,
       meta: {
-        title: 'Search',
+        title: pageTitle,
+        description: pageDescription,
         type: 'search',
         url: searchHref,
         canonical: searchHref,
@@ -312,7 +324,7 @@ async function buildSearchPage() {
       }
     } catch (_) {}
     const bodyClass = canopyBodyClassForType('search');
-    let html = htmlShell({ title: 'Search', body, cssHref: null, scriptHref: jsRel, headExtra, bodyClass });
+    let html = htmlShell({ title: pageTitle, body, cssHref: null, scriptHref: jsRel, headExtra, bodyClass });
     try { html = require('../common').applyBaseToHtml(html); } catch (_) {}
     await fsp.writeFile(outPath, html, 'utf8');
     console.log('Search: Built', path.relative(process.cwd(), outPath));
