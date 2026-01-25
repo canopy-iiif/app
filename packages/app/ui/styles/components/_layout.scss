@@ -2,9 +2,9 @@
 
 .canopy-layout {
   --canopy-layout-sidebar-width: 13rem;
-  --canopy-layout-content-nav-width: 14rem;
-  --canopy-layout-row-gap: clamp(1.25rem, 3vw, 3rem);
-  --canopy-layout-column-gap: clamp(1.25rem, 3vw, 3rem);
+  --canopy-layout-content-nav-width: 13rem;
+  --canopy-layout-row-gap: 2.618rem;
+  --canopy-layout-column-gap: 2.618rem;
   display: grid;
   width: 100%;
   padding: clamp(1rem, 2vw, 2.5rem);

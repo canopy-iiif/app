@@ -1,5 +1,5 @@
-import React from 'react';
-import NavigationTree from './NavigationTree.jsx';
+import React from "react";
+import NavigationTree from "./NavigationTree.jsx";
 
 const SCROLL_OFFSET_REM = 1.618;
 const MAX_HEADING_DEPTH = 3;
@@ -9,25 +9,26 @@ function depthIndex(depth) {
 }
 
 function resolveDepth(value, fallback = 1) {
-  return Math.max(1, typeof value === 'number' ? value : fallback);
+  return Math.max(1, typeof value === "number" ? value : fallback);
 }
 
 function buildNodeKey(id, parentKey, index) {
-  const base = id ? String(id) : `section-${parentKey || 'root'}-${index}`;
-  const sanitized = base.replace(/[^a-zA-Z0-9_-]/g, '-');
-  return `${parentKey || 'section'}-${sanitized || index}`;
+  const base = id ? String(id) : `section-${parentKey || "root"}-${index}`;
+  const sanitized = base.replace(/[^a-zA-Z0-9_-]/g, "-");
+  return `${parentKey || "section"}-${sanitized || index}`;
 }
 
 export default function ContentNavigation({
   items = [],
-  className = '',
+  className = "",
   style = {},
   heading,
   headingId,
   pageTitle,
   ariaLabel,
 }) {
-  const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
+  const isBrowser =
+    typeof window !== "undefined" && typeof document !== "undefined";
   const savedDepthsRef = React.useRef(null);
   const [isExpanded, setIsExpanded] = React.useState(false);
 
@@ -38,39 +39,41 @@ export default function ContentNavigation({
   if ((!items || !items.length) && !headingId) return null;
 
   const combinedClassName = [
-    'canopy-sub-navigation canopy-content-navigation',
+    "canopy-sub-navigation canopy-content-navigation",
     isExpanded
-      ? 'canopy-content-navigation--expanded'
-      : 'canopy-content-navigation--collapsed',
+      ? "canopy-content-navigation--expanded"
+      : "canopy-content-navigation--collapsed",
     className,
   ]
     .filter(Boolean)
-    .join(' ');
+    .join(" ");
 
   const effectiveHeading = heading || pageTitle || null;
-  const navLabel = ariaLabel || (effectiveHeading ? `${effectiveHeading} navigation` : 'Section navigation');
-  const toggleLabel = isExpanded ? 'Hide' : 'Show';
-  const toggleSrLabel = isExpanded ? 'Hide section navigation' : 'Show section navigation';
-  const toggleStateClass = isExpanded ? 'is-expanded' : 'is-collapsed';
+  const navLabel =
+    ariaLabel ||
+    (effectiveHeading
+      ? `${effectiveHeading} navigation`
+      : "Section navigation");
+  const toggleSrLabel = isExpanded
+    ? "Hide section navigation"
+    : "Show section navigation";
+  const toggleStateClass = isExpanded ? "is-expanded" : "is-collapsed";
 
-  const getSavedDepth = React.useCallback(
-    (id, fallback) => {
-      if (!id) return fallback;
-      if (!savedDepthsRef.current) savedDepthsRef.current = new Map();
-      const store = savedDepthsRef.current;
-      if (store.has(id)) return store.get(id);
-      store.set(id, fallback);
-      return fallback;
-    },
-    []
-  );
+  const getSavedDepth = React.useCallback((id, fallback) => {
+    if (!id) return fallback;
+    if (!savedDepthsRef.current) savedDepthsRef.current = new Map();
+    const store = savedDepthsRef.current;
+    if (store.has(id)) return store.get(id);
+    store.set(id, fallback);
+    return fallback;
+  }, []);
 
   const headingEntries = React.useMemo(() => {
     const entries = [];
     const seen = new Set();
     if (headingId) {
       const topId = String(headingId);
-      entries.push({ id: topId, depth: 1 });
+      entries.push({id: topId, depth: 1});
       seen.add(topId);
     }
     const pushNodes = (nodes) => {
@@ -81,11 +84,11 @@ export default function ContentNavigation({
         if (seen.has(id)) return;
         seen.add(id);
         const depth = resolveDepth(
-          typeof node.depth === 'number' ? node.depth : node.level,
-          getSavedDepth(id, 2)
+          typeof node.depth === "number" ? node.depth : node.level,
+          getSavedDepth(id, 2),
         );
         if (depth > MAX_HEADING_DEPTH) return;
-        entries.push({ id, depth });
+        entries.push({id, depth});
         if (node.children && node.children.length) pushNodes(node.children);
       });
     };
@@ -93,12 +96,17 @@ export default function ContentNavigation({
     return entries;
   }, [headingId, items, getSavedDepth]);
 
-  const fallbackId = headingEntries.length ? headingEntries[0].id : headingId || null;
+  const fallbackId = headingEntries.length
+    ? headingEntries[0].id
+    : headingId || null;
   const [activeId, setActiveId] = React.useState(fallbackId);
   const activeIdRef = React.useRef(activeId);
   React.useEffect(() => {
-    if (process.env.NODE_ENV !== 'production' && activeIdRef.current !== activeId) {
-      console.log('[ContentNavigation] activeId changed:', activeId);
+    if (
+      process.env.NODE_ENV !== "production" &&
+      activeIdRef.current !== activeId
+    ) {
+      console.log("[ContentNavigation] activeId changed:", activeId);
     }
     activeIdRef.current = activeId;
   }, [activeId]);
@@ -117,7 +125,7 @@ export default function ContentNavigation({
     try {
       const root = document.documentElement;
       const fontSize = root
-        ? parseFloat(window.getComputedStyle(root).fontSize || '16') || 16
+        ? parseFloat(window.getComputedStyle(root).fontSize || "16") || 16
         : 16;
       return fontSize * SCROLL_OFFSET_REM;
     } catch (_) {
@@ -132,13 +140,13 @@ export default function ContentNavigation({
       if (!elements || !elements.length) return;
       const offset = computeOffsetPx();
       const viewportLimit =
-        typeof window !== 'undefined' && window.innerHeight
+        typeof window !== "undefined" && window.innerHeight
           ? window.innerHeight * 0.5
           : 0;
       let fallbackId = elements[0].id;
       let bestId = fallbackId;
       let bestDistance = Number.POSITIVE_INFINITY;
-      elements.forEach(({ id, element }) => {
+      elements.forEach(({id, element}) => {
         if (!element || !id) return;
         const rect = element.getBoundingClientRect();
         const relativeTop = rect.top - offset;
@@ -153,14 +161,14 @@ export default function ContentNavigation({
       });
       const nextId = bestId || fallbackId;
       if (nextId && nextId !== activeIdRef.current) {
-        if (process.env.NODE_ENV !== 'production') {
-          console.log('[ContentNavigation] updateActive ->', nextId);
+        if (process.env.NODE_ENV !== "production") {
+          console.log("[ContentNavigation] updateActive ->", nextId);
         }
         activeIdRef.current = nextId;
         setActiveId(nextId);
       }
     },
-    [computeOffsetPx]
+    [computeOffsetPx],
   );
 
   React.useEffect(() => {
@@ -168,7 +176,7 @@ export default function ContentNavigation({
     const elements = headingEntries
       .map((entry) => {
         const element = document.getElementById(entry.id);
-        return element ? { id: entry.id, element } : null;
+        return element ? {id: entry.id, element} : null;
       })
       .filter(Boolean);
     headingElementsRef.current = elements;
@@ -180,11 +188,11 @@ export default function ContentNavigation({
       if (!ticking) {
         ticking = true;
         window.requestAnimationFrame(() => {
-          if (process.env.NODE_ENV !== 'production') {
+          if (process.env.NODE_ENV !== "production") {
             console.log(
-              '[ContentNavigation] scroll event',
+              "[ContentNavigation] scroll event",
               window.scrollY,
-              window.innerHeight
+              window.innerHeight,
             );
           }
           updateActiveFromElements(elements);
@@ -192,23 +200,24 @@ export default function ContentNavigation({
         });
       }
     };
-    window.addEventListener('scroll', handle, { passive: true });
-    window.addEventListener('resize', handle);
+    window.addEventListener("scroll", handle, {passive: true});
+    window.addEventListener("resize", handle);
     return () => {
-      window.removeEventListener('scroll', handle);
-      window.removeEventListener('resize', handle);
+      window.removeEventListener("scroll", handle);
+      window.removeEventListener("resize", handle);
     };
   }, [headingEntries, isBrowser, updateActiveFromElements]);
 
   const handleAnchorClick = React.useCallback(
     (event, targetId, options = {}) => {
       try {
-        if (event && typeof event.preventDefault === 'function') event.preventDefault();
+        if (event && typeof event.preventDefault === "function")
+          event.preventDefault();
       } catch (_) {}
       if (!isBrowser) return;
       const offset = computeOffsetPx();
       let top = 0;
-      if (targetId && targetId !== 'top' && !options.scrollToTop) {
+      if (targetId && targetId !== "top" && !options.scrollToTop) {
         const el = document.getElementById(targetId);
         if (el) {
           const rect = el.getBoundingClientRect();
@@ -216,39 +225,46 @@ export default function ContentNavigation({
         }
       }
       if (!Number.isFinite(top) || top < 0 || options.scrollToTop) top = 0;
-      const nextId = targetId && targetId !== 'top'
-        ? targetId
-        : headingEntries[0]?.id || headingId || null;
+      const nextId =
+        targetId && targetId !== "top"
+          ? targetId
+          : headingEntries[0]?.id || headingId || null;
       if (nextId) {
         activeIdRef.current = nextId;
         setActiveId(nextId);
       }
       try {
-        window.scrollTo({ top, behavior: 'smooth' });
+        window.scrollTo({top, behavior: "smooth"});
       } catch (_) {
         window.scrollTo(0, top);
       }
     },
-    [computeOffsetPx, headingEntries, headingId, isBrowser]
+    [computeOffsetPx, headingEntries, headingId, isBrowser],
   );
 
   const navTreeRoot = React.useMemo(() => {
-    function mapNodes(nodes, parentKey = 'section') {
+    function mapNodes(nodes, parentKey = "section") {
       if (!Array.isArray(nodes) || !nodes.length) return [];
       return nodes
         .map((node, index) => {
           if (!node) return null;
-          const id = node.id ? String(node.id) : '';
+          const id = node.id ? String(node.id) : "";
           const depth = resolveDepth(
-            typeof node.depth === 'number' ? node.depth : node.level,
-            getSavedDepth(id, 2)
+            typeof node.depth === "number" ? node.depth : node.level,
+            getSavedDepth(id, 2),
           );
           if (depth > MAX_HEADING_DEPTH) return null;
-          const key = buildNodeKey(id || node.title || `section-${index}`, parentKey, index);
-          const href = id ? `#${id}` : '#';
+          const key = buildNodeKey(
+            id || node.title || `section-${index}`,
+            parentKey,
+            index,
+          );
+          const href = id ? `#${id}` : "#";
           const childNodes = mapNodes(node.children || [], key);
           const isActive = id && activeId === id;
-          const hasActiveChild = childNodes.some((child) => child && child.isActive);
+          const hasActiveChild = childNodes.some(
+            (child) => child && child.isActive,
+          );
           return {
             slug: key,
             title: node.title || node.text || id || `Section ${index + 1}`,
@@ -261,23 +277,13 @@ export default function ContentNavigation({
         .filter(Boolean);
     }
 
-    const nodes = mapNodes(items, 'section');
-    if (headingId) {
-      return {
-        slug: headingId,
-        title: effectiveHeading || pageTitle || headingId,
-        href: `#${headingId}`,
-        isActive: activeId === headingId,
-        isExpanded: true,
-        children: nodes,
-      };
-    }
+    const nodes = mapNodes(items, "section");
     return {
-      slug: 'content-nav-root',
-      title: effectiveHeading || pageTitle || 'On this page',
+      slug: "content-nav-root",
+      title: effectiveHeading || pageTitle || "On this page",
       children: nodes,
     };
-  }, [items, headingId, effectiveHeading, pageTitle, activeId, getSavedDepth]);
+  }, [items, effectiveHeading, pageTitle, activeId, getSavedDepth]);
 
   return (
     <nav
@@ -296,8 +302,8 @@ export default function ContentNavigation({
         data-canopy-content-nav-toggle="true"
         data-show-label="Show"
         data-hide-label="Hide"
-        data-show-full-label="Show section navigation"
-        data-hide-full-label="Hide section navigation"
+        data-show-full-label="Show content navigation"
+        data-hide-full-label="Hide content navigation"
       >
         <span
           className="canopy-content-navigation__toggle-icon"
@@ -305,20 +311,54 @@ export default function ContentNavigation({
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            role="presentation"
+            class="ionicon"
+            viewBox="0 0 512 512"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 9l7 7 7-7" />
+            <path
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="50"
+              d="M160 144h288M160 256h288M160 368h288"
+            />
+            <circle
+              cx="80"
+              cy="144"
+              r="16"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="32"
+            />
+            <circle
+              cx="80"
+              cy="256"
+              r="16"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="32"
+            />
+            <circle
+              cx="80"
+              cy="368"
+              r="16"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="32"
+            />
           </svg>
         </span>
         <span
           className="canopy-content-navigation__toggle-label"
           data-canopy-content-nav-toggle-label="true"
         >
-          {toggleLabel}
+          <span className="sr-only">{toggleSrLabel}</span>
         </span>
         <span className="sr-only" data-canopy-content-nav-toggle-sr="true">
           {toggleSrLabel}
@@ -326,7 +366,7 @@ export default function ContentNavigation({
       </button>
       <NavigationTree
         root={navTreeRoot}
-        includeRoot
+        includeRoot={false}
         parentKey="content-nav"
         className="canopy-sub-navigation__tree canopy-content-navigation__tree"
       />

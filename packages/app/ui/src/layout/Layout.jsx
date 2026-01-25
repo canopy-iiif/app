@@ -109,9 +109,7 @@ function ContentNavigationScript() {
       toggle.setAttribute('title', isCollapsed ? showFull : hideFull);
       toggle.classList.toggle('is-collapsed', isCollapsed);
       toggle.classList.toggle('is-expanded', !isCollapsed);
-      if (labelNode) {
-        labelNode.textContent = isCollapsed ? showLabel : hideLabel;
-      } else {
+      if (!labelNode) {
         toggle.textContent = isCollapsed ? showLabel : hideLabel;
       }
       if (srNode) {
@@ -137,7 +135,7 @@ function ContentNavigationScript() {
     function syncPosition() {
       try {
         var rect = root.getBoundingClientRect();
-        nav.style.setProperty('--canopy-content-nav-fixed-left', rect.left + 'px');
+        nav.style.setProperty('--canopy-content-nav-fixed-right', '1.618rem');
         nav.style.setProperty('--canopy-content-nav-fixed-width', rect.width + 'px');
         if (placeholder) placeholder.style.width = rect.width + 'px';
       } catch (_) {}
@@ -271,7 +269,12 @@ function ContentNavigationScript() {
 
     function updateActive() {
       var offset = computeOffsetPx();
-      var viewportLimit = window.innerHeight ? window.innerHeight * 0.5 : 0;
+      var baseFont = 16;
+      try {
+        var root = document.documentElement;
+        baseFont = parseFloat(window.getComputedStyle(root).fontSize || '16') || 16;
+      } catch (_) {}
+      var proximityLimit = baseFont * 5;
       var fallbackId = entries[0].id;
       var bestId = fallbackId;
       var bestDistance = Number.POSITIVE_INFINITY;
@@ -279,7 +282,7 @@ function ContentNavigationScript() {
         if (!entry || !entry.target) return;
         var rect = entry.target.getBoundingClientRect();
         var relativeTop = rect.top - offset;
-        if (viewportLimit > 0 && relativeTop < -viewportLimit) return;
+        if (relativeTop < -proximityLimit) return;
         var distance = Math.abs(relativeTop);
         if (distance < bestDistance) {
           bestDistance = distance;
@@ -310,7 +313,16 @@ function ContentNavigationScript() {
     if (!roots.length) return;
     var stored = getStored();
     var collapsed = true;
-    if (stored === '0' || stored === 'false') {
+    var isDesktop = false;
+    try {
+      var bp = window.getComputedStyle(document.documentElement).getPropertyValue('--canopy-desktop-breakpoint') || '70rem';
+      isDesktop = window.matchMedia('(min-width: ' + bp.trim() + ')').matches;
+    } catch (_) {
+      isDesktop = false;
+    }
+    if (!isDesktop) {
+      collapsed = true;
+    } else if (stored === '0' || stored === 'false') {
       collapsed = false;
     } else if (stored === '1' || stored === 'true') {
       collapsed = true;

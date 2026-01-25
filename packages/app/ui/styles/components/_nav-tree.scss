@@ -22,8 +22,6 @@
 
   .canopy-nav-tree__row {
     display: flex;
-    align-items: center;
-    gap: 0.25rem;
   }
 
   .canopy-nav-tree__row .canopy-nav-tree__link {
@@ -35,17 +33,26 @@
     text-decoration: none;
   }
 
+  .canopy-nav-tree__link-wrapper {
+    padding: 0.382rem 0;
+    flex-grow: 1;
+  }
+
   .canopy-nav-tree__toggle {
     appearance: none;
     border: none;
     background: transparent;
-    padding: 0.25rem;
-    margin: -0.25rem;
+    padding: 0.5rem;
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
     cursor: pointer;
-    flex-grow: 1;
+    width: 40px;
+    height: 40px;
+
+    svg {
+      stroke-width: 2.618px;
+    }
 
     &:hover,
     &:focus {

@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.5.15",
+    "date": "2026-01-25",
+    "summary": "Refine content navigation UX.",
+    "highlights": []
+  },
+  {
     "version": "1.5.14",
     "date": "2026-01-23",
     "summary": "Adjust Map marker math.",
