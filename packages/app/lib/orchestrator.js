@@ -131,6 +131,15 @@ function attachSignalHandlers() {
 async function orchestrate(options = {}) {
   const argv = options.argv || process.argv.slice(2);
   const env = options.env || process.env;
+  if (
+    argv.includes('--debug-iiif') ||
+    argv.includes('--iiif-debug') ||
+    argv.includes('--debug')
+  ) {
+    if (!env.CANOPY_IIIF_DEBUG) env.CANOPY_IIIF_DEBUG = '1';
+    if (!process.env.CANOPY_IIIF_DEBUG) process.env.CANOPY_IIIF_DEBUG = '1';
+    log('IIIF debug logging enabled');
+  }
 
   process.title = 'canopy-app';
   const mode = getMode(argv, env);

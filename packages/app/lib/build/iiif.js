@@ -17,7 +17,7 @@ const {
 const {resolveCanopyConfigPath} = require("../config-path");
 const mdx = require("./mdx");
 const {log, logLine, logResponse} = require("./log");
-const { getPageContext } = require("../page-context");
+const {getPageContext} = require("../page-context");
 const PageContext = getPageContext();
 const referenced = require("../components/referenced");
 const navPlace = require("../components/nav-place");
@@ -41,11 +41,11 @@ const IIIF_CACHE_INDEX = path.join(IIIF_CACHE_DIR, "index.json");
 // Additional legacy locations kept for backward compatibility (read + optional write)
 const IIIF_CACHE_INDEX_LEGACY = path.join(
   IIIF_CACHE_DIR,
-  "manifest-index.json"
+  "manifest-index.json",
 );
 const IIIF_CACHE_INDEX_MANIFESTS = path.join(
   IIIF_CACHE_MANIFESTS_DIR,
-  "manifest-index.json"
+  "manifest-index.json",
 );
 
 const DEFAULT_THUMBNAIL_SIZE = 400;
@@ -57,6 +57,14 @@ const OG_IMAGE_WIDTH = 1200;
 const OG_IMAGE_HEIGHT = 630;
 const HERO_REPRESENTATIVE_SIZE = Math.max(HERO_THUMBNAIL_SIZE, OG_IMAGE_WIDTH);
 const MAX_ENTRY_SLUG_LENGTH = 50;
+const DEBUG_IIIF = process.env.CANOPY_IIIF_DEBUG === "1";
+
+function logDebug(message) {
+  if (!DEBUG_IIIF) return;
+  try {
+    logLine(`[IIIF][debug] ${message}`, "magenta", {dim: true});
+  } catch (_) {}
+}
 
 function resolvePositiveInteger(value, fallback, options = {}) {
   const allowZero = Boolean(options && options.allowZero);
@@ -71,7 +79,7 @@ function resolvePositiveInteger(value, fallback, options = {}) {
 }
 
 function formatDurationMs(ms) {
-  if (!Number.isFinite(ms) || ms < 0) return '0ms';
+  if (!Number.isFinite(ms) || ms < 0) return "0ms";
   if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
   return `${Math.round(ms)}ms`;
 }
@@ -113,6 +121,18 @@ function normalizeManifestConfig(cfg) {
   return normalizeCollectionUris(entries);
 }
 
+function resolveIiifSources(cfg) {
+  const safeCfg = cfg && typeof cfg === "object" ? cfg : {};
+  let collectionUris = normalizeCollectionUris(safeCfg.collection);
+  if (!collectionUris.length) {
+    collectionUris = normalizeCollectionUris(
+      process.env.CANOPY_COLLECTION_URI || "",
+    );
+  }
+  const manifestUris = normalizeManifestConfig(safeCfg);
+  return {collections: collectionUris, manifests: manifestUris};
+}
+
 function clampSlugLength(slug, limit = MAX_ENTRY_SLUG_LENGTH) {
   if (!slug) return "";
   const max = Math.max(1, limit);
@@ -146,8 +166,8 @@ function extractHomepageId(resource) {
   const list = Array.isArray(homepageRaw)
     ? homepageRaw
     : homepageRaw
-    ? [homepageRaw]
-    : [];
+      ? [homepageRaw]
+      : [];
   for (const entry of list) {
     if (!entry) continue;
     if (typeof entry === "string") {
@@ -221,7 +241,7 @@ function resolveThumbnailPreferences() {
   return {
     size: resolvePositiveInteger(
       process.env.CANOPY_THUMBNAIL_SIZE,
-      DEFAULT_THUMBNAIL_SIZE
+      DEFAULT_THUMBNAIL_SIZE,
     ),
     unsafe: resolveBoolean(process.env.CANOPY_THUMBNAILS_UNSAFE),
   };
@@ -269,7 +289,7 @@ async function resolveHeroMedia(manifest) {
     const manifestThumb = extractResourceThumbnail(manifest);
     const heroSource = (() => {
       if (manifest && manifest.thumbnail) {
-        const clone = { ...manifest };
+        const clone = {...manifest};
         try {
           delete clone.thumbnail;
         } catch (_) {
@@ -282,53 +302,49 @@ async function resolveHeroMedia(manifest) {
     const heroRep = await getRepresentativeImage(
       heroSource || manifest,
       HERO_REPRESENTATIVE_SIZE,
-      true
+      true,
     );
     const canvasImage = findPrimaryCanvasImage(manifest);
     const heroService =
-      (canvasImage && canvasImage.service) ||
-      (heroRep && heroRep.service);
+      (canvasImage && canvasImage.service) || (heroRep && heroRep.service);
     const serviceIsLevel0 = isLevel0Service(heroService);
     const heroPreferred = buildIiifImageUrlFromService(
       serviceIsLevel0 ? null : heroService,
-      HERO_THUMBNAIL_SIZE
+      HERO_THUMBNAIL_SIZE,
     );
     const heroWidth = (() => {
-      if (canvasImage && typeof canvasImage.width === 'number')
+      if (canvasImage && typeof canvasImage.width === "number")
         return canvasImage.width;
-      if (heroRep && typeof heroRep.width === 'number') return heroRep.width;
+      if (heroRep && typeof heroRep.width === "number") return heroRep.width;
       return undefined;
     })();
     const heroHeight = (() => {
-      if (canvasImage && typeof canvasImage.height === 'number')
+      if (canvasImage && typeof canvasImage.height === "number")
         return canvasImage.height;
-      if (heroRep && typeof heroRep.height === 'number')
-        return heroRep.height;
+      if (heroRep && typeof heroRep.height === "number") return heroRep.height;
       return undefined;
     })();
-    const heroSrcset = serviceIsLevel0
-      ? ''
-      : buildIiifImageSrcset(heroService);
+    const heroSrcset = serviceIsLevel0 ? "" : buildIiifImageSrcset(heroService);
     const ogFromService =
       !serviceIsLevel0 && heroService
         ? buildIiifImageUrlForDimensions(
             heroService,
             OG_IMAGE_WIDTH,
-            OG_IMAGE_HEIGHT
+            OG_IMAGE_HEIGHT,
           )
-        : '';
+        : "";
     const annotationImageId =
       canvasImage && canvasImage.isImageBody && canvasImage.id
         ? String(canvasImage.id)
-        : '';
-    let heroThumbnail = heroPreferred || '';
+        : "";
+    let heroThumbnail = heroPreferred || "";
     let heroThumbWidth = heroWidth;
     let heroThumbHeight = heroHeight;
     if (!heroThumbnail && manifestThumb && manifestThumb.url) {
       heroThumbnail = manifestThumb.url;
-      if (typeof manifestThumb.width === 'number')
+      if (typeof manifestThumb.width === "number")
         heroThumbWidth = manifestThumb.width;
-      if (typeof manifestThumb.height === 'number')
+      if (typeof manifestThumb.height === "number")
         heroThumbHeight = manifestThumb.height;
     }
     if (!heroThumbnail) {
@@ -338,7 +354,7 @@ async function resolveHeroMedia(manifest) {
         heroThumbnail = String(heroRep.id);
       }
     }
-    let ogImage = '';
+    let ogImage = "";
     let ogImageWidth;
     let ogImageHeight;
     if (ogFromService) {
@@ -347,16 +363,16 @@ async function resolveHeroMedia(manifest) {
       ogImageHeight = OG_IMAGE_HEIGHT;
     } else if (heroThumbnail) {
       ogImage = heroThumbnail;
-      if (typeof heroThumbWidth === 'number') ogImageWidth = heroThumbWidth;
-      if (typeof heroThumbHeight === 'number') ogImageHeight = heroThumbHeight;
+      if (typeof heroThumbWidth === "number") ogImageWidth = heroThumbWidth;
+      if (typeof heroThumbHeight === "number") ogImageHeight = heroThumbHeight;
     }
     return {
-      heroThumbnail: heroThumbnail || '',
+      heroThumbnail: heroThumbnail || "",
       heroThumbnailWidth: heroThumbWidth,
       heroThumbnailHeight: heroThumbHeight,
-      heroThumbnailSrcset: heroSrcset || '',
-      heroThumbnailSizes: heroSrcset ? HERO_IMAGE_SIZES_ATTR : '',
-      ogImage: ogImage || '',
+      heroThumbnailSrcset: heroSrcset || "",
+      heroThumbnailSizes: heroSrcset ? HERO_IMAGE_SIZES_ATTR : "",
+      ogImage: ogImage || "",
       ogImageWidth,
       ogImageHeight,
     };
@@ -423,7 +439,7 @@ function extractSummaryValues(manifest) {
     flattenMetadataValue(manifest && manifest.summary, values, 0);
   } catch (_) {}
   const unique = Array.from(
-    new Set(values.map((val) => String(val || "").trim()).filter(Boolean))
+    new Set(values.map((val) => String(val || "").trim()).filter(Boolean)),
   );
   if (!unique.length) return "";
   return unique.join(" ");
@@ -641,7 +657,7 @@ function normalizeIiifId(raw) {
     if (!/^https?:\/\//i.test(s)) return s;
     const u = new URL(s);
     const entries = Array.from(u.searchParams.entries()).sort(
-      (a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1])
+      (a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]),
     );
     u.search = "";
     for (const [k, v] of entries) u.searchParams.append(k, v);
@@ -855,18 +871,21 @@ function computeUniqueSlug(index, baseSlug, id, type) {
   const byId = Array.isArray(index && index.byId) ? index.byId : [];
   const normId = normalizeIiifId(String(id || ""));
   const fallbackBase = type === "Manifest" ? "untitled" : "collection";
-  const normalizedBase = normalizeSlugBase(baseSlug || fallbackBase, fallbackBase);
+  const normalizedBase = normalizeSlugBase(
+    baseSlug || fallbackBase,
+    fallbackBase,
+  );
   const used = new Set(
     byId
       .filter((e) => e && e.slug && e.type === type)
-      .map((e) => String(e.slug))
+      .map((e) => String(e.slug)),
   );
   const reserved = RESERVED_SLUGS[type] || new Set();
   let slug = normalizedBase;
   let i = 1;
   for (;;) {
     const existing = byId.find(
-      (e) => e && e.type === type && String(e.slug) === String(slug)
+      (e) => e && e.type === type && String(e.slug) === String(slug),
     );
     if (existing) {
       // If this slug already maps to this id, reuse it and reserve.
@@ -888,9 +907,12 @@ function ensureBaseSlugFor(index, baseSlug, id, type) {
     const byId = Array.isArray(index && index.byId) ? index.byId : [];
     const normId = normalizeIiifId(String(id || ""));
     const fallbackBase = type === "Manifest" ? "untitled" : "collection";
-    const normalizedBase = normalizeSlugBase(baseSlug || fallbackBase, fallbackBase);
+    const normalizedBase = normalizeSlugBase(
+      baseSlug || fallbackBase,
+      fallbackBase,
+    );
     const existingWithBase = byId.find(
-      (e) => e && e.type === type && String(e.slug) === String(normalizedBase)
+      (e) => e && e.type === type && String(e.slug) === String(normalizedBase),
     );
     if (existingWithBase && normalizeIiifId(existingWithBase.id) !== normId) {
       // Reassign the existing entry to the next available suffix to free the base
@@ -898,9 +920,10 @@ function ensureBaseSlugFor(index, baseSlug, id, type) {
         index,
         normalizedBase,
         existingWithBase.id,
-        type
+        type,
       );
-      if (newSlug && newSlug !== normalizedBase) existingWithBase.slug = newSlug;
+      if (newSlug && newSlug !== normalizedBase)
+        existingWithBase.slug = newSlug;
     }
   } catch (_) {}
   return baseSlug;
@@ -917,7 +940,7 @@ async function findSlugByIdFromDisk(id) {
         const raw = await fsp.readFile(p, "utf8");
         const obj = JSON.parse(raw);
         const mid = normalizeIiifId(
-          String((obj && (obj.id || obj["@id"])) || "")
+          String((obj && (obj.id || obj["@id"])) || ""),
         );
         if (mid && mid === normalizeIiifId(String(id))) {
           const slug = name.replace(/\.json$/i, "");
@@ -937,7 +960,7 @@ async function loadCachedManifestById(id) {
     if (Array.isArray(index.byId)) {
       const nid = normalizeIiifId(id);
       const entry = index.byId.find(
-        (e) => e && normalizeIiifId(e.id) === nid && e.type === "Manifest"
+        (e) => e && normalizeIiifId(e.id) === nid && e.type === "Manifest",
       );
       slug = entry && entry.slug;
     }
@@ -957,7 +980,8 @@ async function loadCachedManifestById(id) {
             index.byId = Array.isArray(index.byId) ? index.byId : [];
             const nid = normalizeIiifId(id);
             const existingEntryIdx = index.byId.findIndex(
-              (e) => e && normalizeIiifId(e.id) === nid && e.type === "Manifest"
+              (e) =>
+                e && normalizeIiifId(e.id) === nid && e.type === "Manifest",
             );
             const entry = {
               id: String(nid),
@@ -977,7 +1001,8 @@ async function loadCachedManifestById(id) {
     const p = path.join(IIIF_CACHE_MANIFESTS_DIR, slug + ".json");
     if (!fs.existsSync(p)) return null;
     const raw = await readJson(p);
-    const {manifest: normalized, changed} = await ensurePresentation3Manifest(raw);
+    const {manifest: normalized, changed} =
+      await ensurePresentation3Manifest(raw);
     if (changed) {
       try {
         await fsp.writeFile(p, JSON.stringify(normalized, null, 2), "utf8");
@@ -987,12 +1012,17 @@ async function loadCachedManifestById(id) {
       index.byId = Array.isArray(index.byId) ? index.byId : [];
       const nid = normalizeIiifId(id);
       const existingEntryIdx = index.byId.findIndex(
-        (e) => e && normalizeIiifId(e.id) === nid && e.type === "Manifest"
+        (e) => e && normalizeIiifId(e.id) === nid && e.type === "Manifest",
       );
       if (existingEntryIdx >= 0) {
         const entry = index.byId[existingEntryIdx];
-        const prevCanonical = entry && entry.canonical ? String(entry.canonical) : "";
-        const nextCanonical = applyManifestEntryCanonical(entry, normalized, slug);
+        const prevCanonical =
+          entry && entry.canonical ? String(entry.canonical) : "";
+        const nextCanonical = applyManifestEntryCanonical(
+          entry,
+          normalized,
+          slug,
+        );
         if (nextCanonical !== prevCanonical) {
           await saveManifestIndex(index);
         }
@@ -1005,21 +1035,28 @@ async function loadCachedManifestById(id) {
 }
 
 async function saveCachedManifest(manifest, id, parentId) {
-  const {manifest: normalizedManifest} = await ensurePresentation3Manifest(manifest);
+  const {manifest: normalizedManifest} =
+    await ensurePresentation3Manifest(manifest);
   try {
     const index = await loadManifestIndex();
-    const title = firstLabelString(normalizedManifest && normalizedManifest.label);
+    const title = firstLabelString(
+      normalizedManifest && normalizedManifest.label,
+    );
     const baseSlug =
       slugify(title || "untitled", {lower: true, strict: true, trim: true}) ||
       "untitled";
     const slug = computeUniqueSlug(index, baseSlug, id, "Manifest");
     ensureDirSync(IIIF_CACHE_MANIFESTS_DIR);
     const dest = path.join(IIIF_CACHE_MANIFESTS_DIR, slug + ".json");
-    await fsp.writeFile(dest, JSON.stringify(normalizedManifest, null, 2), "utf8");
+    await fsp.writeFile(
+      dest,
+      JSON.stringify(normalizedManifest, null, 2),
+      "utf8",
+    );
     index.byId = Array.isArray(index.byId) ? index.byId : [];
     const nid = normalizeIiifId(id);
     const existingEntryIdx = index.byId.findIndex(
-      (e) => e && normalizeIiifId(e.id) === nid && e.type === "Manifest"
+      (e) => e && normalizeIiifId(e.id) === nid && e.type === "Manifest",
     );
     const entry = {
       id: String(nid),
@@ -1070,7 +1107,7 @@ async function ensureFeaturedInCache(cfg) {
             e &&
             e.type === "Manifest" &&
             normalizeIiifId(String(e.id)) ===
-              normalizeIiifId(String(manifest.id))
+              normalizeIiifId(String(manifest.id)),
         );
         if (!entry) continue;
 
@@ -1122,7 +1159,8 @@ async function ensureFeaturedInCache(cfg) {
             if (entry.heroThumbnailSrcset !== heroMedia.heroThumbnailSrcset)
               touched = true;
             entry.heroThumbnailSrcset = heroMedia.heroThumbnailSrcset;
-            if (entry.heroThumbnailSizes !== HERO_IMAGE_SIZES_ATTR) touched = true;
+            if (entry.heroThumbnailSizes !== HERO_IMAGE_SIZES_ATTR)
+              touched = true;
             entry.heroThumbnailSizes = HERO_IMAGE_SIZES_ATTR;
           } else {
             if (entry.heroThumbnailSrcset !== undefined) {
@@ -1139,15 +1177,16 @@ async function ensureFeaturedInCache(cfg) {
               entry.ogImage = heroMedia.ogImage;
               touched = true;
             }
-            if (typeof heroMedia.ogImageWidth === 'number') {
+            if (typeof heroMedia.ogImageWidth === "number") {
               if (entry.ogImageWidth !== heroMedia.ogImageWidth) touched = true;
               entry.ogImageWidth = heroMedia.ogImageWidth;
             } else if (entry.ogImageWidth !== undefined) {
               delete entry.ogImageWidth;
               touched = true;
             }
-            if (typeof heroMedia.ogImageHeight === 'number') {
-              if (entry.ogImageHeight !== heroMedia.ogImageHeight) touched = true;
+            if (typeof heroMedia.ogImageHeight === "number") {
+              if (entry.ogImageHeight !== heroMedia.ogImageHeight)
+                touched = true;
               entry.ogImageHeight = heroMedia.ogImageHeight;
             } else if (entry.ogImageHeight !== undefined) {
               delete entry.ogImageHeight;
@@ -1164,7 +1203,7 @@ async function ensureFeaturedInCache(cfg) {
               entry,
               heroMedia && heroMedia.heroThumbnail,
               heroMedia && heroMedia.heroThumbnailWidth,
-              heroMedia && heroMedia.heroThumbnailHeight
+              heroMedia && heroMedia.heroThumbnailHeight,
             )
           ) {
             touched = true;
@@ -1201,7 +1240,7 @@ async function loadCachedCollectionById(id) {
     if (Array.isArray(index.byId)) {
       const nid = normalizeIiifId(id);
       const entry = index.byId.find(
-        (e) => e && normalizeIiifId(e.id) === nid && e.type === "Collection"
+        (e) => e && normalizeIiifId(e.id) === nid && e.type === "Collection",
       );
       slug = entry && entry.slug;
     }
@@ -1218,7 +1257,7 @@ async function loadCachedCollectionById(id) {
               const raw = await fsp.readFile(p, "utf8");
               const obj = JSON.parse(raw);
               const cid = normalizeIiifId(
-                String((obj && (obj.id || obj["@id"])) || "")
+                String((obj && (obj.id || obj["@id"])) || ""),
               );
               if (cid && cid === normalizeIiifId(String(id))) {
                 const candidate = name.replace(/\.json$/i, "");
@@ -1235,7 +1274,7 @@ async function loadCachedCollectionById(id) {
                     (e) =>
                       e &&
                       normalizeIiifId(e.id) === nid &&
-                      e.type === "Collection"
+                      e.type === "Collection",
                   );
                   const entry = {
                     id: String(nid),
@@ -1263,11 +1302,12 @@ async function loadCachedCollectionById(id) {
       index.byId = Array.isArray(index.byId) ? index.byId : [];
       const nid = normalizeIiifId(id);
       const existingEntryIdx = index.byId.findIndex(
-        (e) => e && normalizeIiifId(e.id) === nid && e.type === "Collection"
+        (e) => e && normalizeIiifId(e.id) === nid && e.type === "Collection",
       );
       if (existingEntryIdx >= 0) {
         const entry = index.byId[existingEntryIdx];
-        const prevCanonical = entry && entry.canonical ? String(entry.canonical) : "";
+        const prevCanonical =
+          entry && entry.canonical ? String(entry.canonical) : "";
         const nextCanonical = applyCollectionEntryCanonical(entry, data);
         if (nextCanonical !== prevCanonical) {
           await saveManifestIndex(index);
@@ -1285,7 +1325,9 @@ async function saveCachedCollection(collection, id, parentId) {
     const normalizedCollection = await upgradeIiifResource(collection);
     ensureDirSync(IIIF_CACHE_COLLECTIONS_DIR);
     const index = await loadManifestIndex();
-    const title = firstLabelString(normalizedCollection && normalizedCollection.label);
+    const title = firstLabelString(
+      normalizedCollection && normalizedCollection.label,
+    );
     const baseSlug =
       slugify(title || "collection", {
         lower: true,
@@ -1294,7 +1336,11 @@ async function saveCachedCollection(collection, id, parentId) {
       }) || "collection";
     const slug = computeUniqueSlug(index, baseSlug, id, "Collection");
     const dest = path.join(IIIF_CACHE_COLLECTIONS_DIR, slug + ".json");
-    await fsp.writeFile(dest, JSON.stringify(normalizedCollection, null, 2), "utf8");
+    await fsp.writeFile(
+      dest,
+      JSON.stringify(normalizedCollection, null, 2),
+      "utf8",
+    );
     try {
       if (process.env.CANOPY_IIIF_DEBUG === "1") {
         const {logLine} = require("./log");
@@ -1304,7 +1350,7 @@ async function saveCachedCollection(collection, id, parentId) {
     index.byId = Array.isArray(index.byId) ? index.byId : [];
     const nid = normalizeIiifId(id);
     const existingEntryIdx = index.byId.findIndex(
-      (e) => e && normalizeIiifId(e.id) === nid && e.type === "Collection"
+      (e) => e && normalizeIiifId(e.id) === nid && e.type === "Collection",
     );
     const entry = {
       id: String(nid),
@@ -1319,133 +1365,96 @@ async function saveCachedCollection(collection, id, parentId) {
   } catch (_) {}
 }
 
-async function rebuildManifestIndexFromCache() {
-  try {
-    const previous = await loadManifestIndex();
-    const previousEntries = Array.isArray(previous.byId) ? previous.byId : [];
-    const priorMap = new Map();
-    for (const entry of previousEntries) {
-      if (!entry || !entry.id) continue;
-      const type = entry.type || "Manifest";
-      const key = `${type}:${normalizeIiifId(entry.id)}`;
-      priorMap.set(key, entry);
-    }
-    const nextIndex = {
-      byId: [],
-      collection: previous.collection || null,
-    };
-    const collectionFiles = fs.existsSync(IIIF_CACHE_COLLECTIONS_DIR)
-      ? (await fsp.readdir(IIIF_CACHE_COLLECTIONS_DIR))
-          .filter((name) => name && name.toLowerCase().endsWith(".json"))
-          .sort()
-      : [];
-    const manifestFiles = fs.existsSync(IIIF_CACHE_MANIFESTS_DIR)
-      ? (await fsp.readdir(IIIF_CACHE_MANIFESTS_DIR))
-          .filter((name) => name && name.toLowerCase().endsWith(".json"))
-          .sort()
-      : [];
-    const {size: thumbSize, unsafe: unsafeThumbs} =
-      resolveThumbnailPreferences();
+async function cleanupIiifCache(options = {}) {
+  const allowedManifestIds = Array.isArray(options.allowedManifestIds)
+    ? options.allowedManifestIds
+    : [];
+  const allowedCollectionIds = Array.isArray(options.allowedCollectionIds)
+    ? options.allowedCollectionIds
+    : [];
+  const manifestSet = new Set(
+    allowedManifestIds
+      .map((id) => normalizeIiifId(String(id || "")))
+      .filter(Boolean),
+  );
+  const collectionSet = new Set(
+    allowedCollectionIds
+      .map((id) => normalizeIiifId(String(id || "")))
+      .filter(Boolean),
+  );
+  if (!manifestSet.size && !collectionSet.size) return;
 
-    for (const name of collectionFiles) {
-      const slug = name.replace(/\.json$/i, "");
-      const fp = path.join(IIIF_CACHE_COLLECTIONS_DIR, name);
-      let data = null;
-      try {
-        data = await readJson(fp);
-      } catch (_) {
-        data = null;
-      }
-      if (!data) continue;
-      const id = data.id || data["@id"];
-      if (!id) continue;
-      const nid = normalizeIiifId(String(id));
-      const key = `Collection:${nid}`;
-      const fallback = priorMap.get(key) || {};
-      const parent = resolveParentFromPartOf(data) || fallback.parent || "";
-      const entry = {
-        id: String(nid),
-        type: "Collection",
-        slug,
-        parent,
-      };
-      applyCollectionEntryCanonical(entry, data);
-      nextIndex.byId.push(entry);
-    }
-
-    for (const name of manifestFiles) {
-      const slug = name.replace(/\.json$/i, "");
+  let removedManifestFiles = 0;
+  if (fs.existsSync(IIIF_CACHE_MANIFESTS_DIR)) {
+    const files = await fsp.readdir(IIIF_CACHE_MANIFESTS_DIR);
+    for (const name of files) {
+      if (!name || !name.toLowerCase().endsWith(".json")) continue;
       const fp = path.join(IIIF_CACHE_MANIFESTS_DIR, name);
       let manifest = null;
       try {
         manifest = await readJson(fp);
-      } catch (_) {
-        manifest = null;
+      } catch (_) {}
+      const nid = normalizeIiifId(
+        String(
+          (manifest && (manifest.id || manifest["@id"])) ||
+            name.replace(/\.json$/i, ""),
+        ),
+      );
+      if (!manifestSet.has(nid)) {
+        try {
+          await fsp.rm(fp, {force: true});
+          removedManifestFiles += 1;
+        } catch (_) {}
       }
-      if (!manifest) continue;
-      const id = manifest.id || manifest["@id"];
-      if (!id) continue;
-      const nid = normalizeIiifId(String(id));
-      MEMO_ID_TO_SLUG.set(String(id), slug);
-      const key = `Manifest:${nid}`;
-      const fallback = priorMap.get(key) || {};
-      const parent = resolveParentFromPartOf(manifest) || fallback.parent || "";
-      const entry = {
-        id: String(nid),
-        type: "Manifest",
-        slug,
-        parent,
-      };
-      applyManifestEntryCanonical(entry, manifest, slug);
-      try {
-        const thumb = await getThumbnail(manifest, thumbSize, unsafeThumbs);
-        if (thumb && thumb.url) {
-          entry.thumbnail = String(thumb.url);
-          if (typeof thumb.width === "number") entry.thumbnailWidth = thumb.width;
-          if (typeof thumb.height === "number") entry.thumbnailHeight = thumb.height;
-        }
-      } catch (_) {}
-      try {
-        const heroMedia = await resolveHeroMedia(manifest);
-        if (heroMedia && heroMedia.heroThumbnail) {
-          entry.heroThumbnail = heroMedia.heroThumbnail;
-          if (typeof heroMedia.heroThumbnailWidth === "number")
-            entry.heroThumbnailWidth = heroMedia.heroThumbnailWidth;
-          if (typeof heroMedia.heroThumbnailHeight === "number")
-            entry.heroThumbnailHeight = heroMedia.heroThumbnailHeight;
-          if (heroMedia.heroThumbnailSrcset) {
-            entry.heroThumbnailSrcset = heroMedia.heroThumbnailSrcset;
-            entry.heroThumbnailSizes = HERO_IMAGE_SIZES_ATTR;
-          }
-          if (heroMedia.ogImage) {
-            entry.ogImage = heroMedia.ogImage;
-            if (typeof heroMedia.ogImageWidth === 'number')
-              entry.ogImageWidth = heroMedia.ogImageWidth;
-            else delete entry.ogImageWidth;
-            if (typeof heroMedia.ogImageHeight === 'number')
-              entry.ogImageHeight = heroMedia.ogImageHeight;
-            else delete entry.ogImageHeight;
-          }
-          ensureThumbnailValue(
-            entry,
-            heroMedia.heroThumbnail,
-            heroMedia.heroThumbnailWidth,
-            heroMedia.heroThumbnailHeight
-          );
-        }
-      } catch (_) {}
-      nextIndex.byId.push(entry);
     }
-
-    await saveManifestIndex(nextIndex);
-    try {
-      logLine("✓ Rebuilt IIIF cache index", "cyan");
-    } catch (_) {}
-  } catch (err) {
-    try {
-      logLine("! Skipped IIIF index rebuild", "yellow");
-    } catch (_) {}
   }
+
+  let removedCollectionFiles = 0;
+  if (fs.existsSync(IIIF_CACHE_COLLECTIONS_DIR)) {
+    const files = await fsp.readdir(IIIF_CACHE_COLLECTIONS_DIR);
+    for (const name of files) {
+      if (!name || !name.toLowerCase().endsWith(".json")) continue;
+      const fp = path.join(IIIF_CACHE_COLLECTIONS_DIR, name);
+      let collection = null;
+      try {
+        collection = await readJson(fp);
+      } catch (_) {}
+      const nid = normalizeIiifId(
+        String(
+          (collection && (collection.id || collection["@id"])) ||
+            name.replace(/\.json$/i, ""),
+        ),
+      );
+      if (!collectionSet.has(nid)) {
+        try {
+          await fsp.rm(fp, {force: true});
+          removedCollectionFiles += 1;
+        } catch (_) {}
+      }
+    }
+  }
+
+  try {
+    const index = await loadManifestIndex();
+    if (Array.isArray(index.byId)) {
+      index.byId = index.byId.filter((entry) => {
+        if (!entry || !entry.id) return false;
+        const nid = normalizeIiifId(String(entry.id));
+        if (entry.type === "Manifest") return manifestSet.has(nid);
+        if (entry.type === "Collection") return collectionSet.has(nid);
+        return true;
+      });
+      await saveManifestIndex(index);
+    }
+  } catch (_) {}
+
+  try {
+    logLine(
+      `• Cleaned IIIF cache (${removedManifestFiles} Manifest file(s) removed, ${removedCollectionFiles} Collection file(s) removed)`,
+      "blue",
+      {dim: true},
+    );
+  } catch (_) {}
 }
 
 async function loadConfig() {
@@ -1465,14 +1474,9 @@ async function loadConfig() {
 async function buildIiifCollectionPages(CONFIG) {
   const cfg = CONFIG || (await loadConfig());
 
-  let collectionUris = normalizeCollectionUris(cfg && cfg.collection);
-  if (!collectionUris.length) {
-    collectionUris = normalizeCollectionUris(
-      process.env.CANOPY_COLLECTION_URI || ""
-    );
-  }
-  const manifestUris = normalizeManifestConfig(cfg);
-  if (!collectionUris.length && !manifestUris.length) return {searchRecords: []};
+  const {collections: collectionUris, manifests: manifestUris} =
+    resolveIiifSources(cfg);
+  if (!collectionUris.length && !manifestUris.length) return {iiifRecords: []};
 
   const searchIndexCfg = (cfg && cfg.search && cfg.search.index) || {};
   const metadataCfg = (searchIndexCfg && searchIndexCfg.metadata) || {};
@@ -1498,7 +1502,7 @@ async function buildIiifCollectionPages(CONFIG) {
   const metadataLabelSet = new Set(
     metadataLabelsRaw
       .map((label) => normalizeMetadataLabel(String(label || "")))
-      .filter(Boolean)
+      .filter(Boolean),
   );
   const metadataFacetLabels = (() => {
     if (!Array.isArray(metadataLabelsRaw) || !metadataLabelsRaw.length)
@@ -1506,7 +1510,8 @@ async function buildIiifCollectionPages(CONFIG) {
     const seen = new Set();
     const entries = [];
     for (const label of metadataLabelsRaw) {
-      const raw = typeof label === "string" ? label.trim() : String(label || "");
+      const raw =
+        typeof label === "string" ? label.trim() : String(label || "");
       if (!raw) continue;
       const normalized = normalizeMetadataLabel(raw);
       if (!normalized || seen.has(normalized)) continue;
@@ -1529,8 +1534,8 @@ async function buildIiifCollectionPages(CONFIG) {
   };
   const annotationMotivations = new Set(
     normalizeStringList(annotationsCfg && annotationsCfg.motivation).map((m) =>
-      m.toLowerCase()
-    )
+      m.toLowerCase(),
+    ),
   );
   const annotationsOptions = {
     enabled: annotationsEnabled,
@@ -1539,8 +1544,11 @@ async function buildIiifCollectionPages(CONFIG) {
 
   // Recursively traverse Collections and gather all Manifest tasks
   const tasks = [];
+  let manifestTasksFromCollections = 0;
+  let manifestTasksFromConfig = 0;
   const queuedManifestIds = new Set();
   const visitedCollections = new Set(); // normalized ids
+  const renderedManifestIds = new Set();
   const norm = (x) => {
     try {
       return normalizeIiifId(String(x || ""));
@@ -1566,9 +1574,8 @@ async function buildIiifCollectionPages(CONFIG) {
       const ncol = await upgradeIiifResource(col);
       const reportedId = String(
         (ncol && (ncol.id || ncol["@id"])) ||
-          (typeof colLike === "object" &&
-            (colLike.id || colLike["@id"])) ||
-          ""
+          (typeof colLike === "object" && (colLike.id || colLike["@id"])) ||
+          "",
       );
       const effectiveId = String(uri || reportedId || "");
       const collectionKey = effectiveId || reportedId || uri || "";
@@ -1589,6 +1596,7 @@ async function buildIiifCollectionPages(CONFIG) {
           if (queuedManifestIds.has(dedupeKey)) continue;
           queuedManifestIds.add(dedupeKey);
           tasks.push({id: entryId, parent: collectionKey});
+          manifestTasksFromCollections += 1;
         } else if (entryType === "collection") {
           await gatherFromCollection(entry.raw || entryId, collectionKey);
         }
@@ -1623,34 +1631,44 @@ async function buildIiifCollectionPages(CONFIG) {
       if (!dedupeKey || queuedManifestIds.has(dedupeKey)) continue;
       queuedManifestIds.add(dedupeKey);
       tasks.push({id: uri, parent: ""});
+      manifestTasksFromConfig += 1;
     }
   }
-  if (!tasks.length) return {searchRecords: []};
+  if (!tasks.length) return {iiifRecords: []};
+  try {
+    logLine(
+      `• Processing ${tasks.length} Manifest(s) (${manifestTasksFromCollections} from collections, ${manifestTasksFromConfig} direct)`,
+      "blue",
+      {dim: true},
+    );
+  } catch (_) {}
+  logDebug(
+    `Queued ${tasks.length} Manifest task(s) (${manifestTasksFromCollections} from collections, ${manifestTasksFromConfig} direct)`,
+  );
 
   // Split into chunks and process with limited concurrency
   const chunkSize = resolvePositiveInteger(
     process.env.CANOPY_CHUNK_SIZE,
-    DEFAULT_CHUNK_SIZE
+    DEFAULT_CHUNK_SIZE,
   );
   const chunks = Math.ceil(tasks.length / chunkSize);
   const requestedConcurrency = resolvePositiveInteger(
     process.env.CANOPY_FETCH_CONCURRENCY,
     DEFAULT_FETCH_CONCURRENCY,
-    {allowZero: true}
+    {allowZero: true},
   );
   // Summary before processing chunks
   try {
-    const collectionsCount = visitedCollections.size || 0;
     logLine(
-      `• Fetching ${tasks.length} Manifest(s) in ${chunks} chunk(s) across ${collectionsCount} Collection(s)`,
+      `• Fetching ${tasks.length} Manifest(s) in ${chunks} chunk(s)`,
       "blue",
-      {dim: true}
+      {dim: true},
     );
     const concurrencySummary =
       requestedConcurrency === 0
         ? "auto (no explicit cap)"
         : String(requestedConcurrency);
-    logLine(`• Fetch concurrency: ${concurrencySummary}`, "blue", { dim: true });
+    logLine(`• Fetch concurrency: ${concurrencySummary}`, "blue", {dim: true});
   } catch (_) {}
   const iiifRecords = [];
   const navPlaceRecords = [];
@@ -1660,7 +1678,7 @@ async function buildIiifCollectionPages(CONFIG) {
   const worksLayoutPath = path.join(CONTENT_DIR, "works", "_layout.mdx");
   if (!fs.existsSync(worksLayoutPath)) {
     throw new Error(
-      "IIIF build requires content/works/_layout.mdx. Create the layout instead of relying on generated output."
+      "IIIF build requires content/works/_layout.mdx. Create the layout instead of relying on generated output.",
     );
   }
   let WorksLayoutComp = null;
@@ -1680,7 +1698,9 @@ async function buildIiifCollectionPages(CONFIG) {
     const chunkStart = Date.now();
 
     const concurrency =
-      requestedConcurrency === 0 ? Math.max(1, chunk.length) : requestedConcurrency;
+      requestedConcurrency === 0
+        ? Math.max(1, chunk.length)
+        : requestedConcurrency;
     let next = 0;
     const logs = new Array(chunk.length);
     let nextPrint = 0;
@@ -1720,7 +1740,7 @@ async function buildIiifCollectionPages(CONFIG) {
               const saved = await saveCachedManifest(
                 manifest,
                 String(id),
-                String(it.parent || "")
+                String(it.parent || ""),
               );
               manifest = saved || manifest;
               const cached = await loadCachedManifestById(String(id));
@@ -1747,7 +1767,7 @@ async function buildIiifCollectionPages(CONFIG) {
             const saved = await saveCachedManifest(
               manifest,
               String(id),
-              String(it.parent || "")
+              String(it.parent || ""),
             );
             manifest = saved || manifest;
             const cached = await loadCachedManifestById(String(id));
@@ -1765,11 +1785,13 @@ async function buildIiifCollectionPages(CONFIG) {
         const ensured = await ensurePresentation3Manifest(manifest);
         manifest = ensured.manifest;
         const title = firstLabelString(manifest.label);
-        let summaryRaw = '';
+        const manifestLabel = title || String(manifest.id || id);
+        logDebug(`Preparing manifest ${manifestLabel}`);
+        let summaryRaw = "";
         try {
           summaryRaw = extractSummaryValues(manifest);
         } catch (_) {
-          summaryRaw = '';
+          summaryRaw = "";
         }
         const summaryForMeta = truncateSummary(summaryRaw || title);
         const baseSlug =
@@ -1782,7 +1804,7 @@ async function buildIiifCollectionPages(CONFIG) {
         let idxMap = await loadManifestIndex();
         idxMap.byId = Array.isArray(idxMap.byId) ? idxMap.byId : [];
         let mEntry = idxMap.byId.find(
-          (e) => e && e.type === "Manifest" && normalizeIiifId(e.id) === nid
+          (e) => e && e.type === "Manifest" && normalizeIiifId(e.id) === nid,
         );
         let slug = mEntry && mEntry.slug;
         if (isSlugTooLong(slug)) slug = null;
@@ -1797,7 +1819,7 @@ async function buildIiifCollectionPages(CONFIG) {
           };
           applyManifestEntryCanonical(newEntry, manifest, slug);
           const existingIdx = idxMap.byId.findIndex(
-            (e) => e && e.type === "Manifest" && normalizeIiifId(e.id) === nid
+            (e) => e && e.type === "Manifest" && normalizeIiifId(e.id) === nid,
           );
           if (existingIdx >= 0) idxMap.byId[existingIdx] = newEntry;
           else idxMap.byId.push(newEntry);
@@ -1805,12 +1827,19 @@ async function buildIiifCollectionPages(CONFIG) {
           mEntry = newEntry;
         } else if (mEntry) {
           const prevCanonical = mEntry.canonical || "";
-          const nextCanonical = applyManifestEntryCanonical(mEntry, manifest, slug);
+          const nextCanonical = applyManifestEntryCanonical(
+            mEntry,
+            manifest,
+            slug,
+          );
           if (nextCanonical !== prevCanonical) {
             await saveManifestIndex(idxMap);
           }
         }
         const manifestId = manifest && manifest.id ? manifest.id : id;
+        const normalizedManifestId = normalizeIiifId(String(manifestId || id));
+        if (normalizedManifestId) renderedManifestIds.add(normalizedManifestId);
+        logDebug(`Resolved slug ${slug} for ${manifestLabel}`);
         const references = referenced.getReferencesForManifest(manifestId);
         const href = path.join("works", slug + ".html");
         const outPath = path.join(OUT_DIR, href);
@@ -1872,7 +1901,8 @@ async function buildIiifCollectionPages(CONFIG) {
               canonical,
             },
           };
-          const ogImageForPage = heroMedia && heroMedia.ogImage ? heroMedia.ogImage : '';
+          const ogImageForPage =
+            heroMedia && heroMedia.ogImage ? heroMedia.ogImage : "";
           if (ogImageForPage) {
             pageDetails.image = ogImageForPage;
             pageDetails.ogImage = ogImageForPage;
@@ -1880,11 +1910,19 @@ async function buildIiifCollectionPages(CONFIG) {
             pageDetails.meta.ogImage = ogImageForPage;
           }
           const navigationRoots = navigation.buildNavigationRoots(slug || "");
-          const navigationContext = navigationRoots && Object.keys(navigationRoots).length
-            ? { allRoots: navigationRoots }
-            : null;
-          const pageContextValue = { navigation: navigationContext, page: pageDetails };
-          if (metadataFacetLabels.length && manifest && typeof manifest === "object") {
+          const navigationContext =
+            navigationRoots && Object.keys(navigationRoots).length
+              ? {allRoots: navigationRoots}
+              : null;
+          const pageContextValue = {
+            navigation: navigationContext,
+            page: pageDetails,
+          };
+          if (
+            metadataFacetLabels.length &&
+            manifest &&
+            typeof manifest === "object"
+          ) {
             try {
               Object.defineProperty(manifest, "__canopyMetadataFacets", {
                 configurable: true,
@@ -1910,15 +1948,15 @@ async function buildIiifCollectionPages(CONFIG) {
             PageContext && pageContextValue
               ? React.createElement(
                   PageContext.Provider,
-                  { value: pageContextValue },
-                  wrappedApp
+                  {value: pageContextValue},
+                  wrappedApp,
                 )
               : wrappedApp;
           const page = MDXProvider
             ? React.createElement(
                 MDXProvider,
                 {components: compMap},
-                withContext
+                withContext,
               )
             : withContext;
           const body = ReactDOMServer.renderToStaticMarkup(page);
@@ -1931,8 +1969,8 @@ async function buildIiifCollectionPages(CONFIG) {
             const wrappedHead = PageContext
               ? React.createElement(
                   PageContext.Provider,
-                  { value: pageContextValue },
-                  headElement
+                  {value: pageContextValue},
+                  headElement,
                 )
               : headElement;
             head = ReactDOMServer.renderToStaticMarkup(wrappedHead);
@@ -1956,7 +1994,7 @@ async function buildIiifCollectionPages(CONFIG) {
             ? path
                 .relative(
                   path.dirname(outPath),
-                  path.join(OUT_DIR, "scripts", "canopy-viewer.js")
+                  path.join(OUT_DIR, "scripts", "canopy-viewer.js"),
                 )
                 .split(path.sep)
                 .join("/")
@@ -1965,7 +2003,7 @@ async function buildIiifCollectionPages(CONFIG) {
             ? path
                 .relative(
                   path.dirname(outPath),
-                  path.join(OUT_DIR, "scripts", "canopy-slider.js")
+                  path.join(OUT_DIR, "scripts", "canopy-slider.js"),
                 )
                 .split(path.sep)
                 .join("/")
@@ -1974,7 +2012,7 @@ async function buildIiifCollectionPages(CONFIG) {
             ? path
                 .relative(
                   path.dirname(outPath),
-                  path.join(OUT_DIR, "scripts", "canopy-timeline.js")
+                  path.join(OUT_DIR, "scripts", "canopy-timeline.js"),
                 )
                 .split(path.sep)
                 .join("/")
@@ -1983,7 +2021,7 @@ async function buildIiifCollectionPages(CONFIG) {
             ? path
                 .relative(
                   path.dirname(outPath),
-                  path.join(OUT_DIR, "scripts", "canopy-map.js")
+                  path.join(OUT_DIR, "scripts", "canopy-map.js"),
                 )
                 .split(path.sep)
                 .join("/")
@@ -1992,7 +2030,7 @@ async function buildIiifCollectionPages(CONFIG) {
             ? path
                 .relative(
                   path.dirname(outPath),
-                  path.join(OUT_DIR, "scripts", "canopy-map.css")
+                  path.join(OUT_DIR, "scripts", "canopy-map.css"),
                 )
                 .split(path.sep)
                 .join("/")
@@ -2001,7 +2039,7 @@ async function buildIiifCollectionPages(CONFIG) {
             ? path
                 .relative(
                   path.dirname(outPath),
-                  path.join(OUT_DIR, "scripts", "canopy-hero-slider.js")
+                  path.join(OUT_DIR, "scripts", "canopy-hero-slider.js"),
                 )
                 .split(path.sep)
                 .join("/")
@@ -2010,7 +2048,7 @@ async function buildIiifCollectionPages(CONFIG) {
             ? path
                 .relative(
                   path.dirname(outPath),
-                  path.join(OUT_DIR, "scripts", "canopy-related-items.js")
+                  path.join(OUT_DIR, "scripts", "canopy-related-items.js"),
                 )
                 .split(path.sep)
                 .join("/")
@@ -2019,7 +2057,7 @@ async function buildIiifCollectionPages(CONFIG) {
             ? path
                 .relative(
                   path.dirname(outPath),
-                  path.join(OUT_DIR, "scripts", "canopy-search-form.js")
+                  path.join(OUT_DIR, "scripts", "canopy-search-form.js"),
                 )
                 .split(path.sep)
                 .join("/")
@@ -2040,7 +2078,7 @@ async function buildIiifCollectionPages(CONFIG) {
             jsRel = primaryClassicScripts.shift();
           }
           const classicScriptRels = primaryClassicScripts.concat(
-            secondaryClassicScripts
+            secondaryClassicScripts,
           );
 
           const headSegments = [head];
@@ -2056,7 +2094,7 @@ async function buildIiifCollectionPages(CONFIG) {
               const vendorAbs = path.join(
                 OUT_DIR,
                 "scripts",
-                "react-globals.js"
+                "react-globals.js",
               );
               let vendorRel = path
                 .relative(path.dirname(outPath), vendorAbs)
@@ -2085,7 +2123,7 @@ async function buildIiifCollectionPages(CONFIG) {
             if (BASE_PATH)
               vendorTag =
                 `<script>window.CANOPY_BASE_PATH=${JSON.stringify(
-                  BASE_PATH
+                  BASE_PATH,
                 )}</script>` + vendorTag;
           } catch (_) {}
           let pageBody = body;
@@ -2117,6 +2155,9 @@ async function buildIiifCollectionPages(CONFIG) {
             html = require("../common").applyBaseToHtml(html);
           } catch (_) {}
           await fsp.writeFile(outPath, html, "utf8");
+          logDebug(
+            `Wrote work page → ${path.relative(process.cwd(), outPath)}`,
+          );
           lns.push([
             `✔ Created ${path.relative(process.cwd(), outPath)}`,
             "green",
@@ -2130,6 +2171,9 @@ async function buildIiifCollectionPages(CONFIG) {
               thumbUrl = String(t.url);
               thumbWidth = typeof t.width === "number" ? t.width : undefined;
               thumbHeight = typeof t.height === "number" ? t.height : undefined;
+              logDebug(
+                `Thumbnail resolved for ${manifestLabel}: ${thumbUrl} (${thumbWidth || "auto"}×${thumbHeight || "auto"})`,
+              );
             }
           } catch (_) {}
           try {
@@ -2139,7 +2183,7 @@ async function buildIiifCollectionPages(CONFIG) {
                 (e) =>
                   e &&
                   e.id === String(manifest.id || id) &&
-                  e.type === "Manifest"
+                  e.type === "Manifest",
               );
               if (entry) {
                 let touched = false;
@@ -2165,6 +2209,9 @@ async function buildIiifCollectionPages(CONFIG) {
                   }
                 }
                 if (heroMedia && heroMedia.heroThumbnail) {
+                  logDebug(
+                    `Hero thumbnail cached for ${manifestLabel}: ${heroMedia.heroThumbnail}`,
+                  );
                   if (entry.heroThumbnail !== heroMedia.heroThumbnail) {
                     entry.heroThumbnail = heroMedia.heroThumbnail;
                     touched = true;
@@ -2185,7 +2232,8 @@ async function buildIiifCollectionPages(CONFIG) {
                   }
                   if (heroMedia.heroThumbnailSrcset) {
                     if (
-                      entry.heroThumbnailSrcset !== heroMedia.heroThumbnailSrcset
+                      entry.heroThumbnailSrcset !==
+                      heroMedia.heroThumbnailSrcset
                     ) {
                       entry.heroThumbnailSrcset = heroMedia.heroThumbnailSrcset;
                       touched = true;
@@ -2194,6 +2242,9 @@ async function buildIiifCollectionPages(CONFIG) {
                       entry.heroThumbnailSizes = HERO_IMAGE_SIZES_ATTR;
                       touched = true;
                     }
+                    logDebug(
+                      `Hero srcset cached for ${manifestLabel} (${heroMedia.heroThumbnailSrcset.length} chars)`,
+                    );
                   }
                 } else {
                   if (entry.heroThumbnail !== undefined) {
@@ -2218,19 +2269,24 @@ async function buildIiifCollectionPages(CONFIG) {
                   }
                 }
                 if (heroMedia && heroMedia.ogImage) {
+                  logDebug(
+                    `OG image cached for ${manifestLabel}: ${heroMedia.ogImage}`,
+                  );
                   if (entry.ogImage !== heroMedia.ogImage) {
                     entry.ogImage = heroMedia.ogImage;
                     touched = true;
                   }
-                  if (typeof heroMedia.ogImageWidth === 'number') {
-                    if (entry.ogImageWidth !== heroMedia.ogImageWidth) touched = true;
+                  if (typeof heroMedia.ogImageWidth === "number") {
+                    if (entry.ogImageWidth !== heroMedia.ogImageWidth)
+                      touched = true;
                     entry.ogImageWidth = heroMedia.ogImageWidth;
                   } else if (entry.ogImageWidth !== undefined) {
                     delete entry.ogImageWidth;
                     touched = true;
                   }
-                  if (typeof heroMedia.ogImageHeight === 'number') {
-                    if (entry.ogImageHeight !== heroMedia.ogImageHeight) touched = true;
+                  if (typeof heroMedia.ogImageHeight === "number") {
+                    if (entry.ogImageHeight !== heroMedia.ogImageHeight)
+                      touched = true;
                     entry.ogImageHeight = heroMedia.ogImageHeight;
                   } else if (entry.ogImageHeight !== undefined) {
                     delete entry.ogImageHeight;
@@ -2257,7 +2313,7 @@ async function buildIiifCollectionPages(CONFIG) {
                     entry,
                     heroMedia && heroMedia.heroThumbnail,
                     heroMedia && heroMedia.heroThumbnailWidth,
-                    heroMedia && heroMedia.heroThumbnailHeight
+                    heroMedia && heroMedia.heroThumbnailHeight,
                   )
                 ) {
                   touched = true;
@@ -2283,7 +2339,7 @@ async function buildIiifCollectionPages(CONFIG) {
             try {
               annotationValue = extractAnnotationText(
                 manifest,
-                annotationsOptions
+                annotationsOptions,
               );
             } catch (_) {
               annotationValue = "";
@@ -2326,9 +2382,13 @@ async function buildIiifCollectionPages(CONFIG) {
             type: "work",
             thumbnail: recordThumbnail || undefined,
             thumbnailWidth:
-              typeof recordThumbWidth === "number" ? recordThumbWidth : undefined,
+              typeof recordThumbWidth === "number"
+                ? recordThumbWidth
+                : undefined,
             thumbnailHeight:
-              typeof recordThumbHeight === "number" ? recordThumbHeight : undefined,
+              typeof recordThumbHeight === "number"
+                ? recordThumbHeight
+                : undefined,
             searchMetadataValues:
               metadataValues && metadataValues.length
                 ? metadataValues
@@ -2340,6 +2400,11 @@ async function buildIiifCollectionPages(CONFIG) {
                 ? annotationValue
                 : undefined,
           });
+          logDebug(
+            `Search record queued for ${manifestLabel}: ${pageHref} (metadata values ${
+              metadataValues ? metadataValues.length : 0
+            })`,
+          );
         } catch (e) {
           lns.push([
             `IIIF: failed to render for ${id || "<unknown>"} — ${e.message}`,
@@ -2352,7 +2417,7 @@ async function buildIiifCollectionPages(CONFIG) {
     }
     const workers = Array.from(
       {length: Math.min(concurrency, chunk.length)},
-      () => worker()
+      () => worker(),
     );
     await Promise.all(workers);
     tryFlush();
@@ -2361,48 +2426,58 @@ async function buildIiifCollectionPages(CONFIG) {
       index: ci + 1,
       count: chunk.length,
       durationMs: chunkDuration,
-      concurrency,
     });
     try {
-      const concurrencyLabel =
-        requestedConcurrency === 0 ? `${concurrency} (auto)` : String(concurrency);
       logLine(
-        `⏱ Chunk ${ci + 1}/${chunks}: processed ${chunk.length} Manifest(s) in ${formatDurationMs(chunkDuration)} (concurrency ${concurrencyLabel})`,
+        `⏱ Chunk ${ci + 1}/${chunks}: processed ${chunk.length} Manifest(s) in ${formatDurationMs(chunkDuration)}`,
         "cyan",
-        { dim: true }
+        {dim: true},
       );
     } catch (_) {}
   }
   if (chunkMetrics.length) {
     const totalDuration = chunkMetrics.reduce(
       (sum, entry) => sum + (entry.durationMs || 0),
-      0
+      0,
     );
-    const totalItems = chunkMetrics.reduce((sum, entry) => sum + (entry.count || 0), 0);
+    const totalItems = chunkMetrics.reduce(
+      (sum, entry) => sum + (entry.count || 0),
+      0,
+    );
     const avgDuration = chunkMetrics.length
       ? totalDuration / chunkMetrics.length
       : 0;
     const rate = totalDuration > 0 ? totalItems / (totalDuration / 1000) : 0;
     try {
-      const rateLabel = rate ? `${rate.toFixed(1)} manifest(s)/s` : 'n/a';
+      const rateLabel = rate ? `${rate.toFixed(1)} manifest(s)/s` : "n/a";
       logLine(
         `IIIF chunk summary: ${totalItems} Manifest(s) in ${formatDurationMs(totalDuration)} (avg chunk ${formatDurationMs(avgDuration)}, ${rateLabel})`,
         "cyan",
-        { dim: true }
+        {dim: true},
       );
     } catch (_) {}
   }
   try {
     await navPlace.writeNavPlaceDataset(navPlaceRecords);
+    try {
+      logLine(
+        `✓ Wrote navPlace dataset (${navPlaceRecords.length} record(s))`,
+        "cyan",
+      );
+    } catch (_) {}
   } catch (error) {
     try {
       console.warn(
-        '[canopy][navPlace] failed to write dataset:',
-        error && error.message ? error.message : error
+        "[canopy][navPlace] failed to write dataset:",
+        error && error.message ? error.message : error,
       );
     } catch (_) {}
   }
-  return {iiifRecords};
+  return {
+    iiifRecords,
+    manifestIds: Array.from(renderedManifestIds),
+    collectionIds: Array.from(visitedCollections),
+  };
 }
 
 module.exports = {
@@ -2410,11 +2485,12 @@ module.exports = {
   loadConfig,
   loadManifestIndex,
   saveManifestIndex,
+  resolveIiifSources,
   // Expose helpers used by build for cache warming
   loadCachedManifestById,
   saveCachedManifest,
   ensureFeaturedInCache,
-  rebuildManifestIndexFromCache,
+  cleanupIiifCache,
 };
 
 // Expose a stable set of pure helper utilities for unit testing.
@@ -2465,7 +2541,7 @@ try {
         `IIIF: cache/collections (end): ${files.length} file(s)` +
           (head ? ` [${head}${files.length > 8 ? ", …" : ""}]` : ""),
         "blue",
-        {dim: true}
+        {dim: true},
       );
     } catch (_) {}
   }

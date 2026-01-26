@@ -460,16 +460,43 @@ async function writeSearchIndex(records) {
     console.warn('Search: index size is large (', Math.round(approxBytes / (1024 * 1024)), 'MB ). Consider narrowing sources.');
   }
   await fsp.writeFile(idxPath, indexJson, 'utf8');
+  try {
+    const { logLine } = require('./log');
+    const approxKb = Math.round(approxBytes / 1024);
+    logLine(
+      `• search-index.json written (${indexRecords.length} records, ${approxKb} KB)`,
+      'blue',
+      { dim: true }
+    );
+  } catch (_) {}
 
   const displayPath = path.join(apiDir, 'search-records.json');
   const displayJson = JSON.stringify(displayRecords);
   const displayBytes = Buffer.byteLength(displayJson, 'utf8');
   await fsp.writeFile(displayPath, displayJson, 'utf8');
+  try {
+    const { logLine } = require('./log');
+    const approxKb = Math.round(displayBytes / 1024);
+    logLine(
+      `• search-records.json written (${displayRecords.length} entries, ${approxKb} KB)`,
+      'blue',
+      { dim: true }
+    );
+  } catch (_) {}
   let annotationsBytes = 0;
   if (annotationRecords.length) {
     const annotationsJson = JSON.stringify(annotationRecords);
     annotationsBytes = Buffer.byteLength(annotationsJson, 'utf8');
     await fsp.writeFile(annotationsPath, annotationsJson, 'utf8');
+    try {
+      const { logLine } = require('./log');
+      const approxKb = Math.round(annotationsBytes / 1024);
+      logLine(
+        `• search-index-annotations.json written (${annotationRecords.length} entries, ${approxKb} KB)`,
+        'blue',
+        { dim: true }
+      );
+    } catch (_) {}
   } else {
     try {
       if (fs.existsSync(annotationsPath)) await fsp.unlink(annotationsPath);

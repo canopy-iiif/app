@@ -1,5 +1,7 @@
 const iiif = require('../../../packages/app/lib/build/iiif');
 
+const { resolveIiifSources } = iiif;
+
 const {
   resolvePositiveInteger,
   formatDurationMs,
@@ -90,6 +92,41 @@ describe('normalizeManifestConfig', () => {
   it('returns an empty list when nothing is configured', () => {
     expect(normalizeManifestConfig(null)).toEqual([]);
     expect(normalizeManifestConfig({})).toEqual([]);
+  });
+});
+
+describe('resolveIiifSources', () => {
+  const originalEnv = process.env.CANOPY_COLLECTION_URI;
+  afterEach(() => {
+    process.env.CANOPY_COLLECTION_URI = originalEnv;
+  });
+
+  it('returns configured collection URIs when present', () => {
+    process.env.CANOPY_COLLECTION_URI = '';
+    const sources = resolveIiifSources({
+      collection: [' https://example.org/a ', 'https://example.org/a'],
+    });
+    expect(sources.collections).toEqual(['https://example.org/a']);
+    expect(sources.manifests).toEqual([]);
+  });
+
+  it('falls back to CANOPY_COLLECTION_URI when config is empty', () => {
+    process.env.CANOPY_COLLECTION_URI = 'https://env.example.org/root ';
+    const sources = resolveIiifSources({});
+    expect(sources.collections).toEqual(['https://env.example.org/root']);
+    expect(sources.manifests).toEqual([]);
+  });
+
+  it('includes standalone manifests when configured', () => {
+    process.env.CANOPY_COLLECTION_URI = '';
+    const sources = resolveIiifSources({
+      manifests: [' https://example.org/manifest/1 ', 'https://example.org/manifest/2'],
+    });
+    expect(sources.collections).toEqual([]);
+    expect(sources.manifests).toEqual([
+      'https://example.org/manifest/1',
+      'https://example.org/manifest/2',
+    ]);
   });
 });
 
