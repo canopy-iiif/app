@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.6.1",
+    "date": "2026-01-26",
+    "summary": "Remove post-fetch cache rebuild.",
+    "highlights": []
+  },
+  {
     "version": "1.6.0",
     "date": "2026-01-25",
     "summary": "Support direct IIIF Manifest aggregation.",
