@@ -153,12 +153,14 @@ You can then add your own CSS rules in `app/styles/_custom.css` or new files you
 
 ### Production Build Considerations
 
-When customizing CSS variables, it's important to understand how Canopy processes styles during the build. The build process:
+When customizing CSS variables, it's important to understand how Canopy processes styles during the build. The build
+process:
 
-1. Compiles your `app/styles/index.css` (including imports like `_custom.css`)
+1. Compiles `app/styles/index.css` (including imports like `_custom.css`)
 2. **Appends** theme tokens generated from `canopy.yml` settings after your custom CSS
 
-Because both your custom CSS and Canopy's generated theme use `@layer properties`, the later-appearing Canopy theme will override your custom variables in production builds—even if everything works correctly in development mode (`npm run dev`).
+Because both the custom CSS and Canopy's generated theme use `@layer properties`, the later-appearing Canopy theme will
+override the custom variables in production builds even if everything works correctly in development mode (`npm run dev`).
 
 **Solution:** Add `!important` to your custom CSS variables to ensure they take precedence:
 
@@ -187,9 +189,12 @@ Because both your custom CSS and Canopy's generated theme use `@layer properties
 
 ### Clover IIIF Viewer Theme
 
-The Clover IIIF Viewer (used on work pages) has its own theming system that uses **different CSS variable names**. Canopy UI components use `--color-accent-*` variables, while Clover uses `--colors-accent` (note the plural "colors" with no hyphen before "accent").
+The Clover IIIF Viewer (used on work pages) has its own theming system that uses **different CSS variable names**.
+Canopy UI components use `--color-accent-*` variables, while Clover uses `--colors-accent` (note the plural "colors"
+with no hyphen before "accent").
 
-To customize the viewer's accent colors, add these rules **outside** the `@layer properties` block, targeting the `.clover-viewer` class directly:
+To customize the viewer's accent colors, add these rules **outside** the `@layer properties` block, targeting the
+`.clover-viewer` class directly:
 
 ```css filename="app/styles/_custom.css"
 /* Clover IIIF Viewer theme overrides
