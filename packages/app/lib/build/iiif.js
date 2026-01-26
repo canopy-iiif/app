@@ -99,6 +99,20 @@ function normalizeCollectionUris(value) {
   return uris;
 }
 
+function normalizeManifestConfig(cfg) {
+  if (!cfg || typeof cfg !== "object") return [];
+  const entries = [];
+  const push = (value) => {
+    if (value === undefined || value === null) return;
+    if (Array.isArray(value)) entries.push(...value);
+    else entries.push(value);
+  };
+  push(cfg.manifest);
+  push(cfg.manifests);
+  if (!entries.length) return [];
+  return normalizeCollectionUris(entries);
+}
+
 function clampSlugLength(slug, limit = MAX_ENTRY_SLUG_LENGTH) {
   if (!slug) return "";
   const max = Math.max(1, limit);
@@ -1457,7 +1471,8 @@ async function buildIiifCollectionPages(CONFIG) {
       process.env.CANOPY_COLLECTION_URI || ""
     );
   }
-  if (!collectionUris.length) return {searchRecords: []};
+  const manifestUris = normalizeManifestConfig(cfg);
+  if (!collectionUris.length && !manifestUris.length) return {searchRecords: []};
 
   const searchIndexCfg = (cfg && cfg.search && cfg.search.index) || {};
   const metadataCfg = (searchIndexCfg && searchIndexCfg.metadata) || {};
@@ -1524,6 +1539,7 @@ async function buildIiifCollectionPages(CONFIG) {
 
   // Recursively traverse Collections and gather all Manifest tasks
   const tasks = [];
+  const queuedManifestIds = new Set();
   const visitedCollections = new Set(); // normalized ids
   const norm = (x) => {
     try {
@@ -1567,7 +1583,11 @@ async function buildIiifCollectionPages(CONFIG) {
         const entryId = entry && entry.id;
         if (!entryId) continue;
         const entryType = normalizeIiifType(entry.type || entry.fallback || "");
+        const dedupeKey = norm(entryId) || String(entryId || "");
+        if (!dedupeKey) continue;
         if (entryType === "manifest") {
+          if (queuedManifestIds.has(dedupeKey)) continue;
+          queuedManifestIds.add(dedupeKey);
           tasks.push({id: entryId, parent: collectionKey});
         } else if (entryType === "collection") {
           await gatherFromCollection(entry.raw || entryId, collectionKey);
@@ -1596,6 +1616,14 @@ async function buildIiifCollectionPages(CONFIG) {
       await saveCachedCollection(normalizedRoot, normalizedRoot.id || uri, "");
     } catch (_) {}
     await gatherFromCollection(normalizedRoot, "");
+  }
+  if (manifestUris.length) {
+    for (const uri of manifestUris) {
+      const dedupeKey = norm(uri) || String(uri || "");
+      if (!dedupeKey || queuedManifestIds.has(dedupeKey)) continue;
+      queuedManifestIds.add(dedupeKey);
+      tasks.push({id: uri, parent: ""});
+    }
   }
   if (!tasks.length) return {searchRecords: []};
 
@@ -2395,6 +2423,7 @@ module.exports.__TESTING__ = {
   formatDurationMs,
   resolveBoolean,
   normalizeCollectionUris,
+  normalizeManifestConfig,
   clampSlugLength,
   isSlugTooLong,
   normalizeSlugBase,

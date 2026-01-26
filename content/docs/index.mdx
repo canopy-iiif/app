@@ -5,7 +5,7 @@ description: Overview of the builder, content model, and references that live in
 
 # Using Canopy IIIF
 
-Canopy renders static sites directly from **[IIIF Collections](https://iiif.io/api/presentation/3.0/#51-collection)**! These docs will walk you through the configuration options, content examples, and features available when building with Canopy. Canopy sites can be built in minutes and hosted anywhere static files can be served. The builder fetches manifests and generates layouts from Markdown files leaving you with a bundle of HTML, CSS, and basic javascript that can be deployed anywhere. All examples in this section are plain MDX so they can be copied directly into your own `content/` directory to get started.
+Canopy renders static sites directly from IIIF **[Collections](https://iiif.io/api/presentation/3.0/#51-collection)** and **[Manifests](https://iiif.io/api/presentation/3.0/#52-manifest)**. These docs will walk you through the configuration options, content examples, and features available when building with Canopy. Canopy sites can be built in minutes and hosted anywhere static files can be served. The builder fetches manifests and generates layouts from Markdown files leaving you with a bundle of HTML, CSS, and basic javascript that can be deployed anywhere. All examples in this section are plain MDX so they can be copied directly into your own `content/` directory to get started.
 
 <ButtonWrapper variant="interstitial" text="Start building with Canopy">
   <Button href="/docs/user-guides/canopy-get-started" label="Get started" />
@@ -19,7 +19,7 @@ Canopy renders static sites directly from **[IIIF Collections](https://iiif.io/a
 - Refer to [Content](./content) to understand how to author MDX files with IIIF assets.
 - Track what shipped in each semantic version on the [Releases](./developers/releases) page.
 
-## What is a IIIF Collection?
+## About Collections and Manifests
 
 A IIIF Collection is a JSON document that lists other IIIF resources, typically Manifests or other Collections. Collections can represent any grouping of IIIF Manifests, such as an archive, library, or museum's digital holdings. Each Manifest within a Collection describes a single object (like a book, artwork, or video) and includes metadata, images, and structure.
 Canopy ingests one or more Collection URIs to build a project. Each Manifest listed in the Collection then becomes a page in the site with normalized metadata, thumbnails, and links.
@@ -48,11 +48,32 @@ Below is a [simple example](https://iiif.io/api/cookbook/recipe/0032-collection/
 }
 ```
 
+A IIIF Manifest provides detailed information about a single digital object, including its metadata (like title, creator, date), the images or media associated with it, and how those images are structured (for example, pages in a book or views of an artwork). Each Manifest is also a JSON document that adheres to the IIIF Presentation API specifications.
+
+```yaml filename="manifest-01.json"
+{
+  "@context": "http://iiif.io/api/presentation/3/context.json",
+  "id": "https://iiif.io/api/cookbook/recipe/0032-collection/manifest-01.json",
+  "type": "Manifest",
+  "label": {"en": ["The Gulf Stream"]},
+  "metadata":
+    [
+      {
+        "label": {"en": ["Artist"]},
+        "value": {"en": ["Winslow Homer (1836–1910)"]},
+      },
+      {"label": {"en": ["Date"]}, "value": {"en": ["1899"]}},
+    ],
+  "items": [...],
+}
+```
+
 ## Working with Canopy
 
 Canopy works with both Presentation 3.0 API and the older Presentation 2.x. If the collection noted above were provided to Canopy, the `canopy.yml` file would reference Collection URI **`id`** which is also the URL where the collection document is hosted:
 
 ```yaml filename="canopy.yml"
+title: Works by Winslow Homer
 collection:
   - https://iiif.io/api/cookbook/recipe/0032-collection/collection.json
 ```
@@ -62,4 +83,13 @@ As this collection references two manifests, each would have its own relative pa
 - _/works/the-gulf-stream.html_
 - _/works/northeaster.html_
 
-Each page would include normalized metadata from the Manifest, thumbnails, and links to view the object in a IIIF viewer. Manifest metadata is indexed for search along with any other MDX files under `content/`. Theming offers some baseline options with the ability to supply optional CSS overrides. With a site built, you can deploy it anywhere static files can be served, such as GitHub Pages or your own web server. And best of all, Canopy handles all the heavy lifting of fetching, normalizing, and rendering IIIF resources so you can focus on building great experiences.
+In certain cases, Manifests may not be present in a Collection. You can still include these by manually adding their URIs directly to the `manifest` list in `canopy.yml`:
+
+```yaml filename="canopy.yml"
+title: Works by Winslow Homer
+manifest:
+  - https://iiif.io/api/cookbook/recipe/0032-collection/manifest-01.json
+  - https://iiif.io/api/cookbook/recipe/0032-collection/manifest-02.json
+```
+
+In both cases, each page would include normalized metadata from the Manifest, thumbnails, and links to view the object in a IIIF viewer. Manifest metadata is indexed for search along with any other MDX files under `content/`. Theming offers some baseline options with the ability to supply optional CSS overrides. With a site built, you can deploy it anywhere static files can be served, such as GitHub Pages or your own web server. And best of all, Canopy handles all the heavy lifting of fetching, normalizing, and rendering IIIF resources so you can focus on building great experiences.

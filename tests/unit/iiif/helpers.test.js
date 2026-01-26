@@ -5,6 +5,7 @@ const {
   formatDurationMs,
   resolveBoolean,
   normalizeCollectionUris,
+  normalizeManifestConfig,
   clampSlugLength,
   isSlugTooLong,
   normalizeSlugBase,
@@ -71,6 +72,24 @@ describe('normalizeCollectionUris', () => {
       'https://a.test/one',
       'https://b.test/two',
     ]);
+  });
+});
+
+describe('normalizeManifestConfig', () => {
+  it('combines manifest and manifests keys while deduping', () => {
+    const cfg = {
+      manifest: [' https://a.test/one ', 'https://b.test/two'],
+      manifests: 'https://b.test/two',
+    };
+    expect(normalizeManifestConfig(cfg)).toEqual([
+      'https://a.test/one',
+      'https://b.test/two',
+    ]);
+  });
+
+  it('returns an empty list when nothing is configured', () => {
+    expect(normalizeManifestConfig(null)).toEqual([]);
+    expect(normalizeManifestConfig({})).toEqual([]);
   });
 });
 

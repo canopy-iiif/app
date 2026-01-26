@@ -4,19 +4,24 @@ title: Configuration
 
 # Canopy Configuration
 
-Canopy reads settings from `canopy.yml` in the repository root. Edit this file after walking through the [Get Started guide](/get-started). The minimal `canopy.yml` includes a global site title, a list of IIIF Collection URIs, metadata fields to index, featured items, and a theme block. These settings are not strictly required, yet they form the basis of most Canopy sites.
+Canopy reads settings from `canopy.yml` in the repository root. Edit this file after walking through the [Get Started guide](/get-started). The minimal `canopy.yml` includes a global site title, a list of IIIF Collection and Manifest URIs, metadata fields to index, featured items, as well as a theme block. These settings are not strictly required, yet they form the basis of most Canopy sites.
 
 ```yaml filename="canopy.yml" copy
 title: Example Site
 collection:
   - https://example.org/iiif/collections/a
   - https://example.org/iiif/collections/b
+manifest:
+  - https://example.org/iiif/manifest/delta
+  - https://example.org/iiif/manifest/echo
+  - https://example.edu/api/manifest/foxtrot
 metadata:
   - Subject
   - Creator
 featured:
   - https://example.org/iiif/manifest/alpha
   - https://example.org/iiif/manifest/bravo
+  - https://example.edu/api/manifest/foxtrot
 theme:
   accentColor: violet
   grayColor: mauve
@@ -49,6 +54,21 @@ collection:
 - Each Manifest listed in the Collections becomes a page in the site.
 - Collections can be Presentation API 2.x or 3.0.
 - Collections may be nested (i.e., contain other Collections).
+- When Collections are configured, Canopy traverses them first, gathers all nested manifests, and then deduplicates against any standalone manifest list (see below).
+
+### Manifest (direct)
+
+Directly list individual IIIF Manifest URIs to include in the build. This is useful in cases where some Manifests are not part of a Collection or when you want to curate disparate sources.
+
+```yaml
+manifest:
+  - https://example.org/iiif/manifest/echo
+  - https://example.edu/api/manifest/foxtrot
+```
+
+- Not required and can be used alongside `collection` or on its own.
+- URIs must match the Manifest `id` values.
+- Manifest can be Presentation API 2.x or 3.0.
 
 ### Metadata
 
@@ -68,6 +88,7 @@ metadata:
 featured:
   - https://example.org/iiif/manifest/alpha
   - https://example.org/iiif/manifest/bravo
+  - https://example.edu/api/manifest/foxtrot
 ```
 
 - Optional list of manifest URIs for the homepage hero and other highlighted slots.
@@ -126,6 +147,7 @@ search:
 - `layout` accepts `grid` or `list`. [Works](/search?q=&type=work) are rendered as cards in a grid by default; [pages](/search?q=&type=page) use a search engine style vertical list.
 - `result` accepts `figure` or `article` and maps to `_result-figure.mdx` and `_results-article.mdx` templates in `/content/docs/search/`.
 - The order of `search.results.<type>` entries fixes the tab order on the search page.
+- Each tab corresponds to the `type` query parameter (`/search?type=work`). If a tab is selected while no records of that type exist, the results list appears empty even though other types may have matches. Clear the `type` param or switch tabs to return to the combined view.
 
 #### Custom types
 
