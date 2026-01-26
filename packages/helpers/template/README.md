@@ -4,7 +4,7 @@ This repository offers a trimmed down starting point for new Canopy IIIF project
 
 ## Getting Started
 
-Walk through the [Quick Start guide](https://canopy-iiif.github.io/app/docs/user-guides/canopy-get-started.html) to stand up your new digital project, configure `canopy.yml` using your preferred IIIF collection, and add pages and layouts under `content/`.
+Walk through the [Quick Start guide](https://canopy-iiif.github.io/app/docs/user-guides/canopy-get-started.html) to stand up your new digital project, configure `canopy.yml` using IIIF collections and manifests, and add pages and layouts under `content/`.
 
 ## Updates
 

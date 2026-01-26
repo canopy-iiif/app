@@ -5,9 +5,15 @@ const {Container, DocsCodeBlock} = require("@canopy-iiif/app/ui/server");
 
 const MAX_ITEMS = 30;
 const RATIO_OPTIONS = [0.618, 1, 1.382];
-const CODE_SAMPLE = `collection:
+const CODE_SAMPLE = `title: Art & Empire
+collection:
   - https://api.dc.library.northwestern.edu/api/v2/collections/7ac5769f-a1d9-4227-a350-bf8bd8b1cddc?as=iiif
   - https://api.dc.library.northwestern.edu/api/v2/collections/94536627-cfdf-413c-852b-0cb16d986da3?as=iiif
+manifest:
+  - https://iiif.vam.ac.uk/collections/O1267239/manifest.json
+  - https://iiif.vam.ac.uk/collections/O755793/manifest.json
+  - https://iiif.vam.ac.uk/collections/O136839/manifest.json
+  - https://iiif.vam.ac.uk/collections/O74660/manifest.json
 metadata:
   - Subject
   - Date
@@ -16,12 +22,10 @@ metadata:
 featured:
   - https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif
   - https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b?as=iiif
-  - https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif
-  - https://api.dc.library.northwestern.edu/api/v2/works/e0d60273-e64c-49d8-99dc-d1af8f4c6266?as=iiif
 theme:
   appearance: light
-  accentColor: indigo
-  grayColor: slate`;
+  accentColor: gold
+  grayColor: gray`;
 
 const componentStyles = `
 .collection-example {
@@ -43,6 +47,7 @@ const componentStyles = `
   gap: 2.618rem;
   flex-wrap: nowrap;
   flex-direction: row-reverse;
+  align-items: center;
 }
 
 .collection-example__panel {
@@ -94,7 +99,7 @@ const componentStyles = `
   flex-direction: column;
   gap: 1rem;
   padding: 1.618rem;
-  height: 800px;
+  height: 900px;
   overflow: hidden;
   mask-image: linear-gradient(to bottom, black 61.8%, #0001 90%, transparent 100%)
 }
@@ -184,6 +189,7 @@ const componentStyles = `
 .collection-example__code-block code {
   display: block;
   overflow: hidden;
+  overflow-x: auto;
 }
 
 @keyframes collection-example-line-in {

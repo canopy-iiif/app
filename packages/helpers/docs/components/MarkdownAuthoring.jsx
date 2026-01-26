@@ -138,6 +138,7 @@ const componentStyles = `
 .markdown-authoring__code-block code {
   display: block;
   overflow: hidden;
+  overflow-x: auto;
 }
 
 @keyframes markdown-authoring-line-in {
