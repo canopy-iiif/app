@@ -284,7 +284,9 @@ async function buildSearchPage() {
         canonical: searchHref,
       },
     };
-    const rendered = await mdx.compileMdxFile(searchLayoutPath, outPath, { page: pageDetails });
+    const rendered = await mdx.compileMdxFile(searchLayoutPath, outPath, null, {
+      page: pageDetails,
+    });
     body = rendered && rendered.body ? rendered.body : '';
     head = rendered && rendered.head ? rendered.head : '';
     if (!body) throw new Error('Search: content/search/_layout.mdx produced empty output');

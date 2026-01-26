@@ -13,6 +13,7 @@ const {
   htmlShell,
   rootRelativeHref,
   canopyBodyClassForType,
+  readSiteMetadata,
 } = require("../common");
 const {resolveCanopyConfigPath} = require("../config-path");
 const mdx = require("./mdx");
@@ -1917,6 +1918,7 @@ async function buildIiifCollectionPages(CONFIG) {
           const pageContextValue = {
             navigation: navigationContext,
             page: pageDetails,
+            site: readSiteMetadata ? {...readSiteMetadata()} : null,
           };
           if (
             metadataFacetLabels.length &&

@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.6.2",
+    "date": "2026-01-26",
+    "summary": "Fix title distillation on works and search screens.",
+    "highlights": []
+  },
+  {
     "version": "1.6.1",
     "date": "2026-01-26",
     "summary": "Remove post-fetch cache rebuild.",
