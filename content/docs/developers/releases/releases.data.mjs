@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.6.4",
+    "date": "2026-01-26",
+    "summary": "Simplify navigation.",
+    "highlights": []
+  },
+  {
     "version": "1.6.3",
     "date": "2026-01-26",
     "summary": "Add 404 page route.",

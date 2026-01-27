@@ -12,6 +12,7 @@ const {
   ensureDirSync,
   withBase,
   readSiteMetadata,
+  readPrimaryNavigation,
 } = require("../common");
 let remarkGfm = null;
 try {
@@ -1045,11 +1046,13 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
   const withApp = React.createElement(app.App, null, withLayout);
   const PageContext = getPageContext();
   const siteMeta = readSiteMetadata();
+  const primaryNav = readPrimaryNavigation();
   const contextValue = {
     navigation:
       extraProps && extraProps.navigation ? extraProps.navigation : null,
     page: extraProps && extraProps.page ? extraProps.page : null,
     site: siteMeta ? {...siteMeta} : null,
+    primaryNavigation: Array.isArray(primaryNav) ? primaryNav : [],
   };
   const withContext = PageContext
     ? React.createElement(PageContext.Provider, {value: contextValue}, withApp)

@@ -116,6 +116,25 @@ function readSearchPageMetadata() {
   return cachedSearchPageMetadata;
 }
 
+let cachedPrimaryNavigation = null;
+
+function readPrimaryNavigation() {
+  if (cachedPrimaryNavigation) return cachedPrimaryNavigation;
+  cachedPrimaryNavigation = [];
+  try {
+    const navPath = path.resolve(CONTENT_DIR, 'navigation.yml');
+    if (!fs.existsSync(navPath)) return cachedPrimaryNavigation;
+    const raw = fs.readFileSync(navPath, 'utf8');
+    const data = yaml.load(raw) || {};
+    if (Array.isArray(data.navigation)) {
+      cachedPrimaryNavigation = data.navigation.filter(
+        (item) => item && typeof item === 'object' && typeof item.href === 'string'
+      );
+    }
+  } catch (_) {}
+  return cachedPrimaryNavigation;
+}
+
 // Determine the absolute site origin (scheme + host[:port])
 // Priority:
 // 1) CANOPY_BASE_URL env
@@ -288,4 +307,5 @@ module.exports = {
   readSearchPageMetadata,
   DEFAULT_SEARCH_PAGE_TITLE,
   DEFAULT_SEARCH_PAGE_DESCRIPTION,
+  readPrimaryNavigation,
 };

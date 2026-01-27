@@ -398,9 +398,14 @@ export default function CanopyHeader(props = {}) {
     logo: SiteLogo,
   } = props;
 
-  const navLinks = ensureArray(navLinksProp);
   const PageContext = getSafePageContext();
   const context = React.useContext(PageContext);
+  const contextPrimaryNav = context && Array.isArray(context.primaryNavigation)
+    ? context.primaryNavigation
+    : [];
+  const navLinks = navLinksProp && navLinksProp.length
+    ? ensureArray(navLinksProp)
+    : ensureArray(contextPrimaryNav);
   const contextNavigation =
     context && context.navigation ? context.navigation : null;
   const contextSite = context && context.site ? context.site : null;

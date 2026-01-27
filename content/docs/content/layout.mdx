@@ -54,19 +54,30 @@ Navigation mirrors the file system, so overrides only need to worry about layout
 
 ## Primary navigation
 
-Configure top-level links in `content/_app.mdx` when you render `<CanopyHeader />`. Pass a `navigation` array with `href`/`label` pairs and the header renders them on every page:
+Configure top-level links in `content/navigation.yml`. The file contains a `navigation` array with `href`/`label` pairs
+that render in the header on every page:
 
-```mdx filename="content/_app.mdx" {9-17}
+```yaml filename="content/navigation.yml"
+navigation:
+  - href: /search
+    label: Works
+  - href: /docs
+    label: Docs
+  - href: /about
+    label: About
+```
+
+The `<CanopyHeader />` component in `content/_app.mdx` automatically reads this file—no props required:
+
+```mdx filename="content/_app.mdx"
 <CanopyHeader
-  navigation={[
-    {href: "/search", label: "Works"},
-    {href: "/docs", label: "Docs"},
-    {href: "/about", label: "About"},
-  ]}
   title="Canopy IIIF"
   logo={Logo}
 />
 ```
+
+For older releases of Canopy and other advanced use cases, you can still pass a `navigation` prop directly to
+`<CanopyHeader />`, which takes precedence over `navigation.yml`.
 
 ## Section navigation
 
