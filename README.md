@@ -41,7 +41,7 @@ Each page links to deeper guides (assets, works layouts, Search composition, etc
 - The distributable package lives in `packages/app` and exports the builder plus UI assets.
 - Use Changesets (`npm run changeset`) to record versions, run `npm run release`, and let the release workflow publish to npm before the template sync runs.
 - Keep `repository`, `files`, and `publishConfig.access: public` in `packages/app/package.json` so npm users and GitHub Insights can trace dependents.
-- Publishing guidance, update workflows, and automation hooks are documented at https://canopy-iiif.github.io/app/docs/developers/#releases.
+- Publishing guidance, update workflows, and automation hooks are documented at https://canopy-iiif.github.io/app/docs/releases/.
 
 ## License
 

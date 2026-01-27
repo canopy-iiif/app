@@ -1,15 +1,31 @@
 ---
 title: Layout
-description: "Overview of the docs layout wrapper and its configuration."
+description: "Overview of the layout wrapper and its configuration."
 ---
 
 # Layout
 
-The docs area is wrapped with the `<Layout>` component from `@canopy-iiif/app/ui/server`. It arranges the page into three distinct regions (sidebar navigation, main content, and optional on-page table of contents) and wires up global navigation metadata during build time.
+Canopy uses a flexible `<Layout>` component to structure MDX pages with consistent navigation, content areas, and optional tables of contents. This wrapper is typically defined in `_layout.mdx` files within the `content/` directory tree to apply section-specific configurations.
 
-```mdx filename="content/docs/_layout.mdx"
+```sh {3,7}
+content/
+├── essays/
+│   ├── _layout.mdx
+│   ├── empirical-research.mdx
+│   └── index.mdx
+└── about/
+    ├── _layout.mdx
+    └── index.mdx
+```
+
+In the case above:
+
+- all pages under `content/essays/` will inherit the layout defined in `content/essays/_layout.mdx`;
+- while pages under `content/about/` will use the layout from `content/about/_layout.mdx`.
+
+```mdx filename="content/essays/_layout.mdx"
 ---
-type: "docs"
+type: "essays"
 ---
 
 <Layout navigation={true} fluid={true}>
@@ -17,7 +33,11 @@ type: "docs"
 </Layout>
 ```
 
-## Core props
+## API
+
+The `<Layout>` component arranges the page into three distinct regions (sidebar navigation, main content, and optional on-page table of contents) and wires up global navigation metadata during build time.
+
+Users can customize the layout using several options:
 
 - **`navigation`**: toggles the left-hand sidebar that renders your section menu. Set it to `false` when you want a full-width document without navigation.
 - **`sidebar`**: accepts a React node or render function to replace the default sidebar. `null` keeps the auto-generated navigation.
@@ -39,11 +59,11 @@ Because the layout receives its configuration at build time, individual MDX file
 
 If a section needs a different layout treatment, create or edit the relevant `_layout.mdx` file and pass custom props:
 
-```mdx filename="content/docs/theme/_layout.mdx"
+```mdx filename="content/custom/_layout.mdx"
 <Layout
+  navigation={true}
   fluid={false}
-  navigation
-  sidebarClassName="md:max-w-xs"
+  sidebarClassName="custom-sidebar-class"
   contentNavigation={false}
 >
   {props.children}
@@ -51,52 +71,3 @@ If a section needs a different layout treatment, create or edit the relevant `_l
 ```
 
 Navigation mirrors the file system, so overrides only need to worry about layout props. The sections below outline how the menus and tables of contents are generated.
-
-## Primary navigation
-
-Configure top-level links in `content/navigation.yml`. The file contains a `navigation` array with `href`/`label` pairs
-that render in the header on every page:
-
-```yaml filename="content/navigation.yml"
-navigation:
-  - href: /search
-    label: Works
-  - href: /docs
-    label: Docs
-  - href: /about
-    label: About
-```
-
-The `<CanopyHeader />` component in `content/_app.mdx` automatically reads this file—no props required:
-
-```mdx filename="content/_app.mdx"
-<CanopyHeader
-  title="Canopy IIIF"
-  logo={Logo}
-/>
-```
-
-For older releases of Canopy and other advanced use cases, you can still pass a `navigation` prop directly to
-`<CanopyHeader />`, which takes precedence over `navigation.yml`.
-
-## Section navigation
-
-When `<Layout navigation={true}>` wraps a page, it builds a sidebar from the MDX files that share the same directory. Order follows the file path (directories first, then `index.mdx`, then remaining files alphabetically). Nested folders become nested menus automatically, so you never maintain a parallel menu schema—rename a file or add a new one and the sidebar updates on the next build.
-
-```
-content/
-├── docs/
-│   ├── _layout.mdx
-│   ├── index.mdx
-│   └── content/
-│       ├── index.mdx
-│       └── markdown.mdx
-└── about/
-    └── index.mdx
-```
-
-Visiting `/docs/content/markdown` renders the docs sidebar because the page lives under `content/docs/content/`. Pages outside that tree (e.g., `/about`) receive a minimalist layout unless you wrap them in `<Layout navigation={true}>`.
-
-## Table of contents
-
-`<Layout>` also builds an on-page table of contents from headings inside each MDX file (levels two and below). Keep headings short, descriptive, and unique; the generated IDs power deep links and the right-hand toc.

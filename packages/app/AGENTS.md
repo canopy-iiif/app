@@ -12,7 +12,7 @@ Structure at a Glance
 - `lib/`: Node-side builder and runtimes (see `packages/app/lib/AGENTS.md`).
 - `ui/`: Browser bundle + SSR-safe entry (see `packages/app/ui/AGENTS.md`).
 - `package.json`: Publishes `lib/` as CommonJS and exports UI entrypoints; `prepublishOnly` builds UI.
-- Release notes: maintained via `content/docs/developers/releases/releases.data.mjs` and surfaced in the docs + workflows.
+- Release notes: maintained via `content/docs/releases/releases.data.mjs` and surfaced in the docs + workflows.
 
 Active Cleanup Goals
 --------------------

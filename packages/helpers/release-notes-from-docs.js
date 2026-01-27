@@ -5,7 +5,7 @@ const path = require('path');
 const { pathToFileURL } = require('url');
 
 async function loadReleases() {
-  const modulePath = path.resolve('content', 'docs', 'developers', 'releases', 'releases.data.mjs');
+  const modulePath = path.resolve('content', 'docs', 'releases', 'releases.data.mjs');
   if (!fs.existsSync(modulePath)) {
     throw new Error(`Release data file not found at ${modulePath}`);
   }

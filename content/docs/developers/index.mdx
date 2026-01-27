@@ -1,22 +1,11 @@
 ---
-title: Developers
+title: Technical
 description: Documentation for developers who want to update canopy installations, contribute to core code, or build custom integrations.
 ---
 
-export const CanopyVersion = () => {
-  const version =
-    (typeof process !== "undefined" &&
-      process.env &&
-      (process.env.CANOPY_APP_VERSION ||
-        process.env.npm_package_version ||
-        process.env.npm_package_VERSION)) ||
-    "dev";
-  return <strong>v{version}</strong>;
-};
+# Technical
 
-# Developers
-
-Welcome to the Canopy IIIF developer documentation. This guide is for developers who customize Canopy installations, troubleshoot problems, integrate external scripts, or work locally. You’ll find instructions for setting up a development environment, navigating the codebase, and following best practices. Most developers begin with the `canopy-iiif/template` project; others may wish to explore the core Canopy application in `canopy-iiif/app`.
+This guide is for technical users who customize Canopy installations, troubleshoot problems, integrate external scripts, or work locally. You’ll find instructions for setting up a development environment, navigating the codebase, and following best practices. Most developers begin with the `canopy-iiif/template` project; others may wish to explore the core Canopy application in `canopy-iiif/app`.
 
 <ButtonWrapper variant="interstitial" text="Explore the codebases on GitHub">
   <Button
@@ -62,32 +51,6 @@ Canopy templates are intentionally designed to be simple and modular. The projec
 - `site/` is the output directory for the deployed static site.
 - `canopy.yml` file is the main configuration file for your Canopy project.
 - `package.json` manages dependencies, including the core Canopy application package.
-
-## Custom components
-
-Projects that need reusable UI blocks can register React components under `app/components/mdx.tsx`. See [Developers → Components](/docs/developers/components) for instructions covering both server-rendered components and browser-only runtimes.
-
-### Updating Canopy
-
-Occasionally, new versions of Canopy are released with bug fixes, new features, and improvements. To update your Canopy installation to the latest version, you can use `npm`. Run the following command in the root of your Canopy project directory:
-
-#### Updating in your local environment
-
-If you have a local development environment set up, you can update `@canopy-iiif/app` by running the command below. The current latest version of <CanopyVersion/> will be installed:
-
-```sh
-npm i @canopy-iiif/app@latest
-```
-
-#### Updating via GitHub Actions
-
-If your project was created from the official Canopy template, you can also update `@canopy-iiif/app` without touching your local environment by running the **Update Canopy App** workflow in GitHub Actions:
-
-1. Open your repository in GitHub, go to **Actions**, and select **Update Canopy App** in the sidebar.
-2. Click **Run workflow**. You can optionally provide a specific version (for example `1.0.2`); leave it blank to install the latest release.
-3. The workflow installs the requested version and opens a pull request with the updated `package.json` / `package-lock.json`.
-
-Review the pull request, run your usual tests, and merge when you are ready. This keeps Canopy dependencies current while giving you the chance to audit changes before deploying.
 
 ### Cache
 

@@ -86,7 +86,7 @@ jobs:
             const tag = `v${version}`;
             const body = notes.body && notes.body.trim()
               ? notes.body.trim()
-              : 'Release details are tracked in content/docs/developers/releases/releases.data.mjs.';
+              : 'Release details are tracked in content/docs/releases/releases.data.mjs.';
             const name = `v${version}`;
             try {
               const existing = await github.rest.repos.getReleaseByTag({

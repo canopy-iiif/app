@@ -1,0 +1,48 @@
+---
+title: Navigation
+description: Configure primary site navigation and section sidebars using navigation.yml and Layout props.
+---
+
+# Navigation
+
+Configure top-level links in `content/navigation.yml`. The file contains a `navigation` array with `href`/`label` pairs
+that render in the header on every page:
+
+```yaml filename="content/navigation.yml"
+navigation:
+  - href: /search
+    label: Works
+  - href: /docs
+    label: Docs
+  - href: /about
+    label: About
+```
+
+For older releases of Canopy and other advanced use cases, you can still pass a `navigation` prop directly to
+`<CanopyHeader />`, which takes precedence over `navigation.yml`.
+
+```mdx filename="content/_app.mdx"
+<CanopyHeader
+  title="Art & Empire"
+  navigation={[
+    {href: "/search", label: "Items"},
+    {href: "/essays", label: "Essays"},
+    {href: "/about", label: "About"},
+  ]}
+/>
+```
+
+## Section navigation
+
+Sectional navigation, like what you see in these docs (Configuration, Components, etc...), is handled automatically by a `<Layout>` wrapper in `_layout.mdx` files that read the file system structure under `content/`. Every section can have its own sidebar menu built from the MDX files it contains. Read more about layout configuration in the **[Layout](/docs/content/layout)** guide.
+
+```sh {3,7}
+content/
+├── essays/
+│   ├── _layout.mdx
+│   ├── empirical-research.mdx
+│   └── index.mdx
+└── about/
+    ├── _layout.mdx
+    └── index.mdx
+```

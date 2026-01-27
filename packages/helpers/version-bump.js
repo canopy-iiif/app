@@ -68,7 +68,7 @@ async function promptForReleaseNotes(version) {
 }
 
 function ensureReleaseFiles() {
-  const dir = path.resolve('content/docs/developers/releases');
+  const dir = path.resolve('content/docs/releases');
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   const jsonPath = path.join(dir, 'releases.json');
   const modulePath = path.join(dir, 'releases.data.mjs');
