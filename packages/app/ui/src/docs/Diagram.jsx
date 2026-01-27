@@ -4,26 +4,37 @@ export function CanopyDiagram() {
   return (
     <div className="canopy-diagram">
       <section className="canopy-diagram__section canopy-diagram__section--collections">
-        <h3>IIIF Collection(s)</h3>
+        <h3>IIIF Providers</h3>
         <span className="canopy-diagram__section-summary">
-          Source collections contribute 105 total manifests that Canopy
-          retrieves as-is via IIIF endpoints.
+          Source collections contribute 45 manifests while 5 manifests are
+          directly retrieved as-is via IIIF endpoints.
         </span>
         <div className="canopy-diagram__grid">
           <article>
             <h4>Collection A</h4>
             <ul>
-              <li>70 Manifests</li>
-              <li>IIIF Images + A/V</li>
-              <li>Textual Annotations</li>
+              <li>30 Manifests</li>
+              <li>
+                <em>Manuscripts</em>
+              </li>
             </ul>
           </article>
           <article>
             <h4>Collection B</h4>
             <ul>
-              <li>35 Manifests</li>
-              <li>IIIF Images + A/V</li>
-              <li>Textual Annotations</li>
+              <li>15 Manifests</li>
+              <li>
+                <em>Portraits</em>
+              </li>
+            </ul>
+          </article>
+          <article>
+            <h4>Manifests (direct)</h4>
+            <ul>
+              <li>5 Manifests</li>
+              <li>
+                <em>Scrapbooks</em>
+              </li>
             </ul>
           </article>
         </div>
@@ -37,14 +48,14 @@ export function CanopyDiagram() {
       <section className="canopy-diagram__section canopy-diagram__section--build">
         <h3>Canopy Build Process</h3>
         <span className="canopy-diagram__section-summary">
-          Canopy syncs manifests, page content, and annotations before bundling
-          the site.
+          Canopy retrieves collections and syncs all manifests, page content,
+          and annotations before bundling the site.
         </span>
         <div className="canopy-diagram__grid">
           <article>
             <h4>Automated content</h4>
             <ul>
-              <li>105 manifests → 105 work pages</li>
+              <li>50 manifests → 50 work pages</li>
               <li>One page per manifest</li>
               <li>Customize page layout</li>
             </ul>
@@ -83,7 +94,7 @@ export function CanopyDiagram() {
           <article>
             <h4>Work pages</h4>
             <ul>
-              <li>105 generated HTML pages</li>
+              <li>50 generated HTML pages</li>
               <li>Each links back to source manifests</li>
               <li>Styled with Canopy components</li>
             </ul>

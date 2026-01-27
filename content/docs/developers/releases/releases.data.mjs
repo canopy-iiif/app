@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.6.5",
+    "date": "2026-01-27",
+    "summary": "Refine collection language.",
+    "highlights": []
+  },
+  {
     "version": "1.6.4",
     "date": "2026-01-26",
     "summary": "Simplify navigation.",

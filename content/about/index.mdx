@@ -13,7 +13,7 @@ import {CanopyDiagram} from "@canopy-iiif/app/ui/server";
 
 # About
 
-Using [IIIF Presentation Collection(s)](https://iiif.io/api/presentation/3.0/#overview-collection) as a data source, Canopy IIIF (Canopy) generates a scholarly digital projects platform that transforms provided digital collections into an accessible, discoverable research environment. Built on modern web standards and leveraging the interoperability of IIIF, Canopy creates static sites that extend existing IIIF resources while providing advanced localized search capabilities, contextual navigation, and customizable presentation layers.
+Using [IIIF collections and manifests](https://iiif.io/api/presentation/3.0/#21-defined-types) as a data source, Canopy IIIF (Canopy) generates a scholarly digital projects platform that transforms provided digital collections into an accessible, discoverable research environment. Built on modern web standards and leveraging the interoperability of IIIF, Canopy creates static sites that extend existing IIIF resources while providing advanced localized search capabilities, contextual navigation, and customizable presentation layers.
 
 <ButtonWrapper variant="interstitial" text="Have an idea for a project?">
   <Button href="/about/get-started" label="Get started" />
@@ -26,7 +26,13 @@ Using [IIIF Presentation Collection(s)](https://iiif.io/api/presentation/3.0/#ov
 
 ## Overview
 
-Picture two source IIIF collections with digitized items relating to a famous author: **Collection A** providing _70 manifests_ and **Collection B** contributing _35 more_. A team is tasked with building out a unified digital project for these items that allows users to browse their content, as well as interact with contextual essays, timelines, and maps. By using Canopy, implementers can quickly stand-up a working project with every manifest becoming its own work page, authored Markdown files providing context, and both streams feeding a shared search index before everything is written out to static HTML, CSS, and data assets. The diagram below walks through that pipeline so you can see how these raw manifests become a ready-to-host digital project.
+Picture a scenario where we have three providers with digitized items relating to a famous individual:
+
+- _30 manifests_ of manuscripts from **Collection A**;
+- _15 manifests_ of portraits from **Collection B**;
+- and _5 manifests_ of scrapbooks sourced **directly** and not part of structured collection.
+
+A team is tasked with building out a unified digital project for these items that allows users to browse their content, as well as interact with contextual essays, timelines, and maps. By using Canopy, implementers can quickly stand-up a working project with every manifest becoming its own work page, authored Markdown files providing context, and both streams feeding a shared search index before everything is written out to static HTML, CSS, and data assets. The diagram below walks through that pipeline so you can see how these raw manifests become a ready-to-host digital project.
 
 <CanopyDiagram />
 
