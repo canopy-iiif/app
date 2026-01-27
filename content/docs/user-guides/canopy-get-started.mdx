@@ -67,13 +67,13 @@ featured:
 
 Every template includes `canopy.yml` at the repository root. This single file drives the build of your Canopy site. Open it and replace the demo collection and featured manifests with your own. There are many other configuration options available ([see documentation](https://canopy-iiif.github.io/app/docs/)); but to get the most out of Canopy, you will want to set the following:
 
-| Syntax       | Purpose                                                                                                       |          |
-| ------------ | ------------------------------------------------------------------------------------------------------------- | -------- |
-| `title`      | The global site title.                                                                                        | Optional |
-| `collection` | A list of IIIF Collection URI(s) that Canopy will ingest.                                                     | Required |
-| `manifest`   | A list of IIIF Manifest URI(s) to add in addition to those in the Collection(s) above.                        | Optional |
-| `featured`   | A list of IIIF Manifest URI(s) to highlight on the homepage. These should be part of the Collection(s) above. | Optional |
-| `metadata`   | A list of Metadata label names you want to turn into search facets and UI components in your project.         | Optional |
+| Syntax       | Purpose                                                                                               |          |
+| ------------ | ----------------------------------------------------------------------------------------------------- | -------- |
+| `title`      | The global site title.                                                                                | Optional |
+| `collection` | A list of IIIF Collection URI(s) that Canopy will ingest.                                             | Optional |
+| `manifest`   | A list of IIIF Manifest URI(s) to add in addition to those in the Collection(s) above.                | Optional |
+| `featured`   | A list of IIIF Manifest URI(s) to highlight on the homepage.                                          | Optional |
+| `metadata`   | A list of Metadata label names you want to turn into search facets and UI components in your project. | Optional |
 
 1. From the **Code** tab, click the `canopy.yml` file to open it in the file viewer. Then click the pencil icon ✏️ in the upper right to edit the file directly in GitHub’s web editor.
 2. Replace the demo URIs under `collection` and `featured` with your own Collection(s), Manifest(s), and desired metadata facets.

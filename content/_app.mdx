@@ -1,6 +1,7 @@
 import {Meta, Stylesheet} from "@canopy-iiif/app/head";
 import {CanopyHeader, CanopyFooter, GoogleAnalytics} from "@canopy-iiif/app/ui";
 import ThemeStorageHydrator from "@canopy-iiif/helpers/docs/ThemeStorageHydrator.js";
+import CopyCodeButtonsRuntime from "@canopy-iiif/helpers/docs/CopyCodeButtonsRuntime.js";
 
 export function Head() {
   return (
@@ -24,6 +25,7 @@ export function Head() {
       />
       <GoogleAnalytics id="G-YPJRYY7848" />
       <ThemeStorageHydrator />
+      <CopyCodeButtonsRuntime />
     </>
 
 );

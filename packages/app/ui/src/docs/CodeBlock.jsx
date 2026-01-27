@@ -79,9 +79,10 @@ export default function DocsCodeBlock(props = {}) {
       : false;
 
   const [copied, setCopied] = React.useState(false);
+  const buttonRef = React.useRef(null);
 
   const handleCopy = React.useCallback(async () => {
-    const text = rawCode;
+    const text = trimmedCode;
     try {
       if (
         typeof navigator !== "undefined" &&
@@ -101,11 +102,23 @@ export default function DocsCodeBlock(props = {}) {
         document.body.removeChild(textarea);
       }
       setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      setTimeout(() => setCopied(false), 5000);
     } catch (_) {
       setCopied(false);
     }
-  }, [rawCode]);
+  }, [trimmedCode]);
+
+  React.useEffect(() => {
+    if (buttonRef.current) {
+      buttonRef.current.setAttribute("data-docs-copy-hydrated", "true");
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (!buttonRef.current) return;
+    if (copied) buttonRef.current.setAttribute("data-docs-copy-active", "true");
+    else buttonRef.current.removeAttribute("data-docs-copy-active");
+  }, [copied]);
 
   const containerStyle = {
     borderRadius: "12px",
@@ -136,6 +149,23 @@ export default function DocsCodeBlock(props = {}) {
     overflowX: "auto",
   };
 
+  const buttonStyle = {
+    border: "1px solid var(--color-accent-200, )",
+    borderRadius: "6px",
+    padding: "0.25rem 0.65rem",
+    fontSize: "0.7rem",
+    fontWeight: 600,
+    color: "var(--color-accent-default)",
+    cursor: "pointer",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "0.3rem",
+    background: "var(--docs-copy-bg, rgba(255,255,255,0.08))",
+    transform: "var(--docs-copy-transform, scale(1))",
+    transition:
+      "transform 150ms ease, background-color 150ms ease, color 150ms ease",
+  };
+
   const codeStyle = {
     display: "block",
     padding: 0,
@@ -161,14 +191,21 @@ export default function DocsCodeBlock(props = {}) {
     const displayLine = line === "" ? " " : line;
     return React.createElement(
       "span",
-      {key: lineNumber, style},
+      {
+        key: lineNumber,
+        style,
+        "data-docs-code-line": line,
+      },
       React.createElement("span", {style: lineContentStyle}, displayLine),
     );
   });
 
   return React.createElement(
     "div",
-    {style: containerStyle},
+    {
+      style: containerStyle,
+      "data-docs-code-block": "true",
+    },
     showHeader
       ? React.createElement(
           "div",
@@ -178,26 +215,45 @@ export default function DocsCodeBlock(props = {}) {
             ? React.createElement(
                 "button",
                 {
+                  ref: buttonRef,
                   type: "button",
                   onClick: handleCopy,
                   "aria-live": "polite",
                   "aria-label": copied
                     ? "Copied to clipboard"
                     : "Copy code to clipboard",
-                  style: {
-                    border: "1px solid var(--color-accent-200, )",
-                    borderRadius: "6px",
-                    padding: "0.2rem 0.55rem",
-                    fontSize: "0.7rem",
-                    fontWeight: 500,
-                    color: "var(--color-accent-default)",
-                    cursor: "pointer",
-                  },
+                  "data-docs-copy-button": "true",
+                  style: buttonStyle,
                 },
-                copied ? "Copied" : "Copy",
+                React.createElement("span", null, "Copy"),
+                React.createElement(
+                  "span",
+                  {
+                    "aria-hidden": "true",
+                    "data-docs-copy-icon": "true",
+                  },
+                  "\u2713",
+                ),
               )
             : null,
         )
+      : null,
+    enableCopy
+      ? React.createElement("textarea", {
+          "data-docs-copy-source": "true",
+          tabIndex: -1,
+          readOnly: true,
+          "aria-hidden": "true",
+          defaultValue: trimmedCode,
+          style: {
+            position: "absolute",
+            left: "-9999px",
+            width: 1,
+            height: 1,
+            opacity: 0,
+            pointerEvents: "none",
+          },
+        })
       : null,
     React.createElement(
       "pre",

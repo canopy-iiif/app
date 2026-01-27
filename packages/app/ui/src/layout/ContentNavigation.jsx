@@ -311,15 +311,15 @@ export default function ContentNavigation({
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            class="ionicon"
+            className="ionicon"
             viewBox="0 0 512 512"
           >
             <path
               fill="none"
               stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="50"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="50"
               d="M160 144h288M160 256h288M160 368h288"
             />
             <circle
@@ -328,9 +328,9 @@ export default function ContentNavigation({
               r="16"
               fill="none"
               stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="32"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="32"
             />
             <circle
               cx="80"
@@ -338,9 +338,9 @@ export default function ContentNavigation({
               r="16"
               fill="none"
               stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="32"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="32"
             />
             <circle
               cx="80"
@@ -348,9 +348,9 @@ export default function ContentNavigation({
               r="16"
               fill="none"
               stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="32"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="32"
             />
           </svg>
         </span>
