@@ -1,212 +1,210 @@
+---
+title: Create Markdown Content
+description: Learn how to author Markdown files with IIIF assets in Canopy IIIF.
+referencedManifests:
+  - https://api.dc.library.northwestern.edu/api/v2/works/ff8b7eee-a6fc-4d12-985c-2014b57cc4e1?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/14a6aa15-9e12-47a7-9617-91f430d4f47b?as=iiif
+---
+
 # Author Markdown
 
 Implementers of Canopy IIIF can author contextual content to support Manifest resources using formatted Markdown files. These files are stored in the `/content` directory of your project. In doing so, you can add context to items in your IIIF Collection and craft a custom experience using integrated components provided by Canopy IIIF.
 
-> **Note:** This guide assumes you already cloned or scaffolded a Canopy IIIF project. Follow [Create a Project](/get-started) first if you are starting from scratch.
+**Note:** This guide assumes have you already created a Canopy IIIF project. Follow [Create a Project](./canopy-get-started) first if you are starting from scratch.
 
-## Use Case
+## 1. Create a Markdown file
 
-As a digital humanist, you have authored scholarly content for distinct items in a IIIF Collection. Your aim is to publish a digital scholarship project that highlights your context alongside these items.
-
-## Implementation
-
-### Create a Markdown file
-
-- In your `content` directory, find the `about` subdirectory and **create** the new file `nez-perce.mdx`.
+- In your `content` directory, find the `about` subdirectory and **create** the new file `burial-customs.mdx`.
 - **Add** the following barebones Markdown and front matter to your file and save.
 
-```mdx copy filename="content/about/nez-perce.mdx"
----
-title: The Nez Percé (Nimíipuu)
----
+```mdx copy filename="content/about/burial-customs.mdx"
+### Example: Burial Customs and Colonial Fascination
 
-# The Nez Percé (Nimíipuu)
+Stories of death and burial customs among Mughal and Hindostan peoples have long fascinated colonial observers.
+This interest often stemmed from a mix of curiosity, exoticism, and a desire to document practices perceived as
+"other." Such accounts were frequently filtered through colonial perspectives, which could lead to
+misunderstandings or misrepresentations of local beliefs and rituals surrounding death.
 
-This is a sample page for scholarly content with historical context relating to the [Nez Percé](https://en.wikipedia.org/wiki/Nez_Perce), also known as the Nimíipuu.
+In many cases, these narratives were used to justify colonial rule by portraying indigenous practices as
+primitive or in need of reform. The fascination with burial customs also intersected with broader themes of
+power, control, and the imposition of European norms on colonized societies.
+
+In particular, the custom of a woman self-immolating on her husband's funeral pyre, known as sati, was
+sensationalized in colonial literature. While sati was practiced in certain regions and periods, its portrayal
+often lacked nuance and failed to consider the complex social, religious, and economic factors that influenced
+such practices.
 ```
 
-Your file is now accessible at the relative route `/about/nez-perce`. If running in development mode, your file is accessible at http://localhost:5001/about/nez-perce.
+Your file is now accessible at the relative route `/about/consequences and would render as:
 
-### Navigation updates automatically
+<div style={{ padding: '1rem 2rem', margin: '1rem 0', boxShadow: "0 4px 1rem rgba(0, 0, 0, 0.1)", borderRadius: '0.75rem' }}>
 
-`<Layout>` builds the About sidebar directly from the files in `content/about/`, so the new page
-appears immediately. There is nothing else to configure.
+### Example: Burial Customs and Colonial Fascination
 
-### Add a IIIF Viewer
+Stories of death and burial customs among Mughal and Hindostan peoples have long fascinated colonial observers.
+This interest often stemmed from a mix of curiosity, exoticism, and a desire to document practices perceived as
+"other." Such accounts were frequently filtered through colonial perspectives, which could lead to
+misunderstandings or misrepresentations of local beliefs and rituals surrounding death.
 
-Canopy IIIF provides a [Clover IIIF](https://samvera-labs.github.io/clover-iiif/) `Viewer` component that can be used to display IIIF resources within Markdown.
+In many cases, these narratives were used to justify colonial rule by portraying indigenous practices as
+primitive or in need of reform. The fascination with burial customs also intersected with broader themes of
+power, control, and the imposition of European norms on colonized societies.
 
-- **Add** a `<Viewer />` component to the bottom of our Markdown file and directly reference a [IIIF Manifest](https://api.dc.library.northwestern.edu/api/v2/works/14a6aa15-9e12-47a7-9617-91f430d4f47b?as=iiif) with the `iiifContent` property.
+In particular, the custom of a woman self-immolating on her husband's funeral pyre, known as sati, was
+sensationalized in colonial literature. While sati was practiced in certain regions and periods, its portrayal
+often lacked nuance and failed to consider the complex social, religious, and economic factors that influenced
+such practices.
 
-```mdx copy filename="content/about/nez-perce.mdx"
----
-title: The Nez Percé (Nimíipuu)
----
+</div>
 
-# The Nez Percé (Nimíipuu)
+## 2. Add a IIIF Viewer
 
-This is a sample page for scholarly content with historical context relating to the [Nez Percé](https://en.wikipedia.org/wiki/Nez_Perce), also known as the Nimíipuu.
+After creating the basic Markdown file, you can enhance it by adding a IIIF viewer component to display an item from your IIIF materials. Canopy provides a [Clover IIIF](https://samvera-labs.github.io/clover-iiif/) `Viewer` component that can be used to display IIIF resources within Markdown.
 
-## A IIIF Viewer
+- **Add** a `<Viewer />` component to the within your content and reference a [IIIF Manifest](https://api.dc.library.northwestern.edu/api/v2/works/14a6aa15-9e12-47a7-9617-91f430d4f47b?as=iiif) with the `iiifContent` property.
+- Adjust _options_ as desired to customize the viewer experience.
 
-The `<Viewer />` is a React component that takes a single property, `iiifContent`, which is the URI to the
-IIIF manifest. The component will then fetch the Manifest and render a deep-zoom viewer. The viewer is
-responsive and will resize to fit the container it is placed in. These Manifests can be part of the Canopy
-source Collection but are not limited to it.
+```mdx copy filename="content/about/burial-customs.mdx" {8-17}
+### Example: Burial Customs and Colonial Fascination
 
-<Viewer iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/14a6aa15-9e12-47a7-9617-91f430d4f47b?as=iiif" />
+Stories of death and burial customs among Mughal and Hindostan peoples have long fascinated colonial observers.
+This interest often stemmed from a mix of curiosity, exoticism, and a desire to document practices perceived as
+"other." Such accounts were frequently filtered through colonial perspectives, which could lead to
+misunderstandings or misrepresentations of local beliefs and rituals surrounding death.
+
+<Viewer
+  iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/ff8b7eee-a6fc-4d12-985c-2014b57cc4e1?as=iiif"
+  options={{
+    showTitle: true,
+    informationPanel: {
+      renderAbout: true,
+      renderToggle: true,
+    },
+  }}
+/>
+
+In many cases, these narratives were used to justify colonial rule by portraying indigenous practices as
+primitive or in need of reform. The fascination with burial customs also intersected with broader themes of
+power, control, and the imposition of European norms on colonized societies.
+
+In particular, the custom of a woman self-immolating on her husband's funeral pyre, known as sati, was
+sensationalized in colonial literature. While sati was practiced in certain regions and periods, its portrayal
+often lacked nuance and failed to consider the complex social, religious, and economic factors that influenced
+such practices.
 ```
 
-The IIIF viewer is now rendered at the bottom of the page. The viewer is responsive with a max-height.
+<div style={{ padding: '1rem 2rem', margin: '1rem 0', boxShadow: "0 4px 1rem rgba(0, 0, 0, 0.1)", borderRadius: '0.75rem' }}>
 
-![canopy content page iiif viewer](/examples/creating-markdown-content-referenced-item-0.png)
+### Example: Burial Customs and Colonial Fascination
 
-### Reference Collection Items
+Stories of death and burial customs among Mughal and Hindostan peoples have long fascinated colonial observers.
+This interest often stemmed from a mix of curiosity, exoticism, and a desire to document practices perceived as
+"other." Such accounts were frequently filtered through colonial perspectives, which could lead to
+misunderstandings or misrepresentations of local beliefs and rituals surrounding death.
+
+<Viewer
+  iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/ff8b7eee-a6fc-4d12-985c-2014b57cc4e1?as=iiif"
+  options={{
+    showTitle: true,
+    informationPanel: {
+      renderAbout: true,
+      renderToggle: true,
+    },
+  }}
+/>
+
+In many cases, these narratives were used to justify colonial rule by portraying indigenous practices as
+primitive or in need of reform. The fascination with burial customs also intersected with broader themes of
+power, control, and the imposition of European norms on colonized societies.
+
+In particular, the custom of a woman self-immolating on her husband's funeral pyre, known as sati, was
+sensationalized in colonial literature. While sati was practiced in certain regions and periods, its portrayal
+often lacked nuance and failed to consider the complex social, religious, and economic factors that influenced
+such practices.
+
+</div>
+
+## 3. Add title, description, and referenced items
 
 As a digital humanist, you might have authored a series of essays in Markdown (in the `/content` directory), in which you wish to reference or cite one or more items in the source IIIF Collection. Canopy offers an easy method for linking scholarly content to items in their collection using the `referencedManifests` front matter key. This key takes an array of IIIF Manifest URIs. The Manifests MUST be in the source IIIF Collection of the Canopy project.
 
 - **Add** the `referencedManifests` key to the front matter with an array of Manifest URIs.
 - **Add** a `<ReferencedItems />` component to bottom of our Markdown file. This will render the items as Figures in a responsive grid. Each item will have output relative local link to the item, a `thumbnail`, and the `label`.
 
-```mdx copy filename="content/about/nez-perce.mdx"
+```mdx copy filename="content/about/burial-customs.mdx" {1-7,36}
 ---
-title: The Nez Percé (Nimíipuu)
+title: Burial Customs and Colonial Fascination
+description: An exploration of colonial perspectives on burial customs among Mughal and Hindostan peoples.
 referencedManifests:
-  - https://api.dc.library.northwestern.edu/api/v2/works/84aec8c1-42e8-4e2c-a6b2-1c7e3790217f?as=iiif
-  - https://api.dc.library.northwestern.edu/api/v2/works/19efac1e-5e79-471c-89c2-a60a775562ce?as=iiif
-  - https://api.dc.library.northwestern.edu/api/v2/works/ddd72f96-9869-4335-9d8c-3a3da51ad128?as=iiif
-  - https://api.dc.library.northwestern.edu/api/v2/works/6caed4fb-60bc-4574-86a2-cb9a1859f78c?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/ff8b7eee-a6fc-4d12-985c-2014b57cc4e1?as=iiif
+  - https://api.dc.library.northwestern.edu/api/v2/works/14a6aa15-9e12-47a7-9617-91f430d4f47b?as=iiif
 ---
 
-# The Nez Percé (Nimíipuu)
+### Example: Burial Customs and Colonial Fascination
 
-This is a sample page for scholarly content with historical context relating to the [Nez Percé](https://en.wikipedia.org/wiki/Nez_Perce), also known as the Nimíipuu.
+Stories of death and burial customs among Mughal and Hindostan peoples have long fascinated colonial observers.
+This interest often stemmed from a mix of curiosity, exoticism, and a desire to document practices perceived as
+"other." Such accounts were frequently filtered through colonial perspectives, which could lead to
+misunderstandings or misrepresentations of local beliefs and rituals surrounding death.
 
-## A IIIF Viewer
-
-A IIIF viewer is a React component that takes a single property, `iiifContent`, which is the URI to the
-IIIF manifest. The component will then fetch the Manifest and render a deep-zoom viewer. The viewer is
-responsive and will resize to fit the container it is placed in.
-
-<Viewer iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/14a6aa15-9e12-47a7-9617-91f430d4f47b?as=iiif" />
-
-## Referenced Items
-
-The `<ReferencedItems />` automatically outputs a grid of items that are referenced by the current page.
-
-<ReferencedItems />
-```
-
-These references also flow back to each IIIF work page thanks to the `<References />` component that ships in the default
-`content/works/_layout.mdx`. When a work is cited anywhere in the site the "Contextual References" section appears with
-links to the relevant Markdown pages.
-
-Your page should now output a grid of items that are referenced in the front matter. Automatically, a reciprocal connection is made between the Markdown content and the items in the IIIF Collection. Users can now navigate to and from the scholarly content page and the relative `/work` page representing the Manifest.
-
-![canopy content page referenced items](/examples/creating-markdown-content-referenced-item-1.png)
-
-![canopy work page referencing content](/examples/creating-markdown-content-referenced-item-2.png)
-
-### Leveraging Metadata Collections
-
-During the Canopy build process, new unique metadata-based IIIF Collections are automatically generated from the source IIIF Collection. These Collections can be used within Markdown content to enhance user experience and your scholarly content.
-
-These new Collections are generated for `label` and `value` pairs defined of the `metadata` entries in a Canopy configuration file. The IIIF Collections are available at the URL pattern `/api/facet/{label}/{value}.json`. Generated IIIF Collections for these facets are logged in the Canopy build process, ex:
-
-```sh
-Creating facets as IIIF Collections...
-↓ /api/facet/subject/cayuse-indians.json
-↓ /api/facet/subject/chinookan-indians.json
-↓ /api/facet/subject/nez-perce-indians.json
-↓ /api/facet/subject/tlakluit-indians.json
-↓ /api/facet/subject/umatilla-indians.json
-↓ /api/facet/subject/walla-walla-indians.json
-↓ /api/facet/date/1910.json
-↓ /api/facet/date/1909.json
-↓ /api/facet/date/1905.json
-↓ /api/facet/date/1911.json
-↓ /api/facet/date/1903.json
-```
-
-- **Add** a `<Viewer />` component to the bottom of our Markdown file and reference a collection for label of _Date_ and value of _1905_ with the `iiifContent` property. The `iiifContent` property URI can be either a relative or absolute path.
-
-```mdx copy
-<Viewer iiifContent="/api/facet/date/1905.json" />
-```
-
-![canopy content page iiif viewer for metadata collection](/examples/creating-markdown-content-referenced-item-3.png)
-
-- Or, **Add** a `<Slider />` component as an alternative view to render a carousel of items that link to the local relative `/work` pages representing the Manifests. This component takes the same `iiifContent` property. Note that this component only supports Collection resources.
-
-````mdx copy
-<Slider iiifContent="/api/facet/date/1905.json" />
-
-Need different breakpoints? Supply Clover’s slider options directly:
-
-```mdx copy
-<Slider
-  iiifContent="/api/facet/date/1905.json"
+<Viewer
+  iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/ff8b7eee-a6fc-4d12-985c-2014b57cc4e1?as=iiif"
   options={{
-    breakpoints: {
-      320: {slidesPerView: 2, spaceBetween: 20},
-      480: {slidesPerView: 3, spaceBetween: 30},
-      640: {slidesPerView: 4, spaceBetween: 40},
+    showTitle: true,
+    informationPanel: {
+      renderAbout: true,
+      renderToggle: true,
     },
   }}
 />
+
+In many cases, these narratives were used to justify colonial rule by portraying indigenous practices as
+primitive or in need of reform. The fascination with burial customs also intersected with broader themes of
+power, control, and the imposition of European norms on colonized societies.
+
+In particular, the custom of a woman self-immolating on her husband's funeral pyre, known as sati, was
+sensationalized in colonial literature. While sati was practiced in certain regions and periods, its portrayal
+often lacked nuance and failed to consider the complex social, religious, and economic factors that influenced
+such practices.
+
+<ReferencedItems />
 ```
-````
 
-Shared defaults live in `packages/app/ui/src/iiif/sliderOptions.js`, so you can adjust project-wide
-behavior there and only override `options` when a page needs something special.
+<div style={{ padding: '1rem 2rem', margin: '1rem 0', boxShadow: "0 4px 1rem rgba(0, 0, 0, 0.1)", borderRadius: '0.75rem' }}>
 
-Need spacing tied to `rem` units? Use the `rem()` helper exported from `sliderOptions.js` when
-defining breakpoints. The slider runtime reads `window.getComputedStyle(document.documentElement)`
-once and converts those values to pixels before instantiating Swiper.
+### Example: Burial Customs and Colonial Fascination
 
-````
+Stories of death and burial customs among Mughal and Hindostan peoples have long fascinated colonial observers.
+This interest often stemmed from a mix of curiosity, exoticism, and a desire to document practices perceived as
+"other." Such accounts were frequently filtered through colonial perspectives, which could lead to
+misunderstandings or misrepresentations of local beliefs and rituals surrounding death.
 
-![canopy content page iiif slider for metadata collection](/examples/creating-markdown-content-referenced-item-4.png)
+<Viewer
+  iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/ff8b7eee-a6fc-4d12-985c-2014b57cc4e1?as=iiif"
+  options={{
+    showTitle: true,
+    informationPanel: {
+      renderAbout: true,
+      renderToggle: true,
+    },
+  }}
+/>
 
-```mdx copy filename="content/about/nez-perce.mdx"
----
-title: The Nez Percé (Nimíipuu)
-referencedManifests:
-  - https://api.dc.library.northwestern.edu/api/v2/works/84aec8c1-42e8-4e2c-a6b2-1c7e3790217f?as=iiif
-  - https://api.dc.library.northwestern.edu/api/v2/works/19efac1e-5e79-471c-89c2-a60a775562ce?as=iiif
-  - https://api.dc.library.northwestern.edu/api/v2/works/ddd72f96-9869-4335-9d8c-3a3da51ad128?as=iiif
-  - https://api.dc.library.northwestern.edu/api/v2/works/6caed4fb-60bc-4574-86a2-cb9a1859f78c?as=iiif
----
+In many cases, these narratives were used to justify colonial rule by portraying indigenous practices as
+primitive or in need of reform. The fascination with burial customs also intersected with broader themes of
+power, control, and the imposition of European norms on colonized societies.
 
-# The Nez Percé (Nimíipuu)
+In particular, the custom of a woman self-immolating on her husband's funeral pyre, known as sati, was
+sensationalized in colonial literature. While sati was practiced in certain regions and periods, its portrayal
+often lacked nuance and failed to consider the complex social, religious, and economic factors that influenced
+such practices.
 
-This is a sample page for scholarly content with historical context relating to the [Nez Percé](https://en.wikipedia.org/wiki/Nez_Perce), also known as the Nimíipuu.
-
-## A IIIF Viewer
-
-A IIIF viewer is a React component that takes a single property, `iiifContent`, which is the URI to the
-IIIF manifest. The component will then fetch the Manifest and render a deep-zoom viewer. The viewer is
-responsive and will resize to fit the container it is placed in.
-
-<Viewer iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/14a6aa15-9e12-47a7-9617-91f430d4f47b?as=iiif" />
-
-## Referenced Items
-
-The `<ReferencedItems />` automatically outputs a grid of items that are referenced by the current page.
+[essay continues...]
 
 <ReferencedItems />
 
-## Leveraging Metadata
+</div>
 
-### Using the Viewer
+The referenced items links back to each IIIF work page. When a work is cited anywhere, a "referenced by" section appears with links to the relevant Markdown pages.
 
-The `<Viewer />` component supports IIIF Collections. This allows you to reference a IIIF Collection that is generated by Canopy IIIF. In this example, we are referencing a Collection of items that have a `date` of `1905`.
-
-<Viewer iiifContent="/api/facet/date/1905.json" />
-
-### Using the Slider
-
-Alternatively, you can use the `<Slider />` component to render a carousel of items that link to the local relative `/work` pages representing the Manifests.
-
-<Slider iiifContent="/api/facet/date/1905.json" />
-````
+Your page should now output a grid of items that are referenced in the front matter. Automatically, a reciprocal connection is made between the Markdown content and the items in the IIIF Collection. Users can now navigate to and from the scholarly content page and the relative `/work` page representing the Manifest.

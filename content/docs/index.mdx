@@ -19,7 +19,7 @@ Canopy renders static sites directly from IIIF **[Collections](https://iiif.io/a
 - Refer to [Content](./content) to understand how to author MDX files with IIIF assets.
 - Track what shipped in each semantic version on the [Releases](./developers/releases) page.
 
-## About Collections and Manifests
+## Collections and Manifests
 
 A IIIF Collection is a JSON document that lists other IIIF resources, typically Manifests or other Collections. Collections can represent any grouping of IIIF Manifests, such as an archive, library, or museum's digital holdings. Each Manifest within a Collection describes a single object (like a book, artwork, or video) and includes metadata, images, and structure.
 Canopy ingests one or more Collection URIs to build a project. Each Manifest listed in the Collection then becomes a page in the site with normalized metadata, thumbnails, and links.
@@ -68,11 +68,11 @@ A IIIF Manifest provides detailed information about a single digital object, inc
 }
 ```
 
-## Working with Canopy
+## Configuration
 
 Canopy works with both Presentation 3.0 API and the older Presentation 2.x. If the collection noted above were provided to Canopy, the `canopy.yml` file would reference Collection URI **`id`** which is also the URL where the collection document is hosted:
 
-```yaml filename="canopy.yml"
+```yaml filename="canopy.yml" copy
 title: Works by Winslow Homer
 collection:
   - https://iiif.io/api/cookbook/recipe/0032-collection/collection.json
@@ -85,7 +85,7 @@ As this collection references two manifests, each would have its own relative pa
 
 In certain cases, Manifests may not be present in a Collection. You can still include these by manually adding their URIs directly to the `manifest` list in `canopy.yml`:
 
-```yaml filename="canopy.yml"
+```yaml filename="canopy.yml" copy
 title: Works by Winslow Homer
 manifest:
   - https://iiif.io/api/cookbook/recipe/0032-collection/manifest-01.json
@@ -93,3 +93,40 @@ manifest:
 ```
 
 In both cases, each page would include normalized metadata from the Manifest, thumbnails, and links to view the object in a IIIF viewer. Manifest metadata is indexed for search along with any other MDX files under `content/`. Theming offers some baseline options with the ability to supply optional CSS overrides. With a site built, you can deploy it anywhere static files can be served, such as GitHub Pages or your own web server. And best of all, Canopy handles all the heavy lifting of fetching, normalizing, and rendering IIIF resources so you can focus on building great experiences.
+
+## Content Authoring
+
+To extend IIIF material, Canopy supports the authoring of markdown files with a special component syntax (MDX). These additional content pages can include IIIF assets from your manifests. See the [Content](./content) section for details on how to author MDX files with IIIF resources. Below is a simple example of an MDX file that references the Gulf Stream Manifest from above and includes a viewer component to render it:
+
+```mdx filename="content/about/warm-deadly-seas.mdx" copy
+---
+title: Warm and Deadly Seas
+description: A look at Winslow Homer's 1899 painting The Gulf Stream.
+referencedManifests:
+  - https://iiif.io/api/cookbook/recipe/0032-collection/manifest-01.json
+---
+
+### Example: Warm and Deadly Seas
+
+In 1899, Winslow Homer painted _The Gulf Stream_, a powerful depiction of a lone man
+adrift in a small boat amidst turbulent seas. The painting captures the raw force of
+nature and the vulnerability of humanity against its vastness. In this late 19th-century
+work, Homer illustrates not only the physical dangers of the sea but also the existential
+threats faced by individuals in an indifferent universe.
+
+<Viewer iiifContent="https://iiif.io/api/cookbook/recipe/0032-collection/manifest-01.json" />
+```
+
+This page would be accessible at _/about/warm-deadly-seas.html_ and include the viewer rendering the Manifest specified. The `referencedManifests` frontmatter key ensures that any metadata from the Manifest is indexed for search on this page as well.
+
+---
+
+### Example: Warm and Deadly Seas
+
+In 1899, Winslow Homer painted _The Gulf Stream_, a powerful depiction of a lone man
+adrift in a small boat amidst turbulent seas. The painting captures the raw force of
+nature and the vulnerability of humanity against its vastness. In this late 19th-century
+work, Homer illustrates not only the physical dangers of the sea but also the existential
+threats faced by individuals in an indifferent universe.
+
+<Viewer iiifContent="https://iiif.io/api/cookbook/recipe/0032-collection/manifest-01.json" />
