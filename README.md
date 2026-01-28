@@ -10,7 +10,11 @@ Create fast, light digital projects from IIIF collections. Canopy IIIF helps lib
 - **[Get Started](https://canopy-iiif.github.io/app/about/get-started)**
 - **[Template](https://github.com/canopy-iiif/template)**
 
-## Quick Start
+## GitHub Pages
+
+Follow the [Get Started](https://canopy-iiif.github.io/app/about/get-started) to deploy a lightweight digital project to GitHub Pages in minutes.
+
+## Local development
 
 - `npm install`
 - `npm run dev` (serves http://localhost:5001 via `app/scripts/canopy-build.mts`)
