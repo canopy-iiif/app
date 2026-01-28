@@ -1,0 +1,223 @@
+---
+title: Create a Timeline
+description: Build an interactive, proportionally-spaced timeline to visualize events alongside your narrative.
+referencedManifests:
+  - https://api.dc.library.northwestern.edu/api/v2/works/20f1cd93-7851-4646-af07-0b544661569f?as=iiif
+---
+
+# Create a Timeline
+
+When creating custom content, digital scholars may want to build a timeline to accompany their narrative and visualize
+events chronologically.
+
+The `<Timeline>` component provides a vertical, time-scaled view of events, positioning them relative to one another
+within a defined date range. Closely occurring events remain clustered, while larger temporal gaps are clearly
+represented.
+
+This guide walks through building a timeline from scratch using the `<Timeline>` component.
+
+## 1. Add the Timeline wrapper
+
+Start with a `<Timeline>` element. Give it a `title`, `description`, and `height` to control the visible portion of the
+scrollable timeline:
+
+```mdx
+<Timeline
+  title="Frederick Douglass: Escape and Early Freedom, September 1838"
+  description="Douglass escaped, traveled north, and settled in New Bedford, Massachusetts."
+  height="300px"
+>
+  {/* Points go here */}
+</Timeline>
+```
+
+<Timeline
+  title="Frederick Douglass: Escape and Early Freedom, September 1838"
+  description="Douglass escaped, traveled north, and settled in New Bedford, Massachusetts."
+  height="300px"
+>
+  {/* Points go here */}
+</Timeline>
+
+## 2. Add TimelinePoints
+
+Inside the `<Timeline>`, add a `<TimelinePoint>` for each event. Every point needs a `date` and `title`. Add a `summary`
+to give readers more context:
+
+```mdx
+<Timeline
+  title="Frederick Douglass: Escape and Early Freedom, September 1838"
+  description="Douglass escaped, traveled north, and settled in New Bedford, Massachusetts."
+  height="300px"
+>
+  <TimelinePoint
+    date="1838-09-03"
+    title="Escape from slavery"
+    summary="Escapes north by train and boat from Maryland."
+  />
+  <TimelinePoint
+    date="1838-09-15"
+    title="Marriage to Anna Murray"
+    summary="Marries Anna Murray in New York City."
+  />
+  <TimelinePoint
+    date="1838-09-18"
+    title="Arrival in New Bedford"
+    summary="Settles in Massachusetts and adopts the name Frederick Douglass."
+  />
+</Timeline>
+```
+
+<Timeline
+  title="Frederick Douglass: Escape and Early Freedom, September 1838"
+  description="Douglass escaped, traveled north, and settled in New Bedford, Massachusetts."
+  height="300px"
+>
+  <TimelinePoint
+    date="1838-09-03"
+    title="Escape from slavery"
+    summary="Escapes north by train and boat from Maryland."
+  />
+  <TimelinePoint
+    date="1838-09-15"
+    title="Marriage to Anna Murray"
+    summary="Marries Anna Murray in New York City."
+  />
+  <TimelinePoint
+    date="1838-09-18"
+    title="Arrival in New Bedford"
+    summary="Settles in Massachusetts and adopts the name Frederick Douglass."
+  />
+</Timeline>
+
+
+## 3. Highlight key events
+
+Mark pivotal moments with the `highlight` prop. Highlighted points render in your theme's accent color:
+
+```mdx
+<TimelinePoint
+  date="1838-09-03"
+  title="Escape from slavery"
+  summary="Escapes north by train and boat from Maryland."
+  highlight
+/>
+```
+
+<Timeline
+  title="Frederick Douglass: Escape and Early Freedom, September 1838"
+  description="Douglass escaped, traveled north, and settled in New Bedford, Massachusetts."
+  height="300px"
+>
+  <TimelinePoint
+    date="1838-09-03"
+    title="Escape from slavery"
+    summary="Escapes north by train and boat from Maryland."
+    highlight
+  />
+  <TimelinePoint
+    date="1838-09-15"
+    title="Marriage to Anna Murray"
+    summary="Marries Anna Murray in New York City."
+  />
+  <TimelinePoint
+    date="1838-09-18"
+    title="Arrival in New Bedford"
+    summary="Settles in Massachusetts and adopts the name Frederick Douglass."
+  />
+</Timeline>
+
+## 4. Relate events to works in your collection
+
+Connect a point to related works in your collection with `referencedManifests`:
+
+```mdx
+<TimelinePoint
+  date="1838-09-03"
+  title="Escaping re-enslavement"
+  summary="Following the publication of his first autobiography, Douglass spent nearly two years in the British Isles, gaining international support and legally purchasing his freedom."
+  referencedManifests={[
+    "https://api.dc.library.northwestern.edu/api/v2/works/20f1cd93-7851-4646-af07-0b544661569f?as=iiif"
+  ]}
+/>
+```
+
+<Timeline
+  title="Frederick Douglass in 1845: Narrative, Flight, and Transatlantic Activism"
+  description="Publication, increasing danger, and the beginning of Douglass’s British and Irish lecture tour."
+  range={{start: "1845-06-01", end: "1845-10-31", granularity: "day"}}
+  height="400px"
+>
+  <TimelinePoint
+    date="1845-08-06"
+    title="Departs the United States"
+    summary="Leaves for England to avoid recapture as a fugitive and to strengthen the antislavery cause abroad."
+    highlight
+  />
+  <TimelinePoint
+    date="1845-08-07"
+    title="Sails on the Cambria"
+    summary="Travels to Great Britain aboard the Cunard steamer Cambria and is forced to ride in steerage."
+    referencedManifests={[
+    "https://api.dc.library.northwestern.edu/api/v2/works/20f1cd93-7851-4646-af07-0b544661569f?as=iiif"
+  ]}
+  />
+</Timeline>
+
+## 5. Intermix your content with a map
+
+While the `<Timeline>` component situates events chronologically, many narratives also benefit from geographic context.
+By intermixing `<Timeline>` with the `<Map>` component, the same events can be explored across both time and space.
+
+Add a `<Map>` with `<MapPoints>` that closely relate to your previous `<TimelinePoint>`s.
+
+```mdx
+<Map>
+  <MapPoint
+    lat="39.329"
+    lng="-76.557"
+    title="Escape from slavery (Sept. 3, 1838)"
+    summary="Douglass departs Baltimore, traveling north by rail and water routes under constant risk of capture."
+  />
+  <MapPoint
+    lat="40.7128"
+    lng="-74.0060"
+    title="Marriage to Anna Murray (Sept. 15, 1838)"
+    summary="Douglass marries Anna Murray in New York City, shortly after arriving as a fugitive."
+  />
+  <MapPoint
+    lat="41.6362"
+    lng="-70.9342"
+    title="Arrival in New Bedford (Sept. 18, 1838)"
+    summary="Douglass and Anna settle in New Bedford, Massachusetts, where he begins working and soon adopts the name Frederick Douglass."
+  />
+</Map>
+```
+
+<Map>
+  <MapPoint
+    lat="39.329"
+    lng="-76.557"
+    title="Escape from slavery (Sept. 3, 1838)"
+    summary="Douglass departs Baltimore, traveling north by rail and water routes under constant risk of capture."
+  />
+  <MapPoint
+    lat="40.7128"
+    lng="-74.0060"
+    title="Marriage to Anna Murray (Sept. 15, 1838)"
+    summary="Douglass marries Anna Murray in New York City, shortly after arriving as a fugitive."
+  />
+  <MapPoint
+    lat="41.6362"
+    lng="-70.9342"
+    title="Arrival in New Bedford (Sept. 18, 1838)"
+    summary="Douglass and Anna settle in New Bedford, Massachusetts, where he begins working and soon adopts the name Frederick Douglass."
+  />
+</Map>
+
+## Learn More
+
+See the full [Timeline component reference](/docs/components/timeline) for all available props.
+
+The [Map](/docs/components/map) component is covered more fully in the [Enable a Map with navPlane](/docs/user-guides/enable-a-map-with-navPlace)
+guide.
