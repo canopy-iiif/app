@@ -18,7 +18,8 @@ This guide walks through building a timeline from scratch using the `<Timeline>`
 
 ## 1. Add the Timeline wrapper
 
-Start with a `<Timeline>` element. Give it a `title`, `description`, and `height` to control the scrollable viewport:
+Start with a `<Timeline>` element. Give it a `title`, `description`, and `height` to control the visible portion of the
+scrollable timeline:
 
 ```mdx
 <Timeline
@@ -166,7 +167,7 @@ Connect a point to related works in your collection with `referencedManifests`:
 ## 5. Intermix your content with a map
 
 While the `<Timeline>` component situates events chronologically, many narratives also benefit from geographic context.
-By intermixing `<Timeline>` with the `<Map>` component, events can be visualized across both time and space.
+By intermixing `<Timeline>` with the `<Map>` component, the same events can be explored across both time and space.
 
 Add a `<Map>` with `<MapPoints>` that closely relate to your previous `<TimelinePoint>`s.
 
