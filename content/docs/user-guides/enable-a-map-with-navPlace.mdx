@@ -1,12 +1,21 @@
 # Enable a map with navPlace
 
-Use the `<Map>` component to plot every Manifest that exposes IIIF Presentation 3 navPlace `Point` features. This guide walks through the prerequisites and shows how to embed a map on any MDX page.
+When working with IIIF Presentation 3 content, digital scholars may want to visualize where items in their collection
+are located geographically.
+
+The `<Map>` component plots Manifests that expose navPlace Point features, allowing spatial relationships to be explored
+interactively.
+
+This guide walks through the prerequisites and shows how to embed a map on any MDX page.
 
 > navPlace is an IIIF extension for geographic context. Make sure your manifests contain `navPlace.features` entries before running the build so Canopy can extract coordinates.
 
 ## 1. Add navPlace data to your manifests
 
-Each manifest must include `navPlace` with GeoJSON-like `Feature` objects. Only features with `geometry.type === "Point"` are plotted.
+To display items on a map, each IIIF Manifest must include geographic information describing where it is located or relevant.
+
+Canopy reads this information from the Manifest’s `navPlace` property, which contains GeoJSON-like `Feature` objects.
+Only features with a `geometry.type` of `"Point"` are plotted on the map.
 
 ```json
 {
@@ -36,7 +45,12 @@ Canopy collects these features, normalizes titles + thumbnails, and writes them 
 
 ## 2. Embed a Map in MDX
 
-Place `<Map iiifContent="…" />` on any MDX page (`content/**/*.mdx`) or in `content/works/_layout.mdx`. The component is SSR-safe: it renders a placeholder on the server and hydrates on the client with Leaflet + MarkerCluster.
+Once your Manifests expose `navPlace` data, you can embed a map anywhere in your site to provide a geographic overview
+of your collection.
+
+Place a `<Map>` component on any MDX page (`content/**/*.mdx`) or in `content/works/_layout.mdx`. The component is
+server-side–rendering safe and renders a lightweight placeholder on the server and hydrates on the client using
+Leaflet and MarkerCluster.
 
 ```mdx copy filename="content/about/maps.mdx"
 ---
@@ -49,33 +63,52 @@ Our manifests encode navPlace metadata, so we can show a geographic overview:
 
 <Map
   iiifContent="https://tamulib-dc-labs.github.io/sesquicentennial-manifests/collections.json"
-  height="520px"
+  height="600px"
 />
 ```
 
-- `iiifContent` accepts a Manifest or Collection URL and determines which navPlace markers render.
-- `height` controls the rendered canvas (string or number). Default: `600px`.
+The `<Map>` component accepts the following props:
+
+* `iiifContent`: A IIIF Manifest or Collection URL. Canopy resolves the resource and renders markers for all available `navPlace` points.
+* `height`: Controls the height of the rendered map canvas (string or number). Defaults to `600px`.
+
+> Note:  The `iiifContent` resource must be a part of your Canopy site in order to be used with `Map`. External resources cannot be loaded.
+
 
 ## 3. Add custom points with MapPoint
 
-You can mix in arbitrary coordinates for items that lack navPlace or for non-IIIF references. When `iiifContent` is omitted, the map only displays your custom points.
+In addition to rendering points from navPlace, you can add custom locations directly to a `<Map>` using `<MapPoint>`.
+This is useful for places that lack navPlace data or for locations that are not tied to IIIF resources.
+
+When `iiifContent` is omitted, the map renders only the custom points you provide.
 
 ```mdx copy filename="content/about/maps.mdx"
-<Map height="520px">
-  <MapPoint lat="41.8781" lng="-87.6298" title="Newberry Library" summary="Chicago, IL" href="/works/newberry-atlas" />
-  <MapPoint lat="22.5726" lng="88.3639" title="Calcutta" summary="Survey depot" />
+<Map
+  iiifContent="https://tamulib-dc-labs.github.io/sesquicentennial-manifests/collections.json"
+  height="520px">
+    <MapPoint lat="41.8781" lng="-87.6298" title="Newberry Library" summary="Chicago, IL" href="/works/newberry-atlas" />
+    <MapPoint lat="22.5726" lng="88.3639" title="Calcutta" summary="Survey depot" />
+
 </Map>
 ```
 
-Each `MapPoint` supports:
+Each `<MapPoint>` represents a single geographic location and supports the following props:
 
 - `lat` / `lng` (required) — decimal degrees.
 - `title`, `summary`, `href`, `thumbnail`.
 - Child MDX content for longer descriptions (`<MapPoint>…</MapPoint>`).
 
-Custom points leave their titles unlinked by default so the popup stays informational. Add `href` when you want the heading to navigate elsewhere. If you omit the `thumbnail` prop, the map reuses the first referenced manifest thumbnail so you still get a visual teaser.
+By default, custom points render as informational markers with unlinked titles. Add an `href` when the point should
+navigate the reader to another page or resource. If `thumbnail` is omitted, the map reuses the first available
+referenced manifest thumbnail so the popup still includes a visual cue.
 
-When a point should drive the reader to one or more works, pass `referencedManifests` (or `manifest` / `manifests`) with the manifest IDs/URLs. Pair those values with the page’s `referencedManifests` front matter so Canopy already knows the local `/works/*.html` hrefs.
+### Linking custom points to works
+
+When a location should direct readers to one or more items in your collection, associate the point with IIIF Manifests
+using `referencedManifests` (or the shorthand `manifest` / `manifests`).
+
+Pair these values with the page’s `referencedManifests` front matter so Canopy can resolve local `/works/*.html` links
+automatically.
 
 ```mdx
 <Map height="420px">
@@ -89,9 +122,9 @@ When a point should drive the reader to one or more works, pass `referencedManif
 </Map>
 ```
 
-## 4. Build or restart the dev server
+## 4. Build and preview your map
 
-Run your usual workflow so the navPlace dataset stays in sync:
+Once your `navPlace` data and map markup are in place, run your normal development workflow to generate and preview the map:
 
 ```bash
 npm run dev   # watches navPlace changes and rebuilds the dataset
@@ -99,4 +132,9 @@ npm run dev   # watches navPlace changes and rebuilds the dataset
 npm run build
 ```
 
-The viewer loads Leaflet + MarkerCluster automatically via `site/scripts/canopy-map.js`. Thumbnails, labels, and links in the popup come from each manifest’s cached metadata, so no extra authoring is required.
+> If editing your Github files directly, simply edit and save.
+
+During the build, Canopy collects and normalizes all `navPlace` features and makes them available to the `<Map>`
+component. The map viewer automatically loads Leaflet and MarkerCluster via `site/scripts/canopy-map.js`.
+
+Popups are populated from each Manifest’s cached metadata—including thumbnails, labels, and links.
