@@ -14,6 +14,7 @@ const {
   rootRelativeHref,
   canopyBodyClassForType,
   readSiteMetadata,
+  readPrimaryNavigation,
 } = require("../common");
 const {resolveCanopyConfigPath} = require("../config-path");
 const mdx = require("./mdx");
@@ -1915,10 +1916,12 @@ async function buildIiifCollectionPages(CONFIG) {
             navigationRoots && Object.keys(navigationRoots).length
               ? {allRoots: navigationRoots}
               : null;
+          const primaryNav = readPrimaryNavigation();
           const pageContextValue = {
             navigation: navigationContext,
             page: pageDetails,
             site: readSiteMetadata ? {...readSiteMetadata()} : null,
+            primaryNavigation: Array.isArray(primaryNav) ? primaryNav : [],
           };
           if (
             metadataFacetLabels.length &&
