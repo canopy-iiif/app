@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.6.8",
+    "date": "2026-01-30",
+    "summary": "Adjust z-index of map.",
+    "highlights": []
+  },
+  {
     "version": "1.6.7",
     "date": "2026-01-27",
     "summary": "Update release workflow.",

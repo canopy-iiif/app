@@ -6,6 +6,7 @@
   border-radius: 0.5rem;
   overflow: hidden;
   background-color: var(--color-gray-100);
+  z-index: 0;
 
   .leaflet-control-attribution {
     display: none;
