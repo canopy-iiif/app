@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.6.9",
+    "date": "2026-01-30",
+    "summary": "Simplify Clover theming for dark-mode compatibility.",
+    "highlights": []
+  },
+  {
     "version": "1.6.8",
     "date": "2026-01-30",
     "summary": "Adjust z-index of map.",
