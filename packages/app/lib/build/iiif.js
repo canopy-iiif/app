@@ -497,7 +497,7 @@ function collectTextualBody(body, out) {
   if (body.text !== undefined) collectTextualBody(body.text, out);
 }
 
-function extractAnnotationText(manifest, options = {}) {
+async function extractAnnotationText(manifest, options = {}) {
   if (!manifest || typeof manifest !== "object") return "";
   if (!options.enabled) return "";
   const motivations =
@@ -523,7 +523,7 @@ function extractAnnotationText(manifest, options = {}) {
     }
   }
 
-  function handleAnnotation(annotation) {
+  async function handleAnnotation(annotation) {
     if (!annotation || typeof annotation !== "object") return;
     if (!matchesMotivation(annotation.motivation)) return;
     const body = annotation.body;
@@ -537,10 +537,10 @@ function extractAnnotationText(manifest, options = {}) {
     }
   }
 
-  function walk(value) {
+  async function walk(value) {
     if (!value) return;
     if (Array.isArray(value)) {
-      for (const entry of value) walk(entry);
+      for (const entry of value) await walk(entry);
       return;
     }
     if (typeof value !== "object") return;
@@ -548,22 +548,29 @@ function extractAnnotationText(manifest, options = {}) {
     seenNodes.add(value);
     if (Array.isArray(value.annotations)) {
       for (const page of value.annotations) {
-        if (page && Array.isArray(page.items)) {
+        if (page && typeof page.id === 'string' && !page.items){
+          const fetchedPage = await readJsonFromUri(page.id, { log: true });
+          if (fetchedPage && Array.isArray(fetchedPage.items)) {
+            for (const item of fetchedPage.items){
+              handleAnnotation(item)
+            }
+          }
+        } else if (page && Array.isArray(page.items)) {
           for (const item of page.items) handleAnnotation(item);
         }
-        walk(page);
+        await walk(page);
       }
     }
     if (Array.isArray(value.items)) {
-      for (const item of value.items) walk(item);
+      for (const item of value.items) await walk(item);
     }
     for (const key of Object.keys(value)) {
       if (key === "annotations" || key === "items") continue;
-      walk(value[key]);
+      await walk(value[key]);
     }
   }
 
-  walk(manifest);
+  await walk(manifest);
   if (!results.length) return "";
   return results.join(" ");
 }
@@ -2339,7 +2346,7 @@ async function buildIiifCollectionPages(CONFIG) {
           }
           if (annotationsOptions && annotationsOptions.enabled) {
             try {
-              annotationValue = extractAnnotationText(
+              annotationValue = await extractAnnotationText(
                 manifest,
                 annotationsOptions,
               );
