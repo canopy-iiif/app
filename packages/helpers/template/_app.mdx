@@ -24,6 +24,10 @@ export function App({children}) {
   return (
     <>
       <CanopyHeader
+        navigation={[
+          {href: "/search", label: "Works"},
+          {href: "/about", label: "About"},
+        ]}
         logo={Logo}
       />
       <main>{children}</main>
