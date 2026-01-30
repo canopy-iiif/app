@@ -27,11 +27,11 @@
   }
 }
 
-html.dark .canopy-iiif-image {
+html.dark {
   .clover-iiif-image-openseadragon {
     div[data-testid="clover-iiif-image-openseadragon-controls"] {
       button {
-        background-color: var(--color-gray-100);
+        background-color: var(--color-gray-50);
         color: var(--color-gray-900);
         fill: var(--color-gray-900);
         stroke: var(--color-gray-900);
@@ -40,6 +40,7 @@ html.dark .canopy-iiif-image {
           color: inherit;
           fill: inherit;
           stroke: inherit;
+          filter: unset !important;
         }
 
         &:hover,

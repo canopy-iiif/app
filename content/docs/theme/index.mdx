@@ -164,7 +164,7 @@ override the custom variables in production builds even if everything works corr
 
 **Solution:** Add `!important` to your custom CSS variables to ensure they take precedence:
 
-```css filename="app/styles/_custom.css" {8-18}
+```css filename="app/styles/_custom.css" {8-18}≈
 @layer properties {
   :root,
   :host {
@@ -187,18 +187,16 @@ override the custom variables in production builds even if everything works corr
 }
 ```
 
-### Clover IIIF Viewer Theme
+### Clover Component overrides
 
-The Clover IIIF Viewer (used on work pages) has its own theming system that uses **different CSS variable names**.
-Canopy UI components use `--color-accent-*` variables, while Clover uses `--colors-accent` (note the plural "colors"
-with no hyphen before "accent").
+The Image, Viewer, Slider, and Scroll components (derived from the Clover IIIF package) have their own theming system that uses **different CSS variable names**.
 
-To customize the viewer's accent colors, add these rules **outside** the `@layer properties` block, targeting the
-`.clover-viewer` class directly:
+To customize these colors, add these rules **outside** the `@layer properties` block, targeting the
+`.clover-viewer` class directly. This targeting is necessary because Clover uses its own CSS variables. Standard `:root` variables won't override these component-scoped styles.
 
 ```css filename="app/styles/_custom.css"
 /* Clover IIIF Viewer theme overrides
- * Must target the component directly to override generated theme classes from Stitches.
+ * Must target the component directly to override generated theme classes.
  */
 .clover-viewer,
 .clover-viewer [class*="t-"] {
@@ -207,15 +205,6 @@ To customize the viewer's accent colors, add these rules **outside** the `@layer
   --colors-accentMuted: #8b1a1a !important;
 }
 ```
-
-| Canopy UI Variable | Clover Viewer Variable | Purpose |
-|--------------------|------------------------|---------|
-| `--color-accent-800` | `--colors-accent` | Primary accent color |
-| `--color-accent-900` | `--colors-accentAlt` | Darker accent variant |
-| `--color-accent-600` | `--colors-accentMuted` | Lighter/hover accent |
-
-This targeting is necessary because Clover uses [Stitches](https://stitches.dev/) (a CSS-in-JS library) which generates scoped theme
-classes at the component level. Standard `:root` variables won't override these component-scoped styles.
 
 ### Overrides
 

@@ -125,12 +125,11 @@ function buildVariablesMap(brandScale, grayScale, options = {}) {
     if (grayScale["800"]) vars["--color-gray-muted"] = grayScale["800"];
   }
   if (brandScale && grayScale) {
-    if (brandScale["800"])
+    if (brandScale["800"]) {
       vars["--colors-accent"] = `${brandScale["800"]} !important`;
-    if (brandScale["900"])
-      vars["--colors-accentAlt"] = `${brandScale["900"]} !important`;
-    if (brandScale["600"])
-      vars["--colors-accentMuted"] = `${brandScale["600"]} !important`;
+      vars["--colors-accentAlt"] = `${brandScale["800"]} !important`;
+      vars["--colors-accentMuted"] = `${brandScale["800"]} !important`;
+    }
     if (grayScale["900"]) {
       const primary = `${grayScale["900"]} !important`;
       vars["--colors-primary"] = primary;
