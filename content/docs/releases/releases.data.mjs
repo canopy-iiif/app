@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.6.9",
+    "date": "2026-01-30",
+    "summary": "Add primary navigation to works routes.",
+    "highlights": []
+  },
+  {
     "version": "1.6.8",
     "date": "2026-01-30",
     "summary": "Adjust z-index of map.",
