@@ -39,6 +39,6 @@
   }
 
   ::selection {
-    background-color: var(--color-accent-200);
+    background-color: hsl(from var(--color-accent-default) h s l / 0.2);
   }
 }
