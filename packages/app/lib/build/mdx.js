@@ -909,9 +909,10 @@ async function loadAppWrapper() {
   return APP_WRAPPER;
 }
 
-async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
+async function compileMdxFile(filePath, outPath, Layout, extraProps = {}, options = {}) {
   const {compile} = await import("@mdx-js/mdx");
-  const raw = await fsp.readFile(filePath, "utf8");
+  const sourceOverride = options && typeof options.sourceOverride === 'string' ? options.sourceOverride : null;
+  const raw = sourceOverride != null ? sourceOverride : await fsp.readFile(filePath, "utf8");
   const {content: source} = parseFrontmatter(raw);
   const compiled = await compile(source, buildCompileOptions());
   const code = String(compiled);
@@ -925,10 +926,14 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
   await fsp.writeFile(tmpFile, code, "utf8");
   // Bust ESM module cache using source mtime
   let bust = "";
-  try {
-    const st = fs.statSync(filePath);
-    bust = `?v=${Math.floor(st.mtimeMs)}`;
-  } catch (_) {}
+  if (sourceOverride != null) {
+    bust = `?v=preview-${Date.now()}`;
+  } else {
+    try {
+      const st = fs.statSync(filePath);
+      bust = `?v=${Math.floor(st.mtimeMs)}`;
+    } catch (_) {}
+  }
   const mod = await import(pathToFileURL(tmpFile).href + bust);
   const MDXContent = mod.default || mod.MDXContent || mod;
   const components = await loadUiComponents();
@@ -1132,13 +1137,17 @@ function createReactShimPlugin() {
     export default React;
     export const Children = React.Children;
     export const Component = React.Component;
+    export const PureComponent = React.PureComponent;
     export const Fragment = React.Fragment;
     export const createElement = React.createElement;
     export const cloneElement = React.cloneElement;
     export const createContext = React.createContext;
+    export const createRef = React.createRef;
     export const forwardRef = React.forwardRef;
     export const memo = React.memo;
     export const startTransition = React.startTransition;
+    export const useTransition = React.useTransition;
+    export const useDeferredValue = React.useDeferredValue;
     export const isValidElement = React.isValidElement;
     export const useEffect = React.useEffect;
     export const useLayoutEffect = React.useLayoutEffect;
@@ -1149,6 +1158,11 @@ function createReactShimPlugin() {
     export const useContext = React.useContext;
     export const useReducer = React.useReducer;
     export const useId = React.useId;
+    export const useDebugValue = React.useDebugValue;
+    export const useImperativeHandle = React.useImperativeHandle;
+    export const useInsertionEffect = React.useInsertionEffect;
+    export const useSyncExternalStore = React.useSyncExternalStore;
+    export const version = React.version;
   `;
   const rdomShim = `
     const ReactDOM = (typeof window !== 'undefined' && window.ReactDOM) || {};
@@ -1901,6 +1915,7 @@ module.exports = {
   ensureFacetsRuntime,
   ensureReactGlobals,
   ensureCustomClientRuntime,
+  createReactShimPlugin,
   resetMdxCaches: function () {
     try {
       DIR_LAYOUTS.clear();

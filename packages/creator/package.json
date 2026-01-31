@@ -1,0 +1,16 @@
+{
+  "name": "@canopy-iiif/creator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsup src/index.ts --dts --format esm,cjs --out-dir dist",
+    "dev": "tsup src/index.ts --watch --dts --format esm,cjs --out-dir dist"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "tsup": "^8.1.0",
+    "typescript": "^5.9.3"
+  }
+}

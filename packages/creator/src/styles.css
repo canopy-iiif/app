@@ -1,0 +1,100 @@
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.creator-shell {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  min-height: 100vh;
+  width: 100vw;
+  max-width: 100vw;
+}
+
+@media (max-width: 900px) {
+  .creator-shell {
+    grid-template-columns: 1fr;
+  }
+  .creator-sidebar {
+    border-right: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  }
+}
+
+.creator-sidebar {
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 16px;
+  background: #f8fafc;
+}
+.creator-sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+}
+.creator-sidebar li {
+  margin-bottom: 8px;
+}
+.creator-sidebar button {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.creator-sidebar button.active {
+  background: #312e81;
+  color: #fff;
+}
+.creator-main {
+  padding: 24px;
+  overflow-y: auto;
+}
+.creator-main__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16px;
+}
+.creator-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.creator-editor__actions {
+  display: flex;
+  gap: 8px;
+}
+.creator-editor__field label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.creator-editor__field textarea,
+.creator-editor__field input {
+  width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  padding: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.creator-preview {
+  margin-top: 24px;
+}
+.creator-preview__frame {
+  width: 100%;
+  min-height: 420px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  background: #fff;
+}
+.creator-status {
+  margin-left: 12px;
+  font-size: 14px;
+  color: #047857;
+}
+.creator-muted {
+  color: #475569;
+  font-style: italic;
+}

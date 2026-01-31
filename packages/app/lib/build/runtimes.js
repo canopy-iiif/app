@@ -1,5 +1,6 @@
 const { logLine } = require('./log');
-const { fs, path, OUT_DIR, ensureDirSync } = require('../common');
+const { fs, path, OUT_DIR, ensureDirSync, creatorModeEnabled } = require('../common');
+const { createReactShimPlugin } = require('./mdx');
 
 async function prepareAllRuntimes() {
   const mdx = require('./mdx');
@@ -10,6 +11,11 @@ async function prepareAllRuntimes() {
   try { if (typeof mdx.ensureFacetsRuntime === 'function') await mdx.ensureFacetsRuntime(); } catch (_) {}
   try { if (typeof mdx.ensureReactGlobals === 'function') await mdx.ensureReactGlobals(); } catch (_) {}
   await prepareSearchFormRuntime();
+  if (creatorModeEnabled()) {
+    try { await prepareCreatorRuntime(); } catch (error) {
+      try { console.warn('Creator runtime skipped:', error && error.message ? error.message : error); } catch (_) {}
+    }
+  }
   try { logLine('✓ Prepared client hydration runtimes', 'cyan', { dim: true }); } catch (_) {}
 }
 
@@ -49,6 +55,39 @@ async function prepareSearchFormRuntime() {
   } catch (_) {}
 }
 
+async function prepareCreatorRuntime() {
+  const entry = path.join(process.cwd(), 'packages', 'creator', 'src', 'runtime.jsx');
+  if (!fs.existsSync(entry)) {
+    try { logLine('Creator runtime entry not found; skipping (packages/creator/src/runtime.jsx)', 'yellow', { dim: true }); } catch (_) {}
+    return null;
+  }
+  const esbuild = await resolveEsbuild();
+  if (!esbuild) throw new Error('Creator mode runtime requires esbuild. Install dependencies before building.');
+  ensureDirSync(OUT_DIR);
+  const scriptsDir = path.join(OUT_DIR, 'scripts');
+  ensureDirSync(scriptsDir);
+  const outFile = path.join(scriptsDir, 'creator.js');
+  await esbuild.build({
+    entryPoints: [entry],
+    outfile: outFile,
+    platform: 'browser',
+    format: 'esm',
+    bundle: true,
+    sourcemap: false,
+    target: ['es2018'],
+    logLevel: 'silent',
+    minify: true,
+    loader: { '.ts': 'ts', '.tsx': 'tsx', '.jsx': 'jsx' },
+  });
+  try {
+    const st = fs.statSync(outFile);
+    const size = st && st.size ? (st.size / 1024).toFixed(1) : '0.0';
+    const rel = path.relative(process.cwd(), outFile).split(path.sep).join('/');
+    logLine(`✓ Wrote ${rel} (${size} KB)`, 'cyan');
+  } catch (_) {}
+  return outFile;
+}
+
 async function prepareSearchRuntime(timeoutMs = 10000, label = '') {
   const search = require('../search/search');
   try { logLine(`• Writing search runtime${label ? ' (' + label + ')' : ''}...`, 'blue', { bright: true }); } catch (_) {}
@@ -65,4 +104,9 @@ async function prepareSearchRuntime(timeoutMs = 10000, label = '') {
   }
 }
 
-module.exports = { prepareAllRuntimes, prepareSearchFormRuntime, prepareSearchRuntime };
+module.exports = {
+  prepareAllRuntimes,
+  prepareSearchFormRuntime,
+  prepareSearchRuntime,
+  prepareCreatorRuntime,
+};

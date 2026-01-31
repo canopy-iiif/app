@@ -200,7 +200,8 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
       ? { ...mergedProps.page, headings }
       : { headings };
   }
-  const { body, head } = await mdx.compileMdxFile(filePath, outPath, null, mergedProps);
+  const compileOptions = sourceOverride != null ? { sourceOverride: source } : undefined;
+  const { body, head } = await mdx.compileMdxFile(filePath, outPath, null, mergedProps, compileOptions);
   const needsHydrateViewer =
     body.includes('data-canopy-viewer') ||
     body.includes('data-canopy-scroll') ||

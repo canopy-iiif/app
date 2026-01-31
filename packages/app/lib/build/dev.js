@@ -14,8 +14,14 @@ const {
   OUT_DIR,
   ASSETS_DIR,
   ensureDirSync,
+  htmlShell,
+  creatorModeEnabled,
+  loadCreatorStyles,
+  BASE_ORIGIN,
 } = require("../common");
+const { mapContentPathToOutput, renderContentMdxToHtml } = require('./pages');
 const APP_COMPONENTS_DIR = path.join(process.cwd(), "app", "components");
+const CREATOR_WORKSPACE_DIR = path.join(process.cwd(), 'packages', 'creator');
 
 function resolveTailwindCli() {
   const bin = path.join(
@@ -52,6 +58,7 @@ try {
 const APP_WATCH_TARGETS = [
   { dir: APP_LIB_DIR, label: "@canopy-iiif/app/lib" },
   { dir: APP_UI_DIR, label: "@canopy-iiif/app/ui" },
+  { dir: CREATOR_WORKSPACE_DIR, label: "@canopy-iiif/creator" },
 ];
 const HAS_APP_WORKSPACE = (() => {
   try {
@@ -60,6 +67,93 @@ const HAS_APP_WORKSPACE = (() => {
     return false;
   }
 })();
+
+function isReservedCreatorEntry(name) {
+  if (!name) return false;
+  const base = name.toLowerCase();
+  return base.startsWith('_');
+}
+
+function resolveContentFileSafe(relPath) {
+  if (!relPath) return null;
+  const cleaned = String(relPath).replace(/\\/g, '/').replace(/^\/+/, '');
+  if (!cleaned) return null;
+  const abs = path.resolve(CONTENT_DIR, cleaned);
+  if (!abs.startsWith(CONTENT_DIR)) return null;
+  return abs;
+}
+
+async function collectCreatorFiles(dir = CONTENT_DIR, prefix = '') {
+  const results = [];
+  let entries = [];
+  try {
+    entries = await fsp.readdir(dir, { withFileTypes: true });
+  } catch (_) {
+    return results;
+  }
+  for (const entry of entries) {
+    if (!entry || !entry.name) continue;
+    const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+    const abs = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (isReservedCreatorEntry(entry.name)) continue;
+      const child = await collectCreatorFiles(abs, rel);
+      results.push(...child);
+      continue;
+    }
+    if (!entry.isFile()) continue;
+    if (!/\.mdx$/i.test(entry.name)) continue;
+    if (isReservedCreatorEntry(entry.name)) continue;
+    results.push(rel.replace(/\\/g, '/'));
+  }
+  return results;
+}
+
+function sendJson(res, statusCode, payload) {
+  res.statusCode = statusCode;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.end(JSON.stringify(payload || {}));
+}
+
+function readRequestBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on('data', (chunk) => chunks.push(chunk));
+    req.on('end', () => {
+      try {
+        resolve(Buffer.concat(chunks).toString('utf8'));
+      } catch (e) {
+        reject(e);
+      }
+    });
+    req.on('error', reject);
+  });
+}
+
+async function readJsonBody(req) {
+  const raw = await readRequestBody(req);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch (_) {
+    return null;
+  }
+}
+
+function injectPreviewBase(html) {
+  if (!html) return html;
+  const origin = (BASE_ORIGIN || '').replace(/\/$/, '');
+  if (!origin) return html;
+  if (/<base\b/i.test(html)) return html;
+  const baseTag = `<base href="${origin}/">`;
+  if (html.includes('<head>')) return html.replace('<head>', `<head>${baseTag}`);
+  const headMatch = html.match(/<head[^>]*>/i);
+  if (headMatch && headMatch[0]) {
+    const token = headMatch[0];
+    return html.replace(token, `${token}${baseTag}`);
+  }
+  return baseTag + html;
+}
 
 function stripTailwindThemeLayer(targetPath) {
   try {
@@ -501,11 +595,25 @@ function watchUiDistPerDir() {
   };
 }
 
-const APP_WATCH_EXTENSIONS = new Set([".js", ".jsx", ".scss"]);
+const APP_WATCH_EXTENSIONS = new Set([".js", ".jsx", ".ts", ".tsx", ".mjs", ".mts", ".cts", ".scss"]);
 
 function shouldIgnoreAppSourcePath(p) {
   try {
     const resolved = path.resolve(p);
+    if (
+      CREATOR_WORKSPACE_DIR &&
+      resolved.startsWith(CREATOR_WORKSPACE_DIR) &&
+      CREATOR_WORKSPACE_DIR !== ''
+    ) {
+      const relCreator = path.relative(CREATOR_WORKSPACE_DIR, resolved);
+      if (!relCreator || relCreator === '') return false;
+      if (relCreator.startsWith('..')) return true;
+      const creatorSegments = relCreator.split(path.sep).filter(Boolean);
+      if (!creatorSegments.length) return false;
+      if (creatorSegments[0] === 'node_modules') return true;
+      if (creatorSegments[0].startsWith('.')) return true;
+      return false;
+    }
     const rel = path.relative(APP_PACKAGE_ROOT, resolved);
     if (!rel || rel === "") return false;
     if (rel.startsWith("..")) return true;
@@ -530,6 +638,14 @@ function handleAppSourceChange(baseDir, eventType, filename, label) {
     const relLib = path.relative(APP_LIB_DIR, full);
     if (!relLib.startsWith("..") && !path.isAbsolute(relLib)) {
       pendingModuleReload = true;
+    }
+  } catch (_) {}
+  try {
+    if (CREATOR_WORKSPACE_DIR) {
+      const relCreator = path.relative(CREATOR_WORKSPACE_DIR, full);
+      if (!relCreator.startsWith('..') && !path.isAbsolute(relCreator)) {
+        pendingModuleReload = true;
+      }
     }
   } catch (_) {}
   try {
@@ -652,7 +768,7 @@ function startServer() {
   onBuildSuccess = () => broadcast("reload");
   onCssChange = () => broadcast("css");
 
-  const server = http.createServer((req, res) => {
+  const server = http.createServer(async (req, res) => {
     const origin = `http://${req.headers.host || `localhost:${PORT}`}`;
     let parsedUrl;
     try {
@@ -661,6 +777,126 @@ function startServer() {
       parsedUrl = new URL("/", origin);
     }
     let pathname = decodeURI(parsedUrl.pathname || "/");
+    const creatorActive = creatorModeEnabled();
+    if (creatorActive) {
+      if (pathname === '/creator') {
+        const vendorPath = path.join(OUT_DIR, 'scripts', 'react-globals.js');
+        let vendorSrc = '/scripts/react-globals.js';
+        try {
+          const st = fs.statSync(vendorPath);
+          vendorSrc += `?v=${Math.floor(st.mtimeMs || Date.now())}`;
+        } catch (_) {}
+        const creatorPath = path.join(OUT_DIR, 'scripts', 'creator.js');
+        let creatorSrc = '/scripts/creator.js';
+        try {
+          const st = fs.statSync(creatorPath);
+          creatorSrc += `?v=${Math.floor(st.mtimeMs || Date.now())}`;
+        } catch (_) {}
+        const creatorStyles = loadCreatorStyles();
+        const inlineStyles = creatorStyles
+          ? `<style>${creatorStyles}</style>`
+          : `
+          <style>
+            body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+            .creator-shell { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+            .creator-sidebar { border-right: 1px solid rgba(0,0,0,0.08); padding: 16px; background: #f8fafc; }
+            .creator-sidebar ul { list-style: none; padding: 0; margin: 12px 0 0; }
+            .creator-sidebar li { margin-bottom: 8px; }
+            .creator-sidebar button { width: 100%; text-align: left; border: 0; background: transparent; padding: 6px 8px; border-radius: 6px; cursor: pointer; }
+            .creator-sidebar button.active { background: #312e81; color: #fff; }
+            .creator-main { padding: 24px; overflow-y: auto; }
+            .creator-main__header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
+            .creator-editor { display: flex; flex-direction: column; gap: 16px; }
+            .creator-editor__actions { display: flex; gap: 8px; }
+            .creator-editor__field label { display: block; font-weight: 600; margin-bottom: 4px; }
+            .creator-editor__field textarea,
+            .creator-editor__field input { width: 100%; border: 1px solid rgba(0,0,0,0.15); border-radius: 6px; padding: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+            .creator-preview { margin-top: 24px; }
+            .creator-preview__frame { width: 100%; min-height: 420px; border: 1px solid rgba(0,0,0,0.1); border-radius: 6px; background: #fff; }
+            .creator-status { margin-left: 12px; font-size: 14px; color: #047857; }
+            .creator-muted { color: #475569; font-style: italic; }
+          </style>
+        `;
+        const headExtra = `${inlineStyles}<script src="${vendorSrc}"></script><script>window.__CANOPY_CREATOR_ENABLED = true;</script><script type="module" src="${creatorSrc}"></script>`;
+        const html = htmlShell({
+          title: 'Creator mode',
+          body: '<div id="creator-root" class="creator-shell"></div>',
+          cssHref: '/styles/styles.css',
+          headExtra,
+        });
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.end(html);
+        return;
+      }
+      if (pathname === '/creator/preview' && req.method === 'POST') {
+        try {
+          const payload = await readJsonBody(req);
+          const fileParam = payload && payload.file ? String(payload.file) : '';
+          const contents = payload && typeof payload.contents === 'string' ? payload.contents : '';
+          const abs = resolveContentFileSafe(fileParam);
+          if (!abs) {
+            sendJson(res, 400, { error: 'Invalid file path' });
+            return;
+          }
+          const outPath = mapContentPathToOutput(abs);
+          const raw = await renderContentMdxToHtml(abs, outPath, { creatorPreview: true }, contents);
+          const html = injectPreviewBase(raw || '');
+          res.statusCode = 200;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+          res.end(html);
+        } catch (error) {
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          res.end(JSON.stringify({ error: 'Preview failed', detail: error && error.message ? error.message : String(error) }));
+        }
+        return;
+      }
+      if (pathname === '/__creator/files' && req.method === 'GET') {
+        const files = await collectCreatorFiles();
+        files.sort();
+        sendJson(res, 200, { files });
+        return;
+      }
+      if (pathname === '/__creator/content') {
+        const fileParam = parsedUrl.searchParams.get('file') || '';
+        const abs = resolveContentFileSafe(fileParam);
+        if (!abs) {
+          sendJson(res, 400, { error: 'Invalid file path' });
+          return;
+        }
+        if (req.method === 'GET') {
+          try {
+            const contents = await fsp.readFile(abs, 'utf8');
+            sendJson(res, 200, { file: fileParam, contents });
+          } catch (error) {
+            sendJson(res, 500, { error: 'Failed to read file', detail: error && error.message ? error.message : String(error) });
+          }
+          return;
+        }
+        if (req.method === 'POST') {
+          try {
+            const payload = await readJsonBody(req);
+            if (!payload || typeof payload.contents !== 'string') {
+              sendJson(res, 400, { error: 'Missing contents' });
+              return;
+            }
+            await fsp.writeFile(abs, payload.contents, 'utf8');
+            nextBuildSkipIiif = true;
+            try { onBuildStart(); } catch (_) {}
+            debounceBuild();
+            sendJson(res, 200, { ok: true });
+          } catch (error) {
+            sendJson(res, 500, { error: 'Failed to write file', detail: error && error.message ? error.message : String(error) });
+          }
+          return;
+        }
+        sendJson(res, 405, { error: 'Method Not Allowed' });
+        return;
+      }
+    }
     // Serve dev toast assets and config
     if (pathname === "/__livereload-config") {
       res.writeHead(200, {

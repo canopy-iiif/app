@@ -16,6 +16,8 @@ let cachedAppearance = null;
 let cachedAccent = null;
 let cachedSiteMetadata = null;
 let cachedSearchPageMetadata = null;
+let cachedCreatorMode = null;
+let cachedCreatorStyles = null;
 const DEFAULT_SITE_TITLE = 'Site title';
 const DEFAULT_SEARCH_PAGE_TITLE = 'Search';
 const DEFAULT_SEARCH_PAGE_DESCRIPTION = '';
@@ -114,6 +116,40 @@ function readSearchPageMetadata() {
     };
   } catch (_) {}
   return cachedSearchPageMetadata;
+}
+
+function readCreatorModeFlag() {
+  if (cachedCreatorMode !== null) return cachedCreatorMode;
+  cachedCreatorMode = false;
+  try {
+    const cfgPath = resolveCanopyConfigPath();
+    if (!fs.existsSync(cfgPath)) return cachedCreatorMode;
+    const raw = fs.readFileSync(cfgPath, 'utf8');
+    const data = yaml.load(raw) || {};
+    const mode = data && typeof data.mode === 'string' ? data.mode.trim().toLowerCase() : '';
+    cachedCreatorMode = mode === 'creator';
+  } catch (_) {
+    cachedCreatorMode = false;
+  }
+  return cachedCreatorMode;
+}
+
+function creatorModeEnabled() {
+  return !!readCreatorModeFlag();
+}
+
+function loadCreatorStyles() {
+  if (cachedCreatorStyles) return cachedCreatorStyles;
+  cachedCreatorStyles = '';
+  const stylesPath = path.join(process.cwd(), 'packages', 'creator', 'src', 'styles.css');
+  try {
+    if (fs.existsSync(stylesPath)) {
+      cachedCreatorStyles = fs.readFileSync(stylesPath, 'utf8');
+    }
+  } catch (_) {
+    cachedCreatorStyles = '';
+  }
+  return cachedCreatorStyles;
 }
 
 let cachedPrimaryNavigation = null;
@@ -308,4 +344,6 @@ module.exports = {
   DEFAULT_SEARCH_PAGE_TITLE,
   DEFAULT_SEARCH_PAGE_DESCRIPTION,
   readPrimaryNavigation,
+  creatorModeEnabled,
+  loadCreatorStyles,
 };
