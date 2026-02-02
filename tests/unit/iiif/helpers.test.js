@@ -226,7 +226,7 @@ describe('extractMetadataValues', () => {
 });
 
 describe('extractAnnotationText', () => {
-  it('walks annotations and collects textual bodies for allowed motivations', () => {
+  it('walks annotations and collects textual bodies for allowed motivations', async () => {
     const manifest = {
       items: [
         {
@@ -249,7 +249,7 @@ describe('extractAnnotationText', () => {
       ],
     };
 
-    const result = extractAnnotationText(manifest, {
+    const result = await extractAnnotationText(manifest, {
       enabled: true,
       motivations: new Set(['commenting']),
     });
@@ -257,8 +257,51 @@ describe('extractAnnotationText', () => {
     expect(result).toBe('First Second Third');
   });
 
-  it('returns an empty string when disabled', () => {
-    expect(extractAnnotationText({}, { enabled: false })).toBe('');
+  it("fetches and processes referenced annotation pages", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        type: "AnnotationPage",
+        items: [
+          {
+            motivation: "supplementing",
+            body: {
+              type: "TextualBody",
+              value: "Fetched transcript",
+            },
+          },
+        ],
+      }),
+    });
+
+    const manifest = {
+      items: [
+        {
+          annotations: [
+            {
+              id: "https://example.org/annotation/page1",
+              type: "AnnotationPage",
+            },
+          ],
+        },
+      ],
+    };
+    const result = await extractAnnotationText(manifest, {
+      enabled: true,
+      motivations: new Set(["supplementing"]),
+    });
+
+    expect(result).toBe("Fetched transcript");
+    expect(global.fetch).toHaveBeenCalledWith(
+      "https://example.org/annotation/page1",
+      { headers: { Accept: "application/json" } },
+    );
+
+    delete global.fetch;
+  });
+
+  it('returns an empty string when disabled', async () => {
+    expect(await extractAnnotationText({}, { enabled: false })).toBe('');
   });
 });
 
