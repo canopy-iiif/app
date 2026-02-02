@@ -1,0 +1,24 @@
+export default function OrgApp({children}) {
+  return (
+    <>
+      <header className="org-site-header">
+        <a href="/" aria-label="Canopy IIIF home">
+          <strong>Canopy IIIF</strong>
+        </a>
+        <nav>
+          <a href="/app/docs/">Docs</a>
+          <a href="https://github.com/canopy-iiif/app">Source</a>
+          <a href="https://github.com/canopy-iiif/template">Template</a>
+        </nav>
+      </header>
+      {children}
+      <footer className="org-site-footer">
+        <span>© {new Date().getFullYear()} Canopy IIIF</span>
+        <nav>
+          <a href="https://github.com/canopy-iiif">GitHub</a>
+          <a href="https://canopy-iiif.github.io/app/about/index.html">About</a>
+        </nav>
+      </footer>
+    </>
+  );
+}

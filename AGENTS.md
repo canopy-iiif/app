@@ -190,6 +190,19 @@ Goal: Allow authors to fully compose the search page via MDX, while the builder 
   - Add a secret in this repo named `TEMPLATE_PUSH_TOKEN` (PAT with `repo` write access to `canopy-iiif/template`).
   - Optional: mark `template` as a Template repository in GitHub settings.
 
+--## Org Pages Workflow
+
+- Goal: whenever a release publishes, push the freshly built documentation site into `canopy-iiif.github.io/app/` so https://canopy-iiif.github.io/app stays in sync with the main repo.
+- Trigger: shares the `.github/workflows/release-and-template.yml` entry; the new `org_site` job runs alongside the template push once `needs.release.outputs.published == 'true'`.
+- Steps:
+  - Run `npm run build` with `CANOPY_BASE_PATH=/app` + `CANOPY_BASE_URL=https://canopy-iiif.github.io/app`.
+  - Call `packages/helpers/org/prepare-org-site.js` to copy `site/` into `.org-build/app`, add `.nojekyll`, mirror any `sitemap*.xml` files into the staging root, and render the assets under `packages/helpers/org/root/` (README + robots + `index.mdx` + optional `_app.mdx` + CSS) so the org landing page and metadata stay customizable.
+  - Force-push `.org-build/` via `packages/helpers/org/push-org-site.js` to the `canopy-iiif/canopy-iiif.github.io` repository.
+- Setup required:
+  - Add `ORG_SITE_PUSH_TOKEN` (PAT with `repo` access to `canopy-iiif.github.io`).
+  - The helper defaults to `main`/`canopy-iiif/canopy-iiif.github.io`; override with `ORG_SITE_TARGET_REPO` or `ORG_SITE_TARGET_BRANCH` when dry-running elsewhere.
+  - `.org-build/` stays gitignored next to `.template-build/`.
+
 We index two sources: IIIF Manifests ("works") and static MDX pages ("pages"). Keep this simple and predictable.
 
 - Record shape: `{ id?, title, href, type }`

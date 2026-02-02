@@ -1,0 +1,42 @@
+:root {
+  --org-hero-glow: rgba(99, 102, 241, 0.25);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 10% 15% auto;
+  height: 320px;
+  background: radial-gradient(circle, var(--org-hero-glow), transparent 70%);
+  filter: blur(60px);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.org-site-header strong {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.95rem;
+}
+
+.org-site-footer {
+  font-size: 0.85rem;
+}
+
+.org-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.org-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(168, 88, 255, 0.08), transparent);
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.org-card:hover::after {
+  opacity: 1;
+}

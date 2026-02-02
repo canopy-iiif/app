@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.6.13",
+    "date": "2026-02-02",
+    "summary": "Add org release workflow.",
+    "highlights": []
+  },
+  {
     "version": "1.6.12",
     "date": "2026-02-02",
     "summary": "Add support for referenced IIIF annotation pages.",
