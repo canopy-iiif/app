@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.6.12",
+    "date": "2026-02-02",
+    "summary": "Add support for referenced IIIF annotation pages.",
+    "highlights": []
+  },
+  {
     "version": "1.6.11",
     "date": "2026-01-30",
     "summary": "Add primary navigation to works routes.",
