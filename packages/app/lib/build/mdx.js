@@ -1283,14 +1283,20 @@ async function buildCloverHydrationRuntimes() {
   renameAnonymousChunks(scriptsDir);
   try {
     const { logLine } = require("./log");
-    ["canopy-viewer.js", "canopy-slider.js"].forEach((file) => {
+    const runtimeLabels = {
+      viewer: "Viewer, Scroll, and Image runtime",
+      slider: "Slider runtime",
+    };
+    Object.keys(entryPoints).forEach((key) => {
+      const file = `canopy-${key}.js`;
       try {
         const abs = path.join(scriptsDir, file);
         const st = fs.statSync(abs);
         const size = st && st.size ? st.size : 0;
         const kb = size ? ` (${(size / 1024).toFixed(1)} KB)` : "";
         const rel = path.relative(process.cwd(), abs).split(path.sep).join("/");
-        logLine(`✓ Wrote ${rel}${kb}`, "cyan");
+        const label = runtimeLabels[key] ? ` – ${runtimeLabels[key]}` : "";
+        logLine(`✓ Wrote ${rel}${kb}${label}`, "cyan");
       } catch (_) {}
     });
   } catch (_) {}

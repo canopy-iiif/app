@@ -38,6 +38,19 @@ const IIIF_CACHE_DIR = path.resolve(".cache/iiif");
 const IIIF_CACHE_MANIFESTS_DIR = path.join(IIIF_CACHE_DIR, "manifests");
 const IIIF_CACHE_COLLECTIONS_DIR = path.join(IIIF_CACHE_DIR, "collections");
 const IIIF_CACHE_COLLECTION = path.join(IIIF_CACHE_DIR, "collection.json");
+
+function relativeRuntimeScript(outPath, filename, versioned = false) {
+  if (!outPath || !filename) return null;
+  const abs = path.join(OUT_DIR, "scripts", filename);
+  let rel = path.relative(path.dirname(outPath), abs).split(path.sep).join("/");
+  if (!versioned) return rel;
+  try {
+    const st = fs.statSync(abs);
+    const version = Math.floor(st.mtimeMs || Date.now());
+    if (version) rel += `?v=${version}`;
+  } catch (_) {}
+  return rel;
+}
 // Primary global index location
 const IIIF_CACHE_INDEX = path.join(IIIF_CACHE_DIR, "index.json");
 // Additional legacy locations kept for backward compatibility (read + optional write)
@@ -2003,40 +2016,16 @@ async function buildIiifCollectionPages(CONFIG) {
             needsSearchForm;
 
           const viewerRel = needsHydrateViewer
-            ? path
-                .relative(
-                  path.dirname(outPath),
-                  path.join(OUT_DIR, "scripts", "canopy-viewer.js"),
-                )
-                .split(path.sep)
-                .join("/")
+            ? relativeRuntimeScript(outPath, "canopy-viewer.js", true)
             : null;
           const sliderRel = needsRelated
-            ? path
-                .relative(
-                  path.dirname(outPath),
-                  path.join(OUT_DIR, "scripts", "canopy-slider.js"),
-                )
-                .split(path.sep)
-                .join("/")
+            ? relativeRuntimeScript(outPath, "canopy-slider.js", true)
             : null;
           const timelineRel = needsTimeline
-            ? path
-                .relative(
-                  path.dirname(outPath),
-                  path.join(OUT_DIR, "scripts", "canopy-timeline.js"),
-                )
-                .split(path.sep)
-                .join("/")
+            ? relativeRuntimeScript(outPath, "canopy-timeline.js", true)
             : null;
           const mapRel = needsMap
-            ? path
-                .relative(
-                  path.dirname(outPath),
-                  path.join(OUT_DIR, "scripts", "canopy-map.js"),
-                )
-                .split(path.sep)
-                .join("/")
+            ? relativeRuntimeScript(outPath, "canopy-map.js", true)
             : null;
           const mapCssRel = needsMap
             ? path
@@ -2048,31 +2037,13 @@ async function buildIiifCollectionPages(CONFIG) {
                 .join("/")
             : null;
           const heroRel = needsHeroSlider
-            ? path
-                .relative(
-                  path.dirname(outPath),
-                  path.join(OUT_DIR, "scripts", "canopy-hero-slider.js"),
-                )
-                .split(path.sep)
-                .join("/")
+            ? relativeRuntimeScript(outPath, "canopy-hero-slider.js", true)
             : null;
           const relatedRel = needsRelated
-            ? path
-                .relative(
-                  path.dirname(outPath),
-                  path.join(OUT_DIR, "scripts", "canopy-related-items.js"),
-                )
-                .split(path.sep)
-                .join("/")
+            ? relativeRuntimeScript(outPath, "canopy-related-items.js", true)
             : null;
           const searchFormRel = needsSearchForm
-            ? path
-                .relative(
-                  path.dirname(outPath),
-                  path.join(OUT_DIR, "scripts", "canopy-search-form.js"),
-                )
-                .split(path.sep)
-                .join("/")
+            ? relativeRuntimeScript(outPath, "canopy-search-form.js", true)
             : null;
 
           const moduleScriptRels = [];

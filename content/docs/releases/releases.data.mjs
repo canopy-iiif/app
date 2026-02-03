@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.6.15",
+    "date": "2026-02-03",
+    "summary": "Hotfix: Address bug in Scroll component runtime compiler.",
+    "highlights": []
+  },
+  {
     "version": "1.6.14",
     "date": "2026-02-03",
     "summary": "Update Scroll to support referenced annotation pages.",

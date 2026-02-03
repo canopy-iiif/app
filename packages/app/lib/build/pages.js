@@ -14,6 +14,19 @@ const mdx = require('./mdx');
 const navigation = require('../components/navigation');
 const referenced = require('../components/referenced');
 
+function relativeRuntimeScript(outPath, filename, versioned = false) {
+  if (!outPath || !filename) return null;
+  const abs = path.join(OUT_DIR, 'scripts', filename);
+  let rel = path.relative(path.dirname(outPath), abs).split(path.sep).join('/');
+  if (!versioned) return rel;
+  try {
+    const st = fs.statSync(abs);
+    const version = Math.floor(st.mtimeMs || Date.now());
+    if (version) rel += `?v=${version}`;
+  } catch (_) {}
+  return rel;
+}
+
 function normalizeWhitespace(value) {
   if (!value) return '';
   return String(value).replace(/\s+/g, ' ').trim();
@@ -213,35 +226,32 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
   const needsFacets = body.includes('data-canopy-related-items');
   const needsCustomClients = body.includes('data-canopy-client-component');
   const viewerRel = needsHydrateViewer
-    ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-viewer.js')).split(path.sep).join('/')
+    ? relativeRuntimeScript(outPath, 'canopy-viewer.js', true)
     : null;
   const sliderRel = (needsHydrateSlider || needsFacets)
-    ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-slider.js')).split(path.sep).join('/')
+    ? relativeRuntimeScript(outPath, 'canopy-slider.js', true)
     : null;
   const heroRel = needsHeroSlider
-    ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-hero-slider.js')).split(path.sep).join('/')
+    ? relativeRuntimeScript(outPath, 'canopy-hero-slider.js', true)
     : null;
   const heroCssRel = needsHeroSlider
     ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-hero-slider.css')).split(path.sep).join('/')
     : null;
   const timelineRel = needsTimeline
-    ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-timeline.js')).split(path.sep).join('/')
+    ? relativeRuntimeScript(outPath, 'canopy-timeline.js', true)
     : null;
   const mapRel = needsMap
-    ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-map.js')).split(path.sep).join('/')
+    ? relativeRuntimeScript(outPath, 'canopy-map.js', true)
     : null;
   const mapCssRel = needsMap
     ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-map.css')).split(path.sep).join('/')
     : null;
   const facetsRel = needsFacets
-    ? path.relative(path.dirname(outPath), path.join(OUT_DIR, 'scripts', 'canopy-related-items.js')).split(path.sep).join('/')
+    ? relativeRuntimeScript(outPath, 'canopy-related-items.js', true)
     : null;
   let searchFormRel = null;
   if (needsSearchForm) {
-    const runtimeAbs = path.join(OUT_DIR, 'scripts', 'canopy-search-form.js');
-    let rel = path.relative(path.dirname(outPath), runtimeAbs).split(path.sep).join('/');
-    try { const st = fs.statSync(runtimeAbs); rel += `?v=${Math.floor(st.mtimeMs || Date.now())}`; } catch (_) {}
-    searchFormRel = rel;
+    searchFormRel = relativeRuntimeScript(outPath, 'canopy-search-form.js', true);
   }
   let customClientRel = null;
   if (needsCustomClients) {
