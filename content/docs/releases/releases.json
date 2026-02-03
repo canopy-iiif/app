@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.6.14",
+    "date": "2026-02-03",
+    "summary": "Update Scroll to support referenced annotation pages.",
+    "highlights": []
+  },
+  {
     "version": "1.6.13",
     "date": "2026-02-02",
     "summary": "Add org release workflow.",
