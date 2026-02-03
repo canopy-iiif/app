@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const zlib = require('zlib');
 
 const OUTPUT_ROOT = path.resolve(
   process.cwd(),
@@ -8,6 +9,8 @@ const OUTPUT_ROOT = path.resolve(
 const SITE_ROOT = path.resolve(process.cwd(), 'site');
 const ROOT_TEMPLATES = path.join(__dirname, 'root');
 const { renderOrgIndex } = require('./render-index');
+
+const DEFAULT_CANONICAL_BASE = 'https://canopy-iiif.github.io/app';
 
 function rmrf(target) {
   try {
@@ -27,24 +30,115 @@ function ensureSiteExists() {
   }
 }
 
-function copySiteToAppDir() {
-  const dest = path.join(OUTPUT_ROOT, 'app');
-  rmrf(dest);
-  mkdirp(path.dirname(dest));
-  fs.cpSync(SITE_ROOT, dest, { recursive: true });
+function getCanonicalBaseUrl() {
+  const raw = String(process.env.CANOPY_BASE_URL || '').trim();
+  if (raw) return raw;
+  return DEFAULT_CANONICAL_BASE;
+}
+
+function extractRelativePath(href) {
+  if (!href && href !== 0) return '';
+  const raw = String(href).trim();
+  if (!raw) return '';
+  try {
+    if (/^https?:\/\//i.test(raw)) {
+      const url = new URL(raw);
+      let rel = url.pathname || '/';
+      if (url.search) rel += url.search;
+      if (url.hash) rel += url.hash;
+      return rel || '/';
+    }
+  } catch (_) {}
+  if (raw.startsWith('/')) return raw;
+  return `/${raw}`;
+}
+
+function normalizeRelativePath(rel) {
+  if (!rel) return '/';
+  return rel.startsWith('/') ? rel : `/${rel}`;
+}
+
+function joinBasePath(originPath, rel) {
+  const basePath = originPath && originPath !== '/' ? originPath : '';
+  let remainder = rel || '/';
+  if (basePath) {
+    if (remainder === basePath) {
+      remainder = '/';
+    } else if (remainder.startsWith(`${basePath}/`)) {
+      remainder = remainder.slice(basePath.length);
+      if (!remainder.startsWith('/')) remainder = `/${remainder}`;
+    }
+  }
+  if (remainder === '/' || remainder === '') {
+    return basePath || '/';
+  }
+  return `${basePath}${remainder}`;
+}
+
+function rewriteSitemapXml(contents, baseUrl) {
+  if (!contents) return contents;
+  const canonical = String(baseUrl || '').trim();
+  if (!canonical) return contents;
+  let origin = canonical;
+  let originPath = '';
+  try {
+    const parsed = new URL(canonical);
+    origin = parsed.origin.replace(/\/$/, '');
+    originPath = (parsed.pathname || '').replace(/\/$/, '');
+  } catch (_) {
+    const match = canonical.match(/^(https?:\/\/[^\/]+)(\/.*)?$/i);
+    if (match) {
+      origin = match[1].replace(/\/$/, '');
+      originPath = (match[2] || '').replace(/\/$/, '');
+    }
+  }
+  if (!origin) return contents;
+
+  return contents.replace(/<loc>([^<]+)<\/loc>/gi, (full, href) => {
+    const rel = normalizeRelativePath(extractRelativePath(href));
+    const finalPath = joinBasePath(originPath, rel);
+    return `<loc>${origin}${finalPath}</loc>`;
+  });
 }
 
 function copySitemapsToRoot() {
   if (!fs.existsSync(SITE_ROOT)) return;
   const entries = fs.readdirSync(SITE_ROOT, { withFileTypes: true });
+  const canonicalBase = getCanonicalBaseUrl();
   for (const entry of entries) {
     if (!entry.isFile()) continue;
     if (!/^sitemap.*\.xml(\.gz)?$/i.test(entry.name)) continue;
     const srcPath = path.join(SITE_ROOT, entry.name);
     const destPath = path.join(OUTPUT_ROOT, entry.name);
     mkdirp(path.dirname(destPath));
-    fs.copyFileSync(srcPath, destPath);
+    if (/\.xml$/i.test(entry.name)) {
+      const raw = fs.readFileSync(srcPath, 'utf8');
+      const rewritten = rewriteSitemapXml(raw, canonicalBase);
+      fs.writeFileSync(destPath, rewritten, 'utf8');
+    } else if (/\.xml\.gz$/i.test(entry.name)) {
+      try {
+        const raw = fs.readFileSync(srcPath);
+        const unzipped = zlib.gunzipSync(raw);
+        const rewritten = rewriteSitemapXml(unzipped.toString('utf8'), canonicalBase);
+        const rezipped = zlib.gzipSync(Buffer.from(rewritten, 'utf8'));
+        fs.writeFileSync(destPath, rezipped);
+      } catch (_) {
+        fs.copyFileSync(srcPath, destPath);
+      }
+    } else {
+      fs.copyFileSync(srcPath, destPath);
+    }
   }
+}
+
+const ALLOWED_ROOT_FILES = ['robots.txt'];
+
+function shouldCopyRootFile(name) {
+  const lower = name.toLowerCase();
+  if (ALLOWED_ROOT_FILES.includes(lower)) return true;
+  if (lower.startsWith('readme')) return true;
+  if (lower.endsWith('.css')) return true;
+  return false;
 }
 
 function copyRootExtras() {
@@ -55,10 +149,9 @@ function copyRootExtras() {
     const destPath = path.join(OUTPUT_ROOT, entry);
     const stats = fs.statSync(srcPath);
     if (stats.isDirectory()) {
-      rmrf(destPath);
-      mkdirp(path.dirname(destPath));
-      fs.cpSync(srcPath, destPath, { recursive: true });
-    } else if (stats.isFile()) {
+      continue;
+    }
+    if (stats.isFile() && shouldCopyRootFile(entry)) {
       mkdirp(path.dirname(destPath));
       fs.copyFileSync(srcPath, destPath);
     }
@@ -81,7 +174,6 @@ async function main() {
   ensureSiteExists();
   rmrf(OUTPUT_ROOT);
   mkdirp(OUTPUT_ROOT);
-  copySiteToAppDir();
   copySitemapsToRoot();
   copyRootExtras();
   await renderCustomIndex();

@@ -196,7 +196,7 @@ Goal: Allow authors to fully compose the search page via MDX, while the builder 
 - Trigger: `.github/workflows/deploy-org-site.yml` runs automatically after the Tests workflow succeeds on `main` (mirrors deploy-pages) and offers `workflow_dispatch` for manual syncs.
 - Steps:
   - Run `npm run build` with `CANOPY_BASE_PATH=/app` + `CANOPY_BASE_URL=https://canopy-iiif.github.io/app`.
-  - Call `packages/helpers/org/prepare-org-site.js` to copy `site/` into `.org-build/app`, add `.nojekyll`, mirror any `sitemap*.xml` files into the staging root, and render the assets under `packages/helpers/org/root/` (README + robots + `index.mdx` + optional `_app.mdx` + CSS) so the org landing page and metadata stay customizable.
+  - Call `packages/helpers/org/prepare-org-site.js` to harvest sitemap files from `site/`, rewrite `<loc>` entries to the `CANOPY_BASE_URL` so `/app` stays in every URL, and emit a minimal `.org-build/` (only `index.html`, `README*`, `robots.txt`, `*.css`, `sitemap*.xml(.gz)`, `.nojekyll`). The helper renders `packages/helpers/org/root/index.mdx` (optionally wrapped by `_app.mdx`) into the published HTML—no `/app` directory is pushed.
   - Force-push `.org-build/` via `packages/helpers/org/push-org-site.js` to the `canopy-iiif/canopy-iiif.github.io` repository.
 - Setup required:
   - Add `ORG_SITE_PUSH_TOKEN` (PAT with `repo` access to `canopy-iiif.github.io`).

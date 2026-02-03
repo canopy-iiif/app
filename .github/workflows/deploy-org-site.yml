@@ -18,6 +18,9 @@ jobs:
     if: >-
       ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
     runs-on: ubuntu-latest
+    env:
+      CANOPY_BASE_PATH: /app
+      CANOPY_BASE_URL: https://canopy-iiif.github.io/app
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,8 +41,6 @@ jobs:
 
       - name: Build documentation site for canopy-iiif.github.io/app
         env:
-          CANOPY_BASE_PATH: /app
-          CANOPY_BASE_URL: https://canopy-iiif.github.io/app
           CANOPY_CHUNK_SIZE: "10"
           CANOPY_FETCH_CONCURRENCY: "1"
         run: npm run build
