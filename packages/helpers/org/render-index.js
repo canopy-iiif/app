@@ -3,6 +3,7 @@ const path = require('path');
 const yaml = require('js-yaml');
 const React = require('react');
 const ReactDOMServer = require('react-dom/server');
+const { pathToFileURL } = require('url');
 
 let remarkGfm = null;
 try {
@@ -39,11 +40,16 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
-function compileOptionsBase(overrides = {}) {
+function compileOptionsBase(filePath, overrides = {}) {
   const options = {
     outputFormat: 'function-body',
     development: false,
   };
+  if (filePath) {
+    try {
+      options.baseUrl = pathToFileURL(filePath).href;
+    } catch (_) {}
+  }
   const remarkPlugins = [];
   if (remarkGfm) remarkPlugins.push(remarkGfm);
   if (overrides && Array.isArray(overrides.remarkPlugins)) {
@@ -53,12 +59,12 @@ function compileOptionsBase(overrides = {}) {
   return options;
 }
 
-async function compileMdxModule(source, compileOptions) {
+async function compileMdxModule(source, filePath, overrides) {
   const { compile, run } = await import('@mdx-js/mdx');
   const runtime = await import('react/jsx-runtime');
   const { useMDXComponents: provider } = await import('@mdx-js/react');
   const useMDXComponents = typeof provider === 'function' ? provider : () => ({});
-  const compiled = await compile(source, compileOptions || compileOptionsBase());
+  const compiled = await compile(source, compileOptionsBase(filePath, overrides));
   return run(compiled, runtime, { useMDXComponents });
 }
 
@@ -80,8 +86,7 @@ function resolveOrgBaseUrl() {
 async function renderOrgIndex(mdxPath, outPath) {
   const raw = fs.readFileSync(mdxPath, 'utf8');
   const { data, content } = parseFrontmatter(raw);
-  const compileOptions = compileOptionsBase();
-  const contentModule = await compileMdxModule(content, compileOptions);
+  const contentModule = await compileMdxModule(content, mdxPath);
   const Content = contentModule.default || contentModule.MDXContent || contentModule;
 
   const docsStylesheet = resolveDocsStylesheetHref();
@@ -112,7 +117,7 @@ async function renderOrgIndex(mdxPath, outPath) {
   if (!appSource || !appSource.trim()) {
     throw new Error('packages/helpers/org/root/_app.mdx must export App/Head components.');
   }
-  const appModule = await compileMdxModule(appSource, compileOptions);
+  const appModule = await compileMdxModule(appSource, appPath);
   const App = appModule.App || appModule.default || appModule.MDXContent || null;
   const Head = appModule.Head || null;
   if (!App) {
@@ -145,6 +150,7 @@ async function renderOrgIndex(mdxPath, outPath) {
     name: title,
     url: pageMeta.canonical,
   };
+  const schemaJson = JSON.stringify(schemaPayload).replace(/</g, '\\u003c');
 
   const html = `<!doctype html>
 <html lang="${escapeHtml(lang)}">
@@ -155,7 +161,7 @@ async function renderOrgIndex(mdxPath, outPath) {
     ${description ? `<meta name="description" content="${escapeHtml(description)}" />` : ''}
     <link rel="canonical" href="${escapeHtml(pageMeta.canonical)}" />
     ${stylesheetTags}
-    <script type="application/ld+json">${escapeHtml(JSON.stringify(schemaPayload))}</script>
+    <script type="application/ld+json">${schemaJson}</script>
     ${headFromApp}
     ${headExtra}
   </head>

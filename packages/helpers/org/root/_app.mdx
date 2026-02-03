@@ -1,37 +1,27 @@
+import {Meta, Stylesheet} from "@canopy-iiif/app/head";
+import {CanopyHeader, CanopyFooter, GoogleAnalytics} from "@canopy-iiif/app/ui";
+
 export function Head() {
   return (
     <>
+      <Meta siteTitle="Canopy IIIF" />
+      <Stylesheet />
+      <link rel="icon" href="/favicon.ico" />
       <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
       <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossOrigin="true"
+      />
+      <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..600,50,0..1;1,9..144,300..600,50,0..1&display=swap&family=IBM+Plex+Mono:wght@400;700&display=swap"
         rel="stylesheet"
       />
+      <GoogleAnalytics id="G-YPJRYY7848" />
     </>
   );
 }
 
 export function App({children}) {
-  return (
-    <>
-      <header className="org-site-header">
-        <a href="/" aria-label="Canopy IIIF home">
-          <strong>Canopy IIIF</strong>
-        </a>
-        <nav>
-          <a href="/app/docs/">Docs</a>
-          <a href="https://github.com/canopy-iiif/app">Source</a>
-          <a href="https://github.com/canopy-iiif/template">Template</a>
-        </nav>
-      </header>
-      <main className="org-landing">{children}</main>
-      <footer className="org-site-footer">
-        <span>© {new Date().getFullYear()} Canopy IIIF</span>
-        <nav>
-          <a href="https://github.com/canopy-iiif">GitHub</a>
-          <a href="https://canopy-iiif.github.io/app/about/index.html">About</a>
-        </nav>
-      </footer>
-    </>
-  );
+  return <main>{children}</main>;
 }
