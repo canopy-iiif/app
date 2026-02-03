@@ -1,4 +1,17 @@
-export default function OrgApp({children}) {
+export function Head() {
+  return (
+    <>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
+      <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet"
+      />
+    </>
+  );
+}
+
+export function App({children}) {
   return (
     <>
       <header className="org-site-header">
@@ -11,7 +24,7 @@ export default function OrgApp({children}) {
           <a href="https://github.com/canopy-iiif/template">Template</a>
         </nav>
       </header>
-      {children}
+      <main className="org-landing">{children}</main>
       <footer className="org-site-footer">
         <span>© {new Date().getFullYear()} Canopy IIIF</span>
         <nav>

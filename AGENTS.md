@@ -201,6 +201,7 @@ Goal: Allow authors to fully compose the search page via MDX, while the builder 
 - Setup required:
   - Add `ORG_SITE_PUSH_TOKEN` (PAT with `repo` access to `canopy-iiif.github.io`).
   - The helper defaults to `main`/`canopy-iiif/canopy-iiif.github.io`; override with `ORG_SITE_TARGET_REPO` or `ORG_SITE_TARGET_BRANCH` when dry-running elsewhere.
+  - Override `ORG_SITE_BASE_URL` when the landing page canonical differs from `https://canopy-iiif.github.io`.
   - `.org-build/` stays gitignored next to `.template-build/`.
 
 We index two sources: IIIF Manifests ("works") and static MDX pages ("pages"). Keep this simple and predictable.

@@ -3,40 +3,22 @@ title: Canopy IIIF
 description: Build fast, flexible IIIF sites with a single repository.
 stylesheets:
   - /org-site.css
-styles: |
-  .org-hero {
-    display: grid;
-    gap: 1.5rem;
-  }
-  .org-hero h1 {
-    font-size: clamp(2.5rem, 5vw, 4.25rem);
-  }
-  .org-hero p {
-    font-size: 1.25rem;
-    max-width: 65ch;
-  }
-  .org-pill.is-primary {
-    background: linear-gradient(120deg, rgba(136, 93, 255, 0.9), rgba(94, 234, 212, 0.9));
-    color: #08080c;
-    border-color: transparent;
-  }
-  .org-pill.is-primary:hover {
-    background: linear-gradient(120deg, rgba(136, 93, 255, 1), rgba(94, 234, 212, 1));
-  }
-  .org-card strong {
-    font-size: 1.35rem;
-  }
 ---
+
 <section className="org-hero">
   <p className="org-pill">Static · IIIF-native · Production ready</p>
   <h1>Build IIIF-powered stories and search-friendly sites in minutes.</h1>
   <p>
-    Canopy IIIF turns IIIF Collections and Manifests into fully responsive, fast, and
-    maintainable websites. Author content in Markdown + JSX (MDX), stitch in live viewers
-    and search, and deploy to GitHub Pages for automatic hosting.
+    Canopy IIIF turns IIIF Collections and Manifests into fully responsive,
+    fast, and maintainable websites. Author content in Markdown + JSX (MDX),
+    stitch in live viewers and search, and deploy to GitHub Pages for automatic
+    hosting.
   </p>
   <div className="org-cta-row">
-    <a className="org-pill is-primary" href="https://github.com/canopy-iiif/template">
+    <a
+      className="org-pill is-primary"
+      href="https://github.com/canopy-iiif/template"
+    >
       Use the template →
     </a>
     <a className="org-pill" href="https://canopy-iiif.github.io/app/docs/">
@@ -50,24 +32,25 @@ styles: |
     <span>Author</span>
     <strong>MDX pages + IIIF viewers</strong>
     <p>
-      Write narratives, interleave interactive IIIF viewers, sliders, and maps, and keep assets
-      portable by linking directly to your Manifests.
+      Write narratives, interleave interactive IIIF viewers, sliders, and maps,
+      and keep assets portable by linking directly to your Manifests.
     </p>
   </article>
   <article className="org-card">
     <span>Automate</span>
     <strong>Collections → Sites</strong>
     <p>
-      Point Canopy at a IIIF Collection or manifest list and let the build generate pages, thumbnails,
-      search indexes, and related-item facets.
+      Point Canopy at a IIIF Collection or manifest list and let the build
+      generate pages, thumbnails, search indexes, and related-item facets.
     </p>
   </article>
   <article className="org-card">
     <span>Deploy</span>
     <strong>GitHub Pages ready</strong>
     <p>
-      One repository drives docs, releases, the starter template, and this org landing page.
-      Customize this file to refresh canopy-iiif.github.io instantly.
+      One repository drives docs, releases, the starter template, and this org
+      landing page. Customize this file to refresh canopy-iiif.github.io
+      instantly.
     </p>
   </article>
 </section>
