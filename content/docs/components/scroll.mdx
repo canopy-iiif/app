@@ -5,7 +5,7 @@ description: Verical canvas reader for IIIF Manifests with textual annotations.
 
 # Scroll
 
-`<Scroll>` is a specialized text-focused component that outputs a IIIF Manifest as a vertically oriented canvas reader. A small thumbnail or image viewer is fixed to the side of the viewport while the textual annotations scroll alongside it. `Scroll` can hand;e multiple languages and works well for digitized books, manuscripts, and other text-heavy objects. Note that that component currently only handles annotations embedded within the manifest. `Scroll` will respect the formats of `text/plain`, `text/html`, and `text/markdown`.
+`<Scroll>` is a specialized text-focused component that outputs a IIIF Manifest as a vertically oriented canvas reader. A small thumbnail or image viewer is fixed to the side of the viewport while the textual annotations scroll alongside it. `Scroll` can hand;e multiple languages and works well for digitized books, manuscripts, and other text-heavy objects. Note that that component currently only handles annotations embedded within the manifest. `Scroll` will respect the formats of `text/plain`, `text/html`, and `text/markdown`. Scroll handles both annotations embedded to a Manifest as well as externally referenced annotation pages.
 
 ```mdx
 <Scroll iiifContent="https://iiif-maktaba.dc.library.northwestern.edu/7536339d-ab36-4079-a206-2d46f78053dc.json" />
@@ -18,4 +18,4 @@ description: Verical canvas reader for IIIF Manifests with textual annotations.
 | Prop          | Type   | Required | Notes                                                                     |
 | ------------- | ------ | -------- | ------------------------------------------------------------------------- |
 | `iiifContent` | string | ✅       | IIIF Manifest URL                                                         |
-| `options`     | object |          | Passed to Clover and merged with global defaults from `sliderOptions.js`. |
+| `options`     | object |          | Passed to Scroll and merged with global defaults from `sliderOptions.js`. |
