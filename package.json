@@ -29,6 +29,10 @@
     "@samvera/clover-iiif": "^3.3.8",
     "swiper": "^11.2.10"
   },
+  "optionalDependencies": {
+    "@parcel/watcher-linux-x64-glibc": "^2.5.1",
+    "@parcel/watcher-linux-x64-musl": "^2.5.1"
+  },
   "devDependencies": {
     "@changesets/cli": "^2.27.9",
     "@playwright/test": "^1.47.2",

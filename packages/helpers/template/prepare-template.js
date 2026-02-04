@@ -120,6 +120,7 @@ function rewritePackageJson(appVersion) {
     }
   }
   if (j.workspaces) delete j.workspaces;
+  if (j.optionalDependencies) delete j.optionalDependencies;
   j.scripts = {
     build: 'tsx app/scripts/canopy-build.mts',
     dev: 'tsx app/scripts/canopy-build.mts',
