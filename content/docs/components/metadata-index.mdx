@@ -1,0 +1,74 @@
+---
+title: Index
+description: Site-wide index built from the metadata labels configured in canopy.yml.
+---
+
+# Index (Metadata)
+
+The `<Index />` provides a site-wide list of terms built from the labels listed under the `metadata` key of the `canopy.yml` . During the build, every configured `collection` and `manifest` is traversed, and the values for each label are organized. The `<Index />` then emits a `<dl>` per label with `<dt>` for the heading and `<dd>` rows for every value that appeared anywhere in the corpus. Think of it as a metadata-based analog to a physical volume's index. Every `value` doubles as a link to `/search` so readers can jump straight into filtered results for that term.
+
+```mdx
+<Index />
+```
+
+<Index />
+
+## Usage
+
+### All lists
+
+Add the index to any content page to build a dedicated an index of terms across all items in your collections:
+
+```mdx filename="content/terms.mdx" {9}
+---
+title: Terms
+---
+
+# Terms
+
+A comprehensive index of terms across items in our collections:
+
+<Index />
+```
+
+### Single list
+
+Optionally, you can render a single label by passing `label`. This is helpful when you want to highlight one facet beside other narrative copy or define a dedicated page for a specific subset of terms.
+
+```mdx filename="content/terms/date.mdx" {9}
+---
+title: Dates
+---
+
+# Dates
+
+A comprehensive index of dates across items in our collections:
+
+<Index label="Date" />
+```
+
+<Index label="Date" />
+
+### Limit and Toggle Customizations
+
+By default each list shows up to 15 values before revealing a "Show more" button. You can adjust this limit and customize the button labels for internationalization or tone.
+
+```mdx {3-5}
+<Index
+  label="Subject"
+  limit={50}
+  expandLabel="Show more subjects"
+  collapseLabel="Show fewer subjects"
+/>
+```
+
+## API
+
+| Prop            | Type   | Default     | Notes                                                                                              |
+| --------------- | ------ | ----------- | -------------------------------------------------------------------------------------------------- |
+| `label`         | string |             | Restrict the index to a single metadata label (case-insensitive match on the configured labels).   |
+| `metadata`      | array  | global      | Optional override (array of `{label, values}`) to render a curated subset instead of the full set. |
+| `limit`         | number | `15`        | Maximum number of values to show before revealing the toggle inside each `<dl>`.                   |
+| `expandLabel`   | string | `Show more` | Text for the expand button when additional values are hidden.                                      |
+| `collapseLabel` | string | `Show less` | Text used after expanding the list.                                                                |
+| `className`     | string |             | Extra classes applied to the wrapping `<div>`. Each label always renders as its own `<dl>`.        |
