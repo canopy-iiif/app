@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.6.18",
+    "date": "2026-02-05",
+    "summary": "Introduce metadata Index component.",
+    "highlights": []
+  },
+  {
     "version": "1.6.17",
     "date": "2026-02-04",
     "summary": "Exclude 404 from search index.",
