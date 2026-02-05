@@ -38,6 +38,10 @@ const IIIF_CACHE_DIR = path.resolve(".cache/iiif");
 const IIIF_CACHE_MANIFESTS_DIR = path.join(IIIF_CACHE_DIR, "manifests");
 const IIIF_CACHE_COLLECTIONS_DIR = path.join(IIIF_CACHE_DIR, "collections");
 const IIIF_CACHE_COLLECTION = path.join(IIIF_CACHE_DIR, "collection.json");
+const IIIF_METADATA_INDEX_CACHE = path.join(
+  IIIF_CACHE_DIR,
+  "metadata-index.json",
+);
 
 function relativeRuntimeScript(outPath, filename, versioned = false) {
   if (!outPath || !filename) return null;
@@ -621,6 +625,117 @@ function extractMetadataValues(manifest, options = {}) {
     }
   }
   return out;
+}
+
+function extractMetadataEntries(manifest, options = {}) {
+  const meta = Array.isArray(manifest && manifest.metadata)
+    ? manifest.metadata
+    : [];
+  if (!meta.length) return [];
+  const includeAll = !!options.includeAll;
+  const labelsSet = includeAll
+    ? null
+    : options && options.labelsSet instanceof Set
+      ? options.labelsSet
+      : new Set();
+  const map = new Map();
+  const order = [];
+  for (const entry of meta) {
+    if (!entry) continue;
+    const label = firstLabelString(entry.label);
+    if (!label) continue;
+    const normalized = normalizeMetadataLabel(label);
+    if (!normalized) continue;
+    if (!includeAll && labelsSet && labelsSet.size && !labelsSet.has(normalized)) continue;
+    const values = [];
+    flattenMetadataValue(entry.value, values, 0);
+    const cleaned = [];
+    for (const val of values) {
+      const text = String(val || "").trim();
+      if (text) cleaned.push(text);
+    }
+    if (!cleaned.length) continue;
+    let record = map.get(normalized);
+    if (!record) {
+      record = {label, normalized, values: [], seen: new Set()};
+      map.set(normalized, record);
+      order.push(normalized);
+    } else if (!record.label && label) {
+      record.label = label;
+    }
+    for (const valueText of cleaned) {
+      if (record.seen.has(valueText)) continue;
+      record.seen.add(valueText);
+      record.values.push(valueText);
+    }
+  }
+  return order
+    .map((normalized) => map.get(normalized))
+    .filter(Boolean)
+    .map((record) => ({
+      label: record.label,
+      normalized: record.normalized,
+      values: record.values.slice(),
+    }));
+}
+
+function buildMetadataIndexPayload(map, explicitOrder, fallbackOrder) {
+  if (!map || !map.size) return [];
+  const ordered = [];
+  const seen = new Set();
+  const primaryOrder = Array.isArray(explicitOrder) ? explicitOrder : [];
+  const secondaryOrder = Array.isArray(fallbackOrder) ? fallbackOrder : [];
+  for (const normalized of primaryOrder) {
+    if (!normalized) continue;
+    const record = map.get(normalized);
+    if (!record) continue;
+    ordered.push(record);
+    seen.add(normalized);
+  }
+  for (const normalized of secondaryOrder) {
+    if (!normalized || seen.has(normalized)) continue;
+    const record = map.get(normalized);
+    if (!record) continue;
+    ordered.push(record);
+    seen.add(normalized);
+  }
+  map.forEach((record, normalized) => {
+    if (seen.has(normalized)) return;
+    ordered.push(record);
+  });
+  const payload = [];
+  for (const record of ordered) {
+    if (!record || !record.values) continue;
+    const values = Array.from(record.values.values()).sort((a, b) =>
+      String(a && a.value ? a.value : "").localeCompare(
+        String(b && b.value ? b.value : ""),
+      ),
+    );
+    if (!values.length) continue;
+    payload.push({
+      label: record.label || record.slug || record.normalized,
+      slug: record.slug || record.normalized,
+      values,
+    });
+  }
+  return payload;
+}
+
+async function writeMetadataIndexFile(payload) {
+  if (!payload || !payload.length) {
+    try {
+      await fsp.rm(IIIF_METADATA_INDEX_CACHE, {force: true});
+    } catch (_) {}
+    return;
+  }
+  try {
+    ensureDirSync(path.dirname(IIIF_METADATA_INDEX_CACHE));
+    await fsp.writeFile(
+      IIIF_METADATA_INDEX_CACHE,
+      JSON.stringify(payload, null, 2),
+      "utf8",
+    );
+  } catch (_) {}
 }
 
 async function normalizeToV3(resource) {
@@ -1521,11 +1636,10 @@ async function buildIiifCollectionPages(CONFIG) {
   const metadataLabelsRaw = Array.isArray(cfg && cfg.metadata)
     ? cfg.metadata
     : [];
-  const metadataLabelSet = new Set(
-    metadataLabelsRaw
-      .map((label) => normalizeMetadataLabel(String(label || "")))
-      .filter(Boolean),
-  );
+  const metadataLabelsNormalized = metadataLabelsRaw
+    .map((label) => normalizeMetadataLabel(String(label || "")))
+    .filter(Boolean);
+  const metadataLabelSet = new Set(metadataLabelsNormalized);
   const metadataFacetLabels = (() => {
     if (!Array.isArray(metadataLabelsRaw) || !metadataLabelsRaw.length)
       return [];
@@ -1544,6 +1658,11 @@ async function buildIiifCollectionPages(CONFIG) {
     }
     return entries;
   })();
+  const metadataLabelSlugMap = new Map();
+  for (const entry of metadataFacetLabels) {
+    if (!entry || !entry.normalized) continue;
+    metadataLabelSlugMap.set(entry.normalized, entry.slug || "");
+  }
   const metadataOptions = {
     enabled:
       metadataEnabled &&
@@ -1551,6 +1670,51 @@ async function buildIiifCollectionPages(CONFIG) {
     includeAll: metadataIncludeAll,
     labelsSet: metadataIncludeAll ? null : metadataLabelSet,
   };
+  const metadataIndexMap = new Map();
+  const metadataDynamicOrder = [];
+  const metadataDynamicOrderSet = new Set();
+  const metadataCollectAllLabels = metadataLabelsNormalized.length === 0;
+  function recordMetadataIndexEntry(entry) {
+    if (!entry || !entry.normalized || !Array.isArray(entry.values)) return;
+    if (!entry.values.length) return;
+    const normalized = entry.normalized;
+    if (!metadataCollectAllLabels && !metadataLabelSet.has(normalized)) return;
+    let record = metadataIndexMap.get(normalized);
+    const labelText = entry.label || normalized;
+    if (!record) {
+      const labelSlug =
+        metadataLabelSlugMap.get(normalized) ||
+        slugify(labelText, {lower: true, strict: true, trim: true}) ||
+        normalized;
+      record = {
+        normalized,
+        label: labelText,
+        slug: labelSlug || normalized,
+        values: new Map(),
+      };
+      metadataIndexMap.set(normalized, record);
+      if (metadataCollectAllLabels && !metadataDynamicOrderSet.has(normalized)) {
+        metadataDynamicOrderSet.add(normalized);
+        metadataDynamicOrder.push(normalized);
+      }
+    } else if (!record.label && labelText) {
+      record.label = labelText;
+    }
+    const valueMap = record.values;
+    for (const text of entry.values) {
+      const trimmed = String(text || "").trim();
+      if (!trimmed) continue;
+      const valueSlug =
+        slugify(trimmed, {lower: true, strict: true, trim: true}) ||
+        trimmed.toLowerCase().replace(/[^a-z0-9]+/g, "-") ||
+        trimmed;
+      if (!valueSlug) continue;
+      if (!valueMap.has(valueSlug)) {
+        valueMap.set(valueSlug, {value: trimmed, slug: valueSlug});
+      }
+    }
+  }
+
   const summaryOptions = {
     enabled: summaryEnabled,
   };
@@ -2308,6 +2472,15 @@ async function buildIiifCollectionPages(CONFIG) {
           let metadataValues = [];
           let summaryValue = "";
           let annotationValue = "";
+          try {
+            const metadataEntries = extractMetadataEntries(manifest, {
+              includeAll: metadataCollectAllLabels,
+              labelsSet: metadataLabelSet,
+            });
+            if (metadataEntries && metadataEntries.length) {
+              for (const entry of metadataEntries) recordMetadataIndexEntry(entry);
+            }
+          } catch (_) {}
           if (metadataOptions && metadataOptions.enabled) {
             try {
               metadataValues = extractMetadataValues(manifest, metadataOptions);
@@ -2436,10 +2609,18 @@ async function buildIiifCollectionPages(CONFIG) {
       logLine(
         `IIIF chunk summary: ${totalItems} Manifest(s) in ${formatDurationMs(totalDuration)} (avg chunk ${formatDurationMs(avgDuration)}, ${rateLabel})`,
         "cyan",
-        {dim: true},
+      {dim: true},
       );
     } catch (_) {}
   }
+  try {
+    const metadataIndexPayload = buildMetadataIndexPayload(
+      metadataIndexMap,
+      metadataLabelsNormalized,
+      metadataDynamicOrder,
+    );
+    await writeMetadataIndexFile(metadataIndexPayload);
+  } catch (_) {}
   try {
     await navPlace.writeNavPlaceDataset(navPlaceRecords);
     try {
@@ -2492,6 +2673,7 @@ module.exports.__TESTING__ = {
   extractSummaryValues,
   truncateSummary,
   extractMetadataValues,
+  extractMetadataEntries,
   extractAnnotationText,
   normalizeIiifId,
   normalizeIiifType,

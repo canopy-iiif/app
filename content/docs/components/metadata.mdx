@@ -1,0 +1,64 @@
+---
+title: Index
+description: Site-wide index built from the metadata labels configured in canopy.yml.
+---
+
+# Index
+
+`<Index />` prints a site-wide glossary built from the metadata labels listed under `canopy.yml → metadata`. During the build, Canopy walks every configured `collection` and `manifest`, aggregates the values for each label, then emits one `<dl>` per label with `<dt>` for the heading and `<dd>` rows for every value that appeared anywhere in the corpus. Think of it as the metadata analog to the search facet list—only this version is meant for static MDX pages. Every `<dd>` doubles as a link to `/search`, pre-filling the query parameters so readers can jump straight into filtered results.
+
+```mdx
+<Index />
+```
+
+<Index />
+
+## Usage
+
+### All lists
+
+Add the index to any MDX page—home, about, or even a dedicated metadata reference section.
+
+```mdx filename="content/terms.mdx"
+---
+title: Terms
+---
+
+# Terms
+
+A comprehensive index of terms across items in our collections:
+
+<Index />
+```
+
+### Single list
+
+Render a single label by passing `label`. This is helpful when you want to highlight one facet beside other narrative copy:
+
+```mdx
+<Index label="Date" />
+```
+
+<Index label="Date" />
+
+Limit the visible values and customize the expand/collapse controls per label:
+
+```mdx
+<Index
+  label="Subject"
+  limit={5}
+  expandLabel="Show more subjects"
+  collapseLabel="Show fewer subjects"
+/>
+```
+
+## API
+
+| Prop           | Type   | Default      | Notes                                                                                             |
+| -------------- | ------ | ------------ | ------------------------------------------------------------------------------------------------- |
+| `label`        | string |              | Restrict the index to a single metadata label (case-insensitive match on the configured labels).   |
+| `metadata`     | array  | global       | Optional override (array of `{label, values}`) to render a curated subset instead of the full set. |
+| `limit`        | number | `15`         | Maximum number of values to show before revealing the toggle inside each `<dl>`.                  |
+| `expandLabel`  | string | `Show more`  | Text for the expand button when additional values are hidden.                                      |
+| `collapseLabel`| string | `Show less`  | Text used after expanding the list.                                                                |
+| `className`    | string |              | Extra classes applied to the wrapping `<div>`. Each label always renders as its own `<dl>`.       |

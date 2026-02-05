@@ -17,6 +17,7 @@ const {
   extractSummaryValues,
   truncateSummary,
   extractMetadataValues,
+  extractMetadataEntries,
   extractAnnotationText,
   normalizeIiifId,
   normalizeIiifType,
@@ -221,6 +222,43 @@ describe('extractMetadataValues', () => {
       'Beta',
       '2024',
       'Nope',
+    ]);
+  });
+});
+
+describe('extractMetadataEntries', () => {
+  const manifest = {
+    metadata: [
+      {
+        label: {en: ['Subject']},
+        value: ['Painting', {none: ['Oil']}],
+      },
+      {
+        label: {en: ['Creator']},
+        value: 'Artist Name',
+      },
+      {
+        label: {en: ['Subject']},
+        value: [{en: ['Landscape']}],
+      },
+    ],
+  };
+
+  it('returns entries for configured labels', () => {
+    const labelsSet = new Set(['creator']);
+    expect(extractMetadataEntries(manifest, {labelsSet})).toEqual([
+      {label: 'Creator', normalized: 'creator', values: ['Artist Name']},
+    ]);
+  });
+
+  it('includes all labels when includeAll is true', () => {
+    expect(extractMetadataEntries(manifest, {includeAll: true})).toEqual([
+      {
+        label: 'Subject',
+        normalized: 'subject',
+        values: ['Painting', 'Oil', 'Landscape'],
+      },
+      {label: 'Creator', normalized: 'creator', values: ['Artist Name']},
     ]);
   });
 });
