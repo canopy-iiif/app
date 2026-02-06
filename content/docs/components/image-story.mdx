@@ -1,0 +1,29 @@
+---
+title: ImageStory
+description: Embed the Storiiies viewer to for guided image tours.
+---
+
+# ImageStory
+
+`<ImageStory>` wraps [StoriiiesViewer](https://cogapplabs.github.io/StoriiiesViewer/api), the open-source player for Storiiies manifests created by [Cogapp](https://www.cogapp.com/). It accepts accepts IIIF Manifest URIs with annotations targeting rectangles or points on images, and renders a guided tour with built-in navigation and text areas for annotation content. The component is ideal for embedding interactive image stories in your content pages without needing to build a custom viewer from scratch.
+
+<ImageStory manifestUrl="https://manifest.storiiies-editor.cogapp.com/v3/6c83d" />
+
+```mdx
+<ImageStory manifestUrl="https://manifest.storiiies-editor.cogapp.com/v3/6c83d" />
+```
+
+## Authoring with Storiiies Editor
+
+Individuals of any technical skill level can easily create and export Storiiies manifests using the [Storiiies Editor](https://editor.storiiies.cogapp.com/), which provides a user-friendly interface for defining stories and contextual descriptions. Once exported, simply pass the manifest URL to `<ImageStory>` to embed the interactive experience directly in your MDX content.
+
+Once you've created a story in the editor, click "Export" and copy the manifest URL (e.g. `https://manifest.storiiies-editor.cogapp.com/v3/6c83d`) into the `manifestUrl` prop of `<ImageStory>`. The component will handle loading the manifest and rendering the story with all its interactive features.
+
+## API
+
+| Prop                | Type           | Required | Notes                                                                        |
+| ------------------- | -------------- | -------- | ---------------------------------------------------------------------------- |
+| `manifestUrl`       | string         | ✅       | Storiiies manifest URL. Relative paths are prefixed with the site base path. |
+| `disablePanAndZoom` | boolean        |          | Disables mouse navigation when `true`.                                       |
+| `height`            | string\|number |          | CSS height for the container. Defaults to `600`.                             |
+| `className`         | string         |          | Adds classes to the wrapper div.                                             |

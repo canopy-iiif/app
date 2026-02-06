@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.6.19",
+    "date": "2026-02-06",
+    "summary": "Introduce ImageStory component using Storiiies.",
+    "highlights": []
+  },
+  {
     "version": "1.6.18",
     "date": "2026-02-05",
     "summary": "Introduce metadata Index component.",

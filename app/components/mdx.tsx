@@ -12,5 +12,6 @@ export const components = {
 // them separately and hydrates placeholders at runtime.
 export const clientComponents = {
   ExampleClient: './Example.client.tsx',
+  ImageStory: './ImageStory.client.tsx',
   StoryMapJS: './StoryMapJS.client.tsx',
 };

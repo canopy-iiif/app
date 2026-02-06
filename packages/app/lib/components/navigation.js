@@ -41,7 +41,8 @@ function slugFromRelative(relativePath) {
 function pageSortKey(relativePath) {
   const normalized = normalizeRelativePath(relativePath).toLowerCase();
   if (!normalized) return "";
-  return normalized.replace(/(^|\/)index\.mdx$/i, "$1-index.mdx");
+  const withoutExtension = normalized.replace(/\.mdx$/i, "");
+  return withoutExtension.replace(/(^|\/)index$/i, "$1-index");
 }
 
 function extractTitleSafe(raw) {
