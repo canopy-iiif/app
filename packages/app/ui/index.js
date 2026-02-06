@@ -15,12 +15,14 @@ export {Viewer} from "./src/iiif/Viewer.jsx";
 export {Slider} from "./src/iiif/Slider.jsx";
 export {Scroll} from "./src/iiif/Scroll.jsx";
 export {Image} from "./src/iiif/Image.jsx";
+export {ImageStory} from "./src/iiif/ImageStory.jsx";
 export {Id} from "./src/iiif/Properties/Id.jsx";
 export {
   mergeSliderOptions,
   normalizeSliderOptions,
   sliderOptions,
 } from "./src/iiif/sliderOptions.js";
+export {mountImageStory} from "./src/iiif/imageStoryRuntime.js";
 // New: RelatedItems placeholder (new data attribute)
 export {default as RelatedItems} from "./src/iiif/MdxRelatedItems.jsx";
 // Search UI (React)

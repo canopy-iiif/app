@@ -2169,6 +2169,7 @@ async function buildIiifCollectionPages(CONFIG) {
             body.includes("data-canopy-scroll") ||
             body.includes("data-canopy-image");
           const needsRelated = body.includes("data-canopy-related-items");
+          const needsImageStory = body.includes("data-canopy-image-story");
           const needsHeroSlider = body.includes("data-canopy-hero-slider");
           const needsTimeline = body.includes("data-canopy-timeline");
           const needsMap = body.includes("data-canopy-map");
@@ -2184,6 +2185,9 @@ async function buildIiifCollectionPages(CONFIG) {
             : null;
           const sliderRel = needsRelated
             ? relativeRuntimeScript(outPath, "canopy-slider.js", true)
+            : null;
+          const imageStoryRel = needsImageStory
+            ? relativeRuntimeScript(outPath, "canopy-image-story.js", true)
             : null;
           const timelineRel = needsTimeline
             ? relativeRuntimeScript(outPath, "canopy-timeline.js", true)
@@ -2213,6 +2217,7 @@ async function buildIiifCollectionPages(CONFIG) {
           const moduleScriptRels = [];
           if (viewerRel) moduleScriptRels.push(viewerRel);
           if (sliderRel) moduleScriptRels.push(sliderRel);
+          if (imageStoryRel) moduleScriptRels.push(imageStoryRel);
           const primaryClassicScripts = [];
           if (heroRel) primaryClassicScripts.push(heroRel);
           if (relatedRel) primaryClassicScripts.push(relatedRel);

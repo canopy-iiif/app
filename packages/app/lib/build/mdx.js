@@ -1263,6 +1263,10 @@ async function buildCloverHydrationRuntimes() {
   const entryPoints = {
     viewer: path.join(__dirname, "../components/viewer-runtime-entry.js"),
     slider: path.join(__dirname, "../components/slider-runtime-entry.js"),
+    "image-story": path.join(
+      __dirname,
+      "../components/image-story-runtime-entry.js",
+    ),
   };
   await esbuild.build({
     entryPoints,
@@ -1286,6 +1290,7 @@ async function buildCloverHydrationRuntimes() {
     const runtimeLabels = {
       viewer: "Viewer, Scroll, and Image runtime",
       slider: "Slider runtime",
+      "image-story": "ImageStory runtime",
     };
     Object.keys(entryPoints).forEach((key) => {
       const file = `canopy-${key}.js`;

@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.6.20",
+    "date": "2026-02-06",
+    "summary": "Integrate ImageStory into distributed package.",
+    "highlights": []
+  },
+  {
     "version": "1.6.19",
     "date": "2026-02-06",
     "summary": "Introduce ImageStory component using Storiiies.",

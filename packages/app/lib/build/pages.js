@@ -219,6 +219,7 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
     body.includes('data-canopy-scroll') ||
     body.includes('data-canopy-image');
   const needsHydrateSlider = body.includes('data-canopy-slider');
+  const needsImageStory = body.includes('data-canopy-image-story');
   const needsHeroSlider = body.includes('data-canopy-hero-slider');
   const needsTimeline = body.includes('data-canopy-timeline');
   const needsMap = body.includes('data-canopy-map');
@@ -230,6 +231,9 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
     : null;
   const sliderRel = (needsHydrateSlider || needsFacets)
     ? relativeRuntimeScript(outPath, 'canopy-slider.js', true)
+    : null;
+  const imageStoryRel = needsImageStory
+    ? relativeRuntimeScript(outPath, 'canopy-image-story.js', true)
     : null;
   const heroRel = needsHeroSlider
     ? relativeRuntimeScript(outPath, 'canopy-hero-slider.js', true)
@@ -271,6 +275,7 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
   const moduleScriptRels = [];
   if (viewerRel) moduleScriptRels.push(viewerRel);
   if (sliderRel) moduleScriptRels.push(sliderRel);
+  if (imageStoryRel) moduleScriptRels.push(imageStoryRel);
   if (customClientRel) moduleScriptRels.push(customClientRel);
   const primaryClassicScripts = [];
   if (heroRel) primaryClassicScripts.push(heroRel);
