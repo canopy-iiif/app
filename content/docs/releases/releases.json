@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.6.21",
+    "date": "2026-02-06",
+    "summary": "Normalize number defined height on ImageStory to CSS attribute string.",
+    "highlights": []
+  },
+  {
     "version": "1.6.20",
     "date": "2026-02-06",
     "summary": "Integrate ImageStory into distributed package.",

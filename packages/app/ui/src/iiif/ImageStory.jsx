@@ -5,13 +5,33 @@ import {
   serializeImageStoryProps,
 } from "./imageStoryRuntime.js";
 
+const DEFAULT_IMAGE_STORY_HEIGHT = 600;
+const NUMERIC_HEIGHT_PATTERN = /^[+-]?(?:\d+|\d*\.\d+)$/;
+
+function resolveContainerHeight(value) {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return `${value}px`;
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return `${DEFAULT_IMAGE_STORY_HEIGHT}px`;
+    }
+    if (NUMERIC_HEIGHT_PATTERN.test(trimmed)) {
+      return `${trimmed}px`;
+    }
+    return trimmed;
+  }
+  return `${DEFAULT_IMAGE_STORY_HEIGHT}px`;
+}
+
 export const ImageStory = (props = {}) => {
   const {
     iiifContent,
     disablePanAndZoom,
     pointOfInterestSvgUrl,
     viewerOptions,
-    height = 600,
+    height = DEFAULT_IMAGE_STORY_HEIGHT,
     className,
     style,
     ...rest
@@ -20,6 +40,9 @@ export const ImageStory = (props = {}) => {
   const resolvedClassName = useMemo(() => {
     return ["canopy-image-story", className].filter(Boolean).join(" ");
   }, [className]);
+  const resolvedHeight = useMemo(() => {
+    return resolveContainerHeight(height);
+  }, [height]);
   const serializedProps = useMemo(() => {
     return serializeImageStoryProps({
       iiifContent,
@@ -65,7 +88,7 @@ export const ImageStory = (props = {}) => {
       data-canopy-image-story="1"
       style={{
         width: "100%",
-        height: typeof height === "number" ? `${height}px` : height,
+        height: resolvedHeight,
         ...(style || {}),
       }}
       {...rest}
