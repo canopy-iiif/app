@@ -6,7 +6,6 @@ module.exports = {
     "/node_modules/",
     "/site/",
     "/packages/app/ui/",
-    "/tests/e2e/", // Exclude Playwright e2e tests from Jest
   ],
   collectCoverage: true,
   collectCoverageFrom: [

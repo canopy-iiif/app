@@ -15,6 +15,7 @@ const {
   canopyBodyClassForType,
   readSiteMetadata,
   readPrimaryNavigation,
+  withBase,
 } = require("../common");
 const {resolveCanopyConfigPath} = require("../config-path");
 const mdx = require("./mdx");
@@ -2033,15 +2034,10 @@ async function buildIiifCollectionPages(CONFIG) {
         try {
           let components = {};
           try {
-            components = await import("@canopy-iiif/app/ui/server");
+            components = await mdx.loadUiComponents();
           } catch (_) {
-            try {
-              components = await import("@canopy-iiif/app/ui");
-            } catch (_) {
-              components = {};
-            }
+            components = {};
           }
-          const {withBase} = require("../common");
           const Anchor = function A(props) {
             let {href = "", ...rest} = props || {};
             href = withBase(href);
@@ -2056,8 +2052,7 @@ async function buildIiifCollectionPages(CONFIG) {
           } catch (_) {
             MDXProvider = null;
           }
-          const {loadAppWrapper} = require("./mdx");
-          const app = await loadAppWrapper();
+          const app = await mdx.loadAppWrapper();
 
           let heroMedia = null;
           try {
@@ -2174,6 +2169,9 @@ async function buildIiifCollectionPages(CONFIG) {
           const needsTimeline = body.includes("data-canopy-timeline");
           const needsMap = body.includes("data-canopy-map");
           const needsSearchForm = body.includes("data-canopy-search-form");
+          const needsCustomClients = body.includes(
+            "data-canopy-client-component",
+          );
           const needsHydrate =
             body.includes("data-canopy-hydrate") ||
             needsHydrateViewer ||
@@ -2213,11 +2211,39 @@ async function buildIiifCollectionPages(CONFIG) {
           const searchFormRel = needsSearchForm
             ? relativeRuntimeScript(outPath, "canopy-search-form.js", true)
             : null;
+          let customClientRel = null;
+          if (needsCustomClients) {
+            try {
+              await mdx.ensureCustomClientRuntime();
+              const customAbs = path.join(
+                OUT_DIR,
+                "scripts",
+                "canopy-custom-components.js",
+              );
+              let rel = path
+                .relative(path.dirname(outPath), customAbs)
+                .split(path.sep)
+                .join("/");
+              try {
+                const st = fs.statSync(customAbs);
+                rel += `?v=${Math.floor(st.mtimeMs || Date.now())}`;
+              } catch (_) {}
+              customClientRel = rel;
+            } catch (e) {
+              try {
+                console.warn(
+                  "[canopy][mdx] failed to build custom client runtime:",
+                  e && e.message ? e.message : e,
+                );
+              } catch (_) {}
+            }
+          }
 
           const moduleScriptRels = [];
           if (viewerRel) moduleScriptRels.push(viewerRel);
           if (sliderRel) moduleScriptRels.push(sliderRel);
           if (imageStoryRel) moduleScriptRels.push(imageStoryRel);
+          if (customClientRel) moduleScriptRels.push(customClientRel);
           const primaryClassicScripts = [];
           if (heroRel) primaryClassicScripts.push(heroRel);
           if (relatedRel) primaryClassicScripts.push(relatedRel);
@@ -2238,7 +2264,8 @@ async function buildIiifCollectionPages(CONFIG) {
             needsHydrateViewer ||
             needsRelated ||
             needsTimeline ||
-            needsMap
+            needsMap ||
+            (customClientRel && needsCustomClients)
           );
           let vendorTag = "";
           if (needsReact) {

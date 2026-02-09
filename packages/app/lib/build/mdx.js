@@ -1904,6 +1904,7 @@ module.exports = {
   compileMdxToComponent,
   loadCustomLayout,
   loadAppWrapper,
+  loadUiComponents,
   ensureClientRuntime,
   ensureSliderRuntime,
   ensureTimelineRuntime,
