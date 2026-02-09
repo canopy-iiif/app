@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.6.22",
+    "date": "2026-02-09",
+    "summary": "Address theme and custom component bugs.",
+    "highlights": []
+  },
+  {
     "version": "1.6.21",
     "date": "2026-02-06",
     "summary": "Normalize number defined height on ImageStory to CSS attribute string.",

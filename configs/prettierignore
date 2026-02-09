@@ -3,7 +3,5 @@ site
 dist
 .cache
 coverage
-playwright-report
 package-lock.json
 test-results
-tests/e2e-artifacts

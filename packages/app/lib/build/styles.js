@@ -7,6 +7,49 @@ const {
   ensureDirSync,
 } = require("../common");
 
+function resolveTailwindCli() {
+  const localBin = path.join(
+    process.cwd(),
+    "node_modules",
+    ".bin",
+    process.platform === "win32" ? "tailwindcss.cmd" : "tailwindcss"
+  );
+  if (fs.existsSync(localBin)) return {cmd: localBin, args: []};
+  return {cmd: "tailwindcss", args: []};
+}
+
+function injectThemeTokens(targetPath) {
+  try {
+    const {loadCanopyTheme} = require("@canopy-iiif/app/ui/theme");
+    const theme = loadCanopyTheme();
+    const themeCss = theme && theme.css ? theme.css.trim() : "";
+    if (!themeCss) return;
+
+    let existing = "";
+    try {
+      existing = fs.readFileSync(targetPath, "utf8");
+    } catch (_) {}
+
+    const marker = "/* canopy-theme */";
+    const markerEnd = "/* canopy-theme:end */";
+    const markerRegex = new RegExp(`${marker}[\\s\\S]*?${markerEnd}\\n?`, "g");
+    const sanitized = existing.replace(markerRegex, "").replace(/\s+$/, "");
+
+    const themeBlock = `${marker}\n${themeCss}\n${markerEnd}\n`;
+    const separator = sanitized ? "\n" : "";
+    const next = `${sanitized}${separator}${themeBlock}`;
+    fs.writeFileSync(targetPath, next, "utf8");
+  } catch (_) {}
+}
+
+function stripTailwindThemeLayer(targetPath) {
+  try {
+    const raw = fs.readFileSync(targetPath, "utf8");
+    const cleaned = raw.replace(/@layer theme\{[\s\S]*?\}(?=@layer|$)/g, "");
+    if (cleaned !== raw) fs.writeFileSync(targetPath, cleaned, "utf8");
+  } catch (_) {}
+}
+
 async function ensureStyles() {
   const stylesDir = path.join(OUT_DIR, "styles");
   const dest = path.join(stylesDir, "styles.css");
@@ -69,16 +112,6 @@ async function ensureStyles() {
     }
   }
 
-  function resolveTailwindCli() {
-  const localBin = path.join(
-    process.cwd(),
-    "node_modules",
-    ".bin",
-    process.platform === "win32" ? "tailwindcss.cmd" : "tailwindcss"
-  );
-  if (fs.existsSync(localBin)) return { cmd: localBin, args: [] };
-  return { cmd: 'tailwindcss', args: [] };
-}
   function buildTailwindCli({ input, output, config, minify = true }) {
     try {
       const cli = resolveTailwindCli();
@@ -95,38 +128,6 @@ async function ensureStyles() {
     } catch (_) {
       return false;
     }
-  }
-
-  function injectThemeTokens(targetPath) {
-    try {
-      const { loadCanopyTheme } = require("@canopy-iiif/app/ui/theme");
-      const theme = loadCanopyTheme();
-      const themeCss = theme && theme.css ? theme.css.trim() : "";
-      if (!themeCss) return;
-
-      let existing = "";
-      try {
-        existing = fs.readFileSync(targetPath, "utf8");
-      } catch (_) {}
-
-      const marker = "/* canopy-theme */";
-      const markerEnd = "/* canopy-theme:end */";
-      const markerRegex = new RegExp(`${marker}[\\s\\S]*?${markerEnd}\\n?`, "g");
-      const sanitized = existing.replace(markerRegex, "").replace(/\s+$/, "");
-
-      const themeBlock = `${marker}\n${themeCss}\n${markerEnd}\n`;
-      const separator = sanitized ? "\n" : "";
-      const next = `${sanitized}${separator}${themeBlock}`;
-      fs.writeFileSync(targetPath, next, "utf8");
-    } catch (_) {}
-  }
-
-  function stripTailwindThemeLayer(targetPath) {
-    try {
-      const raw = fs.readFileSync(targetPath, "utf8");
-      const cleaned = raw.replace(/@layer theme\{[\s\S]*?\}(?=@layer|$)/g, "");
-      if (cleaned !== raw) fs.writeFileSync(targetPath, cleaned, "utf8");
-    } catch (_) {}
   }
 
   if (configPath && (inputCss || generatedInput)) {
@@ -174,4 +175,8 @@ async function ensureStyles() {
   stripTailwindThemeLayer(dest);
 }
 
-module.exports = { ensureStyles };
+module.exports = {
+  ensureStyles,
+  injectThemeTokens,
+  stripTailwindThemeLayer,
+};
