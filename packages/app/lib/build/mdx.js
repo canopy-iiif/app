@@ -14,6 +14,24 @@ const {
   readSiteMetadata,
   readPrimaryNavigation,
 } = require("../common");
+const {readCanopyLocalesWithMessages} = require("../locales");
+
+function getSiteLanguageToggle() {
+  try {
+    const data = readCanopyLocalesWithMessages();
+    if (
+      data &&
+      Array.isArray(data.locales) &&
+      data.locales.length
+    ) {
+      return {
+        locales: data.locales,
+        messages: data.messages || {},
+      };
+    }
+  } catch (_) {}
+  return null;
+}
 let remarkGfm = null;
 try {
   const mod = require("remark-gfm");
@@ -1047,11 +1065,16 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
   const PageContext = getPageContext();
   const siteMeta = readSiteMetadata();
   const primaryNav = readPrimaryNavigation();
+  const siteLanguageToggle = getSiteLanguageToggle();
+  const siteContext = siteMeta ? {...siteMeta} : {};
+  if (siteLanguageToggle) {
+    siteContext.languageToggle = siteLanguageToggle;
+  }
   const contextValue = {
     navigation:
       extraProps && extraProps.navigation ? extraProps.navigation : null,
     page: extraProps && extraProps.page ? extraProps.page : null,
-    site: siteMeta ? {...siteMeta} : null,
+    site: siteContext && Object.keys(siteContext).length ? siteContext : null,
     primaryNavigation: Array.isArray(primaryNav) ? primaryNav : [],
   };
   const withContext = PageContext

@@ -1,0 +1,5 @@
+navigation:
+  - href: /es/
+    label: Inicio
+  - href: /es/about
+    label: Sobre

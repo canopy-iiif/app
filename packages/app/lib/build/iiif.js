@@ -17,6 +17,7 @@ const {
   readPrimaryNavigation,
   withBase,
 } = require("../common");
+const {readCanopyLocalesWithMessages} = require("../locales");
 const {resolveCanopyConfigPath} = require("../config-path");
 const mdx = require("./mdx");
 const {log, logLine, logResponse} = require("./log");
@@ -2096,10 +2097,24 @@ async function buildIiifCollectionPages(CONFIG) {
               ? {allRoots: navigationRoots}
               : null;
           const primaryNav = readPrimaryNavigation();
+          const siteMeta = readSiteMetadata ? {...readSiteMetadata()} : null;
+          const siteLanguageToggle = (() => {
+            try {
+              const data = readCanopyLocalesWithMessages();
+              if (data && Array.isArray(data.locales) && data.locales.length) {
+                return {locales: data.locales, messages: data.messages || {}};
+              }
+            } catch (_) {}
+            return null;
+          })();
+          const siteContext = siteMeta ? {...siteMeta} : {};
+          if (siteLanguageToggle) {
+            siteContext.languageToggle = siteLanguageToggle;
+          }
           const pageContextValue = {
             navigation: navigationContext,
             page: pageDetails,
-            site: readSiteMetadata ? {...readSiteMetadata()} : null,
+            site: siteContext && Object.keys(siteContext).length ? siteContext : null,
             primaryNavigation: Array.isArray(primaryNav) ? primaryNav : [],
           };
           if (
