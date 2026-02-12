@@ -25,7 +25,12 @@ The component is ideal for embedding interactive image stories in content pages,
 
 Individuals of any technical skill level can easily create and export Storiiies manifests using the [Storiiies Editor](https://editor.storiiies.cogapp.com/), which provides a user-friendly interface for defining stories and contextual descriptions. Once exported, simply pass the manifest URL to `<ImageStory>` to embed the interactive experience directly in your MDX content.
 
-Once you've created a story in the editor, click "Export" and copy the manifest URL (e.g. `https://manifest.storiiies-editor.cogapp.com/v3/6c83d`) into the `iiifContent` prop of `<ImageStory>`. The component will handle loading the manifest and rendering the story with all its interactive features.
+Once you've created a story in the editor, click **Links** and copy the bookmark URL.
+
+Note the identifier **3683j** in this bookmark: https://storiiies.cogapp.com/view/3683j/Embassy-of-Hyderbeck-to-Calcutta-1800. This identifier can be used to construct a Manifest URL—https://manifest.storiiies-editor.cogapp.com/v3/3683j—which can then be used as the `iiifContent` value.
+
+- **Bookmark link:** `https://storiiies.cogapp.com/view/3683j/Embassy-of-Hyderbeck-to-Calcutta-1800`
+- **Manifest URL:** `https://manifest.storiiies-editor.cogapp.com/v3/3683j`
 
 ## API
 
