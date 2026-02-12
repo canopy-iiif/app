@@ -7,6 +7,10 @@ const CONTENT_DIR = path.resolve('content');
 
 let cachedLocales = null;
 let cachedMessages = null;
+const DEFAULT_LOCALE_ROUTES = {
+  works: 'works',
+  search: 'search',
+};
 
 function normalizeLocale(entry, index) {
   if (!entry || typeof entry !== 'object') return null;
@@ -105,6 +109,27 @@ function readLocaleMessages(lang) {
   return deepMerge(defaultMessages, override);
 }
 
+function normalizeRouteValue(value) {
+  if (typeof value !== 'string') return '';
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  return trimmed.replace(/^\/+/, '').replace(/\/+$/, '');
+}
+
+function readLocaleRoutes(lang) {
+  const data = readLocaleMessages(lang);
+  const rawRoutes = data && data.routes ? data.routes : null;
+  const routes = {};
+  Object.keys(DEFAULT_LOCALE_ROUTES).forEach((key) => {
+    const candidate = rawRoutes && rawRoutes[key];
+    const normalized = normalizeRouteValue(
+      typeof candidate === 'string' ? candidate : ''
+    );
+    routes[key] = normalized || DEFAULT_LOCALE_ROUTES[key];
+  });
+  return routes;
+}
+
 function buildLanguageToggleCopy(locales) {
   const normalized = Array.isArray(locales) ? locales : [];
   const copyMap = {};
@@ -135,4 +160,7 @@ module.exports = {
   readCanopyLocales,
   buildLanguageToggleCopy,
   readCanopyLocalesWithMessages,
+  readLocaleMessages,
+  readLocaleRoutes,
+  DEFAULT_LOCALE_ROUTES,
 };

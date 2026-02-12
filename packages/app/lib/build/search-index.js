@@ -1,6 +1,6 @@
 
 const { logLine } = require('./log');
-const { rootRelativeHref } = require('../common');
+const { rootRelativeHref, buildRouteRelativePath, getDefaultRoute } = require('../common');
 
 function pagesToRecords(pageRecords) {
   const list = Array.isArray(pageRecords) ? pageRecords : [];
@@ -29,7 +29,8 @@ function maybeMockRecords() {
   const svg = encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="400" height="300" fill="#dbeafe"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="24" fill="#1d4ed8">Mock</text></svg>');
   const thumb = `data:image/svg+xml;charset=utf-8,${svg}`;
   for (let i = 1; i <= 120; i++) {
-    mock.push({ title: `Mock Work #${i}`, href: rootRelativeHref(`works/mock-${i}.html`), type: 'work', thumbnail: thumb });
+    const rel = buildRouteRelativePath(getDefaultRoute('works'), `mock-${i}.html`);
+    mock.push({ title: `Mock Work #${i}`, href: rootRelativeHref(rel), type: 'work', thumbnail: thumb });
   }
   mock.push({ title: 'Mock Doc A', href: rootRelativeHref('getting-started/index.html'), type: 'docs' });
   mock.push({ title: 'Mock Doc B', href: rootRelativeHref('getting-started/example.html'), type: 'docs' });

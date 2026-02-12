@@ -3,6 +3,8 @@ const path = require('path');
 const {
   CONTENT_DIR,
   rootRelativeHref,
+  buildRouteRelativePath,
+  getLocaleRoute,
 } = require('../common');
 const mdx = require('../build/mdx.js');
 const {
@@ -99,12 +101,14 @@ function assignThumbnailFields(target, entry, manifest) {
   return target;
 }
 
-function buildReferencedItems(referencedIds) {
+function buildReferencedItems(referencedIds, options = {}) {
   const ids = normalizeReferencedManifestList(referencedIds);
   if (!ids.length) return [];
   const index = readJson(IIIF_INDEX_PATH) || {};
   const byId = Array.isArray(index.byId) ? index.byId : [];
   const items = [];
+  const locale = options && options.locale ? options.locale : null;
+  const routeBase = getLocaleRoute(locale, 'works');
   for (const id of ids) {
     const entry = byId.find(
       (candidate) => candidate && candidate.type === 'Manifest' && equalIiifId(candidate.id, id)
@@ -113,7 +117,8 @@ function buildReferencedItems(referencedIds) {
     if (!slug) continue;
     const manifest = readManifestBySlug(slug);
     if (!manifest) continue;
-    const href = rootRelativeHref(path.join('works', `${slug}.html`).split(path.sep).join('/'));
+    const relPath = buildRouteRelativePath(routeBase, `${slug}.html`);
+    const href = rootRelativeHref(relPath.split(path.sep).join('/'));
     const title = firstLabelString(manifest.label);
     const summary = firstTextValue(manifest.summary);
     const item = { id, slug, href, title };

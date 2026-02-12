@@ -3,6 +3,7 @@ const fsp = fs.promises;
 const path = require('path');
 const yaml = require('js-yaml');
 const { resolveCanopyConfigPath } = require('./config-path');
+const { readCanopyLocales, readLocaleRoutes, DEFAULT_LOCALE_ROUTES } = require('./locales');
 
 const CONTENT_DIR = path.resolve('content');
 const OUT_DIR = path.resolve('site');
@@ -19,6 +20,230 @@ let cachedSearchPageMetadata = null;
 const DEFAULT_SITE_TITLE = 'Site title';
 const DEFAULT_SEARCH_PAGE_TITLE = 'Search';
 const DEFAULT_SEARCH_PAGE_DESCRIPTION = '';
+const DEFAULT_LANG_FALLBACK = 'en';
+
+let cachedLocaleState = null;
+let cachedLocaleRoutesState = null;
+
+function getLocaleState() {
+  if (cachedLocaleState) return cachedLocaleState;
+  let locales = [];
+  try {
+    const data = readCanopyLocales();
+    if (Array.isArray(data) && data.length) {
+      locales = data;
+    }
+  } catch (_) {}
+  if (!Array.isArray(locales) || !locales.length) {
+    locales = [
+      {
+        lang: DEFAULT_LANG_FALLBACK,
+        label: 'English',
+        default: true,
+      },
+    ];
+  }
+  const normalized = locales
+    .map((locale) => {
+      if (!locale || typeof locale !== 'object') return null;
+      const lang = typeof locale.lang === 'string' ? locale.lang.trim() : '';
+      if (!lang) return null;
+      return {...locale, lang};
+    })
+    .filter(Boolean);
+  if (!normalized.length) {
+    normalized.push({lang: DEFAULT_LANG_FALLBACK, label: 'English', default: true});
+  }
+  const defaultLocale =
+    normalized.find((loc) => loc && loc.default) ||
+    normalized[0] ||
+    {lang: DEFAULT_LANG_FALLBACK};
+  const lookup = new Map();
+  normalized.forEach((locale) => {
+    const key = locale.lang.toLowerCase();
+    if (!lookup.has(key)) {
+      lookup.set(key, locale.lang);
+    }
+  });
+  cachedLocaleState = {
+    locales: normalized,
+    defaultLocale,
+    lookup,
+  };
+  return cachedLocaleState;
+}
+
+function getLocaleRoutesState() {
+  if (cachedLocaleRoutesState) return cachedLocaleRoutesState;
+  const localeState = getLocaleState();
+  const order = Array.isArray(localeState.locales)
+    ? localeState.locales.map((loc) => loc.lang)
+    : [];
+  const routeMap = new Map();
+  order.forEach((lang) => {
+    try {
+      routeMap.set(lang, {...readLocaleRoutes(lang)});
+    } catch (_) {
+      routeMap.set(lang, {...DEFAULT_LOCALE_ROUTES});
+    }
+  });
+  if (!order.length) {
+    routeMap.set(DEFAULT_LANG_FALLBACK, {...DEFAULT_LOCALE_ROUTES});
+  }
+  cachedLocaleRoutesState = {
+    order: order.length ? order : [DEFAULT_LANG_FALLBACK],
+    map: routeMap,
+  };
+  return cachedLocaleRoutesState;
+}
+
+function getSiteLocales() {
+  const state = getLocaleState();
+  return state.locales.slice();
+}
+
+function getDefaultLocaleCode() {
+  const state = getLocaleState();
+  const lang = state && state.defaultLocale && state.defaultLocale.lang;
+  return lang || DEFAULT_LANG_FALLBACK;
+}
+
+function canonicalizeLocaleCode(value) {
+  if (value == null) return '';
+  let raw = '';
+  try {
+    raw = String(value).trim();
+  } catch (_) {
+    raw = '';
+  }
+  if (!raw) return '';
+  const state = getLocaleState();
+  const canonical = state.lookup.get(raw.toLowerCase());
+  return canonical || '';
+}
+
+const ROUTE_KEYS = Object.keys(DEFAULT_LOCALE_ROUTES);
+
+function normalizeRouteKey(key) {
+  if (!key) return '';
+  const str = String(key).trim().toLowerCase();
+  return ROUTE_KEYS.includes(str) ? str : '';
+}
+
+function getLocaleRouteConfig(localeCode) {
+  const state = getLocaleRoutesState();
+  const normalizedLocale = canonicalizeLocaleCode(localeCode) || getDefaultLocaleCode();
+  const entry = state.map.get(normalizedLocale);
+  if (entry) return {...entry};
+  const fallback = state.map.get(getDefaultLocaleCode());
+  return fallback ? {...fallback} : {...DEFAULT_LOCALE_ROUTES};
+}
+
+function getLocaleRoute(localeCode, key) {
+  const normalizedKey = normalizeRouteKey(key);
+  if (!normalizedKey) return DEFAULT_LOCALE_ROUTES.works;
+  const config = getLocaleRouteConfig(localeCode);
+  return config[normalizedKey] || DEFAULT_LOCALE_ROUTES[normalizedKey];
+}
+
+function getLocaleRouteEntries(key) {
+  const normalizedKey = normalizeRouteKey(key);
+  if (!normalizedKey) return [];
+  const state = getLocaleRoutesState();
+  const entries = [];
+  const defaultLocale = getDefaultLocaleCode();
+  state.order.forEach((locale) => {
+    const routes = state.map.get(locale) || DEFAULT_LOCALE_ROUTES;
+    const routeValue = routes[normalizedKey] || DEFAULT_LOCALE_ROUTES[normalizedKey];
+    entries.push({
+      locale,
+      route: routeValue,
+      isDefault: locale === defaultLocale,
+    });
+  });
+  entries.sort((a, b) => {
+    if (a.isDefault === b.isDefault) return 0;
+    return a.isDefault ? -1 : 1;
+  });
+  return entries;
+}
+
+function getDefaultRoute(key) {
+  return getLocaleRoute(getDefaultLocaleCode(), key);
+}
+
+function buildRouteRelativePath(route, suffix) {
+  const base = typeof route === 'string' ? route.trim() : '';
+  const cleanedBase = base.replace(/^\/+/, '').replace(/\/+$/, '');
+  const cleanedSuffix = suffix ? String(suffix).replace(/^\/+/, '') : '';
+  if (cleanedBase && cleanedSuffix) return `${cleanedBase}/${cleanedSuffix}`;
+  if (cleanedBase) return cleanedBase;
+  if (cleanedSuffix) return cleanedSuffix;
+  return '';
+}
+
+function resolveLocaleFromContentPath(relPath) {
+  const defaultLang = getDefaultLocaleCode();
+  if (!relPath) return defaultLang;
+  let normalized = '';
+  try {
+    normalized = String(relPath || '');
+  } catch (_) {
+    normalized = '';
+  }
+  if (!normalized) return defaultLang;
+  normalized = normalized.replace(/\\+/g, '/').replace(/^\/+/, '');
+  if (!normalized) return defaultLang;
+  const firstSegment = normalized.split('/')[0] || '';
+  if (!firstSegment) return defaultLang;
+  const canonical = canonicalizeLocaleCode(firstSegment);
+  return canonical || defaultLang;
+}
+
+function normalizePathForLocaleDetection(input) {
+  if (!input && input !== 0) return '';
+  let raw = '';
+  try {
+    raw = String(input || '');
+  } catch (_) {
+    raw = '';
+  }
+  if (!raw) return '';
+  try {
+    if (/^[a-z][a-z0-9+.-]*:/i.test(raw)) {
+      const url = new URL(raw);
+      raw = url.pathname || '';
+    }
+  } catch (_) {}
+  const hashIndex = raw.indexOf('#');
+  if (hashIndex >= 0) raw = raw.slice(0, hashIndex);
+  const queryIndex = raw.indexOf('?');
+  if (queryIndex >= 0) raw = raw.slice(0, queryIndex);
+  raw = raw.replace(/\\+/g, '/');
+  if (!raw.startsWith('/')) raw = '/' + raw.replace(/^\/+/, '');
+  let base = BASE_PATH || '';
+  if (base && !base.startsWith('/')) base = '/' + base;
+  base = base.replace(/\/+$/, '');
+  if (base && base !== '/') {
+    if (raw === base) {
+      raw = '/';
+    } else if (raw.startsWith(base + '/')) {
+      raw = raw.slice(base.length) || '/';
+    }
+  }
+  raw = raw.replace(/^\/+/, '');
+  return raw;
+}
+
+function resolveLocaleFromHref(href) {
+  const defaultLang = getDefaultLocaleCode();
+  const normalized = normalizePathForLocaleDetection(href);
+  if (!normalized) return defaultLang;
+  const firstSegment = normalized.split('/')[0] || '';
+  if (!firstSegment) return defaultLang;
+  const canonical = canonicalizeLocaleCode(firstSegment);
+  return canonical || defaultLang;
+}
 
 function resolveThemeAppearance() {
   if (cachedAppearance) return cachedAppearance;
@@ -116,23 +341,44 @@ function readSearchPageMetadata() {
   return cachedSearchPageMetadata;
 }
 
-let cachedPrimaryNavigation = null;
+const PRIMARY_NAV_CACHE = new Map();
 
-function readPrimaryNavigation() {
-  if (cachedPrimaryNavigation) return cachedPrimaryNavigation;
-  cachedPrimaryNavigation = [];
+function loadNavigationEntries(navPath) {
+  if (!navPath) return {entries: [], found: false};
   try {
-    const navPath = path.resolve(CONTENT_DIR, 'navigation.yml');
-    if (!fs.existsSync(navPath)) return cachedPrimaryNavigation;
+    if (!fs.existsSync(navPath)) return {entries: [], found: false};
     const raw = fs.readFileSync(navPath, 'utf8');
     const data = yaml.load(raw) || {};
-    if (Array.isArray(data.navigation)) {
-      cachedPrimaryNavigation = data.navigation.filter(
-        (item) => item && typeof item === 'object' && typeof item.href === 'string'
-      );
-    }
-  } catch (_) {}
-  return cachedPrimaryNavigation;
+    const entries = Array.isArray(data.navigation)
+      ? data.navigation.filter(
+          (item) => item && typeof item === 'object' && typeof item.href === 'string',
+        )
+      : [];
+    return {entries, found: true};
+  } catch (_) {
+    return {entries: [], found: true};
+  }
+}
+
+function readPrimaryNavigation(localeCode) {
+  const normalized = canonicalizeLocaleCode(localeCode);
+  const cacheKey = normalized || '__default__';
+  if (PRIMARY_NAV_CACHE.has(cacheKey)) {
+    return PRIMARY_NAV_CACHE.get(cacheKey);
+  }
+  let resolved = [];
+  const localeNavPath = normalized
+    ? path.resolve(CONTENT_DIR, normalized, 'navigation.yml')
+    : null;
+  const localeData = localeNavPath ? loadNavigationEntries(localeNavPath) : {entries: [], found: false};
+  if (localeData.found) {
+    resolved = localeData.entries;
+  } else {
+    const defaultData = loadNavigationEntries(path.resolve(CONTENT_DIR, 'navigation.yml'));
+    resolved = defaultData.entries;
+  }
+  PRIMARY_NAV_CACHE.set(cacheKey, resolved);
+  return resolved;
 }
 
 // Determine the absolute site origin (scheme + host[:port])
@@ -188,7 +434,7 @@ function canopyBodyClassForType(type) {
   return `canopy-type-${slug}`;
 }
 
-function htmlShell({ title, body, cssHref, scriptHref, headExtra, bodyClass }) {
+function htmlShell({ title, body, cssHref, scriptHref, headExtra, bodyClass, lang }) {
   const scriptTag = scriptHref ? `<script defer src="${scriptHref}"></script>` : '';
   const extra = headExtra ? String(headExtra) : '';
   const cssTag = cssHref ? `<link rel="stylesheet" href="${cssHref}">` : '';
@@ -202,7 +448,8 @@ function htmlShell({ title, body, cssHref, scriptHref, headExtra, bodyClass }) {
   const titleTag = hasCustomTitle ? '' : `<title>${title}</title>`;
   const bodyClassName = normalizeClassList(bodyClass);
   const bodyAttr = bodyClassName ? ` class="${bodyClassName}"` : '';
-  return `<!doctype html><html lang="en"${htmlAttr}><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>${titleTag}${extra}${cssTag}${scriptTag}</head><body${bodyAttr}>${body}</body></html>`;
+  const htmlLang = typeof lang === 'string' && lang.trim() ? lang.trim() : getDefaultLocaleCode();
+  return `<!doctype html><html lang="${htmlLang}"${htmlAttr}><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>${titleTag}${extra}${cssTag}${scriptTag}</head><body${bodyAttr}>${body}</body></html>`;
 }
 
 function withBase(href) {
@@ -308,4 +555,14 @@ module.exports = {
   DEFAULT_SEARCH_PAGE_TITLE,
   DEFAULT_SEARCH_PAGE_DESCRIPTION,
   readPrimaryNavigation,
+  getSiteLocales,
+  getDefaultLocaleCode,
+  canonicalizeLocaleCode,
+  resolveLocaleFromContentPath,
+  resolveLocaleFromHref,
+  getLocaleRouteConfig,
+  getLocaleRoute,
+  getLocaleRouteEntries,
+  getDefaultRoute,
+  buildRouteRelativePath,
 };

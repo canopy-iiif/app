@@ -50,6 +50,58 @@ function withBasePath(href) {
   }
 }
 
+function apiBasePath() {
+  return withBasePath('/api');
+}
+
+function apiUrl(pathname) {
+  const cleaned = typeof pathname === 'string' ? pathname.replace(/^\/+/, '') : '';
+  const base = apiBasePath();
+  return `${base}/${cleaned}`;
+}
+
+function readDocumentLocale() {
+  try {
+    if (
+      typeof document !== "undefined" &&
+      document.documentElement &&
+      document.documentElement.lang
+    ) {
+      const lang = document.documentElement.lang;
+      if (lang) return String(lang).trim();
+    }
+  } catch (_) {}
+  return "";
+}
+
+function resolveRecordHrefForLocale(record, fallbackHref) {
+  const routes =
+    record && record.routes && typeof record.routes === "object"
+      ? record.routes
+      : null;
+  if (!routes) return fallbackHref;
+  const docLocale = readDocumentLocale();
+  const candidates = [];
+  if (docLocale) candidates.push(docLocale);
+  if (docLocale && docLocale.includes("-")) {
+    const base = docLocale.split("-")[0];
+    if (base && base !== docLocale) candidates.push(base);
+  }
+  if (record && typeof record.locale === "string") {
+    const localeCandidate = record.locale.trim();
+    if (localeCandidate && !candidates.includes(localeCandidate))
+      candidates.push(localeCandidate);
+  }
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    if (routes[candidate]) return routes[candidate];
+    const lower = candidate.toLowerCase();
+    if (lower !== candidate && routes[lower]) return routes[lower];
+  }
+  const first = Object.values(routes).find((value) => value);
+  return first || fallbackHref;
+}
+
 // Lightweight IndexedDB utilities (no deps) with defensive guards
 function hasIDB() {
   try {
@@ -355,7 +407,7 @@ function createSearchStore() {
 
   async function hydrateFacets() {
     try {
-      const res = await fetch("./api/search/facets.json");
+    const res = await fetch(apiUrl('search/facets.json'));
       if (!res || !res.ok) return;
       const json = await res.json().catch(() => null);
       if (!Array.isArray(json)) return;
@@ -452,7 +504,7 @@ function createSearchStore() {
       let resultsOrder = [];
       let resultLayoutMap = {};
       try {
-        const meta = await fetch("./api/index.json")
+        const meta = await fetch(apiUrl('index.json'))
           .then((r) => (r && r.ok ? r.json() : null))
           .catch(() => null);
         if (meta && typeof meta.version === "string") version = meta.version;
@@ -513,7 +565,7 @@ function createSearchStore() {
         }
       } catch (_) {}
       const suffix = version ? `?v=${encodeURIComponent(version)}` : "";
-      const res = await fetch(`./api/search-index.json${suffix}`);
+      const res = await fetch(`${apiUrl('search-index.json')}${suffix}`);
       const text = await res.text();
       const parsed = (() => {
         try {
@@ -530,7 +582,7 @@ function createSearchStore() {
 
       let displayRecords = [];
       try {
-        const displayRes = await fetch(`./api/search-records.json${suffix}`);
+        const displayRes = await fetch(`${apiUrl('search-records.json')}${suffix}`);
         if (displayRes && displayRes.ok) {
           const displayJson = await displayRes.json().catch(() => []);
           displayRecords = Array.isArray(displayJson)
@@ -552,7 +604,8 @@ function createSearchStore() {
       let annotationsRecords = [];
       if (annotationsAssetPath) {
         try {
-          const annotationsUrl = `./api/${annotationsAssetPath.replace(/^\/+/, '')}` + (version ? `?v=${encodeURIComponent(version)}` : "");
+          const cleanedAnnotationsPath = annotationsAssetPath.replace(/^\/+/, '');
+          const annotationsUrl = `${apiUrl(cleanedAnnotationsPath)}${suffix}`;
           const annotationsRes = await fetch(annotationsUrl);
           if (annotationsRes && annotationsRes.ok) {
             const annotationsJson = await annotationsRes.json().catch(() => []);
@@ -579,8 +632,16 @@ function createSearchStore() {
         const display = key ? displayMap.get(key) : null;
         const merged = { ...(display || {}), ...(rec || {}), __docIndex: i };
         if (!merged.id && key) merged.id = key;
-        if (!merged.href && display && display.href) merged.href = String(display.href);
-        if (merged.href) merged.href = withBasePath(merged.href);
+        const fallbackHref = merged.href || (display && display.href) || '';
+        const localeAwareHref = resolveRecordHrefForLocale(
+          display || merged,
+          fallbackHref,
+        );
+        if (localeAwareHref) {
+          merged.href = withBasePath(localeAwareHref);
+        } else if (fallbackHref) {
+          merged.href = withBasePath(fallbackHref);
+        }
         if (!merged.title) merged.title = merged.href || "";
         if (!Array.isArray(merged.metadata)) {
           const meta = Array.isArray(rec && rec.metadata) ? rec.metadata : [];

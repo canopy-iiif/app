@@ -8,6 +8,9 @@ const {
   htmlShell,
   canopyBodyClassForType,
   rootRelativeHref,
+  resolveLocaleFromContentPath,
+  canonicalizeLocaleCode,
+  getDefaultLocaleCode,
 } = require('../common');
 const { log } = require('./log');
 const mdx = require('./mdx');
@@ -109,12 +112,20 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
       ? mdx.parseFrontmatter(source)
       : { data: null, content: source };
   const frontmatterData = frontmatter && isPlainObject(frontmatter.data) ? frontmatter.data : null;
+  const frontmatterLocaleRaw = readFrontmatterString(frontmatterData, 'locale');
+  const frontmatterLocale = canonicalizeLocaleCode(frontmatterLocaleRaw);
+  const pageLocale =
+    frontmatterLocale ||
+    resolveLocaleFromContentPath(relContentPath) ||
+    getDefaultLocaleCode();
   const referencedManifestIdsRaw = frontmatterData ? frontmatterData.referencedManifests : null;
   const referencedManifestIds = referenced.normalizeReferencedManifestList(
     referencedManifestIdsRaw
   );
   const referencedItems = referencedManifestIds.length
-    ? referenced.buildReferencedItems(referencedManifestIds)
+    ? referenced.buildReferencedItems(referencedManifestIds, {
+        locale: pageLocale,
+      })
     : [];
   let layoutMeta = null;
   try {
@@ -141,6 +152,7 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
   const frontmatterMeta = frontmatterData && isPlainObject(frontmatterData.meta) ? frontmatterData.meta : null;
   const headings = mdx.extractHeadings(source);
   const basePage = pageInfo ? { ...pageInfo } : {};
+  if (pageLocale) basePage.locale = pageLocale;
   if (title) basePage.title = title;
   if (resolvedType) basePage.type = resolvedType;
   if (resolvedDescription) basePage.description = resolvedDescription;
@@ -171,6 +183,7 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
     pageMeta.image = resolvedImage;
     if (!pageMeta.ogImage) pageMeta.ogImage = resolvedImage;
   }
+  if (pageLocale) pageMeta.locale = pageLocale;
   if (frontmatterMeta) Object.assign(pageMeta, frontmatterMeta);
   if (Object.keys(pageMeta).length) basePage.meta = pageMeta;
   if (referencedManifestIds.length) {
@@ -357,6 +370,7 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
     scriptHref: jsRel,
     headExtra,
     bodyClass,
+    lang: pageLocale,
   });
   const { applyBaseToHtml } = require('../common');
   return applyBaseToHtml(html);

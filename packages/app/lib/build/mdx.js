@@ -13,6 +13,8 @@ const {
   withBase,
   readSiteMetadata,
   readPrimaryNavigation,
+  getLocaleRouteConfig,
+  getDefaultLocaleCode,
 } = require("../common");
 const {readCanopyLocalesWithMessages} = require("../locales");
 
@@ -1064,12 +1066,24 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
   const withApp = React.createElement(app.App, null, withLayout);
   const PageContext = getPageContext();
   const siteMeta = readSiteMetadata();
-  const primaryNav = readPrimaryNavigation();
+  const pageLocale =
+    extraProps && extraProps.page && typeof extraProps.page.locale === "string"
+      ? extraProps.page.locale
+      : undefined;
+  const primaryNav = readPrimaryNavigation(pageLocale);
   const siteLanguageToggle = getSiteLanguageToggle();
   const siteContext = siteMeta ? {...siteMeta} : {};
   if (siteLanguageToggle) {
     siteContext.languageToggle = siteLanguageToggle;
   }
+  try {
+    const localeRoutes = getLocaleRouteConfig(pageLocale);
+    if (localeRoutes) siteContext.routes = localeRoutes;
+  } catch (_) {}
+  try {
+    const defaultRoutes = getLocaleRouteConfig(getDefaultLocaleCode());
+    if (defaultRoutes) siteContext.routesDefault = defaultRoutes;
+  } catch (_) {}
   const contextValue = {
     navigation:
       extraProps && extraProps.navigation ? extraProps.navigation : null,

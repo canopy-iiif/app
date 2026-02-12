@@ -595,6 +595,25 @@ export default function CanopyHeader(props = {}) {
       : "";
   const siteLanguageToggle =
     contextSite && contextSite.languageToggle ? contextSite.languageToggle : null;
+  const siteRoutes = contextSite && contextSite.routes ? contextSite.routes : null;
+  const siteDefaultRoutes =
+    contextSite && contextSite.routesDefault ? contextSite.routesDefault : null;
+  const searchRouteValue =
+    siteRoutes && typeof siteRoutes.search === "string"
+      ? siteRoutes.search
+      : "";
+  const defaultSearchRoute =
+    siteDefaultRoutes && typeof siteDefaultRoutes.search === "string"
+      ? siteDefaultRoutes.search
+      : "search";
+  const trimmedSearchRoute = searchRouteValue
+    ? searchRouteValue.replace(/^\/+|\/+$/g, "")
+    : "";
+  const usesDirectorySearchRoute =
+    trimmedSearchRoute && trimmedSearchRoute !== (defaultSearchRoute || "search");
+  const normalizedSearchRoute = usesDirectorySearchRoute
+    ? `/${trimmedSearchRoute}/`
+    : `/${(trimmedSearchRoute || defaultSearchRoute || "search").replace(/^\/+/, "")}`;
   const resolvedLanguageToggle = languageToggleProp || siteLanguageToggle;
   const languageToggleConfig = React.useMemo(() => {
     if (!resolvedLanguageToggle) return null;
@@ -666,6 +685,7 @@ export default function CanopyHeader(props = {}) {
             label={searchLabel}
             hotkey={searchHotkey}
             placeholder={searchPlaceholder}
+            searchPath={normalizedSearchRoute}
           />
         </div>
 
@@ -868,6 +888,7 @@ export default function CanopyHeader(props = {}) {
           label={searchLabel}
           hotkey={searchHotkey}
           placeholder={searchPlaceholder}
+          searchPath={normalizedSearchRoute}
         />
       </CanopyModal>
 

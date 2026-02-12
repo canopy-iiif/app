@@ -1,5 +1,5 @@
 navigation:
-  - href: /es/
-    label: Inicio
-  - href: /es/about
+  - href: /es/buscar
+    label: Buscar
+  - href: /sobre
     label: Sobre
