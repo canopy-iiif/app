@@ -43,6 +43,7 @@
       minmax(var(--canopy-gallery-min-column, 16rem), 1fr)
     );
     gap: var(--canopy-gallery-gap, 1.5rem);
+    padding: var(--canopy-gallery-gap, 1.5rem) 0;
   }
 
   &__item {
@@ -360,8 +361,13 @@ body[data-canopy-gallery-locked="1"] {
   }
 }
 
+.canopy-gallery-item__content {
+  width: 100%;
+}
+
 .canopy-gallery-item__content_flex {
   display: flex;
+  flex-direction: row;
   gap: 2rem;
 
   aside {

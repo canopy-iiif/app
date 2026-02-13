@@ -47,4 +47,8 @@ export {default as Timeline} from "./src/content/timeline/Timeline.jsx";
 export {default as TimelinePoint} from "./src/content/timeline/TimelinePoint.jsx";
 export {default as Map} from "./src/content/map/Map.jsx";
 export {default as MapPoint} from "./src/content/map/MapPoint.jsx";
-export {default as Gallery, GalleryItem} from "./src/content/gallery/Gallery.jsx";
+export {
+  default as Gallery,
+  GalleryItem,
+  GalleryContent,
+} from "./src/content/gallery/Gallery.jsx";

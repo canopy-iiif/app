@@ -29,7 +29,7 @@ description: Set of items that open pop-up content when activated, ideal for ima
     summary="Mounted watercolor on mica."
     thumbnail="https://api.dc.library.northwestern.edu/api/v2/works/213f2874-afca-452d-9bf3-ef0fe85a81ae/thumbnail"
   >
-    <div class="canopy-gallery-item__content_flex">
+    <GalleryContent flex>
       <ImageStory
         iiifContent="https://manifest.storiiies-editor.cogapp.com/v3/3683j"
         height="850"
@@ -58,7 +58,7 @@ description: Set of items that open pop-up content when activated, ideal for ima
           <dd>Student Name</dd>
         </dl>
       </aside>
-    </div>
+    </GalleryContent>
   </Gallery.Item>
   <Gallery.Item
     referencedManifests={[
@@ -96,16 +96,26 @@ description: Set of items that open pop-up content when activated, ideal for ima
     thumbnail="https://api.dc.library.northwestern.edu/api/v2/works/213f2874-afca-452d-9bf3-ef0fe85a81ae/thumbnail"
     thumbnailAlt="Miniature painting of a woman writing at a desk"
   >
-    <Viewer
-      iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/213f2874-afca-452d-9bf3-ef0fe85a81ae?as=iiif"
-      options={{
-        showTitle: true,
-        informationPanel: {
-          open: true,
-          renderAbout: true,
-        },
-      }}
-    />
+    <GalleryContent flex>
+      <Viewer
+        iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/213f2874-afca-452d-9bf3-ef0fe85a81ae?as=iiif"
+        options={{
+          showTitle: true,
+          informationPanel: {
+            open: true,
+            renderAbout: true,
+          },
+        }}
+      />
+      <aside>
+        <dl>
+          <dt>Date</dt>
+          <dd>1800</dd>
+          <dt>Creator</dt>
+          <dd>Richard Earlom</dd>
+        </dl>
+      </aside>
+    </GalleryContent>
   </Gallery.Item>
   <Gallery.Item
     referencedManifests={[
@@ -182,3 +192,12 @@ description: Set of items that open pop-up content when activated, ideal for ima
 > Preview tiles now render a standard `<img>` element sourced from `thumbnail`/`src`/`media` string props to keep the markup predictable.
 
 > Popup navigation is fully static: the component uses hash targets (`#gallery-modal-*`) for open/close/next/prev, so no hydration is required. The close target is scoped per gallery, making multiple galleries on the same page safe.
+
+### `<GalleryContent />`
+
+Wrap popup bodies with `<GalleryContent>` (or `Gallery.Content`) to reuse the default gutters and the optional flex layout.
+
+| Prop       | Type     | Required | Notes                                                                 |
+| ---------- | -------- | -------- | --------------------------------------------------------------------- |
+| `flex`     | boolean  |          | When `true`, the wrapper switches to a row-based flex layout.         |
+| `children` | nodes    | ✅       | Modal body markup. Works with any MDX content (Viewers, prose, etc.). |

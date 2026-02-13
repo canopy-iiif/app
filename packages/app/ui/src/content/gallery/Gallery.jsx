@@ -521,6 +521,17 @@ function GalleryFigure({item}) {
   );
 }
 
+export function GalleryContent({children, flex = false}) {
+  const contentClassName = [
+    "canopy-gallery-item__content",
+    flex ? "canopy-gallery-item__content_flex" : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return <div className={contentClassName}>{children}</div>;
+}
+
 export function GalleryItem() {
   return null;
 }
@@ -615,3 +626,4 @@ export default function Gallery({
 }
 
 Gallery.Item = GalleryItem;
+Gallery.Content = GalleryContent;

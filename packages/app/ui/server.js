@@ -28,7 +28,11 @@ export {default as Timeline} from "./src/content/timeline/MdxTimeline.jsx";
 export {default as TimelinePoint} from "./src/content/timeline/TimelinePoint.jsx";
 export {default as Map} from "./src/content/map/MdxMap.jsx";
 export {default as MapPoint} from "./src/content/map/MapPoint.jsx";
-export {default as Gallery, GalleryItem} from "./src/content/gallery/Gallery.jsx";
+export {
+  default as Gallery,
+  GalleryItem,
+  GalleryContent,
+} from "./src/content/gallery/Gallery.jsx";
 
 // SSR-safe MDX placeholders (do not import browser-only UI here)
 export {default as SearchResults} from "./src/search/MdxSearchResults.jsx";
