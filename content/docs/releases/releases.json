@@ -1,5 +1,15 @@
 [
   {
+    "version": "1.7.0",
+    "date": "2026-02-13",
+    "summary": "Introduce Gallery component.",
+    "highlights": [
+      "Adds Gallery component to links related items.",
+      "Gallery item popups render MDX content.",
+      "Gallery items reference manifests."
+    ]
+  },
+  {
     "version": "1.6.22",
     "date": "2026-02-09",
     "summary": "Address theme and custom component bugs.",

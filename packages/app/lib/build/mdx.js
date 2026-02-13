@@ -14,6 +14,11 @@ const {
   readSiteMetadata,
   readPrimaryNavigation,
 } = require("../common");
+
+const globalRoot = typeof globalThis !== "undefined" ? globalThis : global;
+if (globalRoot && typeof globalRoot.__canopyRequire !== "function") {
+  globalRoot.__canopyRequire = typeof require === "function" ? require : null;
+}
 let remarkGfm = null;
 try {
   const mod = require("remark-gfm");

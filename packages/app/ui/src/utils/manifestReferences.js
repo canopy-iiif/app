@@ -1,20 +1,27 @@
 import React from "react";
-import navigationHelpers from "../../../lib/components/navigation.js";
-import referencedHelpers from "../../../lib/components/referenced.js";
 
-const referencedModule =
-  referencedHelpers && typeof referencedHelpers === "object"
-    ? referencedHelpers
-    : null;
-const buildReferencedItems =
-  referencedModule && typeof referencedModule.buildReferencedItems === "function"
-    ? referencedModule.buildReferencedItems
-    : null;
-const normalizeReferencedManifestList =
-  referencedModule &&
-  typeof referencedModule.normalizeReferencedManifestList === "function"
-    ? referencedModule.normalizeReferencedManifestList
-    : null;
+const CONTEXT_KEY =
+  typeof Symbol === "function" ? Symbol.for("__CANOPY_PAGE_CONTEXT__") : "__CANOPY_PAGE_CONTEXT__";
+
+function getGlobalRoot() {
+  if (typeof globalThis !== "undefined") return globalThis;
+  if (typeof global !== "undefined") return global;
+  if (typeof window !== "undefined") return window;
+  return {};
+}
+
+function getPageContext() {
+  const root = getGlobalRoot();
+  if (root && root[CONTEXT_KEY]) return root[CONTEXT_KEY];
+  const ctx = React.createContext({
+    navigation: null,
+    page: null,
+    site: null,
+    primaryNavigation: [],
+  });
+  if (root) root[CONTEXT_KEY] = ctx;
+  return ctx;
+}
 
 export function normalizeManifestId(raw) {
   if (!raw) return "";
@@ -33,9 +40,26 @@ export function normalizeManifestId(raw) {
 }
 
 const PageContextFallback = React.createContext(null);
+let referencedModule = null;
+
+function getReferencedModule() {
+  if (typeof window !== 'undefined') return null;
+  if (referencedModule) return referencedModule;
+  try {
+    const globalReq =
+      (typeof globalThis !== 'undefined' && globalThis.__canopyRequire) || null;
+    if (typeof globalReq === 'function') {
+      referencedModule = globalReq('../../../lib/components/referenced.js');
+      return referencedModule;
+    }
+  } catch (_) {
+    referencedModule = null;
+  }
+  return referencedModule;
+}
 
 export function useReferencedManifestMap() {
-  const PageContext = navigationHelpers?.getPageContext?.() || PageContextFallback;
+  const PageContext = getPageContext() || PageContextFallback;
   const pageContext = React.useContext(PageContext);
   const referencedItems =
     pageContext && pageContext.page && Array.isArray(pageContext.page.referencedItems)
@@ -108,39 +132,43 @@ export function resolveReferencedManifests(ids, manifestMap) {
     });
   }
   const missing = order.filter((key) => key && !manifestRecords.has(key));
-  if (missing.length && buildReferencedItems) {
-    let fallbackItems = [];
-    try {
-      const normalizedMissing = normalizeReferencedManifestList
-        ? normalizeReferencedManifestList(missing)
-        : missing;
-      if (normalizedMissing && normalizedMissing.length) {
-        fallbackItems = buildReferencedItems(normalizedMissing) || [];
+  if (missing.length) {
+    const referencedHelpers = getReferencedModule();
+    const buildReferencedItems = referencedHelpers?.buildReferencedItems;
+    const normalizeList = referencedHelpers?.normalizeReferencedManifestList;
+    if (typeof buildReferencedItems === 'function') {
+      let fallbackItems = [];
+      try {
+        const normalizedMissing =
+          typeof normalizeList === 'function' ? normalizeList(missing) : missing;
+        if (normalizedMissing && normalizedMissing.length) {
+          fallbackItems = buildReferencedItems(normalizedMissing) || [];
+        }
+      } catch (_) {
+        fallbackItems = [];
       }
-    } catch (_) {
-      fallbackItems = [];
-    }
-    fallbackItems.forEach((item) => {
-      if (!item) return;
-      const fallbackKey = normalizeManifestId(item.id || item.href);
-      if (!fallbackKey || manifestRecords.has(fallbackKey)) return;
-      manifestRecords.set(fallbackKey, {
-        id: item.id || item.href || fallbackKey,
-        href: item.href || null,
-        title: item.title || item.href || "",
-        summary: item.summary || "",
-        thumbnail: item.thumbnail || null,
-        thumbnailWidth: item.thumbnailWidth,
-        thumbnailHeight: item.thumbnailHeight,
-        type: item.type || "work",
-        metadata:
-          Array.isArray(item.metadata) && item.metadata.length
-            ? item.metadata
-            : item.summary
-            ? [item.summary]
-            : [],
+      fallbackItems.forEach((item) => {
+        if (!item) return;
+        const fallbackKey = normalizeManifestId(item.id || item.href);
+        if (!fallbackKey || manifestRecords.has(fallbackKey)) return;
+        manifestRecords.set(fallbackKey, {
+          id: item.id || item.href || fallbackKey,
+          href: item.href || null,
+          title: item.title || item.href || '',
+          summary: item.summary || '',
+          thumbnail: item.thumbnail || null,
+          thumbnailWidth: item.thumbnailWidth,
+          thumbnailHeight: item.thumbnailHeight,
+          type: item.type || 'work',
+          metadata:
+            Array.isArray(item.metadata) && item.metadata.length
+              ? item.metadata
+              : item.summary
+              ? [item.summary]
+              : [],
+        });
       });
-    });
+    }
   }
   return order
     .map((key) => manifestRecords.get(key))

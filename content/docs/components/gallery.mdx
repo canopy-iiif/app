@@ -1,0 +1,189 @@
+---
+title: Gallery
+description: Responsive grid of figures that open fullscreen popup canvases for any MDX content.
+roadmap: true
+---
+
+# Gallery
+
+`<Gallery>` renders a responsive matrix of clickable figures. Each `<Gallery.Item>` defines the preview (thumbnail, caption text, metadata) and ships its children into a fullscreen popup so authors can reuse any existing MDX component—Viewer, Map, ImageStory, prose, or custom markup.
+
+- Grid columns collapse automatically using CSS grid with sensible spacing.
+- Figures render semantic `<figure>`/`<figcaption>` markup so cards keep context in document flow.
+- Modals use pure CSS targeting, so the build stays SSR-safe with no extra runtimes. Keyboard users activate the same links to open, close, or step through items.
+- Accessibility niceties ship inlined: focus stays trapped inside the active popup, `Esc` closes it, and background scrolling is locked until you exit.
+- The popup header mirrors the thumbnail so users keep visual context before diving into the richer MDX body.
+- Control the overlay footprint with `popupSize="full" | "medium"`—full overtakes the viewport, while medium keeps page chrome visible and adds rounded/shadowed chrome.
+- Randomize tile layouts per build with `order="random"`, handy when you want a fresh arrangement for every publish.
+- Reference cached manifests (`referencedManifests`) to auto-populate labels, summaries, and thumbnails when you don't want to repeat metadata by hand.
+
+> Examples pull from the same Northwestern fixtures cached under `.cache/iiif`, so thumbnails and modal content point at manifests you already have locally.
+
+## Example: Modal media wall
+
+<Gallery
+  title="Miniatures on mica"
+  description="Click a tile to open a popup powered by the Northwestern manifests cached in .cache/iiif."
+>
+  <Gallery.Item
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/213f2874-afca-452d-9bf3-ef0fe85a81ae?as=iiif",
+    ]}
+    title="Seated woman writing"
+    summary="Mounted watercolor on mica."
+    thumbnail="https://api.dc.library.northwestern.edu/api/v2/works/213f2874-afca-452d-9bf3-ef0fe85a81ae/thumbnail"
+    thumbnailAlt="Miniature painting of a woman writing at a desk"
+  >
+    <Viewer
+      iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/213f2874-afca-452d-9bf3-ef0fe85a81ae?as=iiif"
+      options={{
+        showTitle: true,
+        informationPanel: {
+          open: true,
+          renderAbout: true,
+        },
+      }}
+    />
+  </Gallery.Item>
+  <Gallery.Item
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/2826e1b9-d38c-413d-b46f-4cd28d916b6d?as=iiif",
+    ]}
+    title="Musician with tanpura"
+    summary="Standing figure from the same mica suite."
+    thumbnail="https://api.dc.library.northwestern.edu/api/v2/works/2826e1b9-d38c-413d-b46f-4cd28d916b6d/thumbnail"
+    thumbnailAlt="Miniature painting of a musician holding a long-neck instrument"
+  >
+    <Viewer
+      iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/2826e1b9-d38c-413d-b46f-4cd28d916b6d?as=iiif"
+      options={{
+        showTitle: true,
+        informationPanel: {
+          open: true,
+          renderAbout: true,
+        },
+      }}
+    />
+  </Gallery.Item>
+  <Gallery.Item
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/cdb547e9-d5c1-4c1a-9ca5-b3fad0da4915?as=iiif",
+    ]}
+    title="Seated woman sewing"
+    summary="Companion miniature sourced from the cached collection."
+    thumbnail="https://api.dc.library.northwestern.edu/api/v2/works/cdb547e9-d5c1-4c1a-9ca5-b3fad0da4915/thumbnail"
+    thumbnailAlt="Miniature painting of a seated woman sewing"
+  >
+    <Viewer
+      iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/cdb547e9-d5c1-4c1a-9ca5-b3fad0da4915?as=iiif"
+      options={{
+        showTitle: true,
+        informationPanel: {
+          open: true,
+          renderAbout: true,
+        },
+      }}
+    />
+  </Gallery.Item>
+</Gallery>
+
+```mdx
+<Gallery
+  title="Miniatures on mica"
+  description="Click a tile to open a popup powered by the Northwestern manifests cached in .cache/iiif."
+>
+  <Gallery.Item
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/213f2874-afca-452d-9bf3-ef0fe85a81ae?as=iiif",
+    ]}
+    title="Seated woman writing"
+    summary="Mounted watercolor on mica."
+    thumbnail="https://api.dc.library.northwestern.edu/api/v2/works/213f2874-afca-452d-9bf3-ef0fe85a81ae/thumbnail"
+    thumbnailAlt="Miniature painting of a woman writing at a desk"
+  >
+    <Viewer
+      iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/213f2874-afca-452d-9bf3-ef0fe85a81ae?as=iiif"
+      options={{
+        showTitle: true,
+        informationPanel: {
+          open: true,
+          renderAbout: true,
+        },
+      }}
+    />
+  </Gallery.Item>
+  <Gallery.Item
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/2826e1b9-d38c-413d-b46f-4cd28d916b6d?as=iiif",
+    ]}
+    title="Musician with tanpura"
+    summary="Standing figure from the same mica suite."
+    thumbnail="https://api.dc.library.northwestern.edu/api/v2/works/2826e1b9-d38c-413d-b46f-4cd28d916b6d/thumbnail"
+    thumbnailAlt="Miniature painting of a musician holding a long-neck instrument"
+  >
+    <Viewer
+      iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/2826e1b9-d38c-413d-b46f-4cd28d916b6d?as=iiif"
+      options={{
+        showTitle: true,
+        informationPanel: {
+          open: true,
+          renderAbout: true,
+        },
+      }}
+    />
+  </Gallery.Item>
+  <Gallery.Item
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/cdb547e9-d5c1-4c1a-9ca5-b3fad0da4915?as=iiif",
+    ]}
+    title="Seated woman sewing"
+    summary="Companion miniature sourced from the cached collection."
+    thumbnail="https://api.dc.library.northwestern.edu/api/v2/works/cdb547e9-d5c1-4c1a-9ca5-b3fad0da4915/thumbnail"
+    thumbnailAlt="Miniature painting of a seated woman sewing"
+  >
+    <Viewer
+      iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/cdb547e9-d5c1-4c1a-9ca5-b3fad0da4915?as=iiif"
+      options={{
+        showTitle: true,
+        informationPanel: {
+          open: true,
+          renderAbout: true,
+        },
+      }}
+    />
+  </Gallery.Item>
+</Gallery>
+```
+
+## API
+
+### `<Gallery />`
+
+| Prop          | Type                        | Required | Notes                                                           |
+| ------------- | --------------------------- | -------- | --------------------------------------------------------------- |
+| `title`       | string                      |          | Optional heading rendered above the grid.                       |
+| `description` | string                      |          | Short intro paragraph under the heading.                        |
+| `popupSize`   | `'full' &#124; 'medium'`    |          | Toggle fullscreen vs. windowed popup layout (default `'full'`). |
+| `order`       | `'default' &#124; 'random'` |          | Control figure ordering; random shuffles once during the build. |
+| `children`    | nodes                       | ✅       | One or more `<Gallery.Item>` entries.                           |
+
+### `<Gallery.Item />`
+
+| Prop                                  | Type              | Required | Notes                                                                                                  |
+| ------------------------------------- | ----------------- | -------- | ------------------------------------------------------------------------------------------------------ |
+| `title`                               | string            | ✅       | Primary caption text and popup heading.                                                                |
+| `summary`                             | string            |          | Short description shown under the title (also reused inside the popup).                                |
+| `caption`                             | node              |          | Provide custom figcaption markup. When set, `title`/`summary` rendering is skipped.                    |
+| `meta`                                | string · string[] |          | Supplemental metadata displayed under the caption and inside the popup header.                         |
+| `thumbnail`/`src`                     | string            |          | Preview image URL used in the grid. `media` remains as an alias for string sources.                    |
+| `thumbnailAlt`                        | string            |          | Alt text for the thumbnail image. Defaults to `title`.                                                 |
+| `referencedManifests` / `manifest(s)` | string · string[] |          | Resolve manifests into derived labels, summaries, and thumbnails (overridden when props are provided). |
+| `slug`                                | string            |          | Optional stable identifier for deep-linking popup IDs (hash uses `#gallery-modal-*`).                  |
+| `triggerLabel`                        | string            |          | Custom accessible label for the figure trigger link.                                                   |
+| `popupTitle`                          | string            |          | Override the popup heading; falls back to `title`.                                                     |
+| `popupDescription`                    | string            |          | Override the popup description; falls back to `summary`/`description`.                                 |
+| `children`                            | nodes             | ✅       | Modal body content. Accepts any MDX component (Viewer, Map, ImageStory, markdown, etc).                |
+
+> Preview tiles now render a standard `<img>` element sourced from `thumbnail`/`src`/`media` string props to keep the markup predictable.
+
+> Popup navigation is fully static: the component uses hash targets (`#gallery-modal-*`) for open/close/next/prev, so no hydration is required. The close target is scoped per gallery, making multiple galleries on the same page safe.
