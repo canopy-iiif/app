@@ -1,6 +1,7 @@
 .canopy-gallery {
   position: relative;
-  margin-block: clamp(1.5rem, 2vw, 3rem);
+  padding: 0;
+  margin: 0;
   --canopy-gallery-gap: 1.5rem;
   --canopy-gallery-min-column: 16rem;
   --canopy-gallery-radius: 1rem;
@@ -22,15 +23,16 @@
   }
 
   &__heading {
-    font-size: clamp(1.5rem, 2.5vw, 2rem);
-    line-height: 1.2;
     margin: 0;
+    padding: 0;
+    font-size: 2.618rem;
+    line-height: 1.2;
   }
 
   &__description {
-    margin: 0.5rem 0 0;
-    font-size: 1rem;
-    max-width: 65ch;
+    margin: 1rem 0 0;
+    font-size: 1.222rem;
+    max-width: unset;
     color: var(--color-gray-muted);
   }
 
@@ -179,6 +181,11 @@
     }
   }
 
+  &__modal:not([data-canopy-gallery-active]) {
+    width: 0;
+    height: 0;
+  }
+
   &__modal-scrim {
     min-height: 100vh;
     display: block;
@@ -200,19 +207,23 @@
   }
 
   &__modal-header {
-    padding: clamp(1rem, 2vw, 1.5rem) clamp(1.25rem, 3vw, 2.5rem);
-    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    border: none;
+    padding-top: 3rem;
+    padding-bottom: 0;
+    padding-left: clamp(1.25rem, 3vw, 2.5rem);
+    padding-right: clamp(1.25rem, 3vw, 2.5rem);
     display: flex;
     gap: clamp(1rem, 2vw, 2rem);
   }
 
   &__modal-thumb {
     flex: 0 0 auto;
-    width: clamp(5rem, 12vw, 8rem);
-    aspect-ratio: 4 / 3;
+    width: 100px;
+    aspect-ratio: 1 / 1;
     border-radius: 0.5rem;
     overflow: hidden;
     background: var(--color-gray-100);
+    height: fit-content;
 
     img,
     picture,
@@ -239,14 +250,14 @@
   }
 
   &__modal-title {
-    margin: 0;
-    font-size: clamp(1.5rem, 3vw, 2rem);
+    margin: 0.618rem 0 0;
+    font-size: 1.618rem;
     line-height: 1.2;
   }
 
   &__modal-summary {
-    margin: 0.75rem 0 0;
-    font-size: 1rem;
+    margin: 0;
+    font-size: 1.2222rem;
     color: var(--color-gray-muted);
   }
 
@@ -346,5 +357,37 @@ body[data-canopy-gallery-locked="1"] {
 .canopy-gallery--popup-full {
   .canopy-gallery__modal-scrim {
     padding: 0;
+  }
+}
+
+.canopy-gallery-item__content_flex {
+  display: flex;
+  gap: 2rem;
+
+  aside {
+    min-width: 400px;
+    padding-right: 2rem;
+  }
+
+  dl {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  dt {
+    text-transform: uppercase;
+    color: var(--color-gray-muted);
+    margin: 0;
+    font-size: 0.7222rem;
+    font-weight: 400;
+    margin-top: 0.85rem;
+  }
+
+  dd {
+    color: var(--color-gray-900);
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.45;
   }
 }

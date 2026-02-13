@@ -1,7 +1,6 @@
 ---
 title: Gallery
-description: Responsive grid of figures that open fullscreen popup canvases for any MDX content.
-roadmap: true
+description: Set of items that open pop-up content when activated, ideal for image galleries or exhibits.
 ---
 
 # Gallery
@@ -21,10 +20,7 @@ roadmap: true
 
 ## Example: Modal media wall
 
-<Gallery
-  title="Miniatures on mica"
-  description="Click a tile to open a popup powered by the Northwestern manifests cached in .cache/iiif."
->
+<Gallery>
   <Gallery.Item
     referencedManifests={[
       "https://api.dc.library.northwestern.edu/api/v2/works/213f2874-afca-452d-9bf3-ef0fe85a81ae?as=iiif",
@@ -32,18 +28,48 @@ roadmap: true
     title="Seated woman writing"
     summary="Mounted watercolor on mica."
     thumbnail="https://api.dc.library.northwestern.edu/api/v2/works/213f2874-afca-452d-9bf3-ef0fe85a81ae/thumbnail"
-    thumbnailAlt="Miniature painting of a woman writing at a desk"
   >
-    <Viewer
-      iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/213f2874-afca-452d-9bf3-ef0fe85a81ae?as=iiif"
-      options={{
-        showTitle: true,
-        informationPanel: {
-          open: true,
-          renderAbout: true,
-        },
-      }}
-    />
+    
+    <div class="canopy-gallery-item__content_flex">
+        <ImageStory
+          iiifContent="https://manifest.storiiies-editor.cogapp.com/v3/3683j"
+          height="850"
+        />
+        <aside>
+            <dl>
+              <dt>Date</dt>
+              <dd>1800</dd>
+
+              <dt>Publication Date</dt>
+              <dd>1800</dd>
+
+              <dt>Creator</dt>
+              <dd>Richard Earlom (after Johan Joseph Zoffany)</dd>
+
+              <dt>Creator Dates</dt>
+              <dd>Richard Earlom, 1743–1822; Johan Joseph Zoffany, 1733–1810</dd>
+
+              <dt>Medium</dt>
+              <dd>Mezzotint and stipple engraving on cream laid paper</dd>
+
+              <dt>Image Size</dt>
+              <dd>18 7/8 × 26 in (47.9 × 66 cm)</dd>
+
+              <dt>Sheet Size</dt>
+              <dd>19 7/8 × 26 1/4 in (50.5 × 66.7 cm)</dd>
+
+              <dt>Attribution</dt>
+              <dd>Paul Mellon Collection, Yale Center for British Art</dd>
+
+              <dt>Accession #</dt>
+              <dd>B1985.36.1303</dd>
+
+              <dt>Curator</dt>
+              <dd>Student Name</dd>
+            </dl>
+        </aside>
+    </div>
+
   </Gallery.Item>
   <Gallery.Item
     referencedManifests={[
@@ -52,17 +78,9 @@ roadmap: true
     title="Musician with tanpura"
     summary="Standing figure from the same mica suite."
     thumbnail="https://api.dc.library.northwestern.edu/api/v2/works/2826e1b9-d38c-413d-b46f-4cd28d916b6d/thumbnail"
-    thumbnailAlt="Miniature painting of a musician holding a long-neck instrument"
   >
     <Viewer
       iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/2826e1b9-d38c-413d-b46f-4cd28d916b6d?as=iiif"
-      options={{
-        showTitle: true,
-        informationPanel: {
-          open: true,
-          renderAbout: true,
-        },
-      }}
     />
   </Gallery.Item>
   <Gallery.Item
@@ -72,17 +90,9 @@ roadmap: true
     title="Seated woman sewing"
     summary="Companion miniature sourced from the cached collection."
     thumbnail="https://api.dc.library.northwestern.edu/api/v2/works/cdb547e9-d5c1-4c1a-9ca5-b3fad0da4915/thumbnail"
-    thumbnailAlt="Miniature painting of a seated woman sewing"
   >
     <Viewer
       iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/cdb547e9-d5c1-4c1a-9ca5-b3fad0da4915?as=iiif"
-      options={{
-        showTitle: true,
-        informationPanel: {
-          open: true,
-          renderAbout: true,
-        },
-      }}
     />
   </Gallery.Item>
 </Gallery>
