@@ -8,8 +8,18 @@ const {
 } = require("../common");
 
 function resolveTailwindCli() {
+  const root = process.cwd();
+  let cliEntry = null;
+  try {
+    cliEntry = require.resolve("@tailwindcss/cli/dist/index.mjs", { paths: [root] });
+  } catch (_) {
+    cliEntry = null;
+  }
+  if (cliEntry) {
+    return {cmd: process.execPath || "node", args: [cliEntry]};
+  }
   const localBin = path.join(
-    process.cwd(),
+    root,
     "node_modules",
     ".bin",
     process.platform === "win32" ? "tailwindcss.cmd" : "tailwindcss"

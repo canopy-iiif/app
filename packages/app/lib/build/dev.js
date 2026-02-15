@@ -22,14 +22,24 @@ const {
 const APP_COMPONENTS_DIR = path.join(process.cwd(), "app", "components");
 
 function resolveTailwindCli() {
+  const root = process.cwd();
+  let cliEntry = null;
+  try {
+    cliEntry = require.resolve("@tailwindcss/cli/dist/index.mjs", { paths: [root] });
+  } catch (_) {
+    cliEntry = null;
+  }
+  if (cliEntry) {
+    return { cmd: process.execPath || "node", args: [cliEntry] };
+  }
   const bin = path.join(
-    process.cwd(),
+    root,
     "node_modules",
     ".bin",
     process.platform === "win32" ? "tailwindcss.cmd" : "tailwindcss"
   );
   if (fs.existsSync(bin)) return { cmd: bin, args: [] };
-  return { cmd: 'tailwindcss', args: [] };
+  return { cmd: "tailwindcss", args: [] };
 }
 const PORT = Number(process.env.PORT || 5001);
 const BUILD_MODULE_PATH = path.resolve(__dirname, "build.js");
