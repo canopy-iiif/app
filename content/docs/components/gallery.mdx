@@ -25,9 +25,10 @@ description: Set of items that open pop-up content when activated, ideal for ima
     referencedManifests={[
       "https://api.dc.library.northwestern.edu/api/v2/works/213f2874-afca-452d-9bf3-ef0fe85a81ae?as=iiif",
     ]}
-    title="Seated woman writing"
-    summary="Mounted watercolor on mica."
-    thumbnail="https://api.dc.library.northwestern.edu/api/v2/works/213f2874-afca-452d-9bf3-ef0fe85a81ae/thumbnail"
+    caption="Embassy of Hyderbeck to Calcutta, 1800"
+    title="Embassy of Hyderbeck to Calcutta, 1800"
+    summary="This large-scale mezzotint and stipple engraving depicts a diplomatic procession traveling through the Indian landscape en route to Calcutta. At the center of the composition, elaborately dressed figures ride in howdahs atop horses, accompanied by soldiers, attendants, and local travelers carrying baskets and goods. Flags, spears, and musical instruments emphasize the ceremonial nature of the embassy, while ruins and distant architecture situate the scene within a historicized South Asian setting. Based on a painting by Johan Joseph Zoffany and engraved by Richard Earlom in London, the print translates a moment of cross-cultural encounter into a highly detailed image intended for British audiences, reflecting late eighteenth-century imperial interests in India and the East India Company’s diplomatic presence."
+    thumbnail="https://images.collections.yale.edu/iiif/2/ycba:999f94b5-2285-4c99-bc01-786e1bbc942f/full/600,/0/default.jpg"
   >
     <GalleryContent flex>
       <ImageStory
@@ -197,7 +198,7 @@ description: Set of items that open pop-up content when activated, ideal for ima
 
 Wrap popup bodies with `<GalleryContent>` (or `Gallery.Content`) to reuse the default gutters and the optional flex layout.
 
-| Prop       | Type     | Required | Notes                                                                 |
-| ---------- | -------- | -------- | --------------------------------------------------------------------- |
-| `flex`     | boolean  |          | When `true`, the wrapper switches to a row-based flex layout.         |
-| `children` | nodes    | ✅       | Modal body markup. Works with any MDX content (Viewers, prose, etc.). |
+| Prop       | Type    | Required | Notes                                                                 |
+| ---------- | ------- | -------- | --------------------------------------------------------------------- |
+| `flex`     | boolean |          | When `true`, the wrapper switches to a row-based flex layout.         |
+| `children` | nodes   | ✅       | Modal body markup. Works with any MDX content (Viewers, prose, etc.). |

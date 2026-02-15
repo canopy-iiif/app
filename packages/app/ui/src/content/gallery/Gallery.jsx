@@ -416,6 +416,36 @@ function GalleryModal({item, total, closeTargetId, prevTarget, nextTarget}) {
     >
       <div className="canopy-gallery__modal-scrim">
         <div className="canopy-gallery__modal-panel">
+          <div className="canopy-gallery__modal-actions">
+            {total > 1 ? (
+              <nav
+                className="canopy-gallery__modal-nav"
+                aria-label="Gallery popup navigation"
+              >
+                <a
+                  className="canopy-gallery__modal-nav-link canopy-gallery__modal-nav-link--prev"
+                  href={`#${prevTarget}`}
+                  aria-label={`Show previous popup before ${modalTitle}`}
+                >
+                  Prev
+                </a>
+                <a
+                  className="canopy-gallery__modal-nav-link canopy-gallery__modal-nav-link--next"
+                  href={`#${nextTarget}`}
+                  aria-label={`Show next popup after ${modalTitle}`}
+                >
+                  Next
+                </a>
+              </nav>
+            ) : null}
+            <a
+              className="canopy-gallery__modal-close"
+              href={`#${closeTargetId}`}
+              aria-label={`Close popup for ${modalTitle}`}
+            >
+              Close
+            </a>
+          </div>
           <header className="canopy-gallery__modal-header">
             {preview ? (
               <div className="canopy-gallery__modal-thumb" aria-hidden="true">
@@ -460,36 +490,6 @@ function GalleryModal({item, total, closeTargetId, prevTarget, nextTarget}) {
               </section>
             ) : null}
           </div>
-          <footer className="canopy-gallery__modal-footer">
-            <a
-              className="canopy-gallery__modal-close"
-              href={`#${closeTargetId}`}
-              aria-label={`Close popup for ${modalTitle}`}
-            >
-              Close
-            </a>
-            {total > 1 ? (
-              <nav
-                className="canopy-gallery__modal-nav"
-                aria-label="Gallery popup navigation"
-              >
-                <a
-                  className="canopy-gallery__modal-nav-link canopy-gallery__modal-nav-link--prev"
-                  href={`#${prevTarget}`}
-                  aria-label={`Show previous popup before ${modalTitle}`}
-                >
-                  Prev
-                </a>
-                <a
-                  className="canopy-gallery__modal-nav-link canopy-gallery__modal-nav-link--next"
-                  href={`#${nextTarget}`}
-                  aria-label={`Show next popup after ${modalTitle}`}
-                >
-                  Next
-                </a>
-              </nav>
-            ) : null}
-          </footer>
         </div>
       </div>
     </div>
