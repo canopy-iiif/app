@@ -9,18 +9,13 @@ const {
 
 function resolveTailwindCli() {
   const root = process.cwd();
-  let cliEntry = null;
   try {
-    cliEntry = require.resolve("@tailwindcss/cli/dist/index.mjs", { paths: [root] });
-  } catch (_) {
-    cliEntry = null;
-  }
-  if (cliEntry) {
-    return {cmd: process.execPath || "node", args: [cliEntry]};
-  }
-  const binName = process.platform === "win32" ? "tailwindcss.cmd" : "tailwindcss";
-  const localBin = path.join(root, "node_modules", ".bin", binName);
-  if (fs.existsSync(localBin)) return {cmd: localBin, args: []};
+    const pkgPath = require.resolve("@tailwindcss/cli/package.json", {paths: [root]});
+    const cliEntry = path.join(path.dirname(pkgPath), "dist", "index.mjs");
+    if (fs.existsSync(cliEntry)) {
+      return {cmd: process.execPath || "node", args: [cliEntry]};
+    }
+  } catch (_) {}
   return null;
 }
 

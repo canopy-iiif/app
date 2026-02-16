@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.8.8",
+    "date": "2026-02-16",
+    "summary": "Remove windows-only tailwind fallback.",
+    "highlights": []
+  },
+  {
     "version": "1.8.7",
     "date": "2026-02-16",
     "summary": "Update tailwind node entry.",
