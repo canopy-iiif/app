@@ -3,16 +3,22 @@ const path = require('path');
 const fs = require('fs');
 
 function resolveTailwindCli() {
-  const localBin = path.join(
-    process.cwd(),
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tailwindcss.cmd' : 'tailwindcss'
-  );
+  const cwd = process.cwd();
+  const binName = process.platform === 'win32' ? 'tailwindcss.cmd' : 'tailwindcss';
+  const localBin = path.join(cwd, 'node_modules', '.bin', binName);
   if (fs.existsSync(localBin)) {
     return { cmd: localBin, args: [] };
   }
-  return { cmd: 'tailwindcss', args: [] };
+  let cliEntry = null;
+  try {
+    cliEntry = require.resolve('@tailwindcss/cli/dist/index.mjs', { paths: [cwd] });
+  } catch (_) {
+    cliEntry = null;
+  }
+  if (cliEntry) {
+    return { cmd: process.execPath || 'node', args: [cliEntry] };
+  }
+  return null;
 }
 
 async function buildTailwind({ input, output, config, minify = true, watch = false } = {}) {
@@ -20,6 +26,9 @@ async function buildTailwind({ input, output, config, minify = true, watch = fal
     throw new Error('buildTailwind requires both input and output paths.');
   }
   const cli = resolveTailwindCli();
+  if (!cli) {
+    throw new Error("Tailwind CLI not found. Install '@tailwindcss/cli' in this workspace.");
+  }
   const args = ['-i', input, '-o', output];
   if (config) args.push('-c', config);
   if (minify) args.push('--minify');
@@ -37,6 +46,9 @@ function watchTailwind({ input, output, config, minify = false } = {}) {
     throw new Error('watchTailwind requires both input and output paths.');
   }
   const cli = resolveTailwindCli();
+  if (!cli) {
+    throw new Error("Tailwind CLI not found. Install '@tailwindcss/cli' in this workspace.");
+  }
   const args = ['-i', input, '-o', output, '--watch'];
   if (config) args.push('-c', config);
   if (minify) args.push('--minify');

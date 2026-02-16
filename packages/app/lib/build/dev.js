@@ -23,6 +23,11 @@ const APP_COMPONENTS_DIR = path.join(process.cwd(), "app", "components");
 
 function resolveTailwindCli() {
   const root = process.cwd();
+  const binName = process.platform === "win32" ? "tailwindcss.cmd" : "tailwindcss";
+  const bin = path.join(root, "node_modules", ".bin", binName);
+  if (fs.existsSync(bin)) {
+    return { cmd: bin, args: [] };
+  }
   let cliEntry = null;
   try {
     cliEntry = require.resolve("@tailwindcss/cli/dist/index.mjs", { paths: [root] });
@@ -32,14 +37,7 @@ function resolveTailwindCli() {
   if (cliEntry) {
     return { cmd: process.execPath || "node", args: [cliEntry] };
   }
-  const bin = path.join(
-    root,
-    "node_modules",
-    ".bin",
-    process.platform === "win32" ? "tailwindcss.cmd" : "tailwindcss"
-  );
-  if (fs.existsSync(bin)) return { cmd: bin, args: [] };
-  return { cmd: "tailwindcss", args: [] };
+  return null;
 }
 const PORT = Number(process.env.PORT || 5001);
 const BUILD_MODULE_PATH = path.resolve(__dirname, "build.js");
@@ -965,7 +963,7 @@ async function dev() {
     const cli = resolveTailwindCli();
     if (!cli) {
       throw new Error(
-        "[tailwind] Tailwind CLI not found. Install the 'tailwindcss' package in the workspace."
+        "[tailwind] Tailwind CLI not found. Install '@tailwindcss/cli' (and tailwindcss) in this workspace."
       );
     }
 
@@ -976,6 +974,46 @@ async function dev() {
       } catch (_) {
         return "0.0";
       }
+    };
+
+    const tailwindCmd = (args = []) => {
+      const parts = [cli.cmd];
+      if (Array.isArray(cli.args) && cli.args.length) parts.push(...cli.args);
+      if (Array.isArray(args) && args.length) parts.push(...args);
+      return parts.filter(Boolean).join(" ");
+    };
+
+    const formatSpawnOutput = (result) => {
+      if (!result) return "";
+      const messages = [];
+      if (result.stderr && result.stderr.length) {
+        const text = String(result.stderr).trim();
+        if (text) messages.push(`stderr: ${text}`);
+      }
+      if (result.stdout && result.stdout.length) {
+        const text = String(result.stdout).trim();
+        if (text) messages.push(`stdout: ${text}`);
+      }
+      return messages.join("\n");
+    };
+
+    const tailwindFailureMessage = (label, result, args) => {
+      const details = [
+        label,
+        `  input: ${prettyPath(inputCss)}`,
+        `  config: ${configPath ? prettyPath(configPath) : "<unknown>"}`,
+        `  cli: ${tailwindCmd(args)}`,
+      ];
+      const extra = formatSpawnOutput(result);
+      if (extra) {
+        details.push(
+          extra
+            .split(/\r?\n/)
+            .map((line) => `  ${line}`)
+            .join("\n")
+        );
+      }
+      return details.join("\n");
     };
 
     const baseArgs = [
@@ -993,10 +1031,13 @@ async function dev() {
       env: { ...process.env, BROWSERSLIST_IGNORE_OLD_DATA: "1" },
     });
     if (!initial || initial.status !== 0) {
-      if (initial && initial.stderr) {
-        try { process.stderr.write(initial.stderr); } catch (_) {}
-      }
-      throw new Error("[tailwind] Initial Tailwind build failed.");
+      throw new Error(
+        tailwindFailureMessage(
+          "[tailwind] Initial Tailwind build failed.",
+          initial,
+          baseArgs
+        )
+      );
     }
     injectThemeTokens(outputCss);
     stripTailwindThemeLayer(outputCss);
@@ -1047,10 +1088,13 @@ async function dev() {
         env: { ...process.env, BROWSERSLIST_IGNORE_OLD_DATA: "1" },
       });
       if (!res || res.status !== 0) {
-        if (res && res.stderr) {
-          try { process.stderr.write(res.stderr); } catch (_) {}
-        }
-        throw new Error("[tailwind] On-demand Tailwind compile failed.");
+        throw new Error(
+          tailwindFailureMessage(
+            "[tailwind] On-demand Tailwind compile failed.",
+            res,
+            baseArgs
+          )
+        );
       }
       injectThemeTokens(outputCss);
       stripTailwindThemeLayer(outputCss);

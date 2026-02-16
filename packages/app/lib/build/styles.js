@@ -9,6 +9,11 @@ const {
 
 function resolveTailwindCli() {
   const root = process.cwd();
+  const binName = process.platform === "win32" ? "tailwindcss.cmd" : "tailwindcss";
+  const localBin = path.join(root, "node_modules", ".bin", binName);
+  if (fs.existsSync(localBin)) {
+    return {cmd: localBin, args: []};
+  }
   let cliEntry = null;
   try {
     cliEntry = require.resolve("@tailwindcss/cli/dist/index.mjs", { paths: [root] });
@@ -18,14 +23,7 @@ function resolveTailwindCli() {
   if (cliEntry) {
     return {cmd: process.execPath || "node", args: [cliEntry]};
   }
-  const localBin = path.join(
-    root,
-    "node_modules",
-    ".bin",
-    process.platform === "win32" ? "tailwindcss.cmd" : "tailwindcss"
-  );
-  if (fs.existsSync(localBin)) return {cmd: localBin, args: []};
-  return {cmd: "tailwindcss", args: []};
+  return null;
 }
 
 function injectThemeTokens(targetPath) {
