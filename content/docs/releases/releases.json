@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.8.3",
+    "date": "2026-02-16",
+    "summary": "Write local Tailwind config.",
+    "highlights": []
+  },
+  {
     "version": "1.8.2",
     "date": "2026-02-16",
     "summary": "Troubleshoot Windows tailwind run.",

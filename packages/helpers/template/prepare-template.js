@@ -203,6 +203,15 @@ function writeTailwindFiles() {
 `;
     fs.writeFileSync(path.join(stylesDir, 'index.css'), fallbackCss, 'utf8');
   }
+
+  const tailwindConfigPath = path.join(stylesDir, 'tailwind.config.mjs');
+  if (!fs.existsSync(tailwindConfigPath)) {
+    const configSource = `import defineCanopyTailwindConfig from '@canopy-iiif/app/ui/tailwind-config.js';
+
+export default defineCanopyTailwindConfig(import.meta.url);
+`;
+    fs.writeFileSync(tailwindConfigPath, configSource, 'utf8');
+  }
 }
 
 function main() {
