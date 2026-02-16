@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.8.0",
+    "date": "2026-02-16",
+    "summary": "Troubleshoot Windows Tailwind CLI bug",
+    "highlights": [
+      "Sources Tailwind CLI from module.",
+      "Retains fallback cmd for regression."
+    ]
+  },
+  {
     "version": "1.7.0",
     "date": "2026-02-13",
     "summary": "Introduce Gallery component.",
