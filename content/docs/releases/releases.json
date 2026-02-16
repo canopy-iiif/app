@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.8.6",
+    "date": "2026-02-16",
+    "summary": "Add tailwind debugging.",
+    "highlights": []
+  },
+  {
     "version": "1.8.5",
     "date": "2026-02-16",
     "summary": "Update path to file in Tailwind config.",

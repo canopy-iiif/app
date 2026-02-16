@@ -976,12 +976,15 @@ async function dev() {
       }
     };
 
-    const tailwindCmd = (args = []) => {
-      const parts = [cli.cmd];
-      if (Array.isArray(cli.args) && cli.args.length) parts.push(...cli.args);
-      if (Array.isArray(args) && args.length) parts.push(...args);
-      return parts.filter(Boolean).join(" ");
+    const tailwindArgVector = (args = []) => {
+      const vector = [];
+      if (cli.cmd) vector.push(cli.cmd);
+      if (Array.isArray(cli.args) && cli.args.length) vector.push(...cli.args);
+      if (Array.isArray(args) && args.length) vector.push(...args);
+      return vector;
     };
+
+    const tailwindCmd = (args = []) => tailwindArgVector(args).join(" ");
 
     const formatSpawnOutput = (result) => {
       if (!result) return "";
@@ -1004,6 +1007,28 @@ async function dev() {
         `  config: ${configPath ? prettyPath(configPath) : "<unknown>"}`,
         `  cli: ${tailwindCmd(args)}`,
       ];
+      if (result && typeof result.status === "number") {
+        details.push(`  exitCode: ${result.status}`);
+      }
+      if (result && result.error) {
+        const err = result.error;
+        details.push(
+          `  spawnError: ${err && err.message ? err.message : String(err)}`
+        );
+      }
+      if (result && result.signal) {
+        details.push(`  signal: ${result.signal}`);
+      }
+      const extraArgs = tailwindArgVector(args)
+        .map((part) => {
+          if (!part || typeof part !== "string") return part;
+          if (part.includes("\n")) return part.replace(/\n/g, "\\n");
+          return part;
+        })
+        .join(" ");
+      if (extraArgs && extraArgs !== tailwindCmd(args)) {
+        details.push(`  cliRaw: ${extraArgs}`);
+      }
       const extra = formatSpawnOutput(result);
       if (extra) {
         details.push(
@@ -1026,10 +1051,12 @@ async function dev() {
       "--minify",
     ];
 
-    const initial = spawnSync(cli.cmd, [...cli.args, ...baseArgs], {
+    const spawnOptions = {
       stdio: ["ignore", "pipe", "pipe"],
       env: { ...process.env, BROWSERSLIST_IGNORE_OLD_DATA: "1" },
-    });
+    };
+
+    const initial = spawnSync(cli.cmd, [...cli.args, ...baseArgs], spawnOptions);
     if (!initial || initial.status !== 0) {
       throw new Error(
         tailwindFailureMessage(
@@ -1083,10 +1110,7 @@ async function dev() {
     }
 
     function compileTailwindOnce() {
-      const res = spawnSync(cli.cmd, [...cli.args, ...baseArgs], {
-        stdio: ["ignore", "pipe", "pipe"],
-        env: { ...process.env, BROWSERSLIST_IGNORE_OLD_DATA: "1" },
-      });
+      const res = spawnSync(cli.cmd, [...cli.args, ...baseArgs], spawnOptions);
       if (!res || res.status !== 0) {
         throw new Error(
           tailwindFailureMessage(
