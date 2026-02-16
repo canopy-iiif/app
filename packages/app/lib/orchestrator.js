@@ -10,6 +10,40 @@ let uiWatcherChild = null;
 
 const workspacePackageJsonPath = path.resolve(process.cwd(), 'packages/app/package.json');
 const hasAppWorkspace = fs.existsSync(workspacePackageJsonPath);
+const workspaceUiDistDir = path.resolve(process.cwd(), 'packages/app/ui/dist');
+const requiredUiArtifacts = [
+  path.join(workspaceUiDistDir, 'server.mjs'),
+  path.join(workspaceUiDistDir, 'index.mjs'),
+];
+
+function prettyPath(p) {
+  try {
+    const rel = path.relative(process.cwd(), p);
+    return rel ? rel.split(path.sep).join('/') : p;
+  } catch (_) {
+    return p;
+  }
+}
+
+function ensureUiDistReady(context = 'build') {
+  if (!hasAppWorkspace) return;
+  const missing = [];
+  for (const file of requiredUiArtifacts) {
+    try {
+      if (!fs.existsSync(file)) missing.push(file);
+    } catch (_) {
+      missing.push(file);
+    }
+  }
+  if (missing.length) {
+    const list = missing.map((file) => prettyPath(file)).join(', ');
+    const label = context ? `${context} ` : '';
+    throw new Error(
+      `@canopy-iiif/app/ui ${label}did not produce required bundle(s): ${list}. ` +
+        'Run "npm -w @canopy-iiif/app run ui:build" and ensure it completes successfully.'
+    );
+  }
+}
 
 function getMode(argv = process.argv.slice(2), env = process.env) {
   const cli = new Set(argv);
@@ -49,6 +83,20 @@ function start(cmd, args, opts = {}) {
   return child;
 }
 
+async function buildUiOnce(label, env = process.env) {
+  if (!hasAppWorkspace) return;
+  const prefix = label || 'Building';
+  log(`${prefix} UI assets (@canopy-iiif/app/ui)`);
+  try {
+    await runOnce('npm', ['-w', '@canopy-iiif/app', 'run', 'ui:build'], { env });
+  } catch (error) {
+    const message = (error && error.message) || String(error);
+    throw new Error(`[canopy] Failed to ${prefix.toLowerCase()} UI assets: ${message}`);
+  }
+  ensureUiDistReady(prefix.toLowerCase());
+  log('UI assets ready');
+}
+
 async function prepareUi(mode, env = process.env) {
   if (!hasAppWorkspace) {
     log('Using bundled UI assets from @canopy-iiif/app (workspace not detected)');
@@ -56,22 +104,11 @@ async function prepareUi(mode, env = process.env) {
   }
 
   if (mode === 'build') {
-    log('Building UI assets (@canopy-iiif/app/ui)');
-    try {
-      await runOnce('npm', ['-w', '@canopy-iiif/app', 'run', 'ui:build'], { env });
-      log('UI assets built');
-    } catch (error) {
-      warn(`UI build skipped: ${(error && error.message) || String(error)}`);
-    }
+    await buildUiOnce('Building', env);
     return null;
   }
 
-  try {
-    log('Prebuilding UI assets (@canopy-iiif/app/ui)');
-    await runOnce('npm', ['-w', '@canopy-iiif/app', 'run', 'ui:build'], { env });
-  } catch (error) {
-    warn(`UI prebuild skipped: ${(error && error.message) || String(error)}`);
-  }
+  await buildUiOnce('Prebuilding', env);
 
   log('Starting UI watcher (@canopy-iiif/app/ui)');
   try {

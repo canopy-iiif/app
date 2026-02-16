@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.8.1",
+    "date": "2026-02-16",
+    "summary": "Revise Windows troubleshooting patch.",
+    "highlights": []
+  },
+  {
     "version": "1.8.0",
     "date": "2026-02-16",
     "summary": "Troubleshoot Windows Tailwind CLI bug",
