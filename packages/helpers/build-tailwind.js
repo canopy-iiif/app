@@ -4,11 +4,6 @@ const fs = require('fs');
 
 function resolveTailwindCli() {
   const cwd = process.cwd();
-  const binName = process.platform === 'win32' ? 'tailwindcss.cmd' : 'tailwindcss';
-  const localBin = path.join(cwd, 'node_modules', '.bin', binName);
-  if (fs.existsSync(localBin)) {
-    return { cmd: localBin, args: [] };
-  }
   let cliEntry = null;
   try {
     cliEntry = require.resolve('@tailwindcss/cli/dist/index.mjs', { paths: [cwd] });
@@ -17,6 +12,11 @@ function resolveTailwindCli() {
   }
   if (cliEntry) {
     return { cmd: process.execPath || 'node', args: [cliEntry] };
+  }
+  const binName = process.platform === 'win32' ? 'tailwindcss.cmd' : 'tailwindcss';
+  const localBin = path.join(cwd, 'node_modules', '.bin', binName);
+  if (fs.existsSync(localBin)) {
+    return { cmd: localBin, args: [] };
   }
   return null;
 }

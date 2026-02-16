@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.8.7",
+    "date": "2026-02-16",
+    "summary": "Update tailwind node entry.",
+    "highlights": []
+  },
+  {
     "version": "1.8.6",
     "date": "2026-02-16",
     "summary": "Add tailwind debugging.",

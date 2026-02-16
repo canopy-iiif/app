@@ -23,11 +23,6 @@ const APP_COMPONENTS_DIR = path.join(process.cwd(), "app", "components");
 
 function resolveTailwindCli() {
   const root = process.cwd();
-  const binName = process.platform === "win32" ? "tailwindcss.cmd" : "tailwindcss";
-  const bin = path.join(root, "node_modules", ".bin", binName);
-  if (fs.existsSync(bin)) {
-    return { cmd: bin, args: [] };
-  }
   let cliEntry = null;
   try {
     cliEntry = require.resolve("@tailwindcss/cli/dist/index.mjs", { paths: [root] });
@@ -37,6 +32,9 @@ function resolveTailwindCli() {
   if (cliEntry) {
     return { cmd: process.execPath || "node", args: [cliEntry] };
   }
+  const binName = process.platform === "win32" ? "tailwindcss.cmd" : "tailwindcss";
+  const bin = path.join(root, "node_modules", ".bin", binName);
+  if (fs.existsSync(bin)) return { cmd: bin, args: [] };
   return null;
 }
 const PORT = Number(process.env.PORT || 5001);
