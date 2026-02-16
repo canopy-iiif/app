@@ -204,13 +204,18 @@ function writeTailwindFiles() {
     fs.writeFileSync(path.join(stylesDir, 'index.css'), fallbackCss, 'utf8');
   }
 
-  const tailwindConfigPath = path.join(stylesDir, 'tailwind.config.mjs');
+  const tailwindConfigPath = path.join(stylesDir, 'tailwind.config.cjs');
   if (!fs.existsSync(tailwindConfigPath)) {
-    const configSource = `import defineCanopyTailwindConfig from '@canopy-iiif/app/ui/tailwind-config.js';
+    const configSource = `const defineCanopyTailwindConfig = require('@canopy-iiif/app/ui/tailwind-config.js');
 
-export default defineCanopyTailwindConfig(import.meta.url);
+module.exports = defineCanopyTailwindConfig(__filename);
 `;
     fs.writeFileSync(tailwindConfigPath, configSource, 'utf8');
+  }
+
+  const legacyMjsConfig = path.join(stylesDir, 'tailwind.config.mjs');
+  if (fs.existsSync(legacyMjsConfig)) {
+    rmrf(legacyMjsConfig);
   }
 }
 

@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.8.4",
+    "date": "2026-02-16",
+    "summary": "Troubleshoot tailwind config.",
+    "highlights": []
+  },
+  {
     "version": "1.8.3",
     "date": "2026-02-16",
     "summary": "Write local Tailwind config.",
