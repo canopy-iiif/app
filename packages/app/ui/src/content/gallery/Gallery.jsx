@@ -16,6 +16,9 @@ const INLINE_SCRIPT = `(() => {
       return window.setTimeout(cb, 0);
     };
   let activeModal = null;
+  const NAV_SELECTOR = '[data-canopy-gallery-nav]';
+  const NAV_OPTION_SELECTOR = '[data-canopy-gallery-nav-option]';
+  const NAV_ITEM_SELECTOR = '[data-canopy-gallery-nav-item]';
 
   function isVisible(node) {
     return !!(node && (node.offsetWidth || node.offsetHeight || node.getClientRects().length));
@@ -42,6 +45,40 @@ const INLINE_SCRIPT = `(() => {
     } catch (_) {
       return null;
     }
+  }
+
+  function resetModalScroll(modal) {
+    if (!modal) return;
+    const panel = modal.querySelector('.canopy-gallery__modal-panel');
+    if (panel) {
+      panel.scrollTop = 0;
+      panel.scrollLeft = 0;
+    }
+  }
+
+  function getOptionItem(option) {
+    if (!option || typeof option.closest !== 'function') return null;
+    return option.closest(NAV_ITEM_SELECTOR);
+  }
+
+  function focusActiveNav(modal) {
+    if (!modal) return false;
+    const nav = modal.querySelector(NAV_SELECTOR);
+    if (!nav) return false;
+    const activeOption =
+      nav.querySelector(NAV_OPTION_SELECTOR + ':checked') ||
+      nav.querySelector(NAV_OPTION_SELECTOR);
+    if (!activeOption) return false;
+    raf(() => {
+      try {
+        activeOption.focus({preventScroll: true});
+      } catch (_) {
+        try {
+          activeOption.focus();
+        } catch (err) {}
+      }
+    });
+    return true;
   }
 
   function focusInitial(modal) {
@@ -117,7 +154,10 @@ const INLINE_SCRIPT = `(() => {
       }
       activeModal = modal;
       modal.setAttribute('data-canopy-gallery-active', '1');
-      focusInitial(modal);
+      resetModalScroll(modal);
+      if (!focusActiveNav(modal)) {
+        focusInitial(modal);
+      }
       return;
     }
     if (!activeModal) return;
@@ -170,9 +210,266 @@ const INLINE_SCRIPT = `(() => {
     }
   }
 
-  window.addEventListener('hashchange', syncFromHash);
-  window.addEventListener('pageshow', syncFromHash);
+  function initGalleryNav(nav) {
+    if (!nav || nav.getAttribute('data-canopy-gallery-nav-bound') === '1') {
+      return;
+    }
+    const viewport =
+      nav.querySelector('[data-canopy-gallery-nav-viewport]') ||
+      nav.querySelector('[data-canopy-gallery-nav-track]');
+    if (!viewport) return;
+    const optionNodes = nav.querySelectorAll(NAV_OPTION_SELECTOR);
+    const navOptions = optionNodes ? Array.prototype.slice.call(optionNodes) : [];
+    if (!navOptions.length) return;
+    nav.setAttribute('data-canopy-gallery-nav-bound', '1');
+    const prevBtn = nav.querySelector('[data-canopy-gallery-nav-prev]');
+    const nextBtn = nav.querySelector('[data-canopy-gallery-nav-next]');
+
+    function updateButtons() {
+      if (prevBtn) prevBtn.disabled = false;
+      if (nextBtn) nextBtn.disabled = false;
+    }
+
+    function getOptionLabel(option) {
+      if (!option) return null;
+      let label = option.nextElementSibling;
+      if (label && label.tagName && label.tagName.toLowerCase() === 'label') {
+        return label;
+      }
+      if (option.id) {
+        try {
+          label = nav.querySelector('label[for="' + escapeSelector(option.id) + '"]');
+          if (label) return label;
+        } catch (_) {}
+      }
+      return null;
+    }
+
+    function getTargetIdFromOption(option) {
+      if (!option) return '';
+      const dataId = option.getAttribute('data-canopy-gallery-nav-modal');
+      if (dataId) return String(dataId);
+      const value = option.value || option.getAttribute('value') || '';
+      return String(value);
+    }
+
+    function focusOption(option) {
+      if (!option) return;
+      try {
+        option.focus({preventScroll: true});
+      } catch (_) {
+        try {
+          option.focus();
+        } catch (err) {}
+      }
+    }
+
+    function getActiveIndex() {
+      const currentId = window.location.hash.replace(/^#/, '');
+      if (!currentId) return 0;
+      for (let i = 0; i < navOptions.length; i += 1) {
+        if (getTargetIdFromOption(navOptions[i]) === currentId) {
+          return i;
+        }
+      }
+      return 0;
+    }
+
+    function scrollOptionIntoView(option) {
+      const label = getOptionLabel(option);
+      const target = label || option;
+      if (!target) return;
+      try {
+        target.scrollIntoView({behavior: 'smooth', block: 'nearest', inline: 'center'});
+      } catch (_) {
+        try {
+          target.scrollIntoView();
+        } catch (err) {}
+      }
+    }
+
+    function activateOption(option, opts = {}) {
+      if (!option) return;
+      const targetId = getTargetIdFromOption(option);
+      if (!targetId) return;
+      const targetHash = '#' + targetId;
+      syncActiveState({targetHash, reveal: true, focus: !!opts.focus});
+      if (window.location.hash === targetHash) {
+        try {
+          window.location.hash = targetHash;
+        } catch (_) {}
+      } else {
+        window.location.hash = targetHash;
+      }
+    }
+
+    function openByOffset(direction) {
+      const total = navOptions.length;
+      if (!total) return;
+      const currentIndex = getActiveIndex();
+      const nextIndex = (currentIndex + direction + total) % total;
+      const nextOption = navOptions[nextIndex];
+      if (!nextOption) return;
+      activateOption(nextOption, {focus: true});
+    }
+
+    function syncActiveState(options) {
+      const targetHash =
+        (options && options.targetHash) || window.location.hash || '';
+      const normalized = String(targetHash)
+        .split('#')
+        .pop()
+        .replace(/^#/, '');
+      let activeIndex = -1;
+      let activeOption = null;
+      navOptions.forEach((option, index) => {
+        const linkTarget = getTargetIdFromOption(option);
+        const isActive = normalized && linkTarget === normalized;
+        const label = getOptionLabel(option);
+        const navItem = getOptionItem(option);
+        if (isActive) {
+          activeIndex = index;
+          activeOption = option;
+          option.checked = true;
+          option.setAttribute('checked', 'checked');
+          option.setAttribute('data-canopy-gallery-nav-active', '1');
+          option.setAttribute('data-canopy-gallery-nav-selected', '1');
+          option.tabIndex = 0;
+          if (label) {
+            label.setAttribute('data-canopy-gallery-nav-active', '1');
+          }
+          if (navItem) {
+            navItem.setAttribute('data-canopy-gallery-nav-selected', '1');
+          }
+        } else {
+          option.checked = false;
+          option.removeAttribute('checked');
+          option.removeAttribute('data-canopy-gallery-nav-active');
+          option.removeAttribute('data-canopy-gallery-nav-selected');
+          option.tabIndex = -1;
+          if (label) {
+            label.removeAttribute('data-canopy-gallery-nav-active');
+          }
+          if (navItem) {
+            navItem.removeAttribute('data-canopy-gallery-nav-selected');
+          }
+        }
+      });
+      if (options && options.reveal && activeIndex >= 0) {
+        scrollOptionIntoView(navOptions[activeIndex]);
+      }
+      if (options && options.focus && activeIndex >= 0) {
+        focusOption(activeOption);
+      }
+    }
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', function (event) {
+        event.preventDefault();
+        openByOffset(-1);
+      });
+    }
+    if (nextBtn) {
+      nextBtn.addEventListener('click', function (event) {
+        event.preventDefault();
+        openByOffset(1);
+      });
+    }
+
+    viewport.addEventListener('scroll', function () {
+      raf(updateButtons);
+    });
+    window.addEventListener('resize', function () {
+      raf(updateButtons);
+    });
+
+    nav.addEventListener('keydown', function (event) {
+      const target = event.target || event.srcElement;
+      const isOption =
+        target && target.hasAttribute && target.hasAttribute('data-canopy-gallery-nav-option');
+      if (!isOption) return;
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+        event.preventDefault();
+        openByOffset(1);
+        return;
+      }
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        openByOffset(-1);
+        return;
+      }
+      if (event.key === 'Tab' && !event.shiftKey) {
+        const actions = nav.closest('.canopy-gallery__modal-actions');
+        const closeBtn = actions && actions.querySelector('.canopy-gallery__modal-close');
+        if (closeBtn) {
+          event.preventDefault();
+          try {
+            closeBtn.focus({preventScroll: true});
+          } catch (_) {
+            try {
+              closeBtn.focus();
+            } catch (err) {}
+          }
+        }
+      }
+    });
+
+    nav.addEventListener('change', function (event) {
+      const target = event.target || event.srcElement;
+      if (!target || typeof target.matches !== 'function') return;
+      if (!target.matches(NAV_OPTION_SELECTOR)) return;
+      activateOption(target, {focus: true});
+    });
+
+    updateButtons();
+    syncActiveState({reveal: true});
+    nav.__canopyGalleryNavUpdate = updateButtons;
+    nav.__canopyGalleryNavRefresh = function (options) {
+      syncActiveState({
+        reveal: options && options.reveal,
+        focus: options && options.focus,
+      });
+    };
+  }
+
+  function bindGalleryNavs() {
+    const navs = document.querySelectorAll('[data-canopy-gallery-nav]');
+    if (!navs || !navs.length) return;
+    Array.prototype.forEach.call(navs, initGalleryNav);
+    refreshGalleryNavs({reveal: true});
+  }
+
+  function refreshGalleryNavs(options) {
+    const opts = options || {};
+    const navs = document.querySelectorAll('[data-canopy-gallery-nav-bound="1"]');
+    if (!navs || !navs.length) return;
+    Array.prototype.forEach.call(navs, function (nav) {
+      if (typeof nav.__canopyGalleryNavUpdate === 'function') {
+        raf(nav.__canopyGalleryNavUpdate);
+      }
+      if (typeof nav.__canopyGalleryNavRefresh === 'function') {
+        raf(function () {
+          nav.__canopyGalleryNavRefresh({
+            reveal: !!opts.reveal,
+            focus: !!opts.focus,
+          });
+        });
+      }
+    });
+  }
+
+  window.addEventListener('hashchange', function () {
+    syncFromHash();
+    refreshGalleryNavs({reveal: true});
+  });
+  window.addEventListener('pageshow', function () {
+    syncFromHash();
+    bindGalleryNavs();
+    refreshGalleryNavs({reveal: true});
+  });
   syncFromHash();
+  bindGalleryNavs();
+  refreshGalleryNavs({reveal: true});
 })()`;
 
 let galleryInstanceCounter = 0;
@@ -382,7 +679,7 @@ function buildCaptionContent(itemProps) {
   );
 }
 
-function GalleryModal({item, total, closeTargetId, prevTarget, nextTarget}) {
+function GalleryModal({item, closeTargetId, navItems, navGroupName}) {
   const {
     props,
     modalId,
@@ -401,7 +698,6 @@ function GalleryModal({item, total, closeTargetId, prevTarget, nextTarget}) {
     null;
   const modalTitle =
     props.popupTitle || props.modalTitle || props.title || `Item ${index + 1}`;
-  const preview = renderPreview(props);
   return (
     <div
       id={modalId}
@@ -417,27 +713,11 @@ function GalleryModal({item, total, closeTargetId, prevTarget, nextTarget}) {
       <div className="canopy-gallery__modal-scrim">
         <div className="canopy-gallery__modal-panel">
           <div className="canopy-gallery__modal-actions">
-            {total > 1 ? (
-              <nav
-                className="canopy-gallery__modal-nav"
-                aria-label="Gallery popup navigation"
-              >
-                <a
-                  className="canopy-gallery__modal-nav-link canopy-gallery__modal-nav-link--prev"
-                  href={`#${prevTarget}`}
-                  aria-label={`Show previous popup before ${modalTitle}`}
-                >
-                  Prev
-                </a>
-                <a
-                  className="canopy-gallery__modal-nav-link canopy-gallery__modal-nav-link--next"
-                  href={`#${nextTarget}`}
-                  aria-label={`Show next popup after ${modalTitle}`}
-                >
-                  Next
-                </a>
-              </nav>
-            ) : null}
+            <GalleryThumbnailNav
+              items={navItems}
+              activeModalId={modalId}
+              groupName={`${navGroupName || 'canopy-gallery'}-${modalId}`}
+            />
             <a
               className="canopy-gallery__modal-close"
               href={`#${closeTargetId}`}
@@ -447,11 +727,6 @@ function GalleryModal({item, total, closeTargetId, prevTarget, nextTarget}) {
             </a>
           </div>
           <header className="canopy-gallery__modal-header">
-            {preview ? (
-              <div className="canopy-gallery__modal-thumb" aria-hidden="true">
-                {preview}
-              </div>
-            ) : null}
             <div className="canopy-gallery__modal-text">
               {kicker ? (
                 <p className="canopy-gallery__modal-kicker">{kicker}</p>
@@ -521,6 +796,90 @@ function GalleryFigure({item}) {
   );
 }
 
+function GalleryThumbnailNav({items, activeModalId, groupName}) {
+  if (!items || items.length < 2) return null;
+  const radioGroup = groupName || "canopy-gallery-nav";
+  return (
+    <nav
+      className="canopy-gallery__nav"
+      aria-label="Gallery navigation"
+      data-canopy-gallery-nav="true"
+    >
+      <div
+        className="canopy-gallery__nav-viewport"
+        data-canopy-gallery-nav-viewport="true"
+      >
+        <ul
+          className="canopy-gallery__nav-list"
+          role="list"
+          data-canopy-gallery-nav-track="true"
+        >
+          {items.map((item, index) => {
+            const optionId = `${radioGroup}-${item.modalId || index}`;
+            const isActive = item.modalId === activeModalId;
+            return (
+              <li
+                key={`${item.key}-nav`}
+                className="canopy-gallery__nav-item"
+                data-canopy-gallery-nav-item="true"
+                data-canopy-gallery-nav-selected={
+                  isActive ? '1' : undefined
+                }
+              >
+                <input
+                  type="radio"
+                  className="canopy-gallery__nav-radio"
+                  id={optionId}
+                  name={radioGroup}
+                  value={item.modalId}
+                  checked={isActive ? true : undefined}
+                  readOnly
+                  data-canopy-gallery-nav-option="true"
+                  data-canopy-gallery-nav-modal={item.modalId}
+                  tabIndex={isActive ? 0 : -1}
+                  data-canopy-gallery-nav-selected={
+                    isActive ? '1' : undefined
+                  }
+                />
+                <label
+                  className="canopy-gallery__nav-link"
+                  htmlFor={optionId}
+                  data-canopy-gallery-nav-active={
+                    isActive ? "1" : undefined
+                  }
+                >
+                  <span className="canopy-gallery__nav-thumb">
+                    {renderPreview(item.props)}
+                  </span>
+                  <span className="canopy-gallery__nav-label">
+                    {item.props.title || `Item ${item.index + 1}`}
+                  </span>
+                </label>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+      <button
+        type="button"
+        className="canopy-gallery__nav-button canopy-gallery__nav-button--prev"
+        aria-label="Scroll to previous gallery thumbnails"
+        data-canopy-gallery-nav-prev="true"
+      >
+        Prev
+      </button>
+      <button
+        type="button"
+        className="canopy-gallery__nav-button canopy-gallery__nav-button--next"
+        aria-label="Scroll to next gallery thumbnails"
+        data-canopy-gallery-nav-next="true"
+      >
+        Next
+      </button>
+    </nav>
+  );
+}
+
 export function GalleryContent({children, flex = false}) {
   const contentClassName = [
     "canopy-gallery-item__content",
@@ -577,6 +936,8 @@ export default function Gallery({
     .filter(Boolean)
     .join(" ");
 
+  const navGroupName = `${galleryId}-nav`;
+
   return (
     <section className={rootClassName} style={style} data-canopy-gallery="true">
       <div
@@ -601,21 +962,15 @@ export default function Gallery({
         ))}
       </div>
       <div className="canopy-gallery__modals">
-        {orderedItems.map((item, index) => {
-          const total = orderedItems.length;
-          const prevIndex = (index - 1 + total) % total;
-          const nextIndex = (index + 1) % total;
-          return (
-            <GalleryModal
-              key={`${item.modalId}-modal`}
-              item={item}
-              total={total}
-              closeTargetId={closeTargetId}
-              prevTarget={orderedItems[prevIndex].modalId}
-              nextTarget={orderedItems[nextIndex].modalId}
-            />
-          );
-        })}
+        {orderedItems.map((item) => (
+          <GalleryModal
+            key={`${item.modalId}-modal`}
+            item={item}
+            closeTargetId={closeTargetId}
+            navItems={orderedItems}
+            navGroupName={navGroupName}
+          />
+        ))}
       </div>
       <script
         data-canopy-gallery-script="true"
