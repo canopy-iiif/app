@@ -1,24 +1,13 @@
 ---
 title: Gallery
-description: Set of items that open pop-up content when activated, ideal for image galleries or exhibits.
+description: Build a friendly grid of story cards that open roomy popups for richer MDX content.
 ---
 
 # Gallery
 
-`<Gallery>` renders a responsive matrix of clickable figures. Each `<Gallery.Item>` defines the preview (thumbnail, caption text, metadata) and ships its children into a fullscreen popup so authors can reuse any existing MDX component—Viewer, Map, ImageStory, prose, or custom markup.
+`<Gallery>` collects a set of story cards and presents them as a friendly grid. Each `<Gallery.Item>` supplies its own thumbnail, caption, and short summary, then opens a roomy popup where you can reuse Viewer, Map, ImageStory, prose, or any custom MDX block to add depth without sending readers to another page.
 
-- Grid columns collapse automatically using CSS grid with sensible spacing.
-- Figures render semantic `<figure>`/`<figcaption>` markup so cards keep context in document flow.
-- Modals use pure CSS targeting, so the build stays SSR-safe with no extra runtimes. Keyboard users activate the same links to open, close, or step through items.
-- Accessibility niceties ship inlined: focus stays trapped inside the active popup, `Esc` closes it, and background scrolling is locked until you exit.
-- The popup header mirrors the thumbnail so users keep visual context before diving into the richer MDX body.
-- Control the overlay footprint with `popupSize="full" | "medium"`—full overtakes the viewport, while medium keeps page chrome visible and adds rounded/shadowed chrome.
-- Randomize tile layouts per build with `order="random"`, handy when you want a fresh arrangement for every publish.
-- Reference cached manifests (`referencedManifests`) to auto-populate labels, summaries, and thumbnails when you don't want to repeat metadata by hand.
-
-> Examples pull from the same Northwestern fixtures cached under `.cache/iiif`, so thumbnails and modal content point at manifests you already have locally.
-
-## Example: Modal media wall
+Use it when you want to highlight favorite works, curate a mini exhibit, or gather related pieces into a single scan. The example below pulls from the cached Northwestern manifests and shows how a reader can browse tiles at a glance, tap a card, and explore richer notes inside the popup.
 
 <Gallery>
   <Gallery.Item
@@ -27,7 +16,7 @@ description: Set of items that open pop-up content when activated, ideal for ima
     ]}
     caption="Embassy of Hyderbeck to Calcutta, 1800"
     title="Embassy of Hyderbeck to Calcutta, 1800"
-    summary="This large-scale mezzotint and stipple engraving depicts a diplomatic procession traveling through the Indian landscape en route to Calcutta. At the center of the composition, elaborately dressed figures ride in howdahs atop horses, accompanied by soldiers, attendants, and local travelers carrying baskets and goods. Flags, spears, and musical instruments emphasize the ceremonial nature of the embassy, while ruins and distant architecture situate the scene within a historicized South Asian setting. Based on a painting by Johan Joseph Zoffany and engraved by Richard Earlom in London, the print translates a moment of cross-cultural encounter into a highly detailed image intended for British audiences, reflecting late eighteenth-century imperial interests in India and the East India Company’s diplomatic presence."
+    summary="This large-scale mezzotint and stipple engraving depicts a diplomatic procession traveling through the Indian landscape en route to Calcutta. At the center of the composition, elaborately dressed figures ride in howdahs atop horses, accompanied by soldiers, attendants, and local travelers carrying baskets and goods."
     thumbnail="https://images.collections.yale.edu/iiif/2/ycba:999f94b5-2285-4c99-bc01-786e1bbc942f/full/600,/0/default.jpg"
   >
     <GalleryContent flex>

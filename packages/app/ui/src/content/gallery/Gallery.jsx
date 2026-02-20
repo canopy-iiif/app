@@ -860,22 +860,38 @@ function GalleryThumbnailNav({items, activeModalId, groupName}) {
           })}
         </ul>
       </div>
-      <button
-        type="button"
-        className="canopy-gallery__nav-button canopy-gallery__nav-button--prev"
-        aria-label="Scroll to previous gallery thumbnails"
-        data-canopy-gallery-nav-prev="true"
-      >
-        Prev
-      </button>
-      <button
-        type="button"
-        className="canopy-gallery__nav-button canopy-gallery__nav-button--next"
-        aria-label="Scroll to next gallery thumbnails"
-        data-canopy-gallery-nav-next="true"
-      >
-        Next
-      </button>
+      <div className="canopy-gallery__nav-controls">
+        <button
+          type="button"
+          className="canopy-gallery__nav-button canopy-gallery__nav-button--prev"
+          aria-label="Scroll left through gallery thumbnails"
+          data-canopy-gallery-nav-prev="true"
+        >
+          <span
+            className="canopy-gallery__nav-button-icon"
+            aria-hidden="true"
+            role="presentation"
+          >
+            {'<'}
+          </span>
+          <span className="canopy-gallery__visually-hidden">Previous item</span>
+        </button>
+        <button
+          type="button"
+          className="canopy-gallery__nav-button canopy-gallery__nav-button--next"
+          aria-label="Scroll right through gallery thumbnails"
+          data-canopy-gallery-nav-next="true"
+        >
+          <span
+            className="canopy-gallery__nav-button-icon"
+            aria-hidden="true"
+            role="presentation"
+          >
+            {'>'}
+          </span>
+          <span className="canopy-gallery__visually-hidden">Next item</span>
+        </button>
+      </div>
     </nav>
   );
 }
