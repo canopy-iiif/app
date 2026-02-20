@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.8.9",
+    "date": "2026-02-20",
+    "summary": "Refine gallery, add item navigation on popup.",
+    "highlights": []
+  },
+  {
     "version": "1.8.8",
     "date": "2026-02-16",
     "summary": "Remove windows-only tailwind fallback.",
