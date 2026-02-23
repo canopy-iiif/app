@@ -295,6 +295,9 @@ export default function MdxMap({children, ...rest}) {
   const tileLayers = disableTileLayers ? [] : normalizeTileLayers(tileLayersInput);
   const scrollWheelZoom = parseBoolean(rest.scrollWheelZoom, false);
   const cluster = parseBoolean(rest.cluster, true);
+  const maxClusterRadius = normalizeNumber(
+    rest.maxClusterRadius ?? rest.clusterRadius ?? rest.markerClusterRadius
+  );
   const defaultCenter = normalizeCenter(rest.defaultCenter || rest.center);
   const defaultZoom = normalizeNumber(rest.defaultZoom || rest.zoom);
   const rawKeyConfig =
@@ -312,6 +315,7 @@ export default function MdxMap({children, ...rest}) {
     disableTileLayers,
     scrollWheelZoom,
     cluster,
+    maxClusterRadius: Number.isFinite(maxClusterRadius) ? maxClusterRadius : null,
     customPoints,
     navDataset,
     defaultCenter,

@@ -382,8 +382,30 @@ function buildTileLayers(inputLayers, leaflet) {
     .filter(Boolean);
 }
 
-function buildMarkerIcon(marker, leaflet, colorOverride) {
+function buildMarkerIcon(marker, leaflet, colorOverride, markerStyle) {
   if (!leaflet) return null;
+  if (markerStyle === "small") {
+    const label = marker.keyLabel || marker.title || marker.summary || "";
+    const safeLabel = label ? escapeHtml(label) : "";
+    const color = colorOverride ? escapeHtml(colorOverride) : DEFAULT_ACCENT_HEX;
+    const dotStyle = color ? ` style="background-color:${color}"` : "";
+    const html = `<div class="canopy-map__marker-label">` +
+      `<span class="canopy-map__marker-label-dot"${dotStyle}></span>` +
+      (safeLabel
+        ? `<span class="canopy-map__marker-label-text">${safeLabel}</span>`
+        : "") +
+      `</div>`;
+    try {
+      return leaflet.divIcon({
+        className: "canopy-map__marker canopy-map__marker--label",
+        html,
+        iconAnchor: [6, 6],
+        popupAnchor: [0, 0],
+      });
+    } catch (_) {
+      return null;
+    }
+  }
   const hasThumbnail = Boolean(marker && marker.thumbnail);
   const size = CUSTOM_MARKER_SIZE;
   const anchor = CUSTOM_MARKER_RADIUS;
@@ -408,12 +430,13 @@ function buildMarkerIcon(marker, leaflet, colorOverride) {
   }
 }
 
-function buildClusterOptions(leaflet) {
+function buildClusterOptions(leaflet, maxClusterRadius) {
   if (!leaflet) return null;
   const size = CUSTOM_MARKER_SIZE;
   const anchor = CUSTOM_MARKER_RADIUS;
   return {
     chunkedLoading: true,
+    maxClusterRadius: typeof maxClusterRadius === "number" ? maxClusterRadius : undefined,
     iconCreateFunction: (cluster) => {
       const count = cluster && typeof cluster.getChildCount === "function"
         ? cluster.getChildCount()
@@ -644,6 +667,18 @@ function normalizeGeoReferences(value) {
     .filter(Boolean);
 }
 
+function normalizeMarkerVariant(value) {
+  if (!value) return null;
+  try {
+    const normalized = String(value).trim().toLowerCase();
+    if (!normalized) return null;
+    if (["small", "label", "inline"].includes(normalized)) return "small";
+    return null;
+  } catch (_) {
+    return null;
+  }
+}
+
 function extractNavMarkers(data, allowedKeys) {
   if (!data || !Array.isArray(data.manifests)) return [];
   const keys = allowedKeys instanceof Set ? allowedKeys : new Set();
@@ -717,6 +752,7 @@ export default function Map({
   disableTileLayers = false,
   scrollWheelZoom = false,
   cluster = true,
+  maxClusterRadius = null,
   customPoints = [],
   navDataset = null,
   iiifContent = null,
@@ -903,30 +939,40 @@ export default function Map({
         return {
           keyValue: String(value).trim(),
           label: String(label).trim(),
+          markerType: normalizeMarkerVariant(
+            entry.markerType || entry.type || entry.variant
+          ),
         };
       })
       .filter(Boolean);
   }, [resolvedKeyInput]);
 
   const markerKeyData = React.useMemo(() => {
-    if (!normalizedLegendConfig.length) return {groups: [], colorMap: null};
-    const colorMap = createMarkerMap();
+    if (!normalizedLegendConfig.length) return {groups: [], metaMap: null};
+    const metaMap = createMarkerMap();
     const palette = generateLegendColors(normalizedLegendConfig.length);
     const groups = normalizedLegendConfig.map((entry, index) => {
       const color = palette[index] || palette[0] || DEFAULT_ACCENT_HEX;
-      colorMap.set(entry.keyValue, color);
+      metaMap.set(entry.keyValue, {
+        color,
+        markerType: entry.markerType || null,
+      });
       return {
         keyValue: entry.keyValue,
         label: entry.label,
         color,
+        markerType: entry.markerType || null,
       };
     });
-    return {groups, colorMap};
+    return {groups, metaMap};
   }, [normalizedLegendConfig]);
   const markerKeyGroups = markerKeyData.groups;
-  const markerKeyColorMap = markerKeyData.colorMap;
+  const markerKeyMetaMap = markerKeyData.metaMap;
 
-  const clusterOptions = React.useMemo(() => buildClusterOptions(leafletLib), [leafletLib]);
+  const clusterOptions = React.useMemo(
+    () => buildClusterOptions(leafletLib, typeof maxClusterRadius === "number" ? maxClusterRadius : null),
+    [leafletLib, maxClusterRadius]
+  );
 
   React.useEffect(() => {
     if (!containerRef.current || mapRef.current || !leafletLib) return undefined;
@@ -1015,19 +1061,42 @@ export default function Map({
       layer.clearLayers();
     } catch (_) {}
     const bounds = [];
-  const popupCleanups = [];
+    const popupCleanups = [];
+    const hoverCleanups = [];
 
-  allMarkers.forEach((marker) => {
+    allMarkers.forEach((marker) => {
       if (!marker || !Number.isFinite(marker.lat) || !Number.isFinite(marker.lng)) return;
       const latlng = leafletLib.latLng(marker.lat, marker.lng);
       bounds.push(latlng);
-      const colorOverride =
-        marker.type === "custom" && markerKeyColorMap && marker.keyValue
-          ? markerKeyColorMap.get(String(marker.keyValue).trim())
+      const markerMeta =
+        marker.type === "custom" && markerKeyMetaMap && marker.keyValue
+          ? markerKeyMetaMap.get(String(marker.keyValue).trim())
           : null;
-      const icon = buildMarkerIcon(marker, leafletLib, colorOverride);
+      const colorOverride = markerMeta && markerMeta.color ? markerMeta.color : null;
+      const markerStyle = markerMeta && markerMeta.markerType ? markerMeta.markerType : null;
+      const icon = buildMarkerIcon(marker, leafletLib, colorOverride, markerStyle);
       const leafletMarker = leafletLib.marker(latlng, icon ? {icon} : undefined);
-      const popup = renderPopup(marker);
+      const shouldShowPopup = markerStyle !== "small";
+      const popup = shouldShowPopup ? renderPopup(marker) : null;
+      const handleMouseOver = () => {
+        const el = leafletMarker && leafletMarker.getElement && leafletMarker.getElement();
+        if (el) el.classList.add("is-hovered");
+      };
+      const handleMouseOut = () => {
+        const el = leafletMarker && leafletMarker.getElement && leafletMarker.getElement();
+        if (el) el.classList.remove("is-hovered");
+      };
+      try {
+        leafletMarker.on("mouseover", handleMouseOver);
+        leafletMarker.on("mouseout", handleMouseOut);
+        hoverCleanups.push(() => {
+          try {
+            leafletMarker.off("mouseover", handleMouseOver);
+            leafletMarker.off("mouseout", handleMouseOut);
+          } catch (_) {}
+          handleMouseOut();
+        });
+      } catch (_) {}
       if (popup && popup.element) {
         try {
           leafletMarker.bindPopup(popup.element);
@@ -1055,7 +1124,7 @@ export default function Map({
       try {
         layer.addLayer(leafletMarker);
       } catch (_) {}
-  });
+    });
     const centerOverride = normalizeCenterInput(defaultCenter);
     const hasDefaultZoom = Number.isFinite(defaultZoom);
     if (hasDefaultZoom) {
@@ -1091,6 +1160,11 @@ export default function Map({
 
     return () => {
       popupCleanups.forEach((cleanup) => {
+        try {
+          cleanup();
+        } catch (_) {}
+      });
+      hoverCleanups.forEach((cleanup) => {
         try {
           cleanup();
         } catch (_) {}
@@ -1159,7 +1233,14 @@ export default function Map({
           {markerKeyGroups.map((group) => (
             <li key={group.label} className="canopy-map__key-item">
               <span
-                className="canopy-map__key-dot"
+                className={
+                  [
+                    "canopy-map__key-dot",
+                    group.markerType === "small" ? "canopy-map__key-dot--small" : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" ")
+                }
                 aria-hidden="true"
                 style={{backgroundColor: group.color || undefined}}
               />

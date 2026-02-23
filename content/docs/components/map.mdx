@@ -114,8 +114,8 @@ Attach `referencedManifests` to any `MapPoint` to render a list inside the marke
   height="600px"
   mapKey={[
     {id: "works", label: "Works"},
-    {id: "city", label: "City"},
-    {id: "site", label: "Site"},
+    {id: "city", label: "City", type: "small"},
+    {id: "site", label: "Site", type: "small"},
   ]}
 >
   <MapPoint lat="26.195" lng="75.785" key="city" title="Tonk (1826–1830)" />
@@ -130,13 +130,28 @@ Pass `mapKey` to `<Map>` and assign the matching `key` to each `MapPoint`. The l
   height="600px"
   mapKey={[
     {id: "works", label: "Works"},
-    {id: "city", label: "City"},
-    {id: "site", label: "Site"},
+    {id: "city", label: "City", type: "small"},
+    {id: "site", label: "Site", type: "small"},
   ]}
 >
   <MapPoint lat="26.195" lng="75.785" key="city" title="Tonk (1826–1830)" />
   <MapPoint lat="26.18" lng="75.77" key="works" title="Tonk (1826–1830)" />
   <MapPoint lat="25.18" lng="73.77" key="site" title="Bundi" />
+</Map>
+```
+
+Set `type: 'small'` (or `'label'`) on any `mapKey` entry to render those `MapPoint`s as compact inline labels without popups—great for city labels or dense site annotations.
+
+```mdx
+<Map
+  height="400px"
+  mapKey={[
+    {id: "works", label: "Works"},
+    {id: "city", label: "City", type: "small"},
+  ]}
+>
+  <MapPoint lat="34.5553" lng="69.2075" key="city" title="Kabul" keyLabel="Kabul" />
+  <MapPoint lat="26.18" lng="75.77" key="works" title="Tonk (1826–1830)" />
 </Map>
 ```
 
@@ -224,11 +239,12 @@ Skip OpenStreetMap (or any custom basemap request) by setting `disableTileLayers
 | `iiifContent`     | string                                                               | `null`        | IIIF Manifest or Collection URL used to source navPlace markers.                                                  |
 | `height`          | string \| number                                                     | `600px`       | Fixed height applied to the Leaflet container. Numbers automatically add `px`.                                    |
 | `geoReferences`   | string \| string[] \| `Array<{ annotation?, url?, options? }>`       | `[]`          | Client-side Allmaps annotations to render as warped map layers on top of the basemap.                             |
-| `mapKey`          | `Array<{ id, label }>`                                               | `[]`          | Optional legend configuration used to color-code custom `MapPoint`s by `key`.                                     |
+| `mapKey`          | `Array<{ id, label, type? }>`                                        | `[]`          | Optional legend/marker configuration used to color-code `MapPoint`s by `key`; set `type: 'small'` for inline labels. |
 | `tileLayers`      | `Array<{ name, url, attribution, maxZoom?, minZoom?, subdomains? }>` | OpenStreetMap | One or more custom basemap definitions rendered via Leaflet tile layers.                                          |
 | `disableTileLayers` | boolean \| `'none'` \| `'transparent'`                            | `false`       | Set to `true` (or `'none'`/`'transparent'` in MDX) to use a built-in transparent TileLayer instead of external tiles. |
 | `scrollWheelZoom` | boolean                                                              | `false`       | Enable or disable scroll-wheel zooming.                                                                           |
 | `cluster`         | boolean                                                              | `true`        | Toggle marker clustering (`leaflet.markercluster`).                                                               |
+| `maxClusterRadius`| number                                                               | `null`        | Override Leaflet's `maxClusterRadius` (defaults to the plugin's built-in value).                                   |
 | `defaultCenter`   | `{lat, lng}` \| `'lat,lng'`                                          | `null`        | Fallback map view when no markers are available.                                                                  |
 | `defaultZoom`     | number                                                               | `null`        | Overrides the automatic bounds fit and forces the map to use the provided zoom (optionally with `defaultCenter`). |
 
@@ -242,7 +258,8 @@ Skip OpenStreetMap (or any custom basemap request) by setting `disableTileLayers
 | `summary`                             | string             | Short description rendered inside the popup.                                                                    |
 | `href`                                | string             | Optional link target (absolute, root-relative, or `/works/...`). When omitted the popup title stays plain text. |
 | `thumbnail`                           | string             | Optional image URL displayed in the popup (defaults to the first referenced manifest thumbnail when omitted).   |
-| `key`                                 | string             | Optional identifier that links this `MapPoint` to a `mapKey` entry on the parent `<Map>`.                       |
+| `key`                                 | string             | Optional identifier that links this `MapPoint` to a `mapKey` entry on the parent `<Map>` (required for inline label styling). |
+| `keyLabel`                            | string             | Override label text used by `mapKey` entries with `type: 'small'` (falls back to `title`).                      |
 | `referencedManifests` / `manifest(s)` | string \| string[] | Resolve one or more manifest IDs/URLs into linked work references inside the popup.                             |
 | `children`                            | MDX                | Additional markup rendered below the summary.                                                                   |
 
