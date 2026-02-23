@@ -195,6 +195,26 @@ Add georeferenced imagery from [Allmaps](https://allmaps.org) by supplying one o
   />
 </Map>
 
+### Hide the basemap
+
+Skip OpenStreetMap (or any custom basemap request) by setting `disableTileLayers={true}`. MDX attributes like `disableTileLayers="true"` or legacy `tileLayers="none"/"transparent"` are also honored. This swaps in Canopy's built-in transparent TileLayer (a local data URI) so Leaflet keeps working without hitting third-party servers—perfect for Allmaps-only views or privacy-sensitive embeds.
+
+```mdx
+<Map
+  height="400px"
+  disableTileLayers={true}
+  geoReferences={["https://annotations.allmaps.org/images/26e0416161f6765c"]}
+  defaultZoom={5}
+/>
+```
+
+<Map
+  height="400px"
+  disableTileLayers={true}
+  geoReferences={["https://annotations.allmaps.org/images/26e0416161f6765c"]}
+  defaultZoom={5}
+/>
+
 ## API
 
 ### Map
@@ -206,6 +226,7 @@ Add georeferenced imagery from [Allmaps](https://allmaps.org) by supplying one o
 | `geoReferences`   | string \| string[] \| `Array<{ annotation?, url?, options? }>`       | `[]`          | Client-side Allmaps annotations to render as warped map layers on top of the basemap.                             |
 | `mapKey`          | `Array<{ id, label }>`                                               | `[]`          | Optional legend configuration used to color-code custom `MapPoint`s by `key`.                                     |
 | `tileLayers`      | `Array<{ name, url, attribution, maxZoom?, minZoom?, subdomains? }>` | OpenStreetMap | One or more custom basemap definitions rendered via Leaflet tile layers.                                          |
+| `disableTileLayers` | boolean \| `'none'` \| `'transparent'`                            | `false`       | Set to `true` (or `'none'`/`'transparent'` in MDX) to use a built-in transparent TileLayer instead of external tiles. |
 | `scrollWheelZoom` | boolean                                                              | `false`       | Enable or disable scroll-wheel zooming.                                                                           |
 | `cluster`         | boolean                                                              | `true`        | Toggle marker clustering (`leaflet.markercluster`).                                                               |
 | `defaultCenter`   | `{lat, lng}` \| `'lat,lng'`                                          | `null`        | Fallback map view when no markers are available.                                                                  |

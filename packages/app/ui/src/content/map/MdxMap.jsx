@@ -182,6 +182,26 @@ function normalizeTileLayers(value) {
     .filter(Boolean);
 }
 
+const TILE_LAYER_DISABLE_TOKENS = new Set([
+  "false",
+  "0",
+  "off",
+  "no",
+  "none",
+  "transparent",
+  "disable",
+  "disabled",
+]);
+
+function shouldDisableTileLayers(value) {
+  if (value === false) return true;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (normalized && TILE_LAYER_DISABLE_TOKENS.has(normalized)) return true;
+  }
+  return false;
+}
+
 function parseBoolean(value, fallback) {
   if (value === undefined) return fallback;
   if (typeof value === "boolean") return value;
@@ -253,7 +273,26 @@ export default function MdxMap({children, ...rest}) {
     version: datasetInfo && datasetInfo.version ? datasetInfo.version : null,
   };
   const height = normalizeHeight(rest.height);
-  const tileLayers = normalizeTileLayers(rest.tileLayers || rest.tileLayer);
+  const tileLayersInput =
+    rest.tileLayers !== undefined && rest.tileLayers !== null
+      ? rest.tileLayers
+      : rest.tileLayer !== undefined
+      ? rest.tileLayer
+      : undefined;
+  const disableTileLayersInput =
+    rest.disableTileLayers ?? rest.disableBasemap ?? rest.hideTileLayers;
+  const showTileLayersOverride =
+    rest.showTileLayers ?? rest.showBasemap ?? rest.basemap ?? rest.basemapVisible;
+  let disableTileLayers = false;
+  if (disableTileLayersInput !== undefined) {
+    disableTileLayers = parseBoolean(disableTileLayersInput, false);
+  } else if (showTileLayersOverride !== undefined) {
+    const showLayers = parseBoolean(showTileLayersOverride, true);
+    disableTileLayers = !showLayers;
+  } else {
+    disableTileLayers = shouldDisableTileLayers(tileLayersInput);
+  }
+  const tileLayers = disableTileLayers ? [] : normalizeTileLayers(tileLayersInput);
   const scrollWheelZoom = parseBoolean(rest.scrollWheelZoom, false);
   const cluster = parseBoolean(rest.cluster, true);
   const defaultCenter = normalizeCenter(rest.defaultCenter || rest.center);
@@ -270,6 +309,7 @@ export default function MdxMap({children, ...rest}) {
     id: rest.id || null,
     height,
     tileLayers,
+    disableTileLayers,
     scrollWheelZoom,
     cluster,
     customPoints,

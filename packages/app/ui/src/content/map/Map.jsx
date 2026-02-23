@@ -10,6 +10,9 @@ const DEFAULT_TILE_LAYERS = [
     maxZoom: 19,
   },
 ];
+const TRANSPARENT_TILE_LAYER_NAME = "Transparent";
+const TRANSPARENT_TILE_URL =
+  "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
 
 const CUSTOM_MARKER_SIZE = 40;
 const CUSTOM_MARKER_RADIUS = CUSTOM_MARKER_SIZE / 2;
@@ -337,6 +340,25 @@ function extractManifestKeysFromIiif(resource, fallback) {
     if (keys.length) return keys;
   }
   return fallbackKey ? [fallbackKey] : [];
+}
+
+function createTransparentTileLayers(leaflet) {
+  if (!leaflet) return [];
+  try {
+    return [
+      {
+        name: TRANSPARENT_TILE_LAYER_NAME,
+        layer: leaflet.tileLayer(TRANSPARENT_TILE_URL, {
+          attribution: "",
+          maxZoom: 25,
+          minZoom: 0,
+          opacity: 0,
+        }),
+      },
+    ];
+  } catch (_) {
+    return [];
+  }
 }
 
 function buildTileLayers(inputLayers, leaflet) {
@@ -692,6 +714,7 @@ export default function Map({
   legend = [],
   geoReferences = [],
   tileLayers = [],
+  disableTileLayers = false,
   scrollWheelZoom = false,
   cluster = true,
   customPoints = [],
@@ -912,7 +935,9 @@ export default function Map({
       scrollWheelZoom: scrollWheelZoom === true,
     });
     mapRef.current = map;
-    const layers = buildTileLayers(tileLayers, leafletLib);
+    const layers = disableTileLayers === true
+      ? createTransparentTileLayers(leafletLib)
+      : buildTileLayers(tileLayers, leafletLib);
     const layerControlEntries = {};
     layers.forEach((entry, index) => {
       try {
@@ -941,7 +966,7 @@ export default function Map({
       mapRef.current = null;
       layerRef.current = null;
     };
-  }, [tileLayers, scrollWheelZoom, cluster, clusterOptions, leafletLib]);
+  }, [tileLayers, disableTileLayers, scrollWheelZoom, cluster, clusterOptions, leafletLib]);
 
   React.useEffect(() => {
     const map = mapRef.current;
