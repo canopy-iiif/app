@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.8.12",
+    "date": "2026-02-23",
+    "summary": "Remove map example from template.",
+    "highlights": []
+  },
+  {
     "version": "1.8.11",
     "date": "2026-02-23",
     "summary": "Add small type to Map points.",
