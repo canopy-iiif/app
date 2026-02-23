@@ -13,6 +13,15 @@ function normalizeNumber(value) {
   return Number.isFinite(num) ? num : null;
 }
 
+function normalizeReactKey(value) {
+  if (value == null) return "";
+  const str = String(value);
+  if (/^\.[0-9]+$/.test(str)) return "";
+  if (str.startsWith(".$")) return str.slice(2);
+  if (str.startsWith(".")) return str.slice(1);
+  return str;
+}
+
 function normalizeCoordinates(props = {}) {
   const lat =
     normalizeNumber(props.lat) ??
@@ -39,6 +48,16 @@ function renderDetailsHtml(children) {
   }
 }
 
+function normalizeKeyLabel(value) {
+  if (value == null) return "";
+  try {
+    const label = String(value).trim();
+    return label;
+  } catch (_) {
+    return "";
+  }
+}
+
 function normalizeCustomPoint(child, index, manifestMap) {
   if (!React.isValidElement(child)) return null;
   if (child.type !== MapPoint && child.type?.displayName !== "MapPoint") return null;
@@ -52,6 +71,10 @@ function normalizeCustomPoint(child, index, manifestMap) {
   let thumbnail = props.thumbnail || props.image || "";
   let thumbnailWidth = normalizeNumber(props.thumbnailWidth);
   let thumbnailHeight = normalizeNumber(props.thumbnailHeight);
+  const rawNodeKey = child && child.key != null ? child.key : null;
+  const normalizedNodeKey = normalizeReactKey(rawNodeKey);
+  const keyValue = props.mapKey || props.group || props.key || normalizedNodeKey;
+  const keyLabelFromProps = normalizeKeyLabel(props.keyLabel || props.legend || props.groupLabel);
   const detailsHtml = renderDetailsHtml(props.children);
   const manifestValues = Array.isArray(props.referencedManifests)
     ? props.referencedManifests
@@ -96,6 +119,8 @@ function normalizeCustomPoint(child, index, manifestMap) {
     detailsHtml,
     manifests,
     type: "custom",
+    keyValue: keyValue ? String(keyValue).trim() : "",
+    keyLabel: keyLabelFromProps,
   };
 }
 
@@ -233,6 +258,13 @@ export default function MdxMap({children, ...rest}) {
   const cluster = parseBoolean(rest.cluster, true);
   const defaultCenter = normalizeCenter(rest.defaultCenter || rest.center);
   const defaultZoom = normalizeNumber(rest.defaultZoom || rest.zoom);
+  const rawKeyConfig =
+    rest.key ?? rest.mapKey ?? rest.keys ?? rest.legend ?? rest.keyConfig ?? null;
+  const mapKeyConfig = Array.isArray(rawKeyConfig)
+    ? rawKeyConfig
+    : rawKeyConfig && typeof rawKeyConfig === "object"
+    ? [rawKeyConfig]
+    : [];
   const payload = serializeProps(rest, {
     className: rest.className || "",
     id: rest.id || null,
@@ -244,6 +276,7 @@ export default function MdxMap({children, ...rest}) {
     navDataset,
     defaultCenter,
     defaultZoom: Number.isFinite(defaultZoom) ? defaultZoom : null,
+    keyConfig: mapKeyConfig,
   });
   const json = serializeForScript(payload);
   const placeholderClass = ["canopy-map", rest.className]

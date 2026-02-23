@@ -15,6 +15,7 @@ const CUSTOM_MARKER_SIZE = 40;
 const CUSTOM_MARKER_RADIUS = CUSTOM_MARKER_SIZE / 2;
 // Keep popup stems hovering just above the 40px markers.
 const CUSTOM_MARKER_POPUP_OFFSET = -CUSTOM_MARKER_RADIUS + 6;
+const DEFAULT_ACCENT_HEX = "#2563eb";
 
 function resolveGlobalLeaflet() {
   try {
@@ -147,6 +148,137 @@ function createMarkerMap() {
   };
 }
 
+function normalizeHex(value) {
+  if (!value) return "";
+  let input = String(value).trim();
+  if (!input) return "";
+  if (input.startsWith("var(")) return input;
+  if (/^#[0-9a-f]{3}$/i.test(input)) {
+    return input
+      .replace(/^#/, "")
+      .split("")
+      .map((ch) => ch + ch)
+      .join("")
+      .replace(/^/, "#");
+  }
+  if (/^#[0-9a-f]{6}$/i.test(input)) return input;
+  return "";
+}
+
+function hexToRgb(hex) {
+  if (!hex) return null;
+  const normalized = normalizeHex(hex);
+  if (!normalized) return null;
+  const int = parseInt(normalized.slice(1), 16);
+  return {
+    r: (int >> 16) & 255,
+    g: (int >> 8) & 255,
+    b: int & 255,
+  };
+}
+
+function rgbToHsl({r, g, b}) {
+  const rn = r / 255;
+  const gn = g / 255;
+  const bn = b / 255;
+  const max = Math.max(rn, gn, bn);
+  const min = Math.min(rn, gn, bn);
+  let h = 0;
+  let s = 0;
+  const l = (max + min) / 2;
+  const delta = max - min;
+  if (delta !== 0) {
+    s = l > 0.5 ? delta / (2 - max - min) : delta / (max + min);
+    switch (max) {
+      case rn:
+        h = (gn - bn) / delta + (gn < bn ? 6 : 0);
+        break;
+      case gn:
+        h = (bn - rn) / delta + 2;
+        break;
+      case bn:
+        h = (rn - gn) / delta + 4;
+        break;
+      default:
+        break;
+    }
+    h /= 6;
+  }
+  return {h: h * 360, s: s * 100, l: l * 100};
+}
+
+function hslToHex(h, s, l) {
+  const sat = s / 100;
+  const light = l / 100;
+  const c = (1 - Math.abs(2 * light - 1)) * sat;
+  const hh = h / 60;
+  const x = c * (1 - Math.abs((hh % 2) - 1));
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  if (hh >= 0 && hh < 1) {
+    r = c;
+    g = x;
+  } else if (hh >= 1 && hh < 2) {
+    r = x;
+    g = c;
+  } else if (hh >= 2 && hh < 3) {
+    g = c;
+    b = x;
+  } else if (hh >= 3 && hh < 4) {
+    g = x;
+    b = c;
+  } else if (hh >= 4 && hh < 5) {
+    r = x;
+    b = c;
+  } else {
+    r = c;
+    b = x;
+  }
+  const m = light - c / 2;
+  const rn = Math.round((r + m) * 255);
+  const gn = Math.round((g + m) * 255);
+  const bn = Math.round((b + m) * 255);
+  const toHex = (value) => value.toString(16).padStart(2, "0");
+  return `#${toHex(rn)}${toHex(gn)}${toHex(bn)}`;
+}
+
+function rotateHue(baseHue, degrees) {
+  return (baseHue + degrees + 360) % 360;
+}
+
+function resolveAccentHex() {
+  let value = "";
+  try {
+    if (typeof window !== "undefined") {
+      const styles = window.getComputedStyle(document.documentElement);
+      value = styles.getPropertyValue("--color-accent-default");
+    }
+  } catch (_) {}
+  const normalized = normalizeHex(value);
+  return normalized || DEFAULT_ACCENT_HEX;
+}
+
+function generateLegendColors(count) {
+  if (!count || count <= 0) return [];
+  const colors = [];
+  const baseHex = resolveAccentHex();
+  const accentVar = `var(--color-accent-default, ${baseHex})`;
+  colors.push(accentVar);
+  if (count === 1) return colors;
+  const rgb = hexToRgb(baseHex);
+  const baseHsl = rgb ? rgbToHsl(rgb) : {h: 220, s: 85, l: 56};
+  const rotations = [180, 120, -120, 60, -60, 90, -90, 30, -30];
+  const needed = count - 1;
+  for (let i = 0; i < needed; i += 1) {
+    const angle = rotations[i] != null ? rotations[i] : (360 / (needed + 1)) * (i + 1);
+    const rotatedHue = rotateHue(baseHsl.h, angle);
+    const hex = hslToHex(rotatedHue, baseHsl.s, baseHsl.l);
+    colors.push(hex);
+  }
+  return colors;
+}
+
 function readIiifType(resource) {
   if (!resource) return "";
   const raw = resource.type || resource["@type"];
@@ -228,16 +360,19 @@ function buildTileLayers(inputLayers, leaflet) {
     .filter(Boolean);
 }
 
-function buildMarkerIcon(marker, leaflet) {
+function buildMarkerIcon(marker, leaflet, colorOverride) {
   if (!leaflet) return null;
   const hasThumbnail = Boolean(marker && marker.thumbnail);
   const size = CUSTOM_MARKER_SIZE;
   const anchor = CUSTOM_MARKER_RADIUS;
+  const color = colorOverride ? escapeHtml(colorOverride) : "";
+  const thumbStyle = color ? ` style="border-color:${color}"` : "";
+  const solidStyle = color ? ` style="background-color:${color}"` : "";
   const html = hasThumbnail
-    ? `<div class="canopy-map__marker-thumb"><img src="${escapeHtml(
+    ? `<div class="canopy-map__marker-thumb"${thumbStyle}><img src="${escapeHtml(
         marker.thumbnail
       )}" alt="" loading="lazy" /></div>`
-    : '<span class="canopy-map__marker-solid"></span>';
+    : `<span class="canopy-map__marker-solid"${solidStyle}></span>`;
   try {
     return leaflet.divIcon({
       className: "canopy-map__marker",
@@ -427,8 +562,63 @@ function normalizeCustomMarkers(points) {
         thumbnailHeight: point.thumbnailHeight,
         manifests: Array.isArray(point.manifests) ? point.manifests : [],
         type: "custom",
+        keyValue: point.keyValue ? String(point.keyValue).trim() : "",
+        keyLabel: typeof point.keyLabel === "string"
+          ? point.keyLabel
+          : point.keyLabel
+          ? String(point.keyLabel)
+          : "",
       };
     })
+    .filter(Boolean);
+}
+
+function normalizeGeoReferenceEntry(entry, index) {
+  if (entry == null) return null;
+  if (typeof entry === "string") {
+    const trimmed = entry.trim();
+    return trimmed ? {id: trimmed, annotation: trimmed, options: null} : null;
+  }
+  if (typeof entry === "object") {
+    const id = entry.id || entry.key;
+    const options = entry.options && typeof entry.options === "object" ? entry.options : null;
+    let annotation =
+      entry.annotation ??
+      entry.annotations ??
+      entry.url ??
+      entry.href ??
+      entry.annotationUrl ??
+      entry.source ??
+      null;
+    if (!annotation) {
+      const looksLikeAnnotation =
+        typeof entry.type === "string" && entry.target && entry.body;
+      if (looksLikeAnnotation) annotation = entry;
+    }
+    if (typeof annotation === "string") {
+      const trimmed = annotation.trim();
+      if (!trimmed) return null;
+      return {
+        id: id || trimmed,
+        annotation: trimmed,
+        options,
+      };
+    }
+    if (annotation && typeof annotation === "object") {
+      return {
+        id: id || annotation.id || `geo-reference-${index + 1}`,
+        annotation,
+        options,
+      };
+    }
+  }
+  return null;
+}
+
+function normalizeGeoReferences(value) {
+  const list = Array.isArray(value) ? value : value ? [value] : [];
+  return list
+    .map((entry, index) => normalizeGeoReferenceEntry(entry, index))
     .filter(Boolean);
 }
 
@@ -497,6 +687,10 @@ export default function Map({
   id = null,
   style = null,
   height = "600px",
+  keyConfig = [],
+  mapKey = [],
+  legend = [],
+  geoReferences = [],
   tileLayers = [],
   scrollWheelZoom = false,
   cluster = true,
@@ -663,6 +857,52 @@ export default function Map({
     return [...(navState.markers || []), ...normalizedCustom];
   }, [navState.markers, normalizedCustom]);
 
+  const normalizedGeoReferences = React.useMemo(
+    () => normalizeGeoReferences(geoReferences),
+    [geoReferences]
+  );
+
+  const resolvedKeyInput = React.useMemo(() => {
+    if (Array.isArray(keyConfig) && keyConfig.length) return keyConfig;
+    if (Array.isArray(mapKey) && mapKey.length) return mapKey;
+    if (Array.isArray(legend) && legend.length) return legend;
+    return [];
+  }, [keyConfig, mapKey, legend]);
+
+  const normalizedLegendConfig = React.useMemo(() => {
+    if (!Array.isArray(resolvedKeyInput) || !resolvedKeyInput.length) return [];
+    return resolvedKeyInput
+      .map((entry) => {
+        if (!entry) return null;
+        const value = entry.id || entry.value || entry.key;
+        const label = entry.label || entry.name || entry.title;
+        if (!value || !label) return null;
+        return {
+          keyValue: String(value).trim(),
+          label: String(label).trim(),
+        };
+      })
+      .filter(Boolean);
+  }, [resolvedKeyInput]);
+
+  const markerKeyData = React.useMemo(() => {
+    if (!normalizedLegendConfig.length) return {groups: [], colorMap: null};
+    const colorMap = createMarkerMap();
+    const palette = generateLegendColors(normalizedLegendConfig.length);
+    const groups = normalizedLegendConfig.map((entry, index) => {
+      const color = palette[index] || palette[0] || DEFAULT_ACCENT_HEX;
+      colorMap.set(entry.keyValue, color);
+      return {
+        keyValue: entry.keyValue,
+        label: entry.label,
+        color,
+      };
+    });
+    return {groups, colorMap};
+  }, [normalizedLegendConfig]);
+  const markerKeyGroups = markerKeyData.groups;
+  const markerKeyColorMap = markerKeyData.colorMap;
+
   const clusterOptions = React.useMemo(() => buildClusterOptions(leafletLib), [leafletLib]);
 
   React.useEffect(() => {
@@ -705,6 +945,45 @@ export default function Map({
 
   React.useEffect(() => {
     const map = mapRef.current;
+    if (!map || !leafletLib) return undefined;
+    if (!normalizedGeoReferences.length) return undefined;
+    let cancelled = false;
+    const layers = [];
+    import("@allmaps/leaflet")
+      .then((mod) => {
+        if (cancelled) return;
+        const LayerCtor = mod && (mod.WarpedMapLayer || mod.default);
+        if (!LayerCtor) return;
+        normalizedGeoReferences.forEach((entry) => {
+          if (!entry || !entry.annotation) return;
+          try {
+            const layer = new LayerCtor(entry.annotation, entry.options || undefined);
+            if (typeof layer.addTo === "function") {
+              layer.addTo(map);
+            } else if (typeof map.addLayer === "function") {
+              map.addLayer(layer);
+            }
+            layers.push(layer);
+          } catch (_) {}
+        });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+      layers.forEach((layer) => {
+        try {
+          if (typeof layer.remove === "function") {
+            layer.remove();
+          } else if (map && typeof map.removeLayer === "function") {
+            map.removeLayer(layer);
+          }
+        } catch (_) {}
+      });
+    };
+  }, [leafletLib, normalizedGeoReferences]);
+
+  React.useEffect(() => {
+    const map = mapRef.current;
     const layer = layerRef.current;
     if (!map || !layer || !leafletLib) return;
     try {
@@ -717,7 +996,11 @@ export default function Map({
       if (!marker || !Number.isFinite(marker.lat) || !Number.isFinite(marker.lng)) return;
       const latlng = leafletLib.latLng(marker.lat, marker.lng);
       bounds.push(latlng);
-      const icon = buildMarkerIcon(marker, leafletLib);
+      const colorOverride =
+        marker.type === "custom" && markerKeyColorMap && marker.keyValue
+          ? markerKeyColorMap.get(String(marker.keyValue).trim())
+          : null;
+      const icon = buildMarkerIcon(marker, leafletLib, colorOverride);
       const leafletMarker = leafletLib.marker(latlng, icon ? {icon} : undefined);
       const popup = renderPopup(marker);
       if (popup && popup.element) {
@@ -792,7 +1075,9 @@ export default function Map({
 
   const isLoadingMarkers = iiifTargets.loading || navState.loading;
   const hasMarkers = allMarkers.length > 0;
+  const hasGeoReferences = normalizedGeoReferences.length > 0;
   const hasCustomPoints = normalizedCustom.length > 0;
+  const hasKey = markerKeyGroups.length > 0;
   const datasetUnavailable = navTargets.length > 0 && !datasetHasFeatures;
   const rootClass = [
     "canopy-map",
@@ -815,14 +1100,14 @@ export default function Map({
     ? navState.error
     : isLoadingMarkers
     ? "Loading map data…"
-    : !iiifContent && !hasCustomPoints
+    : !iiifContent && !hasCustomPoints && !hasGeoReferences
     ? "Add iiifContent or MapPoint markers to populate this map."
-    : !hasMarkers
+    : !hasMarkers && !hasGeoReferences
     ? "No map locations available."
     : "";
   const showStatus = Boolean(statusLabel);
 
-  return (
+  const mapElement = (
     <div className={rootClass} id={id || undefined} style={style || undefined}>
       <div
         ref={containerRef}
@@ -830,10 +1115,34 @@ export default function Map({
         style={{height: height || "600px"}}
       />
       {showStatus ? (
-        <div className="canopy-map__status" aria-live="polite">
-          {statusLabel}
+        <div className="canopy-map__overlays">
+          <div className="canopy-map__status" aria-live="polite">
+            {statusLabel}
+          </div>
         </div>
       ) : null}
     </div>
+  );
+
+  if (!hasKey) return mapElement;
+
+  return (
+    <React.Fragment>
+      {mapElement}
+      <div className="canopy-map__key" aria-label="Map key">
+        <ul className="canopy-map__key-list">
+          {markerKeyGroups.map((group) => (
+            <li key={group.label} className="canopy-map__key-item">
+              <span
+                className="canopy-map__key-dot"
+                aria-hidden="true"
+                style={{backgroundColor: group.color || undefined}}
+              />
+              <span className="canopy-map__key-label">{group.label}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </React.Fragment>
   );
 }
