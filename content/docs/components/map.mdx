@@ -46,6 +46,36 @@ By default, custom `MapPoint` popups render their titles as plain text so visito
 
 Attach `referencedManifests` to any `MapPoint` to render a list inside the marker. This automatically resolves links to a relative local in `/works/` if available. Additionally a thumbnail is used from the referenced manifest if no `thumbnail` prop is provided.
 
+<Map>
+  <MapPoint
+    lat="25.45126"
+    lng="75.63737"
+    title="Boondi / Bundi (1826–1830)"
+    summary="A hand-colored aquatint from East India Company sketches, depicting Bundi in a mountain pass, with the palace on the slope and fortifications rising to the summit."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif",
+    ]}
+  />
+  <MapPoint
+    lat="26.195"
+    lng="75.785"
+    title="Tonk (1826–1830)"
+    summary="A hand-colored aquatint from East India Company military sketches, showing Tonk and its hill-fort landscape in Rajpootana, near the Banas River."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b?as=iiif",
+    ]}
+  />
+  <MapPoint
+    lat="26.18"
+    lng="75.77"
+    title="Tonk (1826–1830)"
+    summary="A hand-colored aquatint drawn from East India Company military sketches (1826–1830), showing a riverside ghat and pavilion on the Banas River near Tonk in Rajpootana, with a hill-top fort/shrine in the distance."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif",
+    ]}
+  />
+</Map>
+
 ```mdx
 <Map>
   <MapPoint
@@ -78,16 +108,73 @@ Attach `referencedManifests` to any `MapPoint` to render a list inside the marke
 </Map>
 ```
 
-<Map>
+## Add a key for MapPoint categories
+
+<Map
+  height="600px"
+  mapKey={[
+    {id: "works", label: "Works"},
+    {id: "city", label: "City"},
+    {id: "site", label: "Site"},
+  ]}
+>
+  <MapPoint lat="26.195" lng="75.785" key="city" title="Tonk (1826–1830)" />
+  <MapPoint lat="26.18" lng="75.77" key="works" title="Tonk (1826–1830)" />
+  <MapPoint lat="25.18" lng="73.77" key="site" title="Bundi" />
+</Map>
+
+Pass `mapKey` to `<Map>` and assign the matching `key` to each `MapPoint`. The legend renders beneath the map and reuses those values to color both the legend dots and the markers. (React reserves the plain `key` prop, so in MDX you should use `mapKey` on `<Map>` while individual `<MapPoint>` elements can safely set `key`.)
+
+```mdx
+<Map
+  height="600px"
+  mapKey={[
+    {id: "works", label: "Works"},
+    {id: "city", label: "City"},
+    {id: "site", label: "Site"},
+  ]}
+>
+  <MapPoint lat="26.195" lng="75.785" key="city" title="Tonk (1826–1830)" />
+  <MapPoint lat="26.18" lng="75.77" key="works" title="Tonk (1826–1830)" />
+  <MapPoint lat="25.18" lng="73.77" key="site" title="Bundi" />
+</Map>
+```
+
+## Overlay Allmaps geoReferences
+
+Add georeferenced imagery from [Allmaps](https://allmaps.org) by supplying one or more Annotation or annotation URL strings to the `geoReferences` prop. These overlays hydrate entirely in the browser (via `@allmaps/leaflet`) so your MDX stays SSR-safe, and you can combine them with any mix of `MapPoint` markers or IIIF-derived navPlaces.
+
+```mdx
+<Map
+  height="600px"
+  geoReferences={["https://annotations.allmaps.org/images/26e0416161f6765c"]}
+>
   <MapPoint
-    lat="25.45126"
-    lng="75.63737"
-    title="Boondi / Bundi (1826–1830)"
-    summary="A hand-colored aquatint from East India Company sketches, depicting Bundi in a mountain pass, with the palace on the slope and fortifications rising to the summit."
+    lat="26.195"
+    lng="75.785"
+    title="Tonk (1826–1830)"
+    summary="A hand-colored aquatint from East India Company military sketches, showing Tonk and its hill-fort landscape in Rajpootana, near the Banas River."
     referencedManifests={[
-      "https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif",
+      "https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b?as=iiif",
     ]}
   />
+  <MapPoint
+    lat="26.18"
+    lng="75.77"
+    title="Tonk (1826–1830)"
+    summary="A hand-colored aquatint drawn from East India Company military sketches (1826–1830), showing a riverside ghat and pavilion on the Banas River near Tonk in Rajpootana, with a hill-top fort/shrine in the distance."
+    referencedManifests={[
+      "https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif",
+    ]}
+  />
+</Map>
+```
+
+<Map
+  height="600px"
+  geoReferences={["https://annotations.allmaps.org/images/26e0416161f6765c"]}
+  defaultZoom={5}
+>
   <MapPoint
     lat="26.195"
     lng="75.785"
@@ -116,6 +203,8 @@ Attach `referencedManifests` to any `MapPoint` to render a list inside the marke
 | ----------------- | -------------------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `iiifContent`     | string                                                               | `null`        | IIIF Manifest or Collection URL used to source navPlace markers.                                                  |
 | `height`          | string \| number                                                     | `600px`       | Fixed height applied to the Leaflet container. Numbers automatically add `px`.                                    |
+| `geoReferences`   | string \| string[] \| `Array<{ annotation?, url?, options? }>`       | `[]`          | Client-side Allmaps annotations to render as warped map layers on top of the basemap.                             |
+| `mapKey`          | `Array<{ id, label }>`                                               | `[]`          | Optional legend configuration used to color-code custom `MapPoint`s by `key`.                                     |
 | `tileLayers`      | `Array<{ name, url, attribution, maxZoom?, minZoom?, subdomains? }>` | OpenStreetMap | One or more custom basemap definitions rendered via Leaflet tile layers.                                          |
 | `scrollWheelZoom` | boolean                                                              | `false`       | Enable or disable scroll-wheel zooming.                                                                           |
 | `cluster`         | boolean                                                              | `true`        | Toggle marker clustering (`leaflet.markercluster`).                                                               |
@@ -132,6 +221,7 @@ Attach `referencedManifests` to any `MapPoint` to render a list inside the marke
 | `summary`                             | string             | Short description rendered inside the popup.                                                                    |
 | `href`                                | string             | Optional link target (absolute, root-relative, or `/works/...`). When omitted the popup title stays plain text. |
 | `thumbnail`                           | string             | Optional image URL displayed in the popup (defaults to the first referenced manifest thumbnail when omitted).   |
+| `key`                                 | string             | Optional identifier that links this `MapPoint` to a `mapKey` entry on the parent `<Map>`.                       |
 | `referencedManifests` / `manifest(s)` | string \| string[] | Resolve one or more manifest IDs/URLs into linked work references inside the popup.                             |
 | `children`                            | MDX                | Additional markup rendered below the summary.                                                                   |
 

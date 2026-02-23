@@ -72,6 +72,15 @@ function buildCompileOptions(overrides = {}) {
 const yaml = require("js-yaml");
 const {getPageContext} = require("../page-context");
 
+const UI_PACKAGE_SPEC = "@canopy-iiif/app/ui";
+const UI_SERVER_SPEC = "@canopy-iiif/app/ui/server";
+const UI_SPEC_REGEX = new RegExp(`(['"])${UI_PACKAGE_SPEC.replace(/\//g, '\\/')}(['"])`, "g");
+
+function rewriteUiImportsForServer(source) {
+  if (typeof source !== "string" || !source.includes(UI_PACKAGE_SPEC)) return source;
+  return source.replace(UI_SPEC_REGEX, ($0, open, close) => `${open}${UI_SERVER_SPEC}${close}`);
+}
+
 function parseFrontmatter(src) {
   let input = String(src || "");
   // Strip UTF-8 BOM if present
@@ -591,6 +600,13 @@ async function compileCustomComponentModule(entryPath, signature) {
       ],
       allowOverwrite: true,
     });
+    try {
+      const built = fs.readFileSync(tmpFile, "utf8");
+      const rewritten = rewriteUiImportsForServer(built);
+      if (rewritten !== built) {
+        fs.writeFileSync(tmpFile, rewritten, "utf8");
+      }
+    } catch (_) {}
   } catch (err) {
     const msg = err && (err.message || err.stack) ? err.message || err.stack : err;
     throw new Error(
@@ -870,7 +886,8 @@ async function loadAppWrapper() {
   const {compile} = await import("@mdx-js/mdx");
   const raw = await fsp.readFile(appPath, "utf8");
   const {content: source} = parseFrontmatter(raw);
-  let code = String(await compile(source, buildCompileOptions()));
+  const safeSource = rewriteUiImportsForServer(source);
+  let code = String(await compile(safeSource, buildCompileOptions()));
   // MDX v3 default export (MDXContent) does not forward external children.
   // When present, expose the underlying layout function as __MDXLayout for wrapping.
   if (
@@ -918,7 +935,8 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
   const {compile} = await import("@mdx-js/mdx");
   const raw = await fsp.readFile(filePath, "utf8");
   const {content: source} = parseFrontmatter(raw);
-  const compiled = await compile(source, buildCompileOptions());
+  const safeSource = rewriteUiImportsForServer(source);
+  const compiled = await compile(safeSource, buildCompileOptions());
   const code = String(compiled);
   ensureDirSync(CACHE_DIR);
   const relCacheName =

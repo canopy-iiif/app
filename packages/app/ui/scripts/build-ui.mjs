@@ -82,6 +82,7 @@ async function run() {
     format: 'esm',
     sourcemap: true,
     target: ['es2018'],
+    mainFields: ['module', 'main'],
     external: ['react', 'react-dom', 'react-dom/client', 'react-masonry-css', 'flexsearch', 'cmdk', 'leaflet', 'leaflet.markercluster', '@samvera/clover-iiif/*'],
     logLevel: 'info',
     outExtension: { '.js': '.mjs' },
@@ -136,6 +137,7 @@ async function run() {
       format: 'esm',
       sourcemap: true,
       target: ['es2018'],
+      mainFields: ['module', 'main'],
       external: ['react', 'react-dom', 'react-dom/client', 'react-masonry-css', 'flexsearch', 'cmdk', 'leaflet', 'leaflet.markercluster', '@samvera/clover-iiif/*'],
       logLevel: 'info',
       outExtension: { '.js': '.mjs' }
