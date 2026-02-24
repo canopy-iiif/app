@@ -1,0 +1,33 @@
+---
+title: Build a language toggle
+---
+
+# Build a language toggle
+
+Canopy’s header renders a locale switcher automatically when `canopy.yml → locales` is defined. The builder reads both the config and your `content/locale.yml` overrides, then injects the resulting data into `<CanopyHeader />` via the `languageToggle` prop.
+
+## Configure `_app.mdx`
+
+```mdx filename="content/_app.mdx" {5,9-16}
+import {CanopyHeader, CanopyFooter} from "@canopy-iiif/app/ui";
+
+export function App({children}) {
+  return (
+    <>
+      <CanopyHeader navigation={[{href: "/search", label: "Works"}]} />
+      <main>{children}</main>
+      <CanopyFooter>…</CanopyFooter>
+    </>
+  );
+}
+```
+
+`@canopy-iiif/app` reads locales from `canopy.yml → locales` and merges `content/locale.yml` + `content/<lang>/locale.yml` automatically; the header uses those messages for the visible label and `aria-label` attributes.
+
+## Messages & behavior
+
+- `messages.__default` supplies fallback text (`ui.languageToggle.label`, `ui.languageToggle.ariaLabel`). Each locale-specific entry (e.g., `messages.es`) overrides those keys when available.
+- Links keep the current path/query/hash while swapping locale prefixes (`/es/...`). The default locale renders without a prefix.
+- Desktop renders the toggle next to the search/menu buttons; mobile renders it at the top of the navigation modal.
+
+If you need different placement or markup, you can still pass your own `languageToggle={{locales, messages}}` prop to `<CanopyHeader />` (or render a custom control elsewhere) using the same data the builder exposes.

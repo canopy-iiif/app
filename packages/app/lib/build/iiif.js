@@ -16,7 +16,14 @@ const {
   readSiteMetadata,
   readPrimaryNavigation,
   withBase,
+  resolveLocaleFromHref,
+  getLocaleRouteEntries,
+  getDefaultRoute,
+  buildRouteRelativePath,
+  getLocaleRouteConfig,
+  getDefaultLocaleCode,
 } = require("../common");
+const {readCanopyLocalesWithMessages} = require("../locales");
 const {resolveCanopyConfigPath} = require("../config-path");
 const mdx = require("./mdx");
 const {log, logLine, logResponse} = require("./log");
@@ -174,9 +181,9 @@ function normalizeSlugBase(value, fallback) {
   return clampSlugLength(safeFallback, MAX_ENTRY_SLUG_LENGTH) || safeFallback;
 }
 
-function manifestHrefFromSlug(slug) {
+function manifestHrefFromSlug(slug, routePath) {
   if (!slug) return "";
-  const rel = `works/${String(slug).trim()}.html`;
+  const rel = buildRouteRelativePath(routePath || getDefaultRoute("works"), `${String(slug).trim()}.html`);
   return rootRelativeHref(rel);
 }
 
@@ -203,10 +210,10 @@ function extractHomepageId(resource) {
   return "";
 }
 
-function resolveManifestCanonical(manifest, slug) {
+function resolveManifestCanonical(manifest, slug, routePath) {
   const homepageId = extractHomepageId(manifest);
   if (homepageId) return homepageId;
-  return manifestHrefFromSlug(slug);
+  return manifestHrefFromSlug(slug, routePath);
 }
 
 function resolveCollectionCanonical(collection) {
@@ -223,9 +230,9 @@ function assignEntryCanonical(entry, canonical) {
   return value;
 }
 
-function applyManifestEntryCanonical(entry, manifest, slug) {
+function applyManifestEntryCanonical(entry, manifest, slug, routePath) {
   if (!entry || entry.type !== "Manifest") return "";
-  const canonical = resolveManifestCanonical(manifest, slug);
+  const canonical = resolveManifestCanonical(manifest, slug, routePath);
   return assignEntryCanonical(entry, canonical);
 }
 
@@ -1127,7 +1134,7 @@ async function loadCachedManifestById(id) {
               slug,
               parent: "",
             };
-            applyManifestEntryCanonical(entry, null, slug);
+            applyManifestEntryCanonical(entry, null, slug, getDefaultRoute("works"));
             if (existingEntryIdx >= 0) index.byId[existingEntryIdx] = entry;
             else index.byId.push(entry);
             await saveManifestIndex(index);
@@ -1160,6 +1167,7 @@ async function loadCachedManifestById(id) {
           entry,
           normalized,
           slug,
+          getDefaultRoute("works"),
         );
         if (nextCanonical !== prevCanonical) {
           await saveManifestIndex(index);
@@ -1202,7 +1210,7 @@ async function saveCachedManifest(manifest, id, parentId) {
       slug,
       parent: parentId ? String(parentId) : "",
     };
-    applyManifestEntryCanonical(entry, normalizedManifest, slug);
+    applyManifestEntryCanonical(entry, normalizedManifest, slug, getDefaultRoute("works"));
     if (existingEntryIdx >= 0) index.byId[existingEntryIdx] = entry;
     else index.byId.push(entry);
     await saveManifestIndex(index);
@@ -1860,6 +1868,16 @@ async function buildIiifCollectionPages(CONFIG) {
   const iiifRecords = [];
   const navPlaceRecords = [];
   const {size: thumbSize, unsafe: unsafeThumbs} = resolveThumbnailPreferences();
+  let workRouteEntries = getLocaleRouteEntries("works");
+  if (!workRouteEntries.length) {
+    workRouteEntries = [
+      {
+        locale: getDefaultLocaleCode(),
+        route: getDefaultRoute("works"),
+        isDefault: true,
+      },
+    ];
+  }
 
   // Compile the works layout component once per run
   const worksLayoutPath = path.join(CONTENT_DIR, "works", "_layout.mdx");
@@ -2028,10 +2046,20 @@ async function buildIiifCollectionPages(CONFIG) {
         if (normalizedManifestId) renderedManifestIds.add(normalizedManifestId);
         logDebug(`Resolved slug ${slug} for ${manifestLabel}`);
         const references = referenced.getReferencesForManifest(manifestId);
-        const href = path.join("works", slug + ".html");
-        const outPath = path.join(OUT_DIR, href);
-        ensureDirSync(path.dirname(outPath));
-        try {
+        for (const routeEntry of workRouteEntries) {
+          const routeBase =
+            routeEntry && routeEntry.route
+              ? routeEntry.route
+              : getDefaultRoute("works");
+          const isDefaultRoute = routeEntry && routeEntry.isDefault === true;
+          const localeFromRoute =
+            routeEntry && routeEntry.locale
+              ? routeEntry.locale
+              : getDefaultLocaleCode();
+          const href = buildRouteRelativePath(routeBase, `${slug}.html`);
+          const outPath = path.join(OUT_DIR, href);
+          ensureDirSync(path.dirname(outPath));
+          try {
           let components = {};
           try {
             components = await mdx.loadUiComponents();
@@ -2062,8 +2090,9 @@ async function buildIiifCollectionPages(CONFIG) {
           }
           const normalizedHref = href.split(path.sep).join("/");
           const pageHref = rootRelativeHref(normalizedHref);
+          const pageLocale = localeFromRoute || resolveLocaleFromHref(pageHref);
           const pageDescription = summaryForMeta || title;
-          const canonical = resolveManifestCanonical(manifest, slug);
+          const canonical = resolveManifestCanonical(manifest, slug, routeBase);
           const pageDetails = {
             title,
             href: pageHref,
@@ -2074,12 +2103,14 @@ async function buildIiifCollectionPages(CONFIG) {
             manifestId,
             referencedBy: references,
             canonical,
+            locale: pageLocale,
             meta: {
               title,
               description: pageDescription,
               type: "work",
               url: pageHref,
               canonical,
+              locale: pageLocale,
             },
           };
           const ogImageForPage =
@@ -2095,11 +2126,33 @@ async function buildIiifCollectionPages(CONFIG) {
             navigationRoots && Object.keys(navigationRoots).length
               ? {allRoots: navigationRoots}
               : null;
-          const primaryNav = readPrimaryNavigation();
+          const primaryNav = readPrimaryNavigation(pageLocale);
+          const siteMeta = readSiteMetadata ? {...readSiteMetadata()} : null;
+          const siteLanguageToggle = (() => {
+            try {
+              const data = readCanopyLocalesWithMessages();
+              if (data && Array.isArray(data.locales) && data.locales.length) {
+                return {locales: data.locales, messages: data.messages || {}};
+              }
+            } catch (_) {}
+            return null;
+          })();
+          const siteContext = siteMeta ? {...siteMeta} : {};
+          if (siteLanguageToggle) {
+            siteContext.languageToggle = siteLanguageToggle;
+          }
+          try {
+            const localeRoutes = getLocaleRouteConfig(pageLocale);
+            if (localeRoutes) siteContext.routes = localeRoutes;
+          } catch (_) {}
+          try {
+            const defaultRoutes = getLocaleRouteConfig(getDefaultLocaleCode());
+            if (defaultRoutes) siteContext.routesDefault = defaultRoutes;
+          } catch (_) {}
           const pageContextValue = {
             navigation: navigationContext,
             page: pageDetails,
-            site: readSiteMetadata ? {...readSiteMetadata()} : null,
+            site: siteContext && Object.keys(siteContext).length ? siteContext : null,
             primaryNavigation: Array.isArray(primaryNav) ? primaryNav : [],
           };
           if (
@@ -2329,6 +2382,7 @@ async function buildIiifCollectionPages(CONFIG) {
             scriptHref: jsRel,
             headExtra,
             bodyClass,
+            lang: pageLocale,
           });
           try {
             html = require("../common").applyBaseToHtml(html);
@@ -2501,103 +2555,123 @@ async function buildIiifCollectionPages(CONFIG) {
               }
             }
           } catch (_) {}
-          let metadataValues = [];
-          let summaryValue = "";
-          let annotationValue = "";
-          try {
-            const metadataEntries = extractMetadataEntries(manifest, {
-              includeAll: metadataCollectAllLabels,
-              labelsSet: metadataLabelSet,
+          if (isDefaultRoute) {
+            let metadataValues = [];
+            let summaryValue = "";
+            let annotationValue = "";
+            try {
+              const metadataEntries = extractMetadataEntries(manifest, {
+                includeAll: metadataCollectAllLabels,
+                labelsSet: metadataLabelSet,
+              });
+              if (metadataEntries && metadataEntries.length) {
+                for (const entry of metadataEntries) recordMetadataIndexEntry(entry);
+              }
+            } catch (_) {}
+            if (metadataOptions && metadataOptions.enabled) {
+              try {
+                metadataValues = extractMetadataValues(manifest, metadataOptions);
+              } catch (_) {
+                metadataValues = [];
+              }
+            }
+            if (summaryOptions && summaryOptions.enabled) {
+              summaryValue = summaryRaw || "";
+            }
+            if (annotationsOptions && annotationsOptions.enabled) {
+              try {
+                annotationValue = await extractAnnotationText(
+                  manifest,
+                  annotationsOptions,
+                );
+              } catch (_) {
+                annotationValue = "";
+              }
+            }
+            const fallbackThumbnail =
+              (heroMedia && heroMedia.heroThumbnail) || "";
+            const fallbackThumbWidth =
+              heroMedia && typeof heroMedia.heroThumbnailWidth === "number"
+                ? heroMedia.heroThumbnailWidth
+                : undefined;
+            const fallbackThumbHeight =
+              heroMedia && typeof heroMedia.heroThumbnailHeight === "number"
+                ? heroMedia.heroThumbnailHeight
+                : undefined;
+            const navThumbnail = thumbUrl || fallbackThumbnail;
+            const navThumbWidth =
+              typeof thumbWidth === "number" ? thumbWidth : fallbackThumbWidth;
+            const navThumbHeight =
+              typeof thumbHeight === "number" ? thumbHeight : fallbackThumbHeight;
+            const navRecord = navPlace.buildManifestNavPlaceRecord({
+              manifest,
+              slug,
+              href: pageHref,
+              title,
+              summary: summaryRaw,
+              thumbnail: navThumbnail,
+              thumbnailWidth: navThumbWidth,
+              thumbnailHeight: navThumbHeight,
             });
-            if (metadataEntries && metadataEntries.length) {
-              for (const entry of metadataEntries) recordMetadataIndexEntry(entry);
-            }
-          } catch (_) {}
-          if (metadataOptions && metadataOptions.enabled) {
-            try {
-              metadataValues = extractMetadataValues(manifest, metadataOptions);
-            } catch (_) {
-              metadataValues = [];
-            }
-          }
-          if (summaryOptions && summaryOptions.enabled) {
-            summaryValue = summaryRaw || "";
-          }
-          if (annotationsOptions && annotationsOptions.enabled) {
-            try {
-              annotationValue = await extractAnnotationText(
-                manifest,
-                annotationsOptions,
-              );
-            } catch (_) {
-              annotationValue = "";
-            }
-          }
-          const fallbackThumbnail =
-            (heroMedia && heroMedia.heroThumbnail) || "";
-          const fallbackThumbWidth =
-            heroMedia && typeof heroMedia.heroThumbnailWidth === "number"
-              ? heroMedia.heroThumbnailWidth
-              : undefined;
-          const fallbackThumbHeight =
-            heroMedia && typeof heroMedia.heroThumbnailHeight === "number"
-              ? heroMedia.heroThumbnailHeight
-              : undefined;
-          const navThumbnail = thumbUrl || fallbackThumbnail;
-          const navThumbWidth =
-            typeof thumbWidth === "number" ? thumbWidth : fallbackThumbWidth;
-          const navThumbHeight =
-            typeof thumbHeight === "number" ? thumbHeight : fallbackThumbHeight;
-          const navRecord = navPlace.buildManifestNavPlaceRecord({
-            manifest,
-            slug,
-            href: pageHref,
-            title,
-            summary: summaryRaw,
-            thumbnail: navThumbnail,
-            thumbnailWidth: navThumbWidth,
-            thumbnailHeight: navThumbHeight,
-          });
-          if (navRecord) navPlaceRecords.push(navRecord);
+            if (navRecord) navPlaceRecords.push(navRecord);
 
-          const recordThumbnail = navThumbnail;
-          const recordThumbWidth = navThumbWidth;
-          const recordThumbHeight = navThumbHeight;
-          iiifRecords.push({
-            id: String(manifest.id || id),
-            title,
-            href: pageHref,
-            type: "work",
-            thumbnail: recordThumbnail || undefined,
-            thumbnailWidth:
-              typeof recordThumbWidth === "number"
-                ? recordThumbWidth
-                : undefined,
-            thumbnailHeight:
-              typeof recordThumbHeight === "number"
-                ? recordThumbHeight
-                : undefined,
-            searchMetadataValues:
-              metadataValues && metadataValues.length
-                ? metadataValues
-                : undefined,
-            searchSummary:
-              summaryValue && summaryValue.length ? summaryValue : undefined,
-            searchAnnotation:
-              annotationValue && annotationValue.length
-                ? annotationValue
-                : undefined,
-          });
-          logDebug(
-            `Search record queued for ${manifestLabel}: ${pageHref} (metadata values ${
-              metadataValues ? metadataValues.length : 0
-            })`,
-          );
+            const recordThumbnail = navThumbnail;
+            const recordThumbWidth = navThumbWidth;
+            const recordThumbHeight = navThumbHeight;
+            const localeHrefMap = {};
+            for (const entry of workRouteEntries) {
+              const targetBase =
+                entry && entry.route ? entry.route : getDefaultRoute("works");
+              const targetLocale =
+                entry && entry.locale ? entry.locale : getDefaultLocaleCode();
+              const relHref = buildRouteRelativePath(
+                targetBase,
+                `${slug}.html`,
+              );
+              localeHrefMap[targetLocale] = rootRelativeHref(
+                relHref.split(path.sep).join("/"),
+              );
+            }
+            iiifRecords.push({
+              id: String(manifest.id || id),
+              title,
+              href: pageHref,
+              type: "work",
+               slug,
+               locale: pageLocale,
+              thumbnail: recordThumbnail || undefined,
+              thumbnailWidth:
+                typeof recordThumbWidth === "number"
+                  ? recordThumbWidth
+                  : undefined,
+              thumbnailHeight:
+                typeof recordThumbHeight === "number"
+                  ? recordThumbHeight
+                  : undefined,
+              searchMetadataValues:
+                metadataValues && metadataValues.length
+                  ? metadataValues
+                  : undefined,
+              searchSummary:
+                summaryValue && summaryValue.length ? summaryValue : undefined,
+              searchAnnotation:
+                annotationValue && annotationValue.length
+                  ? annotationValue
+                  : undefined,
+              routes: localeHrefMap,
+            });
+            logDebug(
+              `Search record queued for ${manifestLabel}: ${pageHref} (metadata values ${
+                metadataValues ? metadataValues.length : 0
+              })`,
+            );
+          }
         } catch (e) {
           lns.push([
             `IIIF: failed to render for ${id || "<unknown>"} — ${e.message}`,
             "red",
           ]);
+        }
         }
         logs[idx] = lns;
         tryFlush();

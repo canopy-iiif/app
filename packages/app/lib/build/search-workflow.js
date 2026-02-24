@@ -1,4 +1,11 @@
-const { fs, path, OUT_DIR } = require('../common');
+const {
+  fs,
+  path,
+  OUT_DIR,
+  getLocaleRouteEntries,
+  getDefaultRoute,
+  getDefaultLocaleCode,
+} = require('../common');
 const search = require('../search/search');
 const runtimes = require('./runtimes');
 const { generateFacets } = require('./facets');
@@ -10,7 +17,12 @@ const { logLine } = require('./log');
  * and build the page so subsequent steps can update artifacts incrementally.
  */
 async function ensureSearchInitialized() {
-  const searchPath = path.join(OUT_DIR, 'search.html');
+  const entries = getLocaleRouteEntries('search');
+  const defaultEntry = entries.length
+    ? entries[0]
+    : { locale: getDefaultLocaleCode(), route: getDefaultRoute('search') };
+  const rel = search.resolveSearchOutputRelative(defaultEntry.route || '');
+  const searchPath = path.join(OUT_DIR, rel);
   const needCreatePage = !fs.existsSync(searchPath);
   if (!needCreatePage) return;
   try { logLine('• Preparing search (initial)...', 'blue', { bright: true }); } catch (_) {}
@@ -20,7 +32,7 @@ async function ensureSearchInitialized() {
   await search.writeSearchIndex([]);
   try { logLine('  - Writing runtime...', 'blue'); } catch (_) {}
   await runtimes.prepareSearchRuntime(process.env.CANOPY_BUNDLE_TIMEOUT || 10000, 'initial');
-  try { logLine('  - Building search.html...', 'blue'); } catch (_) {}
+  try { logLine('  - Building search page...', 'blue'); } catch (_) {}
   await search.buildSearchPage();
   try { logLine('✓ Created search page', 'cyan'); } catch (_) {}
 }
@@ -38,7 +50,7 @@ async function finalizeSearch(combinedRecords) {
   try { logLine('• Writing search runtime (final)...', 'blue', { bright: true }); } catch (_) {}
   await runtimes.prepareSearchRuntime(process.env.CANOPY_BUNDLE_TIMEOUT || 10000, 'final');
   try { await search.ensureResultTemplate(); } catch (_) {}
-  try { logLine('• Updating search.html...', 'blue'); } catch (_) {}
+  try { logLine('• Updating search page...', 'blue'); } catch (_) {}
   await search.buildSearchPage();
   try { logLine('✓ Search page updated', 'cyan'); } catch (_) {}
 
@@ -58,4 +70,3 @@ async function finalizeSearch(combinedRecords) {
 }
 
 module.exports = { ensureSearchInitialized, finalizeSearch };
-

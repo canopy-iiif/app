@@ -4,6 +4,184 @@ import CanopyBrand from "./CanopyBrand.jsx";
 import CanopyModal from "./CanopyModal.jsx";
 import NavigationTree from "./NavigationTree.jsx";
 
+function readBasePath() {
+  const normalize = (value) => {
+    if (!value) return "";
+    const raw = String(value).trim();
+    if (!raw) return "";
+    const prefixed = raw.startsWith("/") ? raw : `/${raw}`;
+    const cleaned = prefixed.replace(/\/+$/, "");
+    return cleaned === "/" ? "" : cleaned;
+  };
+  try {
+    if (typeof window !== "undefined" && window.CANOPY_BASE_PATH != null) {
+      const candidate = normalize(window.CANOPY_BASE_PATH);
+      if (candidate || candidate === "") return candidate;
+    }
+  } catch (_) {}
+  try {
+    if (typeof globalThis !== "undefined" && globalThis.CANOPY_BASE_PATH != null) {
+      const candidate = normalize(globalThis.CANOPY_BASE_PATH);
+      if (candidate || candidate === "") return candidate;
+    }
+  } catch (_) {}
+  try {
+    if (typeof process !== "undefined" && process.env && process.env.CANOPY_BASE_PATH) {
+      const candidate = normalize(process.env.CANOPY_BASE_PATH);
+      if (candidate || candidate === "") return candidate;
+    }
+  } catch (_) {}
+  return "";
+}
+
+function withBasePath(href) {
+  try {
+    const raw = typeof href === "string" ? href.trim() : "";
+    if (!raw) return raw;
+    if (/^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i.test(raw)) return raw;
+    if (!raw.startsWith("/")) return raw;
+    const base = readBasePath();
+    if (!base || base === "/") return raw;
+    if (raw === base || raw.startsWith(`${base}/`)) return raw;
+    return `${base}${raw}`;
+  } catch (_) {
+    return href;
+  }
+}
+
+function normalizeLocales(locales) {
+  if (!Array.isArray(locales)) return [];
+  const normalized = locales
+    .map((entry, index) => {
+      if (!entry || typeof entry !== "object") return null;
+      const lang = typeof entry.lang === "string" ? entry.lang.trim() : "";
+      if (!lang) return null;
+      const label =
+        typeof entry.label === "string" && entry.label.trim()
+          ? entry.label.trim()
+          : lang.toUpperCase();
+      return {lang, label, default: entry.default === true, index};
+    })
+    .filter(Boolean);
+  if (!normalized.length) return [];
+  const explicitDefault = normalized.find((item) => item.default);
+  if (explicitDefault) {
+    normalized.forEach((item) => {
+      item.default = item.index === explicitDefault.index;
+    });
+  } else {
+    normalized[0].default = true;
+  }
+  return normalized.map(({index, ...rest}) => rest);
+}
+
+function splitHref(href = "/") {
+  try {
+    if (/^[a-z][a-z0-9+.-]*:/i.test(href)) {
+      const url = new URL(href);
+      return {
+        pathname: url.pathname || "/",
+        suffix: `${url.search || ""}${url.hash || ""}`,
+      };
+    }
+  } catch (_) {}
+  const raw = typeof href === "string" ? href : String(href || "/");
+  const match = raw.match(/^[^?#]+/);
+  const pathname = match ? match[0] : "/";
+  const suffix = raw.slice(pathname.length);
+  return {
+    pathname: pathname || "/",
+    suffix,
+  };
+}
+
+function normalizePathname(pathname = "/") {
+  if (!pathname) return "/";
+  const trimmed = pathname.trim();
+  if (!trimmed) return "/";
+  if (!trimmed.startsWith("/")) return `/${trimmed}`;
+  return trimmed === "/" ? "/" : `/${trimmed.replace(/^\/+/, "")}`;
+}
+
+function stripLocaleFromPath(pathname, locales, defaultLocale) {
+  const normalizedPath = normalizePathname(pathname);
+  const segments = normalizedPath.replace(/^\/+/, "").split("/");
+  const first = segments[0] || "";
+  const match = locales.find((loc) => loc.lang === first);
+  if (match && match.lang !== defaultLocale.lang) {
+    segments.shift();
+    const remainder = segments.join("/");
+    return {
+      locale: match,
+      pathname: remainder ? `/${remainder}` : "/",
+    };
+  }
+  return {locale: defaultLocale, pathname: normalizedPath};
+}
+
+function buildLocaleHref(locale, basePath, suffix, defaultLocale) {
+  const normalizedBase = normalizePathname(basePath);
+  const needsPrefix = locale.lang !== defaultLocale.lang;
+  const prefixed = needsPrefix
+    ? `/${locale.lang}${normalizedBase === "/" ? "" : normalizedBase}`
+    : normalizedBase;
+  const href = withBasePath(prefixed || "/");
+  return suffix ? `${href}${suffix}` : href;
+}
+
+function buildLanguageToggleConfig(toggle, page) {
+  if (!toggle || !Array.isArray(toggle.locales)) return null;
+  const locales = normalizeLocales(toggle.locales);
+  if (locales.length <= 1) return null;
+  const defaultLocale = locales.find((loc) => loc.default) || locales[0];
+  const pageHref = page && page.href ? page.href : "/";
+  const {pathname, suffix} = splitHref(pageHref);
+  const {locale: activeLocale, pathname: basePathname} = stripLocaleFromPath(
+    pathname,
+    locales,
+    defaultLocale,
+  );
+  const messageMap = toggle && toggle.messages ? toggle.messages : {};
+  const defaultCopy = messageMap.__default ? {...messageMap.__default} : {};
+  const localeCopy = messageMap[activeLocale.lang]
+    ? {...defaultCopy, ...messageMap[activeLocale.lang]}
+    : defaultCopy;
+  const label = localeCopy.label || "Language";
+  const ariaLabel = localeCopy.ariaLabel || label || "Language";
+  const links = locales.map((locale) => ({
+    lang: locale.lang,
+    label: locale.label || locale.lang.toUpperCase(),
+    href: buildLocaleHref(locale, basePathname, suffix, defaultLocale),
+    isActive: locale.lang === activeLocale.lang,
+  }));
+  return {label, ariaLabel, links};
+}
+
+function LanguageToggleControl({config, variant = "desktop"}) {
+  if (!config) return null;
+  return (
+    <div
+      className={`canopy-header__language-toggle canopy-header__language-toggle--${variant}`}
+    >
+      {config.label ? (
+        <span className="canopy-language-toggle__label">{config.label}</span>
+      ) : null}
+      <nav className="canopy-language-toggle__nav" aria-label={config.ariaLabel}>
+        {config.links.map((link) => (
+          <a
+            key={link.lang}
+            href={link.href}
+            aria-current={link.isActive ? "true" : undefined}
+            data-active={link.isActive ? "true" : undefined}
+          >
+            {link.label}
+          </a>
+        ))}
+      </nav>
+    </div>
+  );
+}
+
 function HeaderScript() {
   const code = `
 (function () {
@@ -396,6 +574,7 @@ export default function CanopyHeader(props = {}) {
     brandHref = "/",
     title: titleProp,
     logo: SiteLogo,
+    languageToggle: languageToggleProp,
   } = props;
 
   const PageContext = getSafePageContext();
@@ -408,11 +587,39 @@ export default function CanopyHeader(props = {}) {
     : ensureArray(contextPrimaryNav);
   const contextNavigation =
     context && context.navigation ? context.navigation : null;
+  const pageHref = context && context.page && context.page.href ? context.page.href : null;
   const contextSite = context && context.site ? context.site : null;
   const contextSiteTitle =
     contextSite && typeof contextSite.title === "string"
       ? contextSite.title.trim()
       : "";
+  const siteLanguageToggle =
+    contextSite && contextSite.languageToggle ? contextSite.languageToggle : null;
+  const siteRoutes = contextSite && contextSite.routes ? contextSite.routes : null;
+  const siteDefaultRoutes =
+    contextSite && contextSite.routesDefault ? contextSite.routesDefault : null;
+  const searchRouteValue =
+    siteRoutes && typeof siteRoutes.search === "string"
+      ? siteRoutes.search
+      : "";
+  const defaultSearchRoute =
+    siteDefaultRoutes && typeof siteDefaultRoutes.search === "string"
+      ? siteDefaultRoutes.search
+      : "search";
+  const trimmedSearchRoute = searchRouteValue
+    ? searchRouteValue.replace(/^\/+|\/+$/g, "")
+    : "";
+  const usesDirectorySearchRoute =
+    trimmedSearchRoute && trimmedSearchRoute !== (defaultSearchRoute || "search");
+  const normalizedSearchRoute = usesDirectorySearchRoute
+    ? `/${trimmedSearchRoute}/`
+    : `/${(trimmedSearchRoute || defaultSearchRoute || "search").replace(/^\/+/, "")}`;
+  const resolvedLanguageToggle = languageToggleProp || siteLanguageToggle;
+  const languageToggleConfig = React.useMemo(() => {
+    if (!resolvedLanguageToggle) return null;
+    const pageData = context && context.page ? context.page : null;
+    return buildLanguageToggleConfig(resolvedLanguageToggle, pageData);
+  }, [resolvedLanguageToggle, pageHref]);
   const defaultHeaderTitle = contextSiteTitle || "Site title";
   const normalizedTitleProp =
     typeof titleProp === "string" ? titleProp.trim() : "";
@@ -478,6 +685,7 @@ export default function CanopyHeader(props = {}) {
             label={searchLabel}
             hotkey={searchHotkey}
             placeholder={searchPlaceholder}
+            searchPath={normalizedSearchRoute}
           />
         </div>
 
@@ -497,6 +705,12 @@ export default function CanopyHeader(props = {}) {
         </nav>
 
         <div className="canopy-header__actions">
+          {languageToggleConfig ? (
+            <LanguageToggleControl
+              config={languageToggleConfig}
+              variant="desktop"
+            />
+          ) : null}
           <button
             type="button"
             className="canopy-header__icon-button canopy-header__search-trigger"
@@ -556,6 +770,12 @@ export default function CanopyHeader(props = {}) {
         closeLabel="Close navigation"
         closeDataAttr="nav"
       >
+        {languageToggleConfig ? (
+          <LanguageToggleControl
+            config={languageToggleConfig}
+            variant="mobile"
+          />
+        ) : null}
         <nav
           className="canopy-nav-links canopy-modal__nav"
           aria-label="Primary navigation"
@@ -668,6 +888,7 @@ export default function CanopyHeader(props = {}) {
           label={searchLabel}
           hotkey={searchHotkey}
           placeholder={searchPlaceholder}
+          searchPath={normalizedSearchRoute}
         />
       </CanopyModal>
 

@@ -1,0 +1,5 @@
+navigation:
+  - href: /es/buscar
+    label: Buscar
+  - href: /sobre
+    label: Sobre

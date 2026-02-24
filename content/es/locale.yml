@@ -1,0 +1,15 @@
+ui:
+  search:
+    label: Buscar
+    placeholder: Buscar en todo
+  filter:
+    label: Filtrar
+  navigation:
+    works: Obras
+    about: Acerca de
+  languageToggle:
+    label: Idioma
+    ariaLabel: Cambiar idioma del sitio
+routes:
+  search: es/buscar
+  works: es/obras

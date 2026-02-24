@@ -1,0 +1,16 @@
+# Default UI copy used when no locale override exists.
+ui:
+  search:
+    label: Search
+    placeholder: Search everything
+  filter:
+    label: Filter
+  navigation:
+    works: Works
+    about: About
+  languageToggle:
+    label: Language
+    ariaLabel: Change site language
+routes:
+  search: search
+  works: works

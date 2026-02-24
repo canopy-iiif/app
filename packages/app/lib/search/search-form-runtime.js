@@ -60,6 +60,45 @@ function rootBase() {
   return getBasePath();
 }
 
+function documentLocale() {
+  try {
+    if (document && document.documentElement && document.documentElement.lang) {
+      const lang = String(document.documentElement.lang).trim();
+      if (lang) return lang;
+    }
+  } catch (_) {}
+  return '';
+}
+
+function resolveLocaleHref(record, fallbackHref) {
+  const routes =
+    record && record.routes && typeof record.routes === 'object'
+      ? record.routes
+      : null;
+  if (!routes) return fallbackHref;
+  const current = documentLocale();
+  const candidates = [];
+  if (current) {
+    candidates.push(current);
+    if (current.includes('-')) {
+      const base = current.split('-')[0];
+      if (base && base !== current) candidates.push(base);
+    }
+  }
+  if (record && typeof record.locale === 'string') {
+    const recLocale = record.locale.trim();
+    if (recLocale && !candidates.includes(recLocale)) candidates.push(recLocale);
+  }
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    if (routes[candidate]) return routes[candidate];
+    const lower = candidate.toLowerCase();
+    if (lower !== candidate && routes[lower]) return routes[lower];
+  }
+  const first = Object.values(routes).find((value) => value);
+  return first || fallbackHref;
+}
+
 function isOnSearchPage() {
   try {
     const base = rootBase();
@@ -163,7 +202,13 @@ async function loadRecords() {
           const display = key ? displayMap.get(key) : null;
           const merged = { ...(display || {}), ...(rec || {}) };
           if (!merged.id && key) merged.id = key;
-          if (!merged.href && display && display.href) merged.href = String(display.href);
+          const fallbackHref = merged.href || (display && display.href) || '';
+          const localeHref = resolveLocaleHref(display || merged, fallbackHref);
+          if (localeHref) {
+            merged.href = withBase(localeHref);
+          } else if (fallbackHref) {
+            merged.href = withBase(fallbackHref);
+          }
           if (!Array.isArray(merged.metadata)) {
             const meta = Array.isArray(rec && rec.metadata) ? rec.metadata : [];
             merged.metadata = meta;

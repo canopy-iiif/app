@@ -1,0 +1,44 @@
+---
+title: locale.yml files
+---
+
+# `locale.yml` files
+
+Use `content/locale.yml` to declare UI strings (buttons, aria labels, search copy) for the default language. Create `content/<lang>/locale.yml` for each additional locale.
+
+```yaml filename="content/locale.yml"
+ui:
+  search:
+    label: Search
+    placeholder: Search everything
+  filter:
+    label: Filter
+  navigation:
+    works: Works
+    about: About
+  languageToggle:
+    label: Language
+    ariaLabel: Change site language
+```
+
+```yaml filename="content/es/locale.yml"
+ui:
+  search:
+    label: Buscar
+    placeholder: Buscar en todo
+  filter:
+    label: Filtrar
+  navigation:
+    works: Obras
+    about: Acerca de
+  languageToggle:
+    label: Idioma
+    ariaLabel: Cambiar idioma del sitio
+```
+
+Recommendations:
+
+- Keep keys nested so components can request `ui.languageToggle.label` or similar paths.
+- When a locale lacks a specific key, fall back to the default language during build/hydration.
+- Store navigation labels inside these files even if you also maintain `content/<lang>/navigation.yml`; this keeps everything accessible from UI components.
+- Document custom keys in your project README so collaborators know which strings need translation.
