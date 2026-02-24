@@ -1,18 +1,10 @@
 ---
-title: Internationalization overview
+title: Internationalization
 description: Configure localized content, UI copy, and toggles in Canopy projects.
 ---
 
-# Internationalization overview
+# Internationalization (i18n)
 
 Canopy ships with a single English locale, but projects often need multiple languages for configuration, navigation, and content. Internationalization (i18n) is implemented entirely through configuration and the `content/` tree so you can opt in without modifying Canopy’s core runtime.
-
-## Priorities
-
-1. Define localized metadata in [`canopy.yml`](./canopy-config).
-2. Mirror pages per locale under [`content/<lang>/`](./content-directories).
-3. Enable the header [language toggle](./language-toggle) by defining locales in `canopy.yml`.
-4. Maintain per-locale UI copy inside [`locale.yml`](./locale-files).
-5. Walk through the [setup guide](./guide) when documenting your own workflow.
 
 The sample project includes Spanish (`/content/es`) files to demonstrate these steps alongside the English default, plus locale YAML examples so the built-in header toggle has real copy to render.
