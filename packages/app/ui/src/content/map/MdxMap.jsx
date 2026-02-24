@@ -58,6 +58,27 @@ function normalizeKeyLabel(value) {
   }
 }
 
+function pickManifestSummary(manifest) {
+  if (!manifest) return "";
+  if (manifest.summary && typeof manifest.summary === "string") {
+    const trimmedSummary = manifest.summary.trim();
+    if (trimmedSummary) return trimmedSummary;
+  }
+  if (!Array.isArray(manifest.metadata)) return "";
+  for (const entry of manifest.metadata) {
+    if (entry == null) continue;
+    const value = typeof entry === "string"
+      ? entry
+      : typeof entry === "object"
+      ? entry.value || entry.label || entry.title || ""
+      : "";
+    if (!value) continue;
+    const trimmed = String(value).trim();
+    if (trimmed) return trimmed;
+  }
+  return "";
+}
+
 function normalizeCustomPoint(child, index, manifestMap) {
   if (!React.isValidElement(child)) return null;
   if (child.type !== MapPoint && child.type?.displayName !== "MapPoint") return null;
@@ -65,9 +86,9 @@ function normalizeCustomPoint(child, index, manifestMap) {
   if (!coords) return null;
   const props = child.props || {};
   const id = props.id || `map-point-${index + 1}`;
-  const title = props.title || props.label || `Point ${index + 1}`;
-  const summary = props.summary || props.description || "";
-  const href = props.href || props.link || "";
+  let title = props.title || props.label || "";
+  let summary = props.summary || props.description || "";
+  let href = props.href || props.link || "";
   let thumbnail = props.thumbnail || props.image || "";
   let thumbnailWidth = normalizeNumber(props.thumbnailWidth);
   let thumbnailHeight = normalizeNumber(props.thumbnailHeight);
@@ -84,6 +105,18 @@ function normalizeCustomPoint(child, index, manifestMap) {
     ? props.manifests
     : [];
   const manifests = resolveReferencedManifests(manifestValues, manifestMap);
+  const manifestFallback = manifests.length ? manifests[0] : null;
+  if (!title) {
+    const manifestTitle = manifestFallback?.title || manifestFallback?.href || "";
+    title = manifestTitle || `Point ${index + 1}`;
+  }
+  if (!summary && manifestFallback) {
+    const manifestSummary = pickManifestSummary(manifestFallback);
+    if (manifestSummary) summary = manifestSummary;
+  }
+  if (!href && manifestFallback && manifestFallback.href) {
+    href = manifestFallback.href;
+  }
   if (!thumbnail && manifests.length) {
     const manifestWithThumb = manifests.find(
       (manifest) => manifest && manifest.thumbnail

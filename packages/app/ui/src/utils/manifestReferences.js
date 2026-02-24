@@ -41,6 +41,7 @@ export function normalizeManifestId(raw) {
 
 const PageContextFallback = React.createContext(null);
 let referencedModule = null;
+const REFERENCED_SPEC = '@canopy-iiif/app/lib/components/referenced.js';
 
 function getReferencedModule() {
   if (typeof window !== 'undefined') return null;
@@ -49,7 +50,13 @@ function getReferencedModule() {
     const globalReq =
       (typeof globalThis !== 'undefined' && globalThis.__canopyRequire) || null;
     if (typeof globalReq === 'function') {
-      referencedModule = globalReq('../../../lib/components/referenced.js');
+      let target = REFERENCED_SPEC;
+      if (typeof globalReq.resolve === 'function') {
+        try {
+          target = globalReq.resolve(REFERENCED_SPEC);
+        } catch (_) {}
+      }
+      referencedModule = globalReq(target);
       return referencedModule;
     }
   } catch (_) {
