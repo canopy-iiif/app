@@ -152,7 +152,7 @@ Use it when you want to highlight favorite works, curate a mini exhibit, or gath
 
 ## API
 
-### `<Gallery />`
+### Gallery
 
 | Prop          | Type                        | Required | Notes                                                           |
 | ------------- | --------------------------- | -------- | --------------------------------------------------------------- |
@@ -162,7 +162,7 @@ Use it when you want to highlight favorite works, curate a mini exhibit, or gath
 | `order`       | `'default' &#124; 'random'` |          | Control figure ordering; random shuffles once during the build. |
 | `children`    | nodes                       | ✅       | One or more `<Gallery.Item>` entries.                           |
 
-### `<Gallery.Item />`
+### Gallery Item
 
 | Prop                                  | Type              | Required | Notes                                                                                                  |
 | ------------------------------------- | ----------------- | -------- | ------------------------------------------------------------------------------------------------------ |
@@ -183,7 +183,7 @@ Use it when you want to highlight favorite works, curate a mini exhibit, or gath
 
 > Popup navigation is fully static: the component uses hash targets (`#gallery-modal-*`) for open/close/next/prev, so no hydration is required. The close target is scoped per gallery, making multiple galleries on the same page safe.
 
-### `<GalleryContent />`
+### Gallery Content
 
 Wrap popup bodies with `<GalleryContent>` (or `Gallery.Content`) to reuse the default gutters and the optional flex layout.
 
