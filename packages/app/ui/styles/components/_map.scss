@@ -28,6 +28,10 @@
     font-family: inherit;
   }
 
+  .leaflet-container a {
+    color: var(--color-accent-default);
+  }
+
   .leaflet-popup-content {
     margin: 1rem;
   }
