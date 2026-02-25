@@ -122,7 +122,7 @@
       text-decoration: none;
       color: inherit;
       font-size: 1rem;
-      font-weight: 600;
+      font-weight: 500;
       margin: 0.38rem 0;
     }
 
@@ -139,7 +139,7 @@
       gap: 0.25rem;
       align-items: center;
       color: var(--color-accent-600);
-      font-weight: 600;
+      font-weight: 500;
       text-decoration: none;
     }
 
@@ -149,7 +149,7 @@
       &-title {
         margin: 0 0 0.25rem;
         font-size: 0.75rem;
-        font-weight: 600;
+        font-weight: 500;
         letter-spacing: 0.05em;
         text-transform: uppercase;
         color: var(--color-gray-muted);
@@ -171,7 +171,7 @@
 
       &-link,
       &-text {
-        font-weight: 600;
+        font-weight: 500;
         text-decoration: none;
         display: inline-flex;
         align-items: center;
@@ -297,7 +297,7 @@
   &__cluster {
     font-size: 0.8333rem;
     font-family: var(--font-sans);
-    font-weight: 600;
+    font-weight: 500;
     width: 40px;
     height: 40px;
     border-radius: 999px;

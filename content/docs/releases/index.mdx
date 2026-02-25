@@ -12,15 +12,14 @@ export const Releases = ({releases}) => {
         margin-bottom: 1.618rem;
         
         h4 {
-          font-size: 1rem;
           margin-bottom: 0rem;
           color: var(--color-accent-600);
 
           span {
-            color: var(--color-gray-700);
             font-size: 0.8333rem;
-            font-weight: 300;
+            font-weight: 600;
             font-family: var(--font-sans);
+            color: var(--color-gray-900);
           }
         }
 
@@ -39,19 +38,20 @@ export const Releases = ({releases}) => {
       {releases?.map((release) => (
         <section key={release.version} className="canopy-release-entry">
           <h4>
-            <code>v{release.version}</code><span> — {release.date}</span>
-          </h4>
-          {release.summary ? <p>{release.summary}</p> : null}
-          {release.highlights && release.highlights.length ? (
-            <ul>
-              {release.highlights.map((item, index) => (
-                <li key={`${release.version}-item-${index}`}>{item}</li>
-              ))}
-            </ul>
-          ) : null}
-        </section>
-      ))}
-    </>
+            <code>v{release.version} <span>{new Date(release.date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", })}</span></code>
+
+</h4>
+{release.summary ? <p>{release.summary} </p> : null}
+{release.highlights && release.highlights.length ? (
+<ul>
+{release.highlights.map((item, index) => (
+<li key={`${release.version}-item-${index}`}>{item}</li>
+))}
+</ul>
+) : null}
+</section>
+))}
+</>
 
 );
 };

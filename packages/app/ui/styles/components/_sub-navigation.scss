@@ -59,7 +59,7 @@
   align-items: center;
   justify-content: center;
   font-size: 0.6111rem;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1;
   white-space: nowrap;
   z-index: 0;
@@ -76,7 +76,7 @@
 .canopy-sub-navigation__tree .canopy-nav-tree__link.is-active,
 .canopy-modal__section-nav .canopy-nav-tree__link.is-active {
   color: var(--color-gray-900);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .canopy-sub-navigation__list--nested,
@@ -134,7 +134,7 @@
   justify-content: center;
   color: color-mix(in srgb, var(--color-gray-900) 92%, transparent);
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   line-height: 1.2;
   transition: color 150ms ease;

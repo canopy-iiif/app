@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.8.14",
+    "date": "2026-02-25",
+    "summary": "Refine typography and lighten weights.",
+    "highlights": []
+  },
+  {
     "version": "1.8.13",
     "date": "2026-02-25",
     "summary": "Update Map component documentation.",

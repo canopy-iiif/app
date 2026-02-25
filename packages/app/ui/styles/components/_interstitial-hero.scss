@@ -138,7 +138,7 @@
 
     .canopy-interstitial__description {
       font-size: 0.9222rem;
-      font-weight: 700;
+      font-weight: 500;
       color: var(--color-accent-default);
       font-family: var(--font-mono);
     }
@@ -165,7 +165,7 @@
   &__breadcrumb-separator,
   &__breadcrumb-current {
     color: var(--color-gray-900);
-    font-weight: 600;
+    font-weight: 500;
   }
 
   &__slider {
@@ -312,7 +312,7 @@
   &__caption {
     position: absolute;
     bottom: 1.75rem;
-    font-weight: 600;
+    font-weight: 500;
     right: 2rem;
     z-index: 3;
   }

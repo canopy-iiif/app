@@ -37,7 +37,7 @@
   h4,
   .canopy-logo {
     font-family: var(--font-serif);
-    font-weight: 600;
-    letter-spacing: -0.025em;
+    font-weight: 500;
+    letter-spacing: -0.02em;
   }
 }
