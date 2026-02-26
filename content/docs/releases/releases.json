@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.8.15",
+    "date": "2026-02-26",
+    "summary": "Refine gallery layout and styling.",
+    "highlights": []
+  },
+  {
     "version": "1.8.14",
     "date": "2026-02-25",
     "summary": "Refine typography and lighten weights.",

@@ -58,7 +58,6 @@
     padding: clamp(0.75rem, 1vw, 1rem);
     border: 1px solid var(--color-gray-200);
     border-radius: var(--canopy-gallery-radius, 1rem);
-    background-color: #fff;
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 
     &:focus-within {
@@ -181,24 +180,24 @@
   }
 
   &__modal-scrim {
-    min-height: 100vh;
+    height: 100%;
     display: block;
-    background: rgba(15, 23, 42, 1);
+    background-color: var(--color-gray-50);
     padding: 0;
+    display: flex;
+    flex-direction: row;
+    overflow-y: scroll;
   }
 
   &__modal-panel {
     position: relative;
-    background: #fff;
-    color: var(--color-gray-900);
-    border-radius: 0;
-    width: 100%;
-    height: 100vh;
-    max-height: none;
-    overflow: auto;
+    padding: 1.618rem;
+    padding-right: 2.618rem;
     display: flex;
     flex-direction: column;
-    box-shadow: none;
+    gap: 1.6181rem;
+    flex-grow: 1;
+    z-index: 1;
   }
 
   &__modal-actions {
@@ -206,41 +205,25 @@
     align-items: stretch;
     justify-content: space-between;
     flex-direction: column;
+    flex-grow: 0;
+    flex-shrink: 0;
     gap: 1rem;
-    z-index: 5;
-    width: var(--canopy-gallery-modal-actions-width, clamp(5rem, 18vw, 8rem));
-    position: fixed;
-    top: var(--canopy-gallery-sticky-offset, 0);
-    bottom: var(--canopy-gallery-sticky-offset, 0);
-    right: 0;
-    left: auto;
-    padding: clamp(1rem, 2vw, 1.75rem) clamp(0.5rem, 2vw, 1rem);
-    background: linear-gradient(
-      to left,
-      rgba(255, 255, 255, 1),
-      rgba(255, 255, 255, 0.9) 60%,
-      rgba(255, 255, 255, 0.5) 85%,
-      rgba(255, 255, 255, 0)
-    );
-    border-left: 1px solid rgba(15, 23, 42, 0.08);
-    box-shadow: -16px 0 32px rgba(15, 23, 42, 0.05);
+    width: 10vw;
+    max-width: 150px;
+    min-width: calc(50px + 2rem);
+    padding: 1rem;
     margin-left: 0;
     isolation: isolate;
+    z-index: 2;
   }
 
   &__modal-header {
     border: none;
-    padding-top: 1.382rem;
-    padding-bottom: 0;
-    padding-left: clamp(1.25rem, 3vw, 2.5rem);
-    padding-right: calc(
-      clamp(1.25rem, 3vw, 2.5rem) +
-        var(--canopy-gallery-modal-actions-width, clamp(5rem, 18vw, 8rem))
-    );
     display: flex;
     gap: 1rem;
     align-items: flex-start;
     flex-wrap: wrap;
+    padding: 1rem 0;
   }
 
   &__modal-text {
@@ -270,30 +253,26 @@
   }
 
   &__modal-body {
-    padding: clamp(1rem, 3vw, 2.5rem);
-    padding-right: calc(
-      clamp(1rem, 3vw, 2.5rem) +
-        var(--canopy-gallery-modal-actions-width, clamp(5rem, 18vw, 8rem))
-    );
     flex: 0 0 auto;
   }
 
   &__modal-close {
-    background: var(--color-accent-100);
-    border-radius: 999px;
     padding: 0.35rem 1.25rem;
     font-weight: 500;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 100%;
+    width: 2rem;
+    height: 2rem;
     text-align: center;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
   }
 
   &__modal-nav {
     display: flex;
     align-items: center;
-    gap: 0.382rem;
   }
 }
 
@@ -359,11 +338,13 @@ body[data-canopy-gallery-locked="1"] {
     list-style: none;
     display: flex;
     flex-direction: column;
+    gap: 0.618rem;
   }
 
   &__nav-item {
     position: relative;
     list-style: none;
+    margin: 0;
 
     &[data-canopy-gallery-nav-selected] {
       .canopy-gallery__nav-thumb {
@@ -418,16 +399,43 @@ body[data-canopy-gallery-locked="1"] {
 
   &__nav-button {
     flex: 0 0 auto;
-    width: 100%;
-    height: 2.75rem;
-    border-radius: 0.75rem;
-    background: rgba(255, 255, 255, 0.85);
+    width: 5rem;
+    height: 100%;
+    color: var(--color-gray-900);
     font-size: 1.25rem;
     font-weight: 500;
     cursor: pointer;
-    display: inline-flex;
+    display: none;
     align-items: center;
     justify-content: center;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    background: linear-gradient(to right, transparent, transparent);
+
+    &--prev {
+      left: -1rem;
+
+      &:hover,
+      &:focus {
+        background: linear-gradient(
+          to right,
+          var(--color-gray-50),
+          transparent
+        );
+      }
+    }
+
+    &--next {
+      right: 0;
+      background: linear-gradient(to left, transparent, transparent);
+
+      &:hover,
+      &:focus {
+        background: linear-gradient(to left, var(--color-gray-50), transparent);
+      }
+    }
   }
 
   &__nav-controls {
@@ -439,13 +447,6 @@ body[data-canopy-gallery-locked="1"] {
   &__nav-button-icon {
     font-size: 1.25rem;
     line-height: 1;
-  }
-
-  &__modal {
-    .canopy-gallery__nav {
-      margin: clamp(1rem, 3vw, 1.5rem) 0;
-      padding-bottom: 0.25rem;
-    }
   }
 }
 
@@ -480,35 +481,5 @@ body[data-canopy-gallery-locked="1"] {
     margin: 0;
     font-size: 1rem;
     line-height: 1.45;
-  }
-}
-
-@media (max-width: 640px) {
-  .canopy-gallery {
-    &__grid {
-      grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-    }
-
-    &__item {
-      padding: 0.75rem;
-    }
-
-    &__modal-panel {
-      max-height: 100vh;
-    }
-
-    &__modal-header {
-      flex-direction: column;
-    }
-
-    &__modal-thumb {
-      width: 100%;
-    }
-
-    &__modal-actions {
-      gap: 0.25rem;
-      top: 0;
-      padding: 0.5rem clamp(1rem, 4vw, 2rem) 0.25rem;
-    }
   }
 }

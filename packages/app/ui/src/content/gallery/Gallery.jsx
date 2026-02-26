@@ -222,8 +222,19 @@ const INLINE_SCRIPT = `(() => {
     const navOptions = optionNodes ? Array.prototype.slice.call(optionNodes) : [];
     if (!navOptions.length) return;
     nav.setAttribute('data-canopy-gallery-nav-bound', '1');
-    const prevBtn = nav.querySelector('[data-canopy-gallery-nav-prev]');
-    const nextBtn = nav.querySelector('[data-canopy-gallery-nav-next]');
+    const navModal = nav.closest('[data-canopy-gallery-modal]');
+    const prevBtn =
+      nav.querySelector('[data-canopy-gallery-nav-prev]') ||
+      (navModal &&
+        navModal.querySelector(
+          '.canopy-gallery__modal-panel [data-canopy-gallery-nav-prev]'
+        ));
+    const nextBtn =
+      nav.querySelector('[data-canopy-gallery-nav-next]') ||
+      (navModal &&
+        navModal.querySelector(
+          '.canopy-gallery__modal-panel [data-canopy-gallery-nav-next]'
+        ));
 
     function updateButtons() {
       if (prevBtn) prevBtn.disabled = false;
@@ -711,21 +722,53 @@ function GalleryModal({item, closeTargetId, navItems, navGroupName}) {
       data-canopy-gallery-close={closeTargetId}
     >
       <div className="canopy-gallery__modal-scrim">
+        <div className="canopy-gallery__modal-actions">
+          <GalleryThumbnailNav
+            items={navItems}
+            activeModalId={modalId}
+            groupName={`${navGroupName || "canopy-gallery"}-${modalId}`}
+          />
+          <a
+            className="canopy-gallery__modal-close"
+            href={`#${closeTargetId}`}
+            aria-label={`Close popup for ${modalTitle}`}
+          >
+            X
+          </a>
+        </div>
         <div className="canopy-gallery__modal-panel">
-          <div className="canopy-gallery__modal-actions">
-            <GalleryThumbnailNav
-              items={navItems}
-              activeModalId={modalId}
-              groupName={`${navGroupName || 'canopy-gallery'}-${modalId}`}
-            />
-            <a
-              className="canopy-gallery__modal-close"
-              href={`#${closeTargetId}`}
-              aria-label={`Close popup for ${modalTitle}`}
+          <button
+            type="button"
+            className="canopy-gallery__nav-button canopy-gallery__nav-button--prev"
+            aria-label="Scroll left through gallery thumbnails"
+            data-canopy-gallery-nav-prev="true"
+          >
+            <span
+              className="canopy-gallery__nav-button-icon"
+              aria-hidden="true"
+              role="presentation"
             >
-              Close
-            </a>
-          </div>
+              {"<"}
+            </span>
+            <span className="canopy-gallery__visually-hidden">
+              Previous item
+            </span>
+          </button>
+          <button
+            type="button"
+            className="canopy-gallery__nav-button canopy-gallery__nav-button--next"
+            aria-label="Scroll right through gallery thumbnails"
+            data-canopy-gallery-nav-next="true"
+          >
+            <span
+              className="canopy-gallery__nav-button-icon"
+              aria-hidden="true"
+              role="presentation"
+            >
+              {">"}
+            </span>
+            <span className="canopy-gallery__visually-hidden">Next item</span>
+          </button>
           <header className="canopy-gallery__modal-header">
             <div className="canopy-gallery__modal-text">
               {kicker ? (
@@ -746,25 +789,16 @@ function GalleryModal({item, closeTargetId, navItems, navGroupName}) {
                 props.meta,
                 "canopy-gallery__meta canopy-gallery__meta--modal",
               )}
+              {manifests && manifests.length
+                ? manifests.map((manifest) => (
+                    <a key={manifest.id || manifest.href} href={manifest.href}>
+                      {manifest.title || manifest.href}
+                    </a>
+                  ))
+                : null}
             </div>
           </header>
-          <div className="canopy-gallery__modal-body">
-            {props.children}
-            {manifests && manifests.length ? (
-              <section className="canopy-gallery__referenced">
-                <h4>Referenced works</h4>
-                <ul role="list">
-                  {manifests.map((manifest) => (
-                    <li key={manifest.id || manifest.href}>
-                      <a href={manifest.href}>
-                        {manifest.title || manifest.href}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ) : null}
-          </div>
+          <div className="canopy-gallery__modal-body">{props.children}</div>
         </div>
       </div>
     </div>
@@ -822,9 +856,7 @@ function GalleryThumbnailNav({items, activeModalId, groupName}) {
                 key={`${item.key}-nav`}
                 className="canopy-gallery__nav-item"
                 data-canopy-gallery-nav-item="true"
-                data-canopy-gallery-nav-selected={
-                  isActive ? '1' : undefined
-                }
+                data-canopy-gallery-nav-selected={isActive ? "1" : undefined}
               >
                 <input
                   type="radio"
@@ -837,16 +869,12 @@ function GalleryThumbnailNav({items, activeModalId, groupName}) {
                   data-canopy-gallery-nav-option="true"
                   data-canopy-gallery-nav-modal={item.modalId}
                   tabIndex={isActive ? 0 : -1}
-                  data-canopy-gallery-nav-selected={
-                    isActive ? '1' : undefined
-                  }
+                  data-canopy-gallery-nav-selected={isActive ? "1" : undefined}
                 />
                 <label
                   className="canopy-gallery__nav-link"
                   htmlFor={optionId}
-                  data-canopy-gallery-nav-active={
-                    isActive ? "1" : undefined
-                  }
+                  data-canopy-gallery-nav-active={isActive ? "1" : undefined}
                 >
                   <span className="canopy-gallery__nav-thumb">
                     {renderPreview(item.props)}
@@ -859,38 +887,6 @@ function GalleryThumbnailNav({items, activeModalId, groupName}) {
             );
           })}
         </ul>
-      </div>
-      <div className="canopy-gallery__nav-controls">
-        <button
-          type="button"
-          className="canopy-gallery__nav-button canopy-gallery__nav-button--prev"
-          aria-label="Scroll left through gallery thumbnails"
-          data-canopy-gallery-nav-prev="true"
-        >
-          <span
-            className="canopy-gallery__nav-button-icon"
-            aria-hidden="true"
-            role="presentation"
-          >
-            {'<'}
-          </span>
-          <span className="canopy-gallery__visually-hidden">Previous item</span>
-        </button>
-        <button
-          type="button"
-          className="canopy-gallery__nav-button canopy-gallery__nav-button--next"
-          aria-label="Scroll right through gallery thumbnails"
-          data-canopy-gallery-nav-next="true"
-        >
-          <span
-            className="canopy-gallery__nav-button-icon"
-            aria-hidden="true"
-            role="presentation"
-          >
-            {'>'}
-          </span>
-          <span className="canopy-gallery__visually-hidden">Next item</span>
-        </button>
       </div>
     </nav>
   );
