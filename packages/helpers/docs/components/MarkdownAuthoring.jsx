@@ -83,7 +83,7 @@ const componentStyles = `
   font-size: 3.618rem;
   line-height: 1;
   color: var(--color-accent-default);
-  font-weight: 600;
+  font-weight: 300;
   pointer-events: none;
 }
 
@@ -97,7 +97,7 @@ const componentStyles = `
 .markdown-authoring__content::after {
   content: "”";
   bottom: 1rem;
-  right: 0.5rem;
+  right: 0;
   transform: translate(40%, 40%);
 }
 
