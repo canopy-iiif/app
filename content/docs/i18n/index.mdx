@@ -5,6 +5,161 @@ description: Configure localized content, UI copy, and toggles in Canopy project
 
 # Internationalization (i18n)
 
-Canopy ships with a single English locale, but projects often need multiple languages for configuration, navigation, and content. Internationalization (i18n) is implemented entirely through configuration and the `content/` tree so you can opt in without modifying Canopy’s core runtime.
+Canopy handles multiple languages as of version v1.9.0. The default configuration supports a single English locale, but you can easily customize this, and define additional locales by declaring them in `canopy.yml` while also extending content under `content/<lang>/`. The builder automatically wires up localized pages, UI strings, and navigation based on your file structure. You may also redefine the default locale entirely, so the system is flexible enough to support non-English primary languages as well.
 
-The sample project includes Spanish (`/content/es`) files to demonstrate these steps alongside the English default, plus locale YAML examples so the built-in header toggle has real copy to render.
+**Setup checklist**
+
+1. **Add locales to `canopy.yml`.** Provide every language with `lang`, `label`, and (optionally) `default`.
+2. **Duplicate content into language folders.** The default locale lives directly under `content/`; every additional language gets a sibling directory such as `content/es/`.
+3. **Create locale-specific YAML.** Author `content/<lang>/locale.yml` for UI strings and _(optionally)_ `content/<lang>/navigation.yml` for translated nav menus.
+4. **Implement a toggle.** `<CanopyHeader />` automatically renders a language switcher when locales are configured, and the same control can be embedded anywhere in MDX with `<LanguageToggle />`.
+
+## Define locales
+
+Declare supported languages near the top of `canopy.yml` so tooling and docs can discover them easily. Provide at least one locale; when `default` is omitted, the first entry becomes the default language, which is used for routing and as a fallback when localized content is missing. Stick to [BCP 47](https://developer.mozilla.org/en-US/docs/Glossary/BCP_47_language_tag) tags (`es`, `pt`, `pt-BR`, etc.) when defining `lang` values so future automation can derive the correct `<html lang>` attributes. This also ensures compatibility IIIF metadata that uses the same codes for internationalization support.
+
+```yaml filename="canopy.yml"
+title: Site title
+locales:
+  - lang: en
+    label: English
+    default: true
+  - lang: es
+    label: Español
+```
+
+You may also drop English entirely when another locale should be primary. You do not need to declar more than one locale in this case. To do this, simply start with a different language and mark it as default:
+
+```yaml filename="canopy.yml"
+title: Título del sitio
+locales:
+  - lang: es
+    label: Español
+    default: true
+```
+
+## Organize content by locale
+
+Localization mirrors the file tree. Every translated file repeats the same relative path under `content/<lang>/`. The default locale lives directly under `content/`, while additional languages get their own subdirectories. For example, if you have an English homepage at `content/index.mdx` and an About page at `content/about.mdx`, the Spanish versions would be `content/es/index.mdx` and `content/es/sobre.mdx`.
+
+```
+content/
+  index.mdx
+  about.mdx
+  locale.yml
+  navigation.yml
+  es/
+    index.mdx           # Spanish homepage
+    sobre.mdx           # Spanish about page
+    locale.yml          # Spanish UI strings
+    navigation.yml      # Spanish navigation
+```
+
+## Localize UI copy and navigation
+
+### `locale.yml`
+
+The default `content/locale.yml` defines UI strings (search labels, filter copy, language-toggle text). Create `content/<lang>/locale.yml` to override any subset of keys.
+
+```yaml filename="content/locale.yml"
+ui:
+  search:
+    label: Search
+    placeholder: Search everything
+  filter:
+    label: Filter
+  languageToggle:
+    label: Language
+routes:
+  search: search
+  works: works
+```
+
+```yaml filename="content/es/locale.yml"
+ui:
+  search:
+    label: Buscar
+    placeholder: Buscar en todo
+  filter:
+    label: Filtrar
+  languageToggle:
+    label: Idioma
+routes:
+  search: buscar
+  works: obras
+```
+
+- Keys fall back to the default file when omitted.
+- `languageToggle.label` feeds both the visible text and `aria-label` for the select/list control.
+- `routes.*` rewrites locale-specific slugs (e.g., `/buscar/` instead of `/search/`).
+
+### `navigation.yml`
+
+Primary navigation links live in `content/navigation.yml`. Add `content/<lang>/navigation.yml` to translate menu labels or point to locale-specific pages.
+
+```yaml filename="content/navigation.yml"
+navigation:
+  - href: /docs
+    label: Docs
+  - href: /search
+    label: Works
+```
+
+```yaml filename="content/es/navigation.yml"
+navigation:
+  - href: /es/docs
+    label: Documentación
+  - href: /es/buscar
+    label: Obras
+```
+
+When a localized navigation file is missing, the default entries are reused.
+
+## Build a language toggle
+
+Canopy’s header renders a locale switcher automatically whenever `canopy.yml → locales` is defined. The builder combines that data with your `locale.yml` files and injects the resulting `languageToggle` prop into `<CanopyHeader />`.
+
+```mdx filename="content/_app.mdx" {5,9-16}
+import {CanopyHeader, CanopyFooter} from "@canopy-iiif/app/ui";
+
+export function App({children}) {
+  return (
+    <>
+      <CanopyHeader title="Canopy IIIF" />
+      <main>{children}</main>
+      <CanopyFooter>…</CanopyFooter>
+    </>
+  );
+
+}
+```
+
+Behavior highlights:
+
+- Desktop renders a pill-style select by default; mobile renders the same control at the top of the navigation modal.
+- `LanguageToggle` supports two presentations: `control="select"` (default) and `control="list"`, which outputs button-based chips.
+- Each locale always links to its homepage (`/` for the default locale, `/es/`, `/fr/`, etc. for others) while honoring `CANOPY_BASE_PATH`.
+
+If you need to hide the built-in toggle, pass `languageToggle={false}` to `<CanopyHeader />` and drop your own control elsewhere.
+
+### Drop toggles anywhere in MDX
+
+Import the component directly when you want a contextual switch inside docs or content pages. It automatically picks up the current page + site context.
+
+```mdx filename="content/about/index.mdx"
+import {LanguageToggle} from "@canopy-iiif/app/ui";
+
+export const meta = {
+  title: "About",
+};
+
+<LanguageToggle control="list" />
+```
+
+- `control` chooses between `select` and `list` UIs.
+- Pass `languageToggle={customData}` to override the site config or `false` to hide the control entirely.
+- Leave `showLabel` unset; the component uses the resolved label as the `aria-label` automatically.
+
+## Document and maintain translations
+
+Keep a short README or ADR describing which locales exist, how to request new translations, and which directories/files are authoritative. This helps future contributors understand how much of the site is localized and where to add new content.
