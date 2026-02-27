@@ -30,4 +30,22 @@ export function App({children}) {
 - Links keep the current path/query/hash while swapping locale prefixes (`/es/...`). The default locale renders without a prefix.
 - Desktop renders the toggle next to the search/menu buttons; mobile renders it at the top of the navigation modal.
 
-If you need different placement or markup, you can still pass your own `languageToggle={{locales, messages}}` prop to `<CanopyHeader />` (or render a custom control elsewhere) using the same data the builder exposes.
+If you need different placement or markup, you can still pass your own `languageToggle={{locales, messages}}` prop to `<CanopyHeader />` (or render a custom control elsewhere) using the same data the builder exposes. Pass `languageToggle={true}` (default) to force the header to use the site config, or `languageToggle={false}` to hide the built-in switch entirely when you only want to surface your own MDX toggle elsewhere.
+
+## Drop the toggle into MDX
+
+You can now render the same toggle anywhere inside MDX by importing `LanguageToggle` from the UI package. The component automatically reads the current page + site context so it mirrors the header’s behavior.
+
+```mdx filename="content/about/index.mdx"
+import {LanguageToggle} from "@canopy-iiif/app/ui";
+
+export const meta = {
+  title: "About",
+};
+
+<LanguageToggle variant="inline" />
+```
+
+- `variant` sets the BEM modifier on the wrapper (`inline`, `desktop`, `mobile`); defaults to `inline` for MDX usage.
+- Pass `showLabel={false}` to hide the visible label while keeping the aria-label.
+- Override `label` / `ariaLabel` or provide a complete `languageToggle` prop when a page needs custom copy or locale data. The `languageToggle` prop also accepts booleans (`true`/`undefined` to use the site config, `false` to hide the control entirely).
