@@ -12,6 +12,10 @@ const {
   htmlShell,
   canopyBodyClassForType,
   readSearchPageMetadata,
+  resolveLocaleFromHref,
+  getLocaleRouteEntries,
+  getDefaultRoute,
+  getDefaultLocaleCode,
 } = require('../common');
 const { resolveCanopyConfigPath } = require('../config-path');
 
@@ -89,6 +93,29 @@ function createSearchMdxPlugin() {
       });
     },
   };
+}
+
+function getSearchRouteEntries() {
+  let entries = getLocaleRouteEntries('search');
+  if (!entries.length) {
+    entries = [
+      {
+        locale: getDefaultLocaleCode(),
+        route: getDefaultRoute('search'),
+        isDefault: true,
+      },
+    ];
+  }
+  return entries;
+}
+
+function resolveSearchOutputRelative(routeValue) {
+  const defaultRoute = getDefaultRoute('search') || 'search';
+  const trimmed = typeof routeValue === 'string' ? routeValue.trim().replace(/^\/+|\/+$/g, '') : '';
+  if (!trimmed || trimmed === defaultRoute) {
+    return `${trimmed || defaultRoute}.html`;
+  }
+  return path.join(trimmed, 'index.html');
 }
 
 async function ensureSearchRuntime() {
@@ -248,18 +275,32 @@ async function ensureSearchRuntime() {
 }
 
 async function buildSearchPage() {
+  for (const entry of getSearchRouteEntries()) {
+    await buildSearchPageForEntry(entry);
+  }
+}
+
+async function buildSearchPageForEntry(routeEntry) {
   try {
-    const outPath = path.join(OUT_DIR, 'search.html');
+    const defaultRoute = getDefaultRoute('search') || 'search';
+    const routeBase =
+      routeEntry && typeof routeEntry.route === 'string'
+        ? routeEntry.route
+        : defaultRoute;
+    const relativeOutput = resolveSearchOutputRelative(routeBase);
+    const outPath = path.join(OUT_DIR, relativeOutput);
     ensureDirSync(path.dirname(outPath));
-    // Require author-provided content/search/_layout.mdx; do not fall back to a generated page.
     const searchLayoutPath = path.join(path.resolve('content'), 'search', '_layout.mdx');
-    let body = '';
-    let head = '';
     if (!require('../common').fs.existsSync(searchLayoutPath)) {
       throw new Error('Missing required file: content/search/_layout.mdx');
     }
     const mdx = require('../build/mdx');
-    const searchHref = rootRelativeHref('search.html');
+    const normalizedRoute = routeBase ? routeBase.replace(/^\/+|\/+$/g, '') : '';
+    const fileHref = rootRelativeHref(relativeOutput.split(path.sep).join('/'));
+    const prettyHref =
+      normalizedRoute && normalizedRoute !== defaultRoute
+        ? rootRelativeHref(`${normalizedRoute}/`)
+        : fileHref;
     const searchPageMeta = readSearchPageMetadata() || {};
     const pageTitle =
       typeof searchPageMeta.title === 'string' && searchPageMeta.title.trim()
@@ -272,23 +313,30 @@ async function buildSearchPage() {
     const pageDetails = {
       title: pageTitle,
       description: pageDescription,
-      href: searchHref,
-      url: searchHref,
+      href: prettyHref,
+      url: prettyHref,
       type: 'search',
-      canonical: searchHref,
+      canonical: prettyHref,
       meta: {
         title: pageTitle,
         description: pageDescription,
         type: 'search',
-        url: searchHref,
-        canonical: searchHref,
+        url: prettyHref,
+        canonical: prettyHref,
       },
     };
+    const fallbackLocale = resolveLocaleFromHref(prettyHref);
+    const pageLocale =
+      (routeEntry && routeEntry.locale) ||
+      fallbackLocale ||
+      getDefaultLocaleCode();
+    pageDetails.locale = pageLocale;
+    if (pageDetails.meta) pageDetails.meta.locale = pageLocale;
     const rendered = await mdx.compileMdxFile(searchLayoutPath, outPath, null, {
       page: pageDetails,
     });
-    body = rendered && rendered.body ? rendered.body : '';
-    head = rendered && rendered.head ? rendered.head : '';
+    const body = rendered && rendered.body ? rendered.body : '';
+    const head = rendered && rendered.head ? rendered.head : '';
     if (!body) throw new Error('Search: content/search/_layout.mdx produced empty output');
     const importMap = '';
     const jsAbs = path.join(OUT_DIR, 'scripts', 'search.js');
@@ -296,7 +344,6 @@ async function buildSearchPage() {
     let v = '';
     try { const st = require('fs').statSync(jsAbs); v = `?v=${Math.floor(st.mtimeMs || Date.now())}`; } catch (_) {}
     jsRel = jsRel + v;
-    // Include react-globals vendor shim before search.js to provide window.React globals
     const vendorReactAbs = path.join(OUT_DIR, 'scripts', 'react-globals.js');
     const vendorFlexAbs = path.join(OUT_DIR, 'scripts', 'flexsearch-globals.js');
     const vendorSearchFormAbs = path.join(OUT_DIR, 'scripts', 'canopy-search-form.js');
@@ -326,7 +373,7 @@ async function buildSearchPage() {
       }
     } catch (_) {}
     const bodyClass = canopyBodyClassForType('search');
-    let html = htmlShell({ title: pageTitle, body, cssHref: null, scriptHref: jsRel, headExtra, bodyClass });
+    let html = htmlShell({ title: pageTitle, body, cssHref: null, scriptHref: jsRel, headExtra, bodyClass, lang: pageLocale });
     try { html = require('../common').applyBaseToHtml(html); } catch (_) {}
     await fsp.writeFile(outPath, html, 'utf8');
     console.log('Search: Built', path.relative(process.cwd(), outPath));
@@ -395,6 +442,17 @@ function sanitizeRecordForDisplay(r) {
   const out = { ...base };
   if (out.metadata) delete out.metadata;
   if (out.summary) out.summary = toSafeString(out.summary, '');
+  const locale = toSafeString(r && r.locale, '').trim();
+  if (locale) out.locale = locale;
+  if (r && r.routes && typeof r.routes === 'object') {
+    const normalizedRoutes = {};
+    Object.keys(r.routes).forEach((key) => {
+      const routeHref = toSafeString(r.routes[key], '');
+      if (!routeHref) return;
+      normalizedRoutes[key] = rootRelativeHref(routeHref);
+    });
+    if (Object.keys(normalizedRoutes).length) out.routes = normalizedRoutes;
+  }
   const summaryMarkdown = toSafeString(
     (r && r.summaryMarkdown) ||
       (r && r.searchSummaryMarkdown) ||
@@ -405,7 +463,9 @@ function sanitizeRecordForDisplay(r) {
     out.summaryMarkdown = summaryMarkdown;
   }
   const hrefRaw = toSafeString(r && r.href, '');
-  out.href = rootRelativeHref(hrefRaw);
+  if (hrefRaw) {
+    out.href = rootRelativeHref(hrefRaw);
+  }
   const thumbnail = toSafeString(r && r.thumbnail, '');
   if (thumbnail) out.thumbnail = thumbnail;
   // Preserve optional thumbnail dimensions for aspect ratio calculations in the UI
@@ -603,4 +663,10 @@ async function ensureResultTemplate() {
   } catch (_) {}
 }
 
-module.exports = { ensureSearchRuntime, ensureResultTemplate, buildSearchPage, writeSearchIndex };
+module.exports = {
+  ensureSearchRuntime,
+  ensureResultTemplate,
+  buildSearchPage,
+  writeSearchIndex,
+  resolveSearchOutputRelative,
+};

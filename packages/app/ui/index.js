@@ -7,6 +7,7 @@ export {default as Button} from "./src/layout/Button.jsx";
 export {default as ButtonWrapper} from "./src/layout/ButtonWrapper.jsx";
 export {default as CanopyHeader} from "./src/layout/CanopyHeader.jsx";
 export {default as CanopyFooter} from "./src/layout/CanopyFooter.jsx";
+export {default as LanguageToggle} from "./src/layout/LanguageToggle.jsx";
 export {default as CanopyBrand} from "./src/layout/CanopyBrand.jsx";
 export {default as CanopyModal} from "./src/layout/CanopyModal.jsx";
 export {default as TeaserCard} from "./src/layout/TeaserCard.jsx";

@@ -35,16 +35,12 @@ export function App({children}) {
   return (
     <>
       <CanopyHeader
-        navigation={[
-          {href: "/search", label: "Works"},
-          {href: "/docs", label: "Docs"},
-          {href: "/about", label: "About"},
-        ]}
         title="Canopy IIIF"
         logo={Logo}
       />
       <main>{children}</main>
       <CanopyFooter>
+        <LanguageToggle variant="list" />
         <p>Copyright 2025 Canopy IIIF, MIT License</p>
       </CanopyFooter>
     </>

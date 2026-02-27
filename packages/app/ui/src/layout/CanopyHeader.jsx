@@ -3,6 +3,8 @@ import SearchPanel from "../search/SearchPanel.jsx";
 import CanopyBrand from "./CanopyBrand.jsx";
 import CanopyModal from "./CanopyModal.jsx";
 import NavigationTree from "./NavigationTree.jsx";
+import getSafePageContext from "./pageContext.js";
+import LanguageToggle from "./LanguageToggle.jsx";
 
 function HeaderScript() {
   const code = `
@@ -303,26 +305,6 @@ function HeaderScript() {
   );
 }
 
-const CONTEXT_KEY =
-  typeof Symbol === "function"
-    ? Symbol.for("__CANOPY_PAGE_CONTEXT__")
-    : "__CANOPY_PAGE_CONTEXT__";
-
-function getSharedRoot() {
-  if (typeof globalThis !== "undefined") return globalThis;
-  if (typeof window !== "undefined") return window;
-  if (typeof global !== "undefined") return global;
-  return null;
-}
-
-function getSafePageContext() {
-  const root = getSharedRoot();
-  if (root && root[CONTEXT_KEY]) return root[CONTEXT_KEY];
-  const ctx = React.createContext({navigation: null, page: null, site: null});
-  if (root) root[CONTEXT_KEY] = ctx;
-  return ctx;
-}
-
 function ensureArray(navLinks) {
   if (!Array.isArray(navLinks)) return [];
   return navLinks.filter(
@@ -396,6 +378,7 @@ export default function CanopyHeader(props = {}) {
     brandHref = "/",
     title: titleProp,
     logo: SiteLogo,
+    languageToggle: languageToggleProp,
   } = props;
 
   const PageContext = getSafePageContext();
@@ -409,10 +392,38 @@ export default function CanopyHeader(props = {}) {
   const contextNavigation =
     context && context.navigation ? context.navigation : null;
   const contextSite = context && context.site ? context.site : null;
+  const pageData = context && context.page ? context.page : null;
   const contextSiteTitle =
     contextSite && typeof contextSite.title === "string"
       ? contextSite.title.trim()
       : "";
+  const siteLanguageToggle =
+    contextSite && contextSite.languageToggle ? contextSite.languageToggle : null;
+  const siteRoutes = contextSite && contextSite.routes ? contextSite.routes : null;
+  const siteDefaultRoutes =
+    contextSite && contextSite.routesDefault ? contextSite.routesDefault : null;
+  const searchRouteValue =
+    siteRoutes && typeof siteRoutes.search === "string"
+      ? siteRoutes.search
+      : "";
+  const defaultSearchRoute =
+    siteDefaultRoutes && typeof siteDefaultRoutes.search === "string"
+      ? siteDefaultRoutes.search
+      : "search";
+  const trimmedSearchRoute = searchRouteValue
+    ? searchRouteValue.replace(/^\/+|\/+$/g, "")
+    : "";
+  const usesDirectorySearchRoute =
+    trimmedSearchRoute && trimmedSearchRoute !== (defaultSearchRoute || "search");
+  const normalizedSearchRoute = usesDirectorySearchRoute
+    ? `/${trimmedSearchRoute}/`
+    : `/${(trimmedSearchRoute || defaultSearchRoute || "search").replace(/^\/+/, "")}`;
+  const resolvedLanguageToggle =
+    languageToggleProp === false
+      ? null
+      : languageToggleProp === true || typeof languageToggleProp === "undefined"
+      ? siteLanguageToggle
+      : languageToggleProp;
   const defaultHeaderTitle = contextSiteTitle || "Site title";
   const normalizedTitleProp =
     typeof titleProp === "string" ? titleProp.trim() : "";
@@ -478,6 +489,7 @@ export default function CanopyHeader(props = {}) {
             label={searchLabel}
             hotkey={searchHotkey}
             placeholder={searchPlaceholder}
+            searchPath={normalizedSearchRoute}
           />
         </div>
 
@@ -497,6 +509,14 @@ export default function CanopyHeader(props = {}) {
         </nav>
 
         <div className="canopy-header__actions">
+          {resolvedLanguageToggle ? (
+            <LanguageToggle
+              languageToggle={resolvedLanguageToggle}
+              page={pageData}
+              variant="desktop"
+              className="canopy-header__language-toggle canopy-header__language-toggle--desktop"
+            />
+          ) : null}
           <button
             type="button"
             className="canopy-header__icon-button canopy-header__search-trigger"
@@ -556,6 +576,14 @@ export default function CanopyHeader(props = {}) {
         closeLabel="Close navigation"
         closeDataAttr="nav"
       >
+        {resolvedLanguageToggle ? (
+          <LanguageToggle
+            languageToggle={resolvedLanguageToggle}
+            page={pageData}
+            variant="mobile"
+            className="canopy-header__language-toggle canopy-header__language-toggle--mobile"
+          />
+        ) : null}
         <nav
           className="canopy-nav-links canopy-modal__nav"
           aria-label="Primary navigation"
@@ -668,6 +696,7 @@ export default function CanopyHeader(props = {}) {
           label={searchLabel}
           hotkey={searchHotkey}
           placeholder={searchPlaceholder}
+          searchPath={normalizedSearchRoute}
         />
       </CanopyModal>
 

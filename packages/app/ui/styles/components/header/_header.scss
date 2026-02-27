@@ -68,6 +68,118 @@
     flex: 0 0 auto;
   }
 
+  .canopy-language-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .canopy-language-toggle__select {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .canopy-language-toggle__select-input {
+    border: 1px solid var(--color-gray-300);
+    border-radius: 999px;
+    padding: 0.25rem 2rem 0.25rem 0.75rem;
+    background: var(--color-white);
+    color: var(--color-gray-900);
+    font-weight: 600;
+    appearance: none;
+    min-width: 6.5rem;
+    cursor: pointer;
+  }
+
+  .canopy-language-toggle__select-input:focus-visible {
+    outline: 2px solid var(--color-accent-default);
+    outline-offset: 2px;
+  }
+
+  .canopy-language-toggle__nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .canopy-language-toggle__list {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .canopy-language-toggle__button,
+  .canopy-language-toggle__nav a {
+    text-decoration: none;
+    font-weight: 600;
+    color: var(--color-gray-700);
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    transition:
+      color 150ms ease,
+      background 150ms ease;
+    cursor: pointer;
+  }
+
+  .canopy-language-toggle__button[data-active="true"],
+  .canopy-language-toggle__nav a[data-active="true"] {
+    color: var(--color-accent-900);
+    background: var(--color-accent-100);
+  }
+
+  .canopy-language-toggle__button:focus-visible,
+  .canopy-language-toggle__nav a:focus-visible {
+    outline: 2px solid var(--color-accent-default);
+    outline-offset: 2px;
+  }
+
+  .canopy-language-toggle--mobile {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .canopy-language-toggle--mobile .canopy-language-toggle__nav {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.25rem;
+  }
+
+  .canopy-language-toggle--mobile .canopy-language-toggle__list {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.25rem;
+  }
+
+  .canopy-language-toggle--mobile .canopy-language-toggle__select {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .canopy-language-toggle--mobile .canopy-language-toggle__select-input {
+    width: auto;
+  }
+
+  .canopy-language-toggle--inline {
+    flex-wrap: wrap;
+    gap: 0.25rem 0.5rem;
+  }
+
+  .canopy-language-toggle--inline .canopy-language-toggle__nav {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .canopy-language-toggle--inline .canopy-language-toggle__list {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
   .canopy-header__actions:empty {
     display: none;
   }
@@ -151,7 +263,7 @@
     }
 
     .canopy-header__actions {
-      display: none;
+      display: flex;
     }
 
     .canopy-header__search-trigger {
