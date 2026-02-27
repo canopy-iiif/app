@@ -37,6 +37,11 @@ export function App({children}) {
       <CanopyHeader
         title="Canopy IIIF"
         logo={Logo}
+        navigation={[
+          {href: "/docs", label: "Docs"},
+          {href: "/search", label: "Works"},
+          {href: "/about", label: "About"},
+        ]}
       />
       <main>{children}</main>
       <CanopyFooter>

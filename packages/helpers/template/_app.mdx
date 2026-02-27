@@ -23,13 +23,7 @@ export function Head() {
 export function App({children}) {
   return (
     <>
-      <CanopyHeader
-        navigation={[
-          {href: "/search", label: "Works"},
-          {href: "/about", label: "About"},
-        ]}
-        logo={Logo}
-      />
+      <CanopyHeader logo={Logo} />
       <main>{children}</main>
       <CanopyFooter>
         <p>Copyright 2025 Site Title, MIT License. A Canopy IIIF Project.</p>

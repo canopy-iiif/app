@@ -1,6 +1,4 @@
 navigation:
-  - href: /docs
-    label: Docs
   - href: /search
     label: Works
   - href: /about
