@@ -1,5 +1,16 @@
 [
   {
+    "version": "1.9.0",
+    "date": "2026-02-27",
+    "summary": "Add baseline internationalization support.",
+    "highlights": [
+      "Add ability to define locales by language code.",
+      "Organize locales content by subdirectories.",
+      "Customize locale UI and navigation.",
+      "Toggle defined locales."
+    ]
+  },
+  {
     "version": "1.8.15",
     "date": "2026-02-26",
     "summary": "Refine gallery layout and styling.",
@@ -32,7 +43,7 @@
   {
     "version": "1.8.10",
     "date": "2026-02-23",
-    "summary": "Add key and georeferencing features to Map.`",
+    "summary": "Add key and georeferencing features to Map.",
     "highlights": []
   },
   {
