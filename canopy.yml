@@ -1,33 +1,16 @@
-title: Site title
+collection:
+  - https://canopy-iiif.github.io/fixtures/iiif/presentation/3/i18n/collection.json
 locales:
   - lang: en
     label: English
     default: true
   - lang: es
     label: Español
-collection:
-  - https://api.dc.library.northwestern.edu/api/v2/collections/7ac5769f-a1d9-4227-a350-bf8bd8b1cddc?as=iiif
-  # - https://api.dc.library.northwestern.edu/api/v2/collections/94536627-cfdf-413c-852b-0cb16d986da3?as=iiif
-manifest:
-  - https://iiif.vam.ac.uk/collections/O1267239/manifest.json
-  - https://iiif.vam.ac.uk/collections/O755793/manifest.json
-  - https://iiif.vam.ac.uk/collections/O136839/manifest.json
-  - https://iiif.vam.ac.uk/collections/O74660/manifest.json
 metadata:
-  - Subject
-  - Date
-  - Language
-  - Genre
+  - Colors
 featured:
-  - https://api.dc.library.northwestern.edu/api/v2/works/4bdb5a22-6c7f-498d-8e6e-e49ea9bc4778?as=iiif
-  - https://api.dc.library.northwestern.edu/api/v2/works/c26591b2-994b-4ba3-a87e-9124419fa91b?as=iiif
-  - https://api.dc.library.northwestern.edu/api/v2/works/d4c62d7f-f50d-4b29-85e0-5d380675bec7?as=iiif
-  - https://iiif.vam.ac.uk/collections/O74660/manifest.json
-  - https://api.dc.library.northwestern.edu/api/v2/works/e0d60273-e64c-49d8-99dc-d1af8f4c6266?as=iiif
+  - https://canopy-iiif.github.io/fixtures/iiif/presentation/3/i18n/manifest-01.json
 search:
-  page:
-    title: Search
-    description: Discover results across the entire collection.
   results:
     work:
       layout: grid
@@ -42,11 +25,11 @@ search:
     summary:
       enabled: true
     annotations:
-      enabled: false
+      enabled: true
       motivation:
         - commenting
         - tagging
 theme:
   appearance: light
-  accentColor: indigo
+  accentColor: red
   grayColor: slate

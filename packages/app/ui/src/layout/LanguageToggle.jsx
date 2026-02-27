@@ -10,7 +10,8 @@ export default function LanguageToggle({
   page,
   variant = "inline",
   className = "",
-  showLabel = true,
+  showLabel = false,
+  control,
   label,
   ariaLabel,
 }) {
@@ -25,6 +26,17 @@ export default function LanguageToggle({
       : languageToggle === true || typeof languageToggle === "undefined"
       ? siteLanguageToggle
       : languageToggle;
+  const normalizeControl = (value) =>
+    value === "list" ? "list" : value === "select" ? "select" : null;
+  const toggleControl = normalizeControl(
+    resolvedToggle && typeof resolvedToggle.control === "string"
+      ? resolvedToggle.control
+      : null,
+  );
+  const resolvedControl =
+    normalizeControl(typeof control === "string" ? control : null) ||
+    toggleControl ||
+    "select";
   const config = React.useMemo(() => {
     if (!resolvedToggle) return null;
     const base = buildLanguageToggleConfig(resolvedToggle, pageData);
@@ -44,6 +56,7 @@ export default function LanguageToggle({
       variant={variant}
       className={className}
       showLabel={showLabel}
+      control={resolvedControl}
     />
   );
 }

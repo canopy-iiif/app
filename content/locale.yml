@@ -10,7 +10,6 @@ ui:
     about: About
   languageToggle:
     label: Language
-    ariaLabel: Change site language
 routes:
   search: search
   works: works

@@ -134,16 +134,22 @@ function buildLanguageToggleCopy(locales) {
   const normalized = Array.isArray(locales) ? locales : [];
   const copyMap = {};
   const fallback = readLocaleMessages(null);
-  copyMap.__default = fallback && fallback.ui && fallback.ui.languageToggle
-    ? {...fallback.ui.languageToggle}
-    : {};
+  const fallbackToggle =
+    fallback && fallback.ui && fallback.ui.languageToggle
+      ? {...fallback.ui.languageToggle}
+      : {};
+  copyMap.__default = fallbackToggle;
   normalized.forEach((locale) => {
     if (!locale || !locale.lang) return;
     const data = readLocaleMessages(locale.lang);
-    const localeCopy = data && data.ui && data.ui.languageToggle
-      ? data.ui.languageToggle
-      : {};
-    copyMap[locale.lang] = {...copyMap.__default, ...localeCopy};
+    const localeToggle =
+      data && data.ui && data.ui.languageToggle
+        ? {...data.ui.languageToggle}
+        : null;
+    if (localeToggle && typeof localeToggle.label !== 'string') {
+      localeToggle.label = null;
+    }
+    copyMap[locale.lang] = localeToggle;
   });
   return copyMap;
 }

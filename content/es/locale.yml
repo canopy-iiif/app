@@ -9,7 +9,6 @@ ui:
     about: Acerca de
   languageToggle:
     label: Idioma
-    ariaLabel: Cambiar idioma del sitio
 routes:
   search: es/buscar
   works: es/obras

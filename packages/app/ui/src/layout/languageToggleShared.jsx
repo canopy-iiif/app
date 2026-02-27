@@ -131,61 +131,209 @@ export function buildLanguageToggleConfig(toggle, page) {
   if (locales.length <= 1) return null;
   const defaultLocale = locales.find((loc) => loc.default) || locales[0];
   const pageHref = page && page.href ? page.href : "/";
-  const {pathname, suffix} = splitHref(pageHref);
-  const {locale: activeLocale, pathname: basePathname} = stripLocaleFromPath(
+  const {pathname} = splitHref(pageHref);
+  const {locale: activeLocale} = stripLocaleFromPath(
     pathname,
     locales,
     defaultLocale,
   );
+  const homePathname = "/";
+  const homeSuffix = "";
   const messageMap = toggle && toggle.messages ? toggle.messages : {};
-  const defaultCopy = messageMap.__default ? {...messageMap.__default} : {};
-  const localeCopy = messageMap[activeLocale.lang]
-    ? {...defaultCopy, ...messageMap[activeLocale.lang]}
-    : defaultCopy;
-  const label = localeCopy.label || "Language";
-  const ariaLabel = localeCopy.ariaLabel || label || "Language";
+  const defaultCopy = messageMap.__default || {};
+  const localeCopy = messageMap[activeLocale.lang] || null;
+  const fallbackLabel = defaultCopy.label || "Language";
+  const label =
+    (localeCopy && localeCopy.label) || fallbackLabel;
   const links = locales.map((locale) => ({
     lang: locale.lang,
     label: locale.label || locale.lang.toUpperCase(),
-    href: buildLocaleHref(locale, basePathname, suffix, defaultLocale),
+    href: buildLocaleHref(locale, homePathname, homeSuffix, defaultLocale),
     isActive: locale.lang === activeLocale.lang,
   }));
-  return {label, ariaLabel, links};
+  return {label, links};
 }
 
 export function LanguageToggleControl({
   config,
   variant = "inline",
   className = "",
-  showLabel = true,
+  showLabel = false,
+  control = "select",
 }) {
   if (!config) return null;
   const classes = [
     "canopy-language-toggle",
     variant ? `canopy-language-toggle--${variant}` : null,
+    control ? `canopy-language-toggle--${control}` : null,
     className,
   ]
     .filter(Boolean)
     .join(" ")
     .trim();
-  const ariaLabel = config.ariaLabel || config.label || "Language";
+  const ariaLabel = config.label || "Language";
+  const resolvedControl = control === "list" ? "list" : "select";
+  const selectId =
+    typeof React.useId === "function" && resolvedControl === "select"
+      ? React.useId()
+      : undefined;
+  const links = Array.isArray(config.links) ? config.links : [];
+  if (!links.length) return null;
+  const activeLink = links.find((link) => link.isActive);
+  const fallbackHref = links[0].href;
+  const selectedHref = activeLink ? activeLink.href : fallbackHref;
+  const navigate = React.useCallback((href) => {
+    if (!href) return;
+    try {
+      if (typeof window !== "undefined" && window.location) {
+        if (typeof window.location.assign === "function") {
+          window.location.assign(href);
+        } else {
+          window.location.href = href;
+        }
+        return;
+      }
+    } catch (_) {}
+    try {
+      if (typeof document !== "undefined" && document.location) {
+        document.location.href = href;
+      }
+    } catch (_) {}
+  }, []);
+  const handleSelectChange = React.useCallback(
+    (event) => {
+      if (!event || !event.target) return;
+      const nextHref = event.target.value;
+      if (!nextHref || nextHref === selectedHref) return;
+      navigate(nextHref);
+    },
+    [navigate, selectedHref],
+  );
+  const labelElement =
+    showLabel && config.label
+      ? resolvedControl === "select"
+        ? (
+            <label
+              className="canopy-language-toggle__label"
+              htmlFor={selectId}
+            >
+              {config.label}
+            </label>
+          )
+        : (
+            <span className="canopy-language-toggle__label">
+              {config.label}
+            </span>
+          )
+      : null;
   return (
     <div className={classes || undefined}>
-      {showLabel && config.label ? (
-        <span className="canopy-language-toggle__label">{config.label}</span>
-      ) : null}
-      <nav className="canopy-language-toggle__nav" aria-label={ariaLabel}>
-        {config.links.map((link) => (
-          <a
-            key={link.lang}
-            href={link.href}
-            aria-current={link.isActive ? "true" : undefined}
-            data-active={link.isActive ? "true" : undefined}
+      {labelElement}
+      {resolvedControl === "select" ? (
+        <div className="canopy-language-toggle__select">
+          <select
+            id={selectId}
+            className="canopy-language-toggle__select-input"
+            value={selectedHref}
+            onChange={handleSelectChange}
+            aria-label={ariaLabel}
+            data-canopy-language-select="true"
           >
-            {link.label}
-          </a>
-        ))}
-      </nav>
+            {links.map((link) => (
+              <option
+                key={link.lang}
+                value={link.href}
+                data-lang={link.lang}
+                data-canopy-language-option="true"
+              >
+                {link.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : (
+        <nav className="canopy-language-toggle__nav" aria-label={ariaLabel}>
+          <ul className="canopy-language-toggle__list" role="list">
+            {links.map((link) => (
+              <li key={link.lang}>
+                <button
+                  type="button"
+                  className="canopy-language-toggle__button"
+                  data-active={link.isActive ? "true" : undefined}
+                  aria-pressed={link.isActive ? "true" : "false"}
+                  data-canopy-language-button="true"
+                  data-href={link.href}
+                  onClick={() => navigate(link.href)}
+                >
+                  {link.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
+      <LanguageToggleRuntime />
     </div>
   );
+}
+
+function LanguageToggleRuntime() {
+  const code = `
+(function () {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  if (window.__CANOPY_LANGUAGE_TOGGLE_INIT__) return;
+  window.__CANOPY_LANGUAGE_TOGGLE_INIT__ = true;
+
+  function navigate(href) {
+    if (!href) return;
+    try {
+      if (window.location && typeof window.location.assign === 'function') {
+        window.location.assign(href);
+      } else if (window.location) {
+        window.location.href = href;
+      }
+    } catch (_) {}
+  }
+
+  function bindSelect(select) {
+    if (!select || select.dataset.canopyLanguageBound === 'true') return;
+    select.dataset.canopyLanguageBound = 'true';
+    select.addEventListener('change', function (event) {
+      var target = event && event.target ? event.target : select;
+      var href = target && target.value;
+      if (!href || href === '#') return;
+      navigate(href);
+    });
+  }
+
+  function bindButtons(root) {
+    var buttons = root.querySelectorAll('[data-canopy-language-button]');
+    Array.prototype.forEach.call(buttons, function (btn) {
+      if (!btn || btn.dataset.canopyLanguageBound === 'true') return;
+      btn.dataset.canopyLanguageBound = 'true';
+      btn.addEventListener('click', function (event) {
+        event.preventDefault();
+        var href = btn.getAttribute('data-href');
+        navigate(href);
+      });
+    });
+  }
+
+  function scan(root) {
+    if (!root) root = document;
+    var selects = root.querySelectorAll('[data-canopy-language-select]');
+    Array.prototype.forEach.call(selects, bindSelect);
+    bindButtons(root);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+      scan(document);
+    });
+  } else {
+    scan(document);
+  }
+})();
+  `;
+  return <script dangerouslySetInnerHTML={{__html: code}} />;
 }
