@@ -1,3 +1,5 @@
+@use "../buttons" as buttons;
+
 @layer components {
   .canopy-modal--filters .canopy-modal__panel {
     width: min(100%, 48rem);
@@ -37,7 +39,6 @@
 
   .canopy-search-filters__facet {
     border: 1px solid var(--color-gray-200);
-    border-radius: 0.75rem;
     background: var(--color-gray-50);
     overflow: hidden;
   }
@@ -82,24 +83,19 @@
   .canopy-search-filters__quick-input {
     flex: 1;
     min-width: 0;
-    border-radius: 0.5rem;
     border: 1px solid var(--color-gray-300);
     padding: 0.375rem 0.75rem;
     font-size: var(--font-size-sm);
     color: var(--color-gray-muted);
-    transition:
-      border-color var(--duration-fast) var(--easing-standard),
-      box-shadow var(--duration-fast) var(--easing-standard);
+    transition: border-color var(--duration-fast) var(--easing-standard);
 
     &:focus {
       outline: none;
       border-color: var(--color-accent-500);
-      box-shadow: 0 0 0 1px var(--color-accent-500);
     }
   }
 
   .canopy-search-filters__quick-clear {
-    border-radius: 0.375rem;
     border: 1px solid var(--color-gray-200);
     padding: 0.25rem 0.5rem;
     font-size: var(--font-size-xs);
@@ -136,7 +132,6 @@
     margin-top: 0.25rem;
     width: 1rem;
     height: 1rem;
-    border-radius: 0.375rem;
     border: 1px solid var(--color-gray-300);
     color: var(--color-accent-500);
     accent-color: var(--color-accent-500);
@@ -171,18 +166,12 @@
   }
 
   .canopy-search-filters__button {
-    border-radius: 9999px;
-    padding: 0.5rem 1.25rem;
+    @include buttons.canopy-button-base(0.5rem, 1.25rem);
     font-size: var(--font-size-sm);
-    cursor: pointer;
-    transition:
-      background-color var(--duration-fast) var(--easing-standard),
-      color var(--duration-fast) var(--easing-standard);
   }
 
   .canopy-search-filters__button--secondary {
     border: 1px solid var(--color-gray-300);
-    background: transparent;
     color: var(--color-gray-muted);
   }
 

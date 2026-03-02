@@ -3,7 +3,6 @@
   position: relative;
   width: 100%;
   min-height: 320px;
-  border-radius: 0.5rem;
   overflow: hidden;
   background-color: var(--color-gray-100);
   z-index: 0;
@@ -52,12 +51,10 @@
     max-width: 320px;
     z-index: 4;
     padding: 0.5rem 0.75rem;
-    border-radius: 999px;
     background-color: rgba(15, 23, 42, 0.85);
     color: var(--color-gray-50);
     font-size: 0.875rem;
     line-height: 1.25rem;
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.3);
     pointer-events: auto;
   }
 
@@ -89,7 +86,6 @@
     &-dot {
       width: 12px;
       height: 12px;
-      border-radius: 999px;
       background-color: var(--color-accent-default);
       flex-shrink: 0;
     }
@@ -107,7 +103,6 @@
 
     &-media {
       width: 100%;
-      border-radius: 0.25rem;
       overflow: hidden;
 
       img {
@@ -194,7 +189,6 @@
     }
   }
   .leaflet-marker-icon#{&}__marker {
-    background: transparent;
     border: none;
     width: auto;
     height: auto;
@@ -213,8 +207,6 @@
   &__marker-solid {
     width: 40px;
     height: 40px;
-    border-radius: 999px;
-    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.35);
     overflow: hidden;
     display: flex;
     align-items: center;
@@ -241,7 +233,6 @@
   }
 
   &__marker--label {
-    background: transparent;
     border: none;
 
     &.is-hovered {
@@ -254,7 +245,6 @@
       }
 
       .canopy-map__marker-label-text {
-        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
       }
     }
   }
@@ -268,14 +258,12 @@
     background: #fffd;
     white-space: nowrap;
     position: relative;
-    border-radius: 999px;
     padding-left: 4px;
   }
 
   &__marker-label-dot {
     width: 12px;
     height: 12px;
-    border-radius: 999px;
     background-color: var(--color-accent-default);
     flex-shrink: 0;
     cursor: default;
@@ -300,13 +288,11 @@
     font-weight: 500;
     width: 40px;
     height: 40px;
-    border-radius: 999px;
     background: var(--color-gray-default);
     color: var(--color-gray-50);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.35);
     box-sizing: content-box;
   }
 }

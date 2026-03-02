@@ -1,3 +1,5 @@
+@use "./buttons" as buttons;
+
 @layer components {
   .canopy-nav-tree {
     color: inherit;
@@ -39,14 +41,10 @@
   }
 
   .canopy-nav-tree__toggle {
+    @include buttons.canopy-button-base(0.5rem, 0.5rem);
     appearance: none;
     border: none;
-    background: transparent;
-    padding: 0.5rem;
-    display: inline-flex;
-    align-items: center;
     justify-content: flex-end;
-    cursor: pointer;
     width: 40px;
     height: 40px;
 

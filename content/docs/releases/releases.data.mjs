@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.9.2",
+    "date": "2026-03-02",
+    "summary": "Add variables for border radii and shadows.",
+    "highlights": []
+  },
+  {
     "version": "1.9.1",
     "date": "2026-03-01",
     "summary": "Update template navigation.",

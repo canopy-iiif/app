@@ -1,3 +1,5 @@
+@use "../buttons" as buttons;
+
 @layer components {
   .canopy-modal {
     position: fixed;
@@ -24,8 +26,6 @@
     max-width: 400px;
     max-height: min(90vh, 640px);
     background: var(--color-gray-50);
-    border-radius: 1rem;
-    box-shadow: 12px 24px 48px rgba(0, 0, 0, 0.5);
     overflow: hidden;
     margin: 0;
   }
@@ -59,21 +59,14 @@
   }
 
   .canopy-modal__close {
+    @include buttons.canopy-button-base(0.25rem, 0.75rem);
     position: absolute;
     top: 0.75rem;
     right: 0.75rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
     width: 2.5rem;
     height: 2.5rem;
-    border-radius: 9999px;
     color: var(--color-accent-900);
-    cursor: pointer;
-    transition:
-      background-color 150ms ease,
-      color 150ms ease,
-      border-color 150ms ease;
+    border: none;
 
     svg path {
       stroke-width: 2.618px;
@@ -102,15 +95,12 @@
       width: 100%;
       height: 100%;
       max-height: none;
-      border-radius: 0;
       margin: 0;
-      box-shadow: none;
     }
 
     .canopy-modal__close {
       top: 1rem;
       right: 1rem;
-      border-radius: 0.75rem;
     }
 
     .canopy-modal__brand {

@@ -12,11 +12,9 @@
   --storiiies-viewer-button-bg: var(--color-accent-default);
   --storiiies-viewer-button-fg: var(--color-gray-50);
 
-  border-radius: 0.5rem;
   position: relative;
   display: block;
   overflow: hidden;
-  box-shadow: inset 0 0 0 1px #0000000d;
 
   .storiiies-viewer__info-text {
     margin-top: 1.618rem;
@@ -42,8 +40,6 @@
   }
 
   .storiiies-viewer__info-area {
-    border-radius: 0.5rem;
-    box-shadow: 5px 5px 21px #0001;
     font-weight: 300;
   }
 

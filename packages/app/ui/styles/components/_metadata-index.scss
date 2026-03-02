@@ -1,3 +1,5 @@
+@use "./buttons" as buttons;
+
 .canopy-index {
   display: flex;
   flex-direction: column;
@@ -55,13 +57,10 @@
 }
 
 .canopy-index__more {
-  padding: 0.45rem 1rem;
-  font-size: 0.8333rem;
-  border: 1px solid var(--color-accent-200);
-  border-radius: 999px;
+  @include buttons.canopy-button-base(0.45rem, 1rem);
+  border-color: var(--color-accent-200);
   background: var(--color-accent-100);
   color: var(--color-accent-default);
-  cursor: pointer;
 }
 
 .canopy-index__more:hover {

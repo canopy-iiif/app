@@ -1,3 +1,5 @@
+@use "./buttons" as buttons;
+
 .canopy-gallery {
   position: relative;
   padding: 0;
@@ -57,8 +59,6 @@
     height: 100%;
     padding: clamp(0.75rem, 1vw, 1rem);
     border: 1px solid var(--color-gray-200);
-    border-radius: var(--canopy-gallery-radius, 1rem);
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 
     &:focus-within {
       outline: 2px solid var(--color-accent-default, #3b82f6);
@@ -70,7 +70,6 @@
     position: relative;
     aspect-ratio: 1/1;
     overflow: hidden;
-    border-radius: calc(var(--canopy-gallery-radius, 1rem) - 0.25rem);
     background: var(--color-gray-100);
 
     img,
@@ -145,12 +144,10 @@
   &__trigger {
     position: absolute;
     inset: 0;
-    border-radius: inherit;
     text-decoration: none;
     border: 0;
     z-index: 2;
     color: inherit;
-    background: transparent;
   }
 }
 
@@ -294,8 +291,6 @@ body[data-canopy-gallery-locked="1"] {
     width: min(960px, calc(100% - clamp(2rem, 4vw, 4rem)));
     height: auto;
     max-height: min(90vh, 960px);
-    border-radius: 0.75rem;
-    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.45);
   }
 }
 
@@ -328,7 +323,6 @@ body[data-canopy-gallery-locked="1"] {
 
     &::-webkit-scrollbar-thumb {
       background-color: rgba(15, 23, 42, 0.2);
-      border-radius: 0.5rem;
     }
   }
 
@@ -357,7 +351,6 @@ body[data-canopy-gallery-locked="1"] {
     display: inline-flex;
     flex-direction: column;
     text-decoration: none;
-    border-radius: 0.75rem;
     background: var(--color-gray-50);
     color: inherit;
     width: 100%;
@@ -378,7 +371,6 @@ body[data-canopy-gallery-locked="1"] {
   &__nav-thumb {
     width: 100%;
     aspect-ratio: 1 / 1;
-    border-radius: 0.5rem;
     overflow: hidden;
     padding: 1px;
     outline: 3px solid var(--color-gray-50);
@@ -393,18 +385,16 @@ body[data-canopy-gallery-locked="1"] {
       display: block;
       opacity: 1;
       transition: all 0.2s ease;
-      border-radius: 0.5rem;
     }
   }
 
   &__nav-button {
+    @include buttons.canopy-button-base(0.25rem, 0.75rem);
     flex: 0 0 auto;
     width: 5rem;
     height: 100%;
     color: var(--color-gray-900);
     font-size: 1.25rem;
-    font-weight: 500;
-    cursor: pointer;
     display: none;
     align-items: center;
     justify-content: center;
@@ -412,6 +402,7 @@ body[data-canopy-gallery-locked="1"] {
     top: 50%;
     transform: translateY(-50%);
     z-index: 5;
+    border: none;
     background: linear-gradient(to right, transparent, transparent);
 
     &--prev {

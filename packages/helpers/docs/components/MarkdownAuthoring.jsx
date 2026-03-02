@@ -33,6 +33,10 @@ local authority, resistance, and the uneven realities of
 Company rule.`;
 
 const componentStyles = `
+.markdown-authoring {
+  padding: 1.618rem 0;
+}
+
 .markdown-authoring__container {
   position: relative;
   display: flex;
@@ -68,13 +72,11 @@ const componentStyles = `
   display: flex;
   flex-direction: column;
   gap: 2.618rem;
-  padding: 2.618rem;
   justify-content: center;
 }
 
 .markdown-authoring__content {
   position: relative;
-  padding: 1.618rem;
 }
 
 .markdown-authoring__content::before,
@@ -88,16 +90,16 @@ const componentStyles = `
 }
 
 .markdown-authoring__content::before {
-  content: "“";
-  top: 4rem;
-  left: -0.5rem;
+  content: "“";  
+  top: 2.618rem;
+  left: -1.618rem;
   transform: translate(-40%, -40%);
 }
 
 .markdown-authoring__content::after {
   content: "”";
-  bottom: 1rem;
-  right: 0;
+  bottom: 0;
+  right: -1rem;
   transform: translate(40%, 40%);
 }
 
@@ -133,12 +135,12 @@ const componentStyles = `
   font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
   font-size: 0.875rem;
   line-height: 1.6;
+  mask-image: linear-gradient(to right, black calc(100% - 5rem), transparent calc(100% - 1rem));
 }
 
 .markdown-authoring__code-block code {
   display: block;
   overflow: hidden;
-  overflow-x: auto;
 }
 
 @keyframes markdown-authoring-line-in {

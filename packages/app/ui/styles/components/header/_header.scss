@@ -1,4 +1,5 @@
 @use "../../settings/breakpoints" as bp;
+@use "../buttons" as buttons;
 
 @layer components {
   .canopy-header {
@@ -7,7 +8,6 @@
     align-items: center;
     gap: 1.618rem;
     padding: 1rem 1.618rem;
-    background: transparent;
     z-index: 1;
   }
 
@@ -20,16 +20,10 @@
   }
 
   .canopy-header__menu {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    @include buttons.canopy-button-base(0.25rem, 0.75rem);
     width: 2.5rem;
     height: 2.5rem;
-    border-radius: 0.75rem;
-    transition:
-      background 150ms ease,
-      color 150ms ease,
-      border-color 150ms ease;
+    border: none;
   }
 
   .canopy-header__menu:hover,
@@ -82,11 +76,8 @@
 
   .canopy-language-toggle__select-input {
     border: 1px solid var(--color-gray-300);
-    border-radius: 999px;
     padding: 0.25rem 2rem 0.25rem 0.75rem;
-    background: var(--color-white);
     color: var(--color-gray-900);
-    font-weight: 600;
     appearance: none;
     min-width: 6.5rem;
     cursor: pointer;
@@ -114,17 +105,9 @@
 
   .canopy-language-toggle__button,
   .canopy-language-toggle__nav a {
-    text-decoration: none;
-    font-weight: 600;
-    color: var(--color-gray-700);
-    padding: 0.15rem 0.5rem;
-    border-radius: 999px;
+    @include buttons.canopy-button-base(0.15rem, 0.5rem);
     border: none;
-    background: transparent;
-    transition:
-      color 150ms ease,
-      background 150ms ease;
-    cursor: pointer;
+    color: var(--color-gray-700);
   }
 
   .canopy-language-toggle__button[data-active="true"],
@@ -185,18 +168,11 @@
   }
 
   .canopy-header__icon-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    @include buttons.canopy-button-base(0.25rem, 0.75rem);
     width: 2.5rem;
     height: 2.5rem;
-    border-radius: 0.75rem;
     color: var(--color-accent-900);
-    cursor: pointer;
-    transition:
-      background 150ms ease,
-      color 150ms ease,
-      border-color 150ms ease;
+    border: none;
 
     svg path {
       stroke-width: 2.618px;
@@ -237,9 +213,7 @@
 
   .canopy-modal--search .canopy-search-teaser {
     position: static;
-    background: transparent;
     border: none;
-    box-shadow: none;
     max-height: clamp(20rem, 60vh, 32rem);
     padding: 0;
     display: block;

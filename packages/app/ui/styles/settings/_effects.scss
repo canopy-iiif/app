@@ -1,0 +1,20 @@
+:root {
+  --canopy-radius-none: 0;
+  --canopy-radius-sm: 0;
+  --canopy-radius-md: 0;
+  --canopy-radius-lg: 0;
+  --canopy-radius-xl: 0;
+  --canopy-radius-pill: 0;
+  --canopy-radius-circle: 0;
+  --canopy-shadow-none: none;
+  --canopy-shadow-sm: none;
+  --canopy-shadow-md: none;
+  --canopy-shadow-lg: none;
+}
+
+*,
+*::before,
+*::after {
+  border-radius: var(--canopy-radius-none) !important;
+  box-shadow: var(--canopy-shadow-none) !important;
+}

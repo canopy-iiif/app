@@ -1,3 +1,5 @@
+@use "../buttons" as buttons;
+
 .canopy-search-tabs {
   position: relative;
   display: inline-flex;
@@ -7,14 +9,13 @@
 }
 
 .canopy-search-tab {
+  @include buttons.canopy-button-base(0.25rem, 0.75rem);
   position: relative;
   border: none;
-  background: transparent;
-  padding: 0.25rem 0.75rem 0.5rem;
+  padding-bottom: 0.5rem;
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--color-gray-muted);
-  cursor: pointer;
 }
 
 .canopy-search-tab.is-active {
@@ -26,7 +27,6 @@
   bottom: -3px;
   left: 0;
   height: 3px; /* underline */
-  border-radius: 999px;
   background: var(--color-accent-default);
   pointer-events: none;
   opacity: 0;

@@ -1,50 +1,61 @@
+@mixin canopy-button-base($padding-y: 0.6rem, $padding-x: 1.4rem) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: $padding-y $padding-x;
+  border: 1px solid currentColor;
+  color: inherit;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  line-height: 1.4;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+@mixin canopy-button-variant($variant) {
+  @if $variant == "primary" {
+    background-color: var(--color-accent-default);
+    border-color: var(--color-accent-default);
+    color: var(--color-accent-50);
+
+    &:hover,
+    &:focus-visible {
+      background-color: var(--color-accent-600);
+      border-color: var(--color-accent-600);
+    }
+  } @else if $variant == "secondary" {
+    border-color: var(--color-gray-400);
+    color: var(--color-gray-900);
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--color-accent-400);
+      color: var(--color-accent-900);
+    }
+  } @else if $variant == "ghost" {
+    border-color: transparent;
+  }
+}
+
 @layer components {
   .canopy-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    padding: 0.55rem 1.4rem;
-    border-radius: 9999px;
-    font-size: 0.9222rem;
-    font-weight: 300;
-    text-decoration: none;
-    transition:
-      background-color 0.2s ease,
-      color 0.2s ease,
-      border-color 0.2s ease,
-      box-shadow 0.2s ease;
+    @include canopy-button-base();
+    border-color: currentColor;
 
     &--primary {
-      background-color: var(--color-accent-default);
-      color: var(--color-accent-50);
-      box-shadow: 0 18px 32px -22px rgba(15, 23, 42, 0.55);
-
-      &:hover,
-      &:focus-visible {
-        background-color: var(--color-accent-600);
-      }
+      @include canopy-button-variant("primary");
     }
 
     &--secondary {
-      border: 1px solid var(--color-gray-200);
-      color: color-mix(in srgb, var(--color-gray-900) 92%, transparent);
-      background-color: var(--color-gray-50);
+      @include canopy-button-variant("secondary");
+    }
 
-      &:hover,
-      &:focus-visible {
-        border-color: color-mix(
-          in srgb,
-          var(--color-accent-400) 65%,
-          transparent
-        );
-        background-color: color-mix(
-          in srgb,
-          var(--color-accent-300) 25%,
-          transparent
-        );
-        color: var(--color-accent-900);
-      }
+    &--ghost {
+      @include canopy-button-variant("ghost");
     }
   }
 
@@ -56,8 +67,6 @@
   }
 
   .canopy-button-group__text {
-    font-size: 1.38rem;
-    font-weight: 500;
     color: var(--color-gray-900);
     margin-bottom: 1rem;
     letter-spacing: -0.0125em;
@@ -67,7 +76,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.75rem;
+    gap: 1rem;
     padding: 0.618rem 0 1.618rem;
     width: 100%;
   }
@@ -78,12 +87,6 @@
     text-align: center;
     padding: clamp(2rem, 4vw, 3rem) clamp(1.25rem, 4vw, 4rem);
     margin: 2rem 0;
-    border-radius: 1.25rem;
-    background: linear-gradient(
-      173deg,
-      transparent 0%,
-      var(--color-accent-200) 100%
-    );
   }
 
   .canopy-button-group--interstitial .canopy-button-group__actions {

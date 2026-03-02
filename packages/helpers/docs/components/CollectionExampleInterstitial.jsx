@@ -31,6 +31,7 @@ const componentStyles = `
 .collection-example {
   position: relative;
   display: block;
+  padding: 1.618rem 0;
 }
 
 .collection-example__container {
@@ -38,7 +39,6 @@ const componentStyles = `
   display: flex;
   flex-direction: column;
   gap: 2.618rem;
-  padding: 2.618rem 1.618rem;
 }
 
 .collection-example__grid {
@@ -56,7 +56,6 @@ const componentStyles = `
   display: flex;
   flex-direction: column;
   gap: 2.618rem;
-  padding: 2.618rem;
 }
 
 .collection-example__intro {
@@ -87,10 +86,12 @@ const componentStyles = `
   font-family: var(--font-mono);
   font-size: 0.9375rem;
   line-height: 1.6;
+  mask-image: linear-gradient(to right, black calc(100% - 5rem), transparent calc(100% - 1rem));
 }
 
 .collection-example__code-block code {
   display: block;
+  overflow: hidden !important;
 }
 
 .collection-example__collection {
@@ -98,10 +99,8 @@ const componentStyles = `
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding: 1.618rem;
   height: 900px;
   overflow: hidden;
-  mask-image: linear-gradient(to bottom, black 61.8%, #0001 90%, transparent 100%)
 }
 
 .collection-example__collection-header {

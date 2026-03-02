@@ -1,3 +1,5 @@
+@use "./buttons" as buttons;
+
 .canopy-sub-navigation {
   color: inherit;
 }
@@ -104,7 +106,6 @@
   transition:
     background-color 150ms ease,
     border-color 150ms ease,
-    box-shadow 150ms ease,
     padding 150ms ease;
   color: var(--color-gray-muted);
 }
@@ -113,7 +114,6 @@
   padding: 0.25rem;
   border-color: transparent;
   background: none;
-  box-shadow: none;
 }
 
 .canopy-content-navigation--floating {
@@ -128,16 +128,10 @@
 }
 
 .canopy-content-navigation__toggle {
+  @include buttons.canopy-button-base(0.35rem, 0.75rem);
   align-self: flex-end;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   color: color-mix(in srgb, var(--color-gray-900) 92%, transparent);
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  line-height: 1.2;
-  transition: color 150ms ease;
+  border: none;
 }
 
 .canopy-content-navigation__toggle:hover,

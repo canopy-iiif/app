@@ -31,6 +31,12 @@ Current Focus
 - Build tooling: review `ui/scripts/build-ui.mjs` for esbuild config drift (externals, target, watch mode ergonomics) and note desired improvements.
 - Accessibility + performance: capture any known UI gaps (focus management, bundle size) and link to issues once triaged.
 
+Flat Styling Guardrails
+-----------------------
+- `styles/settings/_effects.scss` defines zeroed custom properties for every radius/shadow token and globally forces `border-radius` + `box-shadow` to `0/none`. Do not reintroduce rounded corners or elevation without updating this module and documenting the exception.
+- When component styles still need emphasis, lean on borders, spacing, and color instead of shadows. Shared helpers (`@mixin canopy-button-base`) keep interactive controls consistent.
+- Before adding new CSS, check that it inherits typography/backgrounds from the base layers; avoid declaring `background: transparent` or duplicate font settings.
+
 ### Interstitials
 - `src/interstitials/Hero.jsx` renders the homepage hero. It rotates featured manifests declared in `canopy.yml → featured`, accepts overrides (`item`, `index`, `random`) when authors want deterministic slides, and exposes presentation props (`headline`, `description`, `links`, `height`, `background`).
 - Runtime: `packages/app/lib/components/hero-slider-runtime.js` bundles to `site/scripts/canopy-hero-slider.js`; ensure Swiper deps stay external to avoid duplicating React.
@@ -63,6 +69,7 @@ Logbook Template
 
 Logbook
 -------
+- 2025-09-29 / chatgpt: Flattened the entire UI surface (removed border radius/shadows, centralized button mixins, documented `settings/_effects.scss`) and rebuilt the UI bundle to propagate the simplified styles.
 - 2025-09-26 / chatgpt: Deprecated the legacy hero wrappers in favour of the interstitial hero and restored an accessible `data-canopy-search-form-trigger` button inside `SearchPanel` to keep homepage verification passing.
 - 2025-09-26 / chatgpt: Upgraded Tailwind to v4, mapped the search form trigger button to `bg-brand`, and ensured template output pins the same dependency.
 - 2025-09-27 / chatgpt: Restyled the search form with scoped `.canopy-search-form-*` classes, added base-path aware form resolution, and defaulted SearchPanel grouping to `['work','docs','page']` so new MDX record types appear in the teaser tabs.
