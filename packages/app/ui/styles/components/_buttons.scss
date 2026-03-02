@@ -29,6 +29,7 @@
     }
   } @else if $variant == "secondary" {
     border-color: var(--color-gray-400);
+    background-color: var(--color-gray-50);
     color: var(--color-gray-900);
 
     &:hover,

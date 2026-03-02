@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.9.3",
+    "date": "2026-03-02",
+    "summary": "Style refinements.",
+    "highlights": []
+  },
+  {
     "version": "1.9.2",
     "date": "2026-03-02",
     "summary": "Add variables for border radii and shadows.",

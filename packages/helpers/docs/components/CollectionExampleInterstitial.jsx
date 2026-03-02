@@ -101,6 +101,7 @@ const componentStyles = `
   gap: 1rem;
   height: 900px;
   overflow: hidden;
+  mask-image: linear-gradient(to bottom, black calc(100% - 5rem), transparent calc(100% - 1rem));
 }
 
 .collection-example__collection-header {
