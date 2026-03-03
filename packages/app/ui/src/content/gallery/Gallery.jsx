@@ -559,17 +559,61 @@ function renderPreview(props = {}) {
   return <div className="canopy-gallery__placeholder" aria-hidden="true" />;
 }
 
+function renderFlexibleContent(content, options = {}) {
+  const {
+    inlineTag: InlineTag = "span",
+    blockTag: BlockTag = "div",
+    className,
+    id,
+  } = options;
+  if (content == null || content === false) return null;
+  const isPrimitive =
+    typeof content === "string" ||
+    typeof content === "number" ||
+    typeof content === "bigint";
+  if (isPrimitive) {
+    return (
+      <InlineTag className={className} id={id}>
+        {content}
+      </InlineTag>
+    );
+  }
+  if (React.isValidElement(content)) {
+    if (content.type === React.Fragment) {
+      return (
+        <BlockTag className={className} id={id}>
+          {content}
+        </BlockTag>
+      );
+    }
+    const mergedClassName = [content.props?.className, className]
+      .filter(Boolean)
+      .join(" ");
+    return React.cloneElement(content, {
+      ...content.props,
+      className: mergedClassName || undefined,
+      id: content.props?.id || id,
+    });
+  }
+  const FallbackTag = BlockTag;
+  return (
+    <FallbackTag className={className} id={id}>
+      {content}
+    </FallbackTag>
+  );
+}
+
 function normalizeItem(child, index, galleryId, manifestMap) {
   if (!React.isValidElement(child)) return null;
   if (child.type !== GalleryItem && child.type?.displayName !== "GalleryItem")
     return null;
   const props = child.props || {};
-  const manifestValues = Array.isArray(props.referencedManifests)
-    ? props.referencedManifests
+  const manifestValues = props.referencedManifests
+    ? ensureArray(props.referencedManifests)
     : props.manifest
       ? [props.manifest]
-      : Array.isArray(props.manifests)
-        ? props.manifests
+      : props.manifests
+        ? ensureArray(props.manifests)
         : [];
   const manifests = resolveReferencedManifests(manifestValues, manifestMap);
   const normalizedProps = {...props};
@@ -679,9 +723,11 @@ function buildCaptionContent(itemProps) {
       {itemProps.title ? (
         <span className="canopy-gallery__title-text">{itemProps.title}</span>
       ) : null}
-      {summary ? (
-        <span className="canopy-gallery__summary">{summary}</span>
-      ) : null}
+      {renderFlexibleContent(summary, {
+        inlineTag: "span",
+        blockTag: "div",
+        className: "canopy-gallery__summary",
+      })}
       {renderMetaList(
         itemProps.meta,
         "canopy-gallery__meta canopy-gallery__meta--caption",
@@ -777,14 +823,12 @@ function GalleryModal({item, closeTargetId, navItems, navGroupName}) {
               <h3 id={modalTitleId} className="canopy-gallery__modal-title">
                 {modalTitle}
               </h3>
-              {summary ? (
-                <p
-                  id={modalDescriptionId || undefined}
-                  className="canopy-gallery__modal-summary"
-                >
-                  {summary}
-                </p>
-              ) : null}
+              {renderFlexibleContent(summary, {
+                inlineTag: "p",
+                blockTag: "div",
+                className: "canopy-gallery__modal-summary",
+                id: modalDescriptionId || undefined,
+              })}
               {renderMetaList(
                 props.meta,
                 "canopy-gallery__meta canopy-gallery__meta--modal",
