@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.9.4",
+    "date": "2026-03-03",
+    "summary": "Allow site.baseUrl override in GitHub pages.",
+    "highlights": []
+  },
+  {
     "version": "1.9.3",
     "date": "2026-03-02",
     "summary": "Style refinements.",

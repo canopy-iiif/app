@@ -39,24 +39,84 @@ jobs:
           enablement: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Determine base path for Pages
+      - name: Resolve base URL for Pages
         run: |
-          REPO_NAME="${GITHUB_REPOSITORY#*/}"
-          if [[ "$REPO_NAME" == *.github.io ]]; then
-            echo "CANOPY_BASE_PATH=" >> $GITHUB_ENV
-          else
-            echo "CANOPY_BASE_PATH=/$REPO_NAME" >> $GITHUB_ENV
-          fi
-      - name: Determine absolute base URL for Pages
-        run: |
-          OWNER="${GITHUB_REPOSITORY%/*}"
-          REPO="${GITHUB_REPOSITORY#*/}"
-          if [[ "$REPO" == "$OWNER.github.io" ]]; then
-            BASE_URL="https://${OWNER}.github.io"
-          else
-            BASE_URL="https://${OWNER}.github.io/${REPO}"
-          fi
-          echo "CANOPY_BASE_URL=${BASE_URL}" >> $GITHUB_ENV
+          node <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+          const yaml = require('js-yaml');
+
+          const envFile = process.env.GITHUB_ENV;
+          const repoSlug = process.env.GITHUB_REPOSITORY || '';
+          const [owner = '', repo = ''] = repoSlug.split('/');
+          const configPath = path.resolve('canopy.yml');
+
+          let configBaseUrl = '';
+          if (fs.existsSync(configPath)) {
+            try {
+              const raw = fs.readFileSync(configPath, 'utf8');
+              const data = yaml.load(raw) || {};
+              if (data && typeof data === 'object' && data.site && typeof data.site.baseUrl === 'string') {
+                configBaseUrl = data.site.baseUrl.trim();
+              }
+            } catch (error) {
+              console.warn('[pages] unable to read canopy.yml baseUrl:', error);
+            }
+          }
+
+          const defaultBaseUrl = () => {
+            if (!owner || !repo) return '';
+            if (repo === `${owner}.github.io`) {
+              return `https://${owner}.github.io`;
+            }
+            return `https://${owner}.github.io/${repo}`;
+          };
+
+          const normalizeBasePath = (value) => {
+            if (!value) return '';
+            const raw = String(value).trim();
+            if (!raw) return '';
+            const prefixed = raw.startsWith('/') ? raw : `/${raw}`;
+            const cleaned = prefixed.replace(/\/+$/, '');
+            return cleaned === '/' ? '' : cleaned;
+          };
+
+          const pathFromUrl = (urlString) => {
+            if (!urlString) return '';
+            try {
+              const parsed = new URL(urlString);
+              const pathname = (parsed.pathname || '').replace(/\/+$/, '');
+              if (!pathname || pathname === '/') return '';
+              return normalizeBasePath(pathname);
+            } catch (_) {
+              return '';
+            }
+          };
+
+          const resolvedBaseUrl = configBaseUrl || defaultBaseUrl();
+          const manualBasePath = normalizeBasePath(process.env.CANOPY_BASE_PATH || '');
+          const configBasePath = configBaseUrl ? pathFromUrl(configBaseUrl) : '';
+
+          let resolvedBasePath = manualBasePath;
+          if (!resolvedBasePath) {
+            if (configBaseUrl) {
+              resolvedBasePath = configBasePath;
+            } else if (repo && repo !== `${owner}.github.io`) {
+              resolvedBasePath = normalizeBasePath(`/${repo}`);
+            } else {
+              resolvedBasePath = '';
+            }
+          }
+
+          const lines = [];
+          lines.push(`CANOPY_BASE_URL=${resolvedBaseUrl || defaultBaseUrl()}`);
+          lines.push(`CANOPY_BASE_PATH=${resolvedBasePath}`);
+          if (!envFile) {
+            lines.forEach((line) => console.log(line));
+          } else {
+            fs.appendFileSync(envFile, `${lines.join('\n')}\n`);
+          }
+          NODE
 
       - name: Build site
         env:
