@@ -2,6 +2,7 @@ import {Meta, Stylesheet} from "@canopy-iiif/app/head";
 import {CanopyHeader, CanopyFooter, GoogleAnalytics} from "@canopy-iiif/app/ui";
 import ThemeStorageHydrator from "@canopy-iiif/helpers/docs/ThemeStorageHydrator.js";
 import CopyCodeButtonsRuntime from "@canopy-iiif/helpers/docs/CopyCodeButtonsRuntime.js";
+import GithubCorner from "@canopy-iiif/helpers/docs/GithubCorner.js";
 
 export function Head() {
   return (
@@ -27,29 +28,29 @@ export function Head() {
       <ThemeStorageHydrator />
       <CopyCodeButtonsRuntime />
     </>
-
-);
+  );
 }
 
 export function App({children}) {
   return (
     <>
-      <CanopyHeader
-        title="Canopy IIIF"
-        logo={Logo}
-        navigation={[
-          {href: "/docs", label: "Docs"},
-          {href: "/search", label: "Works"},
-          {href: "/about", label: "About"},
-        ]}
-      />
+      <GithubCorner>
+        <CanopyHeader
+          title="Canopy IIIF"
+          logo={Logo}
+          navigation={[
+            {href: "/docs", label: "Docs"},
+            {href: "/search", label: "Works"},
+            {href: "/about", label: "About"},
+          ]}
+        />
+      </GithubCorner>
       <main>{children}</main>
       <CanopyFooter>
         <p>Copyright 2025 Canopy IIIF, MIT License</p>
       </CanopyFooter>
     </>
-
-);
+  );
 }
 
 export const Logo = () => (
