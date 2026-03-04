@@ -93,7 +93,10 @@ export const ImageStory = (props = {}) => {
       }}
       {...rest}
     >
-      <script type="application/json" dangerouslySetInnerHTML={{__html: serializedProps}} />
+      <script
+        type="application/json"
+        dangerouslySetInnerHTML={{__html: serializedProps}}
+      />
     </div>
   );
 };

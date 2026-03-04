@@ -129,6 +129,8 @@ function resolveViewerConfig(element, props) {
       ? sanitized.viewerOptions
       : {};
   const config = { ...viewerOptions, container: element };
+  // Always hide the Storiiies credit slide for consistency.
+  config.showCreditSlide = false;
   if (sanitized.iiifContent) {
     config.manifestUrl = withBasePath(sanitized.iiifContent);
   }
