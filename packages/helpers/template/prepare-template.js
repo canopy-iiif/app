@@ -105,6 +105,12 @@ function applyTemplateOverrides() {
     const destReadme = path.join(distRoot, 'README.md');
     fs.copyFileSync(templateReadme, destReadme);
   }
+
+  const templateAgents = path.join(templateRoot, 'AGENTS.md');
+  if (fs.existsSync(templateAgents)) {
+    const destAgents = path.join(distRoot, 'AGENTS.md');
+    fs.copyFileSync(templateAgents, destAgents);
+  }
 }
 
 function rewritePackageJson(appVersion) {
