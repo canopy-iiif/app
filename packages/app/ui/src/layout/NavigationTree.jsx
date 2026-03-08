@@ -26,13 +26,11 @@ function NavigationTreeList({nodes, depth, parentKey}) {
 function NavigationTreeItem({node, depth, nodeKey}) {
   if (!node) return null;
   const hasChildren = Array.isArray(node.children) && node.children.length > 0;
-  const isRoadmap = !!node.isRoadmap;
-  const isInteractive = !!(node.href && !isRoadmap);
+  const isInteractive = !!node.href;
   const Tag = isInteractive ? "a" : "span";
   const depthClass = `depth-${normalizeDepth(depth + 1)}`;
   const classes = ["canopy-nav-tree__link", depthClass];
-  if (!isInteractive && !isRoadmap) classes.push("is-label");
-  if (isRoadmap) classes.push("is-disabled");
+  if (!isInteractive) classes.push("is-label");
   if (node.isActive) classes.push("is-active");
   const isRootLevel = depth < 0;
   const panelId = hasChildren ? `canopy-section-${nodeKey}` : null;
@@ -63,9 +61,6 @@ function NavigationTreeItem({node, depth, nodeKey}) {
             tabIndex={isInteractive ? undefined : -1}
           >
             {node.title || node.slug}
-            {isRoadmap ? (
-              <span className="canopy-nav-tree__badge">Roadmap</span>
-            ) : null}
           </Tag>
         </div>
         {allowToggle ? (

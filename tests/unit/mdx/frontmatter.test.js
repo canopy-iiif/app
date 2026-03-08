@@ -1,6 +1,5 @@
 const {
   parseFrontmatter,
-  isRoadmapEntry,
   extractTitle,
   isReservedFile,
 } = require('../../../packages/app/lib/build/mdx');
@@ -28,25 +27,6 @@ describe('parseFrontmatter', () => {
 
     expect(data).toBeNull();
     expect(content).toBe('# Title only');
-  });
-});
-
-describe('isRoadmapEntry', () => {
-  it('accepts boolean and numeric truthy values', () => {
-    expect(isRoadmapEntry({ roadmap: true })).toBe(true);
-    expect(isRoadmapEntry({ roadmap: 1 })).toBe(true);
-  });
-
-  it('normalizes string inputs regardless of case or whitespace', () => {
-    expect(isRoadmapEntry({ roadmap: ' YES ' })).toBe(true);
-    expect(isRoadmapEntry({ roadmap: 'no' })).toBe(false);
-    expect(isRoadmapEntry({ roadmap: 'Off' })).toBe(false);
-  });
-
-  it('treats missing or falsy values as not being roadmap entries', () => {
-    expect(isRoadmapEntry({})).toBe(false);
-    expect(isRoadmapEntry(null)).toBe(false);
-    expect(isRoadmapEntry({ roadmap: 0 })).toBe(false);
   });
 });
 

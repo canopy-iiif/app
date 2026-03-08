@@ -388,16 +388,6 @@ async function processContentEntry(absPath, pagesMetadata = []) {
         ? mdx.parseFrontmatter(source)
         : { data: null };
       const frontmatterData = frontmatter && isPlainObject(frontmatter.data) ? frontmatter.data : null;
-      const isRoadmap = frontmatterData && typeof mdx.isRoadmapEntry === 'function'
-        ? mdx.isRoadmapEntry(frontmatterData)
-        : false;
-      if (isRoadmap) {
-        try { await fsp.rm(outPath, { force: true }); } catch (_) {}
-        try {
-          log(`• Skipped roadmap page ${path.relative(process.cwd(), absPath)}\n`, 'yellow', { dim: true });
-        } catch (_) {}
-        return;
-      }
       ensureDirSync(path.dirname(outPath));
       try { log(`• Processing MDX ${absPath}\n`, 'blue'); } catch (_) {}
       const base = path.basename(absPath);
