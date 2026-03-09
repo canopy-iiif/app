@@ -66,31 +66,147 @@ At each locale level, you may also choose to customize the user interface and na
 
 ### locale.yml
 
-The default `content/locale.yml` defines language for user interface search labels, filter copy, language-toggle text). You may then create `content/<lang>/locale.yml` to override any subset of keys. To accommodate some of fixed routes, update `routes` for `search` and `works` as needed.
+The default `content/locale.yml` defines strings for search labels, filter copy, error notices, and the language toggle. Create `content/<lang>/locale.yml` to override keys. Update `routes` for `search` and `works` if you need translated slugs. If any key is undefined, entries continue to inherit from the English source. If `content/locale.yml` and/or `content/<lang>/locale.yml` is missing, the user interface will automatically fall back to hardcoded English terms.
 
 ```yaml filename="content/locale.yml"
-ui:
-  search:
-    label: Search
-    placeholder: Search everything
-  filter:
-    label: Filter
-  languageToggle:
-    label: Language
+common:
+  actions:
+    open: "Open"
+    close: "Close"
+    clear: "Clear"
+    clear_all: "Clear all"
+    done: "Done"
+    show: "Show"
+    hide: "Hide"
+  nouns:
+    search: "Search"
+    filters: "Filters"
+    results: "results"
+    values: "values"
+    types: "types"
+    items: "items"
+    navigation: "navigation"
+    section_navigation: "section navigation"
+    content_navigation: "content navigation"
+    gallery: "gallery"
+    gallery_thumbnails: "gallery thumbnails"
+    map: "map"
+    map_data: "map data"
+    map_locations: "map locations"
+    item_label: "Item"
+    details: "details"
+    breadcrumb: "Breadcrumb"
+    home: "Home"
+  types:
+    work: "Works"
+    page: "Pages"
+    docs: "Docs"
+  statuses:
+    loading: "Loading…"
+    empty_short: "No {content}"
+    empty_detail: "No {content} available."
+    unavailable: "{content} unavailable."
+    unavailable_detail: "{content} is unavailable."
+    failed: "Unable to load {content}."
+    loading_content: "Loading {content}…"
+    summary_content: "Showing {shown} of {total} {content}"
+    search_summary: 'Found {shown} of {total} in {type} for "{query}"'
+    no_matches: "No matches found."
+  phrases:
+    placeholder_search: "Search…"
+    results_label: "Search results"
+    open_content: "Open {content}"
+    close_content: "Close {content}"
+    show_content: "Show {content}"
+    hide_content: "Hide {content}"
+    nav_label: "{content} navigation"
+    search_content: "Search {content}"
+    filter_values: "Filter {content} values"
+    clear_content_search: "Clear {content} search"
+    none_applied: "No {content} applied"
+    scroll_direction_content: "Scroll {direction} through {content}"
+    step_content: "{direction} {content}"
+    item_numbered: "{content} {index}"
+    content_key: "{content} key"
+  directions:
+    left: "left"
+    right: "right"
+    previous: "Previous"
+    next: "Next"
+  misc:
+    referenced_by: "Referenced by"
 routes:
   search: search
   works: works
 ```
 
 ```yaml filename="content/es/locale.yml"
-ui:
-  search:
-    label: Buscar
-    placeholder: Buscar en todo
-  filter:
-    label: Filtrar
-  languageToggle:
-    label: Idioma
+common:
+  actions:
+    open: "Abrir"
+    close: "Cerrar"
+    clear: "Borrar"
+    clear_all: "Borrar todo"
+    done: "Listo"
+    show: "Mostrar"
+    hide: "Ocultar"
+  nouns:
+    search: "Buscar"
+    filters: "Filtros"
+    results: "resultados"
+    values: "valores"
+    types: "tipos"
+    items: "elementos"
+    navigation: "navegación"
+    section_navigation: "navegación de sección"
+    content_navigation: "navegación de contenido"
+    gallery: "galería"
+    gallery_thumbnails: "miniaturas de galería"
+    map: "mapa"
+    map_data: "datos del mapa"
+    map_locations: "lugares del mapa"
+    item_label: "Elemento"
+    details: "detalles"
+    breadcrumb: "Miga de pan"
+    home: "Inicio"
+  types:
+    work: "Obras"
+    page: "Páginas"
+    docs: "Docs"
+  statuses:
+    loading: "Cargando…"
+    empty_short: "Sin {content}"
+    empty_detail: "No hay {content} disponible."
+    unavailable: "{content} no disponible."
+    unavailable_detail: "{content} no está disponible."
+    failed: "No se puede cargar {content}."
+    loading_content: "Cargando {content}…"
+    summary_content: "Mostrando {shown} de {total} {content}"
+    search_summary: 'Se encontraron {shown} de {total} en {type} para "{query}"'
+    no_matches: "Sin coincidencias."
+  phrases:
+    placeholder_search: "Buscar…"
+    results_label: "Resultados de búsqueda"
+    open_content: "Abrir {content}"
+    close_content: "Cerrar {content}"
+    show_content: "Mostrar {content}"
+    hide_content: "Ocultar {content}"
+    nav_label: "Navegación de {content}"
+    search_content: "Buscar {content}"
+    filter_values: "Filtrar valores de {content}"
+    clear_content_search: "Borrar búsqueda de {content}"
+    none_applied: "Sin {content} aplicados"
+    scroll_direction_content: "Desplazar {direction} en {content}"
+    step_content: "{direction} {content}"
+    item_numbered: "{content} {index}"
+    content_key: "Clave de {content}"
+  directions:
+    left: "izquierda"
+    right: "derecha"
+    previous: "Anterior"
+    next: "Siguiente"
+  misc:
+    referenced_by: "Referenciado por"
 routes:
   search: buscar
   works: obras

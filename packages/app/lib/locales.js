@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
 const {resolveCanopyConfigPath} = require('./config-path');
+const DEFAULT_LOCALE_MESSAGES = require('./default-locale');
 
 const CONTENT_DIR = path.resolve('content');
 
@@ -102,7 +103,8 @@ function deepMerge(base, override) {
 
 function readLocaleMessages(lang) {
   const basePath = path.join(CONTENT_DIR, 'locale.yml');
-  const defaultMessages = readYamlFile(basePath) || {};
+  const userMessages = readYamlFile(basePath);
+  const defaultMessages = deepMerge(DEFAULT_LOCALE_MESSAGES, userMessages) || {};
   if (!lang) return defaultMessages;
   const langPath = path.join(CONTENT_DIR, lang, 'locale.yml');
   const override = readYamlFile(langPath);
