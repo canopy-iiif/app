@@ -1,9 +1,17 @@
 @use "../buttons" as buttons;
 
 @layer components {
+  .canopy-modal--filters {
+    align-items: stretch;
+    justify-content: stretch;
+    padding: 0;
+  }
+
   .canopy-modal--filters .canopy-modal__panel {
     width: min(100%, 48rem);
-    max-height: min(90vh, 720px);
+    height: 100%;
+    max-height: none;
+    margin: 0;
   }
 
   .canopy-modal--filters .canopy-modal__body--filters {

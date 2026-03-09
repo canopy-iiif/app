@@ -1,5 +1,8 @@
 import React from "react";
 import CanopyModal from "../layout/CanopyModal.jsx";
+import getSafePageContext from "../layout/pageContext.js";
+
+const PageContext = getSafePageContext();
 
 function toArray(input) {
   if (!input) return [];
@@ -138,7 +141,7 @@ export default function SearchFiltersDialog(props = {}) {
     onClear,
     title,
     subtitle = "Refine results by metadata",
-    brandLabel = "Canopy IIIF",
+    brandLabel: brandLabelProp,
     brandHref = "/",
     logo: SiteLogo,
   } = props;
@@ -164,6 +167,16 @@ export default function SearchFiltersDialog(props = {}) {
     };
   }, [open]);
 
+  const context = React.useContext(PageContext);
+  const contextSiteTitle =
+    context && context.site && typeof context.site.title === "string"
+      ? context.site.title.trim()
+      : "";
+  const resolvedBrandLabel =
+    typeof brandLabelProp === "string" && brandLabelProp.trim()
+      ? brandLabelProp
+      : contextSiteTitle || "Site title";
+
   if (!open) return null;
 
   const brandId = "canopy-modal-filters-label";
@@ -175,7 +188,7 @@ export default function SearchFiltersDialog(props = {}) {
       variant="filters"
       open
       labelledBy={brandId}
-      label={brandLabel}
+      label={resolvedBrandLabel}
       logo={SiteLogo}
       href={brandHref}
       closeLabel="Close filters"

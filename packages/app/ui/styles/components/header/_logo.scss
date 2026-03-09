@@ -6,6 +6,8 @@
     font-size: 1.382rem;
     color: var(--color-gray-default) !important;
     line-height: 1;
+    min-width: 0;
+    max-width: 100%;
 
     &:hover {
       text-decoration: none;
@@ -14,6 +16,7 @@
     svg {
       height: 1.65rem;
       display: block;
+      flex: 0 0 auto;
 
       circle.canopy-logo-backlight {
         fill: var(--color-accent-900);
@@ -24,6 +27,18 @@
         fill: var(--color-accent-default);
         color: var(--color-accent-default);
       }
+    }
+
+    span {
+      display: block;
+      min-width: 0;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      height: 3rem;
+      line-height: 3rem;
     }
   }
 

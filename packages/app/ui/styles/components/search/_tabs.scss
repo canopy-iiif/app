@@ -34,3 +34,14 @@
   transition-property: transform, width, opacity;
   transition-timing-function: ease-out;
 }
+
+.canopy-search-tabs__filters-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.canopy-search-tabs__filters-count {
+  font-weight: 500;
+  opacity: 0.8;
+}

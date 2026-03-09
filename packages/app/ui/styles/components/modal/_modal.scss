@@ -44,11 +44,20 @@
     align-items: center;
     gap: 0.75rem;
     margin-bottom: 1.25rem;
+    min-width: 0;
+    padding-right: 3rem;
   }
 
   .canopy-modal__brand .canopy-logo {
     font-size: 1.35rem;
     line-height: 1;
+    max-width: 100%;
+  }
+
+  .canopy-modal__brand-link {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100%;
   }
 
   .canopy-modal__title {
@@ -67,6 +76,11 @@
     height: 2.5rem;
     color: var(--color-accent-900);
     border: none;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      var(--color-gray-50) 60%
+    );
 
     svg path {
       stroke-width: 2.618px;

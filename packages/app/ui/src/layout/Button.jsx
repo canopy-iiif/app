@@ -10,11 +10,12 @@ export default function Button({
   variant = 'primary',
   className = '',
   children,
+  as: Element = 'a',
   ...rest
 }) {
   const resolvedVariant = VARIANTS.has(variant) ? variant : 'primary';
   const computedRel =
-    target === '_blank' && !rel ? 'noopener noreferrer' : rel;
+    Element === 'a' && target === '_blank' && !rel ? 'noopener noreferrer' : rel;
   const content = children != null ? children : label;
 
   if (!content) return null;
@@ -27,15 +28,19 @@ export default function Button({
     .filter(Boolean)
     .join(' ');
 
-  return (
-    <a
-      href={href}
-      className={classes}
-      target={target}
-      rel={computedRel}
-      {...rest}
-    >
-      {content}
-    </a>
-  );
+  const elementProps = {
+    className: classes,
+    ...rest,
+  };
+
+  if (Element === 'a') {
+    elementProps.href = href;
+    if (target) elementProps.target = target;
+    if (computedRel) elementProps.rel = computedRel;
+  } else {
+    if (typeof target !== 'undefined') elementProps.target = target;
+    if (computedRel) elementProps.rel = computedRel;
+  }
+
+  return <Element {...elementProps}>{content}</Element>;
 }

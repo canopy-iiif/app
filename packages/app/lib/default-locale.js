@@ -1,3 +1,7 @@
+/**
+ * This file is auto-generated from content/locale.yml.
+ * Run `node packages/helpers/locales/sync-default-locale.js` after updating locale copy.
+ */
 module.exports = {
   common: {
     actions: {
@@ -7,7 +11,7 @@ module.exports = {
       clear_all: 'Clear all',
       done: 'Done',
       show: 'Show',
-      hide: 'Hide',
+      hide: 'Hide'
     },
     nouns: {
       search: 'Search',
@@ -27,12 +31,12 @@ module.exports = {
       item_label: 'Item',
       details: 'details',
       breadcrumb: 'Breadcrumb',
-      home: 'Home',
+      home: 'Home'
     },
     types: {
       work: 'Works',
       page: 'Pages',
-      docs: 'Docs',
+      docs: 'Docs'
     },
     statuses: {
       loading: 'Loading…',
@@ -44,7 +48,7 @@ module.exports = {
       loading_content: 'Loading {content}…',
       summary_content: 'Showing {shown} of {total} {content}',
       search_summary: 'Found {shown} of {total} in {type} for "{query}"',
-      no_matches: 'No matches found.',
+      no_matches: 'No matches found.'
     },
     phrases: {
       placeholder_search: 'Search…',
@@ -61,16 +65,16 @@ module.exports = {
       scroll_direction_content: 'Scroll {direction} through {content}',
       step_content: '{direction} {content}',
       item_numbered: '{content} {index}',
-      content_key: '{content} key',
+      content_key: '{content} key'
     },
     directions: {
       left: 'left',
       right: 'right',
       previous: 'Previous',
-      next: 'Next',
+      next: 'Next'
     },
     misc: {
-      referenced_by: 'Referenced by',
-    },
-  },
+      referenced_by: 'Referenced by'
+    }
+  }
 };

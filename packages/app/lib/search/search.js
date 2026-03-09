@@ -16,6 +16,7 @@ const {
   getLocaleRouteEntries,
   getDefaultRoute,
   getDefaultLocaleCode,
+  getSiteTitle,
 } = require('../common');
 const { resolveCanopyConfigPath } = require('../config-path');
 
@@ -310,6 +311,7 @@ async function buildSearchPageForEntry(routeEntry) {
       typeof searchPageMeta.description === 'string'
         ? searchPageMeta.description
         : '';
+    const siteTitle = typeof getSiteTitle === 'function' ? getSiteTitle() : '';
     const pageDetails = {
       title: pageTitle,
       description: pageDescription,
@@ -366,6 +368,10 @@ async function buildSearchPageForEntry(routeEntry) {
       }
     }
     let headExtra = vendorTags + head + importMap + customRuntimeTag;
+    if (siteTitle && typeof siteTitle === 'string') {
+      const siteTitleScript = `<script>window.CANOPY_SITE_TITLE=${JSON.stringify(siteTitle)}</script>`;
+      headExtra = siteTitleScript + headExtra;
+    }
     try {
       const { BASE_PATH } = require('../common');
       if (BASE_PATH) {

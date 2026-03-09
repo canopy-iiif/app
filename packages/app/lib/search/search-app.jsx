@@ -6,6 +6,38 @@ import {
   SearchFiltersDialog,
 } from "@canopy-iiif/app/ui";
 import resultTemplates from "__CANOPY_SEARCH_RESULT_TEMPLATES__";
+const SITE_TITLE_FALLBACK = "Site title";
+
+function readSiteTitleFromGlobals() {
+  try {
+    if (
+      typeof window !== "undefined" &&
+      typeof window.CANOPY_SITE_TITLE === "string"
+    ) {
+      const raw = window.CANOPY_SITE_TITLE.trim();
+      if (raw) return raw;
+    }
+  } catch (_) {}
+  try {
+    if (
+      typeof globalThis !== "undefined" &&
+      typeof globalThis.CANOPY_SITE_TITLE === "string"
+    ) {
+      const raw = globalThis.CANOPY_SITE_TITLE.trim();
+      if (raw) return raw;
+    }
+  } catch (_) {}
+  try {
+    if (typeof document !== "undefined" && document.title) {
+      const trimmed = document.title.trim();
+      if (!trimmed) return "";
+      const parts = trimmed.split("|").map((part) => part.trim()).filter(Boolean);
+      if (parts.length > 1) return parts[parts.length - 1];
+      return trimmed;
+    }
+  } catch (_) {}
+  return "";
+}
 
 function readBasePath() {
   const normalize = (val) => {
@@ -58,6 +90,11 @@ function apiUrl(pathname) {
   const cleaned = typeof pathname === 'string' ? pathname.replace(/^\/+/, '') : '';
   const base = apiBasePath();
   return `${base}/${cleaned}`;
+}
+
+function resolveSiteTitle() {
+  const title = readSiteTitleFromGlobals();
+  return title || SITE_TITLE_FALLBACK;
 }
 
 function readDocumentLocale() {
@@ -909,6 +946,8 @@ function TabsMount() {
   const handleToggle = (facetSlug, valueSlug, checked) => {
     if (toggleFilter) toggleFilter(facetSlug, valueSlug, checked);
   };
+  const brandLabel = useMemo(() => resolveSiteTitle(), []);
+  const brandHref = useMemo(() => withBasePath("/"), []);
   return (
     <>
       <SearchTabsUI
@@ -928,6 +967,8 @@ function TabsMount() {
           selected={filters}
           onToggle={handleToggle}
           onClear={() => clearFilters && clearFilters()}
+          brandLabel={brandLabel}
+          brandHref={brandHref}
         />
       ) : null}
     </>

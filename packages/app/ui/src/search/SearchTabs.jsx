@@ -1,4 +1,5 @@
 import React, {useRef, useState, useEffect} from "react";
+import Button from "../layout/Button.jsx";
 
 export default function SearchTabs({
   type = "all",
@@ -15,7 +16,12 @@ export default function SearchTabs({
     t && t.length ? t.charAt(0).toUpperCase() + t.slice(1) : "";
 
   const hasFilters = typeof onOpenFilters === "function";
-  const filterBadge = activeFilterCount > 0 ? ` (${activeFilterCount})` : "";
+  const filterBadge =
+    activeFilterCount > 0 ? (
+      <span className="canopy-search-tabs__filters-count">
+        ({activeFilterCount})
+      </span>
+    ) : null;
 
   // --- highlight state (ported from RadioGroup idea) ---
   const [itemBoundingBox, setItemBoundingBox] = useState(null);
@@ -109,17 +115,17 @@ export default function SearchTabs({
       </div>
 
       {hasFilters ? (
-        <button
+        <Button
+          as="button"
           type="button"
+          variant="primary"
           onClick={() => onOpenFilters && onOpenFilters()}
           aria-expanded={filtersOpen ? "true" : "false"}
-          className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
+          className="canopy-search-tabs__filters-button"
         >
-          <span>
-            {filtersLabel}
-            {filterBadge}
-          </span>
-        </button>
+          <span>{filtersLabel}</span>
+          {filterBadge}
+        </Button>
       ) : null}
     </div>
   );
