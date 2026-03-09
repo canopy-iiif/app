@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.9.8",
+    "date": "2026-03-09",
+    "summary": "Define and document UI terms for locale.yml.",
+    "highlights": []
+  },
+  {
     "version": "1.9.7",
     "date": "2026-03-04",
     "summary": "Disable credit slide on ImageStory component.",
