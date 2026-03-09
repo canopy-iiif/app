@@ -68,7 +68,7 @@ At each locale level, you may also choose to customize the user interface and na
 
 The default `content/locale.yml` defines strings for search labels, filter copy, error notices, and the language toggle. Create `content/<lang>/locale.yml` to override keys. Update `routes` for `search` and `works` if you need translated slugs. If any key is undefined, entries continue to inherit from the English source. If `content/locale.yml` and/or `content/<lang>/locale.yml` is missing, the user interface will automatically fall back to hardcoded English terms.
 
-```yaml filename="content/locale.yml"
+```yaml filename="content/locale.yml" copy
 common:
   actions:
     open: "Open"
@@ -140,7 +140,7 @@ routes:
   works: works
 ```
 
-```yaml filename="content/es/locale.yml"
+```yaml filename="content/es/locale.yml" copy
 common:
   actions:
     open: "Abrir"
