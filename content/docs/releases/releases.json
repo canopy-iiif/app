@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.9.12",
+    "date": "2026-03-10",
+    "summary": "Remove org deploy workflow from templates.",
+    "highlights": []
+  },
+  {
     "version": "1.9.11",
     "date": "2026-03-10",
     "summary": "Update homepage content for i18n template.",

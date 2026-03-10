@@ -127,6 +127,13 @@ function applyTemplateOverrides(templateRoot) {
     const destCanopy = path.join(distRoot, 'canopy.yml');
     fs.copyFileSync(templateCanopy, destCanopy);
   }
+
+  const workflowDir = path.join(distRoot, '.github', 'workflows');
+  const workflowsToRemove = ['deploy-org-site.yml'];
+  for (const workflow of workflowsToRemove) {
+    const target = path.join(workflowDir, workflow);
+    if (fs.existsSync(target)) rmrf(target);
+  }
 }
 
 function rewritePackageJson(appVersion) {
