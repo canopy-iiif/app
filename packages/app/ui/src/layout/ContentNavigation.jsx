@@ -1,5 +1,6 @@
 import React from "react";
 import NavigationTree from "./NavigationTree.jsx";
+import {useLocale} from "../locale/index.js";
 
 const SCROLL_OFFSET_REM = 1.618;
 const MAX_HEADING_DEPTH = 3;
