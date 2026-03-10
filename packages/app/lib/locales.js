@@ -111,6 +111,34 @@ function readLocaleMessages(lang) {
   return deepMerge(defaultMessages, override);
 }
 
+function serializeForScript(value) {
+  try {
+    return JSON.stringify(value || {}).replace(/</g, '\\u003c');
+  } catch (_) {
+    return '{}';
+  }
+}
+
+function buildLocaleRuntimeScript(localeCode) {
+  let messages = null;
+  try {
+    messages = readLocaleMessages(localeCode);
+  } catch (_) {
+    messages = null;
+  }
+  if (!messages) {
+    try {
+      messages = readLocaleMessages(null);
+    } catch (_) {
+      messages = DEFAULT_LOCALE_MESSAGES;
+    }
+  }
+  const langValue = typeof localeCode === 'string' ? localeCode : '';
+  const serializedMessages = serializeForScript(messages || {});
+  const serializedCode = JSON.stringify(langValue || '').replace(/</g, '\\u003c');
+  return `<script>window.CANOPY_LOCALE_CODE=${serializedCode};window.CANOPY_LOCALE_MESSAGES=${serializedMessages};</script>`;
+}
+
 function normalizeRouteValue(value) {
   if (typeof value !== 'string') return '';
   const trimmed = value.trim();
@@ -170,5 +198,6 @@ module.exports = {
   readCanopyLocalesWithMessages,
   readLocaleMessages,
   readLocaleRoutes,
+  buildLocaleRuntimeScript,
   DEFAULT_LOCALE_ROUTES,
 };

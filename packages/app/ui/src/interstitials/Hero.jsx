@@ -4,6 +4,7 @@ import navigationHelpers from "../../../lib/components/navigation.js";
 import {computeHeroHeightStyle} from "./hero-utils.js";
 import Button from "../layout/Button.jsx";
 import ButtonWrapper from "../layout/ButtonWrapper.jsx";
+import {useLocale} from "../locale/index.js";
 
 const NavIconBase = ({children, ...rest}) => (
   <svg
@@ -166,9 +167,10 @@ export default function Hero({
   style = {},
   background = "theme",
   variant = "featured",
-  homeLabel = "Home",
+  homeLabel,
   ...rest
 }) {
+  const {getString} = useLocale();
   const normalizedVariant = normalizeVariant(variant);
   const isBreadcrumbVariant = normalizedVariant === "breadcrumb";
   const PageContext =
@@ -254,7 +256,10 @@ export default function Hero({
   const breadcrumbItems = React.useMemo(() => {
     if (!isBreadcrumbVariant) return [];
     const items = [];
-    const label = typeof homeLabel === "string" ? homeLabel.trim() : "";
+    const label = (homeLabel != null
+      ? homeLabel
+      : getString("common.nouns.home", "Home"))
+      .trim();
     if (label) {
       items.push({title: label, href: applyBasePath("/")});
     }
@@ -280,7 +285,10 @@ export default function Hero({
 
   const breadcrumbNode = isBreadcrumbVariant && breadcrumbItems.length
     ? (
-        <nav className="canopy-interstitial__breadcrumb" aria-label="Breadcrumb">
+        <nav
+          className="canopy-interstitial__breadcrumb"
+          aria-label={getString("common.nouns.breadcrumb", "Breadcrumb")}
+        >
           {breadcrumbItems.map((item, idx) => {
             const isLast = idx === breadcrumbItems.length - 1;
             const key = `${item.title || idx}-${idx}`;

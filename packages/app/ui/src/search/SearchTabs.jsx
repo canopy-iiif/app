@@ -1,5 +1,6 @@
 import React, {useRef, useState, useEffect} from "react";
 import Button from "../layout/Button.jsx";
+import {useLocale} from "../locale/index.js";
 
 export default function SearchTabs({
   type = "all",
@@ -11,17 +12,43 @@ export default function SearchTabs({
   filtersLabel = "Filters",
   filtersOpen = false,
 }) {
+  const {getString, formatString} = useLocale();
+  const typeLabels = React.useMemo(
+    () => ({
+      work: getString("common.types.work", "Works"),
+      page: getString("common.types.page", "Pages"),
+      docs: getString("common.types.docs", "Docs"),
+    }),
+    [getString],
+  );
+  const allTypesLabel = getString("common.nouns.items", "items");
   const orderedTypes = Array.isArray(types) ? types : [];
-  const toLabel = (t) =>
-    t && t.length ? t.charAt(0).toUpperCase() + t.slice(1) : "";
+  const toLabel = (t) => {
+    const key = String(t || "").toLowerCase();
+    if (!key) return "";
+    if (key === "all") {
+      return allTypesLabel ? String(allTypesLabel) : "All";
+    }
+    if (typeLabels[key]) return typeLabels[key];
+    return key.charAt(0).toUpperCase() + key.slice(1);
+  };
 
   const hasFilters = typeof onOpenFilters === "function";
+  const resolvedFiltersLabel =
+    typeof filtersLabel === "string" && filtersLabel.trim()
+      ? filtersLabel
+      : getString("common.nouns.filters", "Filters");
   const filterBadge =
     activeFilterCount > 0 ? (
       <span className="canopy-search-tabs__filters-count">
         ({activeFilterCount})
       </span>
     ) : null;
+  const searchTypesLabel = formatString(
+    "common.phrases.search_content",
+    "Search types",
+    {content: getString("common.nouns.types", "types")},
+  );
 
   // --- highlight state (ported from RadioGroup idea) ---
   const [itemBoundingBox, setItemBoundingBox] = useState(null);
@@ -78,7 +105,7 @@ export default function SearchTabs({
     <div className="canopy-search-tabs-wrapper">
       <div
         role="tablist"
-        aria-label="Search types"
+        aria-label={searchTypesLabel || "Search types"}
         className="canopy-search-tabs"
         ref={wrapperRef}
         onMouseLeave={resetHighlight}
@@ -123,7 +150,7 @@ export default function SearchTabs({
           aria-expanded={filtersOpen ? "true" : "false"}
           className="canopy-search-tabs__filters-button"
         >
-          <span>{filtersLabel}</span>
+          <span>{resolvedFiltersLabel}</span>
           {filterBadge}
         </Button>
       ) : null}

@@ -1,6 +1,7 @@
 import React from "react";
 import navigationHelpers from "../../../lib/components/navigation.js";
 import referenced from "../../../lib/components/referenced.js";
+import {useLocale} from "../locale/index.js";
 
 function getPageContext() {
   if (!navigationHelpers || typeof navigationHelpers.getPageContext !== "function") {
@@ -25,12 +26,15 @@ function resolveReferences(manifestId, contextList) {
 
 export default function References({
   id = "",
-  title = "Referenced by",
+  title,
   emptyLabel = null,
   className = "",
   children,
   ...rest
 }) {
+  const {getString} = useLocale();
+  const resolvedTitle =
+    title != null ? title : getString("common.misc.referenced_by", "Referenced by");
   const PageContext = getPageContext();
   const context = PageContext ? React.useContext(PageContext) : null;
   const contextPage = context && context.page ? context.page : null;
@@ -50,7 +54,7 @@ export default function References({
   return (
     <dl className={containerClass} {...rest}>
       <div className="references__group">
-        <dt>{title}</dt>
+        <dt>{resolvedTitle}</dt>
         {entries.map((entry) => (
           <dd key={entry.href} className="references__item">
             <a href={entry.href}>{entry.title || entry.href}</a>

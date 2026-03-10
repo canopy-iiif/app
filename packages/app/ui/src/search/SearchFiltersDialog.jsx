@@ -1,6 +1,7 @@
 import React from "react";
 import CanopyModal from "../layout/CanopyModal.jsx";
 import getSafePageContext from "../layout/pageContext.js";
+import {useLocale} from "../locale/index.js";
 
 const PageContext = getSafePageContext();
 
@@ -41,7 +42,17 @@ function facetMatches(values = [], query) {
   return [...starts, ...contains].slice(0, 10);
 }
 
-function FacetSection({facet, selected, onToggle}) {
+function FacetSection({
+  facet,
+  selected,
+  onToggle,
+  searchPlaceholder,
+  filterLabelBuilder,
+  clearButtonLabel,
+  clearAriaBuilder,
+  noMatchesLabel,
+  emptyValuesLabel,
+}) {
   if (!facet || !facet.label || !Array.isArray(facet.values)) return null;
   const {label, slug, values} = facet;
   const selectedValues = selected.get(String(slug)) || new Set();
@@ -71,23 +82,31 @@ function FacetSection({facet, selected, onToggle}) {
             type="search"
             value={quickQuery}
             onChange={(event) => setQuickQuery(event.target.value)}
-            placeholder="Search values"
+            placeholder={searchPlaceholder}
             className="canopy-search-filters__quick-input"
-            aria-label={`Filter ${label} values`}
+            aria-label={
+              filterLabelBuilder
+                ? filterLabelBuilder(label)
+                : `Filter ${label} values`
+            }
           />
           {quickQuery ? (
             <button
               type="button"
               onClick={() => setQuickQuery("")}
               className="canopy-search-filters__quick-clear"
-              aria-label={`Clear ${label} filter search`}
+              aria-label={
+                clearAriaBuilder
+                  ? clearAriaBuilder(label)
+                  : `Clear ${label} filter search`
+              }
             >
-              Clear
+              {clearButtonLabel || "Clear"}
             </button>
           ) : null}
         </div>
         {hasQuery && !filteredValues.length ? (
-          <p className="canopy-search-filters__facet-notice">No matches found.</p>
+          <p className="canopy-search-filters__facet-notice">{noMatchesLabel}</p>
         ) : null}
         <ul className="canopy-search-filters__facet-list">
           {filteredValues.map((entry) => {
@@ -123,7 +142,7 @@ function FacetSection({facet, selected, onToggle}) {
             );
           })}
           {!filteredValues.length && !hasQuery ? (
-            <li className="canopy-search-filters__facet-empty">No values available.</li>
+            <li className="canopy-search-filters__facet-empty">{emptyValuesLabel}</li>
           ) : null}
         </ul>
       </div>
@@ -140,12 +159,50 @@ export default function SearchFiltersDialog(props = {}) {
     onToggle,
     onClear,
     title,
-    subtitle = "Refine results by metadata",
+    subtitle,
     brandLabel: brandLabelProp,
     brandHref = "/",
     logo: SiteLogo,
   } = props;
 
+  const {getString, formatString} = useLocale();
+  const filtersLabel = getString("common.nouns.filters", "filters");
+  const valuesLabel = getString("common.nouns.values", "values");
+  const metadataLabel = getString("common.nouns.metadata", "metadata");
+  const searchValuesPlaceholder = formatString(
+    "common.phrases.search_content",
+    "Search values",
+    {content: valuesLabel},
+  );
+  const filterValuesLabel = (content) =>
+    formatString(
+      "common.phrases.filter_values",
+      "Filter {content} values",
+      {content: content || valuesLabel},
+    );
+  const clearSearchLabel = (content) =>
+    formatString(
+      "common.phrases.clear_content_search",
+      "Clear {content} search",
+      {content: content || filtersLabel},
+    );
+  const emptyValuesLabel = formatString(
+    "common.statuses.empty_detail",
+    "No {content} available.",
+    {content: valuesLabel},
+  );
+  const noMatchesLabel = getString(
+    "common.statuses.no_matches",
+    "No matches found.",
+  );
+  const subtitleText =
+    subtitle != null
+      ? subtitle
+      : formatString(
+          "common.phrases.filter_values",
+          "Filter {content} values",
+          {content: metadataLabel},
+        );
   const selectedMap = normalizeSelected(selected);
   const activeCount = Array.from(selectedMap.values()).reduce(
     (total, set) => total + set.size,
@@ -180,7 +237,31 @@ export default function SearchFiltersDialog(props = {}) {
   if (!open) return null;
 
   const brandId = "canopy-modal-filters-label";
-  const subtitleText = subtitle != null ? subtitle : title;
+  const resolvedSubtitle = subtitleText || title;
+  const modalCloseLabel = formatString(
+    "common.phrases.close_content",
+    "Close {content}",
+    {content: filtersLabel},
+  );
+  const filterUnavailableLabel = formatString(
+    "common.statuses.unavailable_detail",
+    "{content} is unavailable.",
+    {content: filtersLabel},
+  );
+  const noneAppliedLabel = formatString(
+    "common.phrases.none_applied",
+    "No {content} applied",
+    {content: filtersLabel},
+  );
+  const appliedCountLabel = activeCount
+    ? formatString(
+        "common.phrases.applied_count",
+        "{count} {content} applied",
+        {count: activeCount, content: filtersLabel},
+      )
+    : noneAppliedLabel;
+  const clearAllLabel = getString("common.actions.clear_all", "Clear all");
+  const doneLabel = getString("common.actions.done", "Done");
 
   return (
     <CanopyModal
@@ -191,13 +272,13 @@ export default function SearchFiltersDialog(props = {}) {
       label={resolvedBrandLabel}
       logo={SiteLogo}
       href={brandHref}
-      closeLabel="Close filters"
+      closeLabel={modalCloseLabel || "Close"}
       onClose={() => onOpenChange && onOpenChange(false)}
       onBackgroundClick={() => onOpenChange && onOpenChange(false)}
       bodyClassName="canopy-modal__body--filters"
     >
-      {subtitleText ? (
-        <p className="canopy-search-filters__subtitle">{subtitleText}</p>
+      {resolvedSubtitle ? (
+        <p className="canopy-search-filters__subtitle">{resolvedSubtitle}</p>
       ) : null}
       <div className="canopy-search-filters__body">
         {Array.isArray(facets) && facets.length ? (
@@ -208,21 +289,23 @@ export default function SearchFiltersDialog(props = {}) {
                 facet={facet}
                 selected={selectedMap}
                 onToggle={onToggle}
+                searchPlaceholder={searchValuesPlaceholder}
+                filterLabelBuilder={filterValuesLabel}
+                clearButtonLabel={getString("common.actions.clear", "Clear")}
+                clearAriaBuilder={clearSearchLabel}
+                noMatchesLabel={noMatchesLabel}
+                emptyValuesLabel={emptyValuesLabel}
               />
             ))}
           </div>
         ) : (
           <p className="canopy-search-filters__empty">
-            No filters are available for this collection.
+            {filterUnavailableLabel}
           </p>
         )}
       </div>
       <footer className="canopy-search-filters__footer">
-        <div>
-          {activeCount
-            ? `${activeCount} filter${activeCount === 1 ? '' : 's'} applied`
-            : 'No filters applied'}
-        </div>
+        <div>{appliedCountLabel}</div>
         <div className="canopy-search-filters__footer-actions">
           <button
             type="button"
@@ -232,14 +315,14 @@ export default function SearchFiltersDialog(props = {}) {
             disabled={!activeCount}
             className="canopy-search-filters__button canopy-search-filters__button--secondary"
           >
-            Clear all
+            {clearAllLabel}
           </button>
           <button
             type="button"
             onClick={() => onOpenChange && onOpenChange(false)}
             className="canopy-search-filters__button canopy-search-filters__button--primary"
           >
-            Done
+            {doneLabel}
           </button>
         </div>
       </footer>

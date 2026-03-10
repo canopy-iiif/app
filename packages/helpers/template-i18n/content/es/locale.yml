@@ -17,6 +17,8 @@ common:
     navigation: "navegación"
     section_navigation: "navegación de sección"
     content_navigation: "navegación de contenido"
+    primary_navigation: "navegación principal"
+    metadata: "metadatos"
     gallery: "galería"
     gallery_thumbnails: "miniaturas de galería"
     map: "mapa"
@@ -53,6 +55,8 @@ common:
     filter_values: "Filtrar valores de {content}"
     clear_content_search: "Borrar búsqueda de {content}"
     none_applied: "Sin {content} aplicados"
+    applied_count: "Se aplicaron {count} {content}"
+    toggle_content: "Alternar {content}"
     scroll_direction_content: "Desplazar {direction} en {content}"
     step_content: "{direction} {content}"
     item_numbered: "{content} {index}"
@@ -64,6 +68,7 @@ common:
     next: "Siguiente"
   misc:
     referenced_by: "Referenciado por"
+    on_this_page: "En esta página"
 routes:
   search: buscar
   works: obras

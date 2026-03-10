@@ -1,5 +1,6 @@
 import React from 'react';
 import CanopyBrand from './CanopyBrand.jsx';
+import {useLocale} from "../locale/index.js";
 
 export default function CanopyModal(props = {}) {
   const {
@@ -10,7 +11,7 @@ export default function CanopyModal(props = {}) {
     label,
     logo: Logo,
     href = '/',
-    closeLabel = 'Close',
+    closeLabel,
     closeDataAttr,
     onClose,
     onBackgroundClick,
@@ -44,10 +45,13 @@ export default function CanopyModal(props = {}) {
     };
   }
 
+  const {getString} = useLocale();
+  const resolvedCloseLabel = closeLabel || getString('common.actions.close', 'Close');
+
   const closeButtonProps = {
     type: 'button',
     className: 'canopy-modal__close',
-    'aria-label': closeLabel,
+    'aria-label': resolvedCloseLabel,
   };
 
   if (typeof closeDataAttr === 'string' && closeDataAttr) {
@@ -77,7 +81,7 @@ export default function CanopyModal(props = {}) {
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M6 18L18 6" />
           </svg>
-          <span className="sr-only">{closeLabel}</span>
+          <span className="sr-only">{resolvedCloseLabel}</span>
         </button>
         <div className={bodyClassNameValue}>
           {label ? (

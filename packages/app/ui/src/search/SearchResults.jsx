@@ -2,6 +2,7 @@ import Grid, { GridItem } from "../layout/Grid.jsx";
 import ArticleCard from "../layout/ArticleCard.jsx";
 import Card from "../layout/Card.jsx";
 import React from "react";
+import {useLocale} from "../locale/index.js";
 
 function DefaultArticleTemplate({ record, query }) {
   if (!record) return null;
@@ -52,10 +53,19 @@ export default function SearchResults({
   templates = {},
   variant = "auto",
 }) {
+  const {getString} = useLocale();
+  const resultsRegionLabel = getString(
+    "common.phrases.results_label",
+    "Search results",
+  );
+  const noResultsLabel = getString(
+    "common.statuses.no_matches",
+    "No matches found.",
+  );
   if (!results.length) {
     return (
       <div className="text-slate-600">
-        <em>No results</em>
+        <em>{noResultsLabel}</em>
       </div>
     );
   }
@@ -69,7 +79,7 @@ export default function SearchResults({
 
   if (isAnnotationView) {
     return (
-      <div id="search-results" className="space-y-4" role="region" aria-label="Search results">
+      <div id="search-results" className="space-y-4" role="region" aria-label={resultsRegionLabel}>
         {results.map((r, i) => {
           if (!r) return null;
           return (
@@ -95,7 +105,7 @@ export default function SearchResults({
 
   if (layout === "list") {
     return (
-      <div id="search-results" className="space-y-6" role="region" aria-label="Search results">
+      <div id="search-results" className="space-y-6" role="region" aria-label={resultsRegionLabel}>
         {results.map((r, i) => {
           if (shouldRenderAsArticle(r)) {
             return (
@@ -133,7 +143,7 @@ export default function SearchResults({
 
   // Default: grid (masonry)
   return (
-    <div id="search-results" role="region" aria-label="Search results">
+    <div id="search-results" role="region" aria-label={resultsRegionLabel}>
       <Grid>
         {results.map((r, i) => {
           if (shouldRenderAsArticle(r)) {

@@ -23,7 +23,11 @@ const {
   getLocaleRouteConfig,
   getDefaultLocaleCode,
 } = require("../common");
-const {readCanopyLocalesWithMessages} = require("../locales");
+const {
+  readCanopyLocalesWithMessages,
+  readLocaleMessages,
+  buildLocaleRuntimeScript,
+} = require("../locales");
 const {resolveCanopyConfigPath} = require("../config-path");
 const mdx = require("./mdx");
 const {log, logLine, logResponse} = require("./log");
@@ -2142,6 +2146,10 @@ async function buildIiifCollectionPages(CONFIG) {
             siteContext.languageToggle = siteLanguageToggle;
           }
           try {
+            const localeMessages = readLocaleMessages(pageLocale);
+            if (localeMessages) siteContext.localeMessages = localeMessages;
+          } catch (_) {}
+          try {
             const localeRoutes = getLocaleRouteConfig(pageLocale);
             if (localeRoutes) siteContext.routes = localeRoutes;
           } catch (_) {}
@@ -2313,6 +2321,10 @@ async function buildIiifCollectionPages(CONFIG) {
           );
 
           const headSegments = [head];
+          try {
+            const localeScript = buildLocaleRuntimeScript(pageLocale);
+            if (localeScript) headSegments.push(localeScript);
+          } catch (_) {}
           const needsReact = !!(
             needsHydrateViewer ||
             needsRelated ||

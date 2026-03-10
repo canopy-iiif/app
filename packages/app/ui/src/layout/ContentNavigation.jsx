@@ -27,6 +27,7 @@ export default function ContentNavigation({
   pageTitle,
   ariaLabel,
 }) {
+  const {getString, formatString} = useLocale();
   const isBrowser =
     typeof window !== "undefined" && typeof document !== "undefined";
   const savedDepthsRef = React.useRef(null);
@@ -49,15 +50,46 @@ export default function ContentNavigation({
     .join(" ");
 
   const effectiveHeading = heading || pageTitle || null;
-  const navLabel =
-    ariaLabel ||
-    (effectiveHeading
-      ? `${effectiveHeading} navigation`
-      : "Section navigation");
+  const fallbackNavLabel = getString(
+    "common.nouns.section_navigation",
+    "Section navigation",
+  );
+  const computedNavLabel = effectiveHeading
+    ? formatString(
+        "common.phrases.nav_label",
+        "{content} navigation",
+        {content: effectiveHeading},
+      )
+    : fallbackNavLabel;
+  const navLabel = ariaLabel || computedNavLabel;
   const toggleSrLabel = isExpanded
-    ? "Hide section navigation"
-    : "Show section navigation";
+    ? formatString("common.phrases.hide_content", "Hide {content}", {
+        content: navLabel,
+      })
+    : formatString("common.phrases.show_content", "Show {content}", {
+        content: navLabel,
+      });
   const toggleStateClass = isExpanded ? "is-expanded" : "is-collapsed";
+  const toggleShowLabel = getString("common.actions.show", "Show");
+  const toggleHideLabel = getString("common.actions.hide", "Hide");
+  const contentNavLabel = getString(
+    "common.nouns.content_navigation",
+    "content navigation",
+  );
+  const onThisPageLabel = getString(
+    "common.misc.on_this_page",
+    "On this page",
+  );
+  const showContentNavLabel = formatString(
+    "common.phrases.show_content",
+    "Show {content}",
+    {content: contentNavLabel},
+  );
+  const hideContentNavLabel = formatString(
+    "common.phrases.hide_content",
+    "Hide {content}",
+    {content: contentNavLabel},
+  );
 
   const getSavedDepth = React.useCallback((id, fallback) => {
     if (!id) return fallback;
@@ -280,7 +312,7 @@ export default function ContentNavigation({
     const nodes = mapNodes(items, "section");
     return {
       slug: "content-nav-root",
-      title: effectiveHeading || pageTitle || "On this page",
+      title: effectiveHeading || pageTitle || onThisPageLabel,
       children: nodes,
     };
   }, [items, effectiveHeading, pageTitle, activeId, getSavedDepth]);
@@ -300,10 +332,10 @@ export default function ContentNavigation({
         title={toggleSrLabel}
         onClick={handleToggle}
         data-canopy-content-nav-toggle="true"
-        data-show-label="Show"
-        data-hide-label="Hide"
-        data-show-full-label="Show content navigation"
-        data-hide-full-label="Hide content navigation"
+        data-show-label={toggleShowLabel}
+        data-hide-label={toggleHideLabel}
+        data-show-full-label={showContentNavLabel}
+        data-hide-full-label={hideContentNavLabel}
       >
         <span
           className="canopy-content-navigation__toggle-icon"

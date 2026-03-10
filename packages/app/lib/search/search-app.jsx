@@ -6,7 +6,9 @@ import {
   SearchFiltersDialog,
 } from "@canopy-iiif/app/ui";
 import resultTemplates from "__CANOPY_SEARCH_RESULT_TEMPLATES__";
+import localeRuntime from "../locale-runtime.js";
 const SITE_TITLE_FALLBACK = "Site title";
+const {getRuntimeMessage, formatRuntimeMessage} = localeRuntime;
 
 function readSiteTitleFromGlobals() {
   try {
@@ -137,6 +139,16 @@ function resolveRecordHrefForLocale(record, fallbackHref) {
   }
   const first = Object.values(routes).find((value) => value);
   return first || fallbackHref;
+}
+
+function resolveTypeLabel(type) {
+  const key = String(type || "").toLowerCase();
+  if (key === "work") return getRuntimeMessage("common.types.work", "Works");
+  if (key === "page") return getRuntimeMessage("common.types.page", "Pages");
+  if (key === "docs") return getRuntimeMessage("common.types.docs", "Docs");
+  if (key === "all") return getRuntimeMessage("common.nouns.types", "types");
+  if (key === "annotation") return getRuntimeMessage("common.nouns.items", "items");
+  return key ? key.charAt(0).toUpperCase() + key.slice(1) : "";
 }
 
 // Lightweight IndexedDB utilities (no deps) with defensive guards
@@ -899,7 +911,12 @@ function useStore() {
 
 function ResultsMount(props = {}) {
   const {results, type, loading, query, resultSettings} = useStore();
-  if (loading) return <div className="text-slate-600">Loading…</div>;
+  if (loading)
+    return (
+      <div className="text-slate-600">
+        {formatRuntimeMessage("common.statuses.loading", "Loading…")}
+      </div>
+    );
   const normalizedType = String(type || "").trim().toLowerCase();
   const hasOverrides =
     resultSettings && Object.keys(resultSettings || {}).length > 0;
@@ -977,10 +994,20 @@ function TabsMount() {
 function SummaryMount() {
   const {query, type, shown, total} = useStore();
   const text = useMemo(() => {
-    if (!query) return `Showing ${shown} of ${total} items`;
-    return `Found ${shown} of ${total} in ${
-      type === "all" ? "all types" : type
-    } for "${query}"`;
+    const itemsLabel = getRuntimeMessage("common.nouns.items", "items");
+    if (!query) {
+      return formatRuntimeMessage(
+        "common.statuses.summary_content",
+        "Showing {shown} of {total} {content}",
+        {shown, total, content: itemsLabel},
+      );
+    }
+    const typeLabel = resolveTypeLabel(type);
+    return formatRuntimeMessage(
+      "common.statuses.search_summary",
+      'Found {shown} of {total} in {type} for "{query}"',
+      {shown, total, type: typeLabel, query},
+    );
   }, [query, type, shown, total]);
   return <div className="text-sm text-slate-600">{text}</div>;
 }

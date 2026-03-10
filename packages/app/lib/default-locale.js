@@ -23,6 +23,8 @@ module.exports = {
       navigation: 'navigation',
       section_navigation: 'section navigation',
       content_navigation: 'content navigation',
+      primary_navigation: 'Primary navigation',
+      metadata: 'metadata',
       gallery: 'gallery',
       gallery_thumbnails: 'gallery thumbnails',
       map: 'map',
@@ -62,6 +64,8 @@ module.exports = {
       filter_values: 'Filter {content} values',
       clear_content_search: 'Clear {content} search',
       none_applied: 'No {content} applied',
+      applied_count: '{count} {content} applied',
+      toggle_content: 'Toggle {content}',
       scroll_direction_content: 'Scroll {direction} through {content}',
       step_content: '{direction} {content}',
       item_numbered: '{content} {index}',
@@ -74,7 +78,8 @@ module.exports = {
       next: 'Next'
     },
     misc: {
-      referenced_by: 'Referenced by'
+      referenced_by: 'Referenced by',
+      on_this_page: 'On this page'
     }
   }
 };

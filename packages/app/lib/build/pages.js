@@ -14,6 +14,7 @@ const {
 } = require('../common');
 const { log } = require('./log');
 const mdx = require('./mdx');
+const {buildLocaleRuntimeScript} = require('../locales');
 const navigation = require('../components/navigation');
 const referenced = require('../components/referenced');
 
@@ -325,6 +326,10 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
     if (BASE_PATH) vendorTag = `<script>window.CANOPY_BASE_PATH=${JSON.stringify(BASE_PATH)}</script>` + vendorTag;
   } catch (_) {}
   const headSegments = [head];
+  try {
+    const localeScript = buildLocaleRuntimeScript(pageLocale);
+    if (localeScript) headSegments.push(localeScript);
+  } catch (_) {}
   const extraScripts = [];
   const pushClassicScript = (src) => {
     if (!src || src === jsRel) return;

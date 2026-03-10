@@ -20,7 +20,7 @@ const globalRoot = typeof globalThis !== "undefined" ? globalThis : global;
 if (globalRoot && typeof globalRoot.__canopyRequire !== "function") {
   globalRoot.__canopyRequire = typeof require === "function" ? require : null;
 }
-const {readCanopyLocalesWithMessages} = require("../locales");
+const {readCanopyLocalesWithMessages, readLocaleMessages} = require("../locales");
 
 function getSiteLanguageToggle() {
   try {
@@ -1083,6 +1083,10 @@ async function compileMdxFile(filePath, outPath, Layout, extraProps = {}) {
   if (siteLanguageToggle) {
     siteContext.languageToggle = siteLanguageToggle;
   }
+  try {
+    const localeMessages = readLocaleMessages(pageLocale);
+    if (localeMessages) siteContext.localeMessages = localeMessages;
+  } catch (_) {}
   try {
     const localeRoutes = getLocaleRouteConfig(pageLocale);
     if (localeRoutes) siteContext.routes = localeRoutes;

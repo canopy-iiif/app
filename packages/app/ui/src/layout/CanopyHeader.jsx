@@ -5,6 +5,7 @@ import CanopyModal from "./CanopyModal.jsx";
 import NavigationTree from "./NavigationTree.jsx";
 import getSafePageContext from "./pageContext.js";
 import LanguageToggle from "./LanguageToggle.jsx";
+import {useLocale} from "../locale/index.js";
 
 function HeaderScript() {
   const code = `
@@ -372,9 +373,9 @@ function getLinkNavigationData(link, navigationRoots, sectionNavigation) {
 export default function CanopyHeader(props = {}) {
   const {
     navigation: navLinksProp,
-    searchLabel = "Search",
+    searchLabel: searchLabelProp,
     searchHotkey = "mod+k",
-    searchPlaceholder = "Search…",
+    searchPlaceholder: searchPlaceholderProp,
     brandHref = "/",
     title: titleProp,
     logo: SiteLogo,
@@ -383,6 +384,7 @@ export default function CanopyHeader(props = {}) {
 
   const PageContext = getSafePageContext();
   const context = React.useContext(PageContext);
+  const {getString, formatString} = useLocale();
   const contextPrimaryNav = context && Array.isArray(context.primaryNavigation)
     ? context.primaryNavigation
     : [];
@@ -424,6 +426,38 @@ export default function CanopyHeader(props = {}) {
       : languageToggleProp === true || typeof languageToggleProp === "undefined"
       ? siteLanguageToggle
       : languageToggleProp;
+  const resolvedSearchLabel =
+    searchLabelProp != null
+      ? searchLabelProp
+      : getString("common.nouns.search", "Search");
+  const resolvedSearchPlaceholder =
+    searchPlaceholderProp != null
+      ? searchPlaceholderProp
+      : getString("common.phrases.placeholder_search", "Search…");
+  const primaryNavigationLabel = getString(
+    "common.nouns.primary_navigation",
+    "Primary navigation",
+  );
+  const openSearchButtonLabel = formatString(
+    "common.phrases.open_content",
+    "Open {content}",
+    {content: resolvedSearchLabel},
+  );
+  const openNavButtonLabel = formatString(
+    "common.phrases.open_content",
+    "Open {content}",
+    {content: primaryNavigationLabel},
+  );
+  const closeNavLabel = formatString(
+    "common.phrases.close_content",
+    "Close {content}",
+    {content: primaryNavigationLabel},
+  );
+  const closeSearchLabel = formatString(
+    "common.phrases.close_content",
+    "Close {content}",
+    {content: resolvedSearchLabel},
+  );
   const defaultHeaderTitle = contextSiteTitle || "Site title";
   const normalizedTitleProp =
     typeof titleProp === "string" ? titleProp.trim() : "";
@@ -445,12 +479,24 @@ export default function CanopyHeader(props = {}) {
     Array.isArray(sectionNavigation.root.children) &&
     sectionNavigation.root.children.length
   );
+  const sectionNavFallback = getString(
+    "common.nouns.section_navigation",
+    "Section navigation",
+  );
   const sectionLabel = sectionHeading
-    ? `More in ${sectionHeading}`
-    : "More in this section";
+    ? formatString(
+        "common.phrases.nav_label",
+        "{content} navigation",
+        {content: sectionHeading},
+      )
+    : sectionNavFallback;
   const sectionAriaLabel = sectionHeading
-    ? `${sectionHeading} section navigation`
-    : "Section navigation";
+    ? formatString(
+        "common.phrases.nav_label",
+        "{content} navigation",
+        {content: sectionHeading},
+      )
+    : sectionNavFallback;
   const defaultSectionLabel = sectionLabel;
   const defaultSectionAriaLabel = sectionAriaLabel;
   const shouldAttachSectionNav = (link) => {
@@ -486,16 +532,16 @@ export default function CanopyHeader(props = {}) {
 
         <div className="canopy-header__desktop-search">
           <SearchPanel
-            label={searchLabel}
+            label={resolvedSearchLabel}
             hotkey={searchHotkey}
-            placeholder={searchPlaceholder}
+            placeholder={resolvedSearchPlaceholder}
             searchPath={normalizedSearchRoute}
           />
         </div>
 
         <nav
           className="canopy-nav-links canopy-header__desktop-nav"
-          aria-label="Primary navigation"
+          aria-label={primaryNavigationLabel}
         >
           {navLinks.map((link) => (
             <a
@@ -520,7 +566,7 @@ export default function CanopyHeader(props = {}) {
           <button
             type="button"
             className="canopy-header__icon-button canopy-header__search-trigger"
-            aria-label="Open search"
+            aria-label={openSearchButtonLabel}
             aria-controls="canopy-modal-search"
             aria-expanded="false"
             data-canopy-header-toggle="search"
@@ -543,7 +589,7 @@ export default function CanopyHeader(props = {}) {
           <button
             type="button"
             className="canopy-header__icon-button canopy-header__menu"
-            aria-label="Open navigation"
+            aria-label={openNavButtonLabel}
             aria-controls="canopy-modal-nav"
             aria-expanded="false"
             data-canopy-header-toggle="nav"
@@ -573,7 +619,7 @@ export default function CanopyHeader(props = {}) {
         label={resolvedTitle}
         logo={SiteLogo}
         href={brandHref}
-        closeLabel="Close navigation"
+        closeLabel={closeNavLabel}
         closeDataAttr="nav"
       >
         {resolvedLanguageToggle ? (
@@ -586,7 +632,7 @@ export default function CanopyHeader(props = {}) {
         ) : null}
         <nav
           className="canopy-nav-links canopy-modal__nav"
-          aria-label="Primary navigation"
+          aria-label={primaryNavigationLabel}
         >
           <ul className="canopy-modal__nav-list" role="list">
             {navLinks.map((link, index) => {
@@ -604,9 +650,18 @@ export default function CanopyHeader(props = {}) {
               const nestedId = hasChildren
                 ? `canopy-modal-section-${index}`
                 : null;
-              const toggleLabel = link.label
-                ? `Toggle ${link.label} menu`
-                : "Toggle section menu";
+              const toggleLabelTarget = link.label
+                ? formatString(
+                    "common.phrases.nav_label",
+                    "{content} navigation",
+                    {content: link.label},
+                  )
+                : primaryNavigationLabel;
+              const toggleLabel = formatString(
+                "common.phrases.toggle_content",
+                "Toggle {content}",
+                {content: toggleLabelTarget},
+              );
               const defaultExpanded = hasChildren && !!navRoot.isExpanded;
               return (
                 <li
@@ -657,7 +712,11 @@ export default function CanopyHeader(props = {}) {
                       className="canopy-modal__section-nav canopy-modal__section-nav--nested"
                       aria-label={
                         navData && navData.title
-                          ? `${navData.title} section navigation`
+                          ? formatString(
+                              "common.phrases.nav_label",
+                              "{content} navigation",
+                              {content: navData.title},
+                            )
                           : defaultSectionAriaLabel
                       }
                       aria-hidden={defaultExpanded ? "false" : "true"}
@@ -688,14 +747,14 @@ export default function CanopyHeader(props = {}) {
         label={resolvedTitle}
         logo={SiteLogo}
         href={brandHref}
-        closeLabel="Close search"
+        closeLabel={closeSearchLabel}
         closeDataAttr="search"
         bodyClassName="canopy-modal__body--search"
       >
         <SearchPanel
-          label={searchLabel}
+          label={resolvedSearchLabel}
           hotkey={searchHotkey}
-          placeholder={searchPlaceholder}
+          placeholder={resolvedSearchPlaceholder}
           searchPath={normalizedSearchRoute}
         />
       </CanopyModal>

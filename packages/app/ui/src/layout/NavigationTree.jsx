@@ -1,11 +1,18 @@
 import React from "react";
+import {useLocale} from "../locale/index.js";
 
 function normalizeDepth(depth) {
   if (typeof depth !== "number") return 0;
   return Math.max(0, Math.min(5, depth));
 }
 
-function NavigationTreeList({nodes, depth, parentKey}) {
+function NavigationTreeList({
+  nodes,
+  depth,
+  parentKey,
+  buildToggleLabel,
+  buildNavLabel,
+}) {
   if (!Array.isArray(nodes) || !nodes.length) return null;
   const listClasses = ["canopy-nav-tree__list"];
   if (depth > 0) listClasses.push("canopy-nav-tree__list--nested");
@@ -17,13 +24,15 @@ function NavigationTreeList({nodes, depth, parentKey}) {
           node={node}
           depth={depth}
           nodeKey={`${parentKey}-${index}`}
+          buildToggleLabel={buildToggleLabel}
+          buildNavLabel={buildNavLabel}
         />
       ))}
     </ul>
   );
 }
 
-function NavigationTreeItem({node, depth, nodeKey}) {
+function NavigationTreeItem({node, depth, nodeKey, buildToggleLabel, buildNavLabel}) {
   if (!node) return null;
   const hasChildren = Array.isArray(node.children) && node.children.length > 0;
   const isInteractive = !!node.href;
@@ -36,9 +45,9 @@ function NavigationTreeItem({node, depth, nodeKey}) {
   const panelId = hasChildren ? `canopy-section-${nodeKey}` : null;
   const allowToggle = hasChildren && !isRootLevel;
   const defaultExpanded = allowToggle ? !!node.isExpanded : true;
-  const toggleLabel = node.title
-    ? `Toggle ${node.title} menu`
-    : "Toggle section menu";
+  const toggleLabel = buildToggleLabel
+    ? buildToggleLabel(node.title || node.slug)
+    : `Toggle ${node.title || "section"} menu`;
 
   return (
     <li
@@ -103,6 +112,8 @@ function NavigationTreeItem({node, depth, nodeKey}) {
             nodes={node.children}
             depth={depth + 1}
             parentKey={nodeKey}
+            buildToggleLabel={buildToggleLabel}
+            buildNavLabel={buildNavLabel}
           />
         </div>
       ) : null}
@@ -121,6 +132,26 @@ export default function NavigationTree({
   ...rest
 }) {
   if (!root) return null;
+  const {formatString, getString} = useLocale();
+  const navFallback = getString("common.nouns.navigation", "navigation");
+  const buildNavLabel = React.useCallback(
+    (value) =>
+      formatString(
+        "common.phrases.nav_label",
+        "{content} navigation",
+        {content: value || navFallback},
+      ),
+    [formatString, navFallback],
+  );
+  const buildToggleLabel = React.useCallback(
+    (value) =>
+      formatString(
+        "common.phrases.toggle_content",
+        "Toggle {content}",
+        {content: buildNavLabel(value)},
+      ),
+    [buildNavLabel, formatString],
+  );
   const nodes = includeRoot ? [root] : root.children;
   if (!Array.isArray(nodes) || !nodes.length) return null;
   const combinedClassName = ["canopy-nav-tree", className]
@@ -137,6 +168,8 @@ export default function NavigationTree({
         nodes={nodes}
         depth={includeRoot ? -1 : 0}
         parentKey={parentKey}
+        buildToggleLabel={buildToggleLabel}
+        buildNavLabel={buildNavLabel}
       />
     </Component>
   );

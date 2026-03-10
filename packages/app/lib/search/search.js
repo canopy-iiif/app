@@ -18,6 +18,7 @@ const {
   getDefaultLocaleCode,
   getSiteTitle,
 } = require('../common');
+const {buildLocaleRuntimeScript} = require('../locales');
 const { resolveCanopyConfigPath } = require('../config-path');
 
 const SEARCH_TEMPLATES_ALIAS = '__CANOPY_SEARCH_RESULT_TEMPLATES__';
@@ -368,6 +369,10 @@ async function buildSearchPageForEntry(routeEntry) {
       }
     }
     let headExtra = vendorTags + head + importMap + customRuntimeTag;
+    try {
+      const localeScript = buildLocaleRuntimeScript(pageLocale);
+      if (localeScript) headExtra = localeScript + headExtra;
+    } catch (_) {}
     if (siteTitle && typeof siteTitle === 'string') {
       const siteTitleScript = `<script>window.CANOPY_SITE_TITLE=${JSON.stringify(siteTitle)}</script>`;
       headExtra = siteTitleScript + headExtra;

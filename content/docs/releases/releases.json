@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.9.15",
+    "date": "2026-03-10",
+    "summary": "Update locale mapping.",
+    "highlights": []
+  },
+  {
     "version": "1.9.14",
     "date": "2026-03-10",
     "summary": "Remove legacy callout component.",

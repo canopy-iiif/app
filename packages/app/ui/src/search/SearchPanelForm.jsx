@@ -1,5 +1,6 @@
 import {MagnifyingGlassIcon} from "../Icons";
 import React from "react";
+import {useLocale} from "../locale/index.js";
 
 function readBasePath() {
   const normalize = (val) => {
@@ -65,16 +66,31 @@ export function resolveSearchPath(pathValue) {
 
 export default function SearchPanelForm(props = {}) {
   const {
-    placeholder = "Search…",
-    buttonLabel = "Search",
+    placeholder,
+    buttonLabel,
     label,
     searchPath = "/search",
     inputId: inputIdProp,
-    clearLabel = "Clear search",
+    clearLabel,
   } = props || {};
-
+  const {getString, formatString} = useLocale();
+  const searchLabel = getString("common.nouns.search", "Search");
+  const placeholderText =
+    placeholder != null
+      ? placeholder
+      : getString("common.phrases.placeholder_search", "Search…");
+  const buttonText =
+    buttonLabel != null ? buttonLabel : getString("common.nouns.search", "Search");
+  const clearText =
+    clearLabel != null
+      ? clearLabel
+      : formatString(
+          "common.phrases.clear_content_search",
+          "Clear {content} search",
+          {content: searchLabel},
+        );
   const text =
-    typeof label === "string" && label.trim() ? label.trim() : buttonLabel;
+    typeof label === "string" && label.trim() ? label.trim() : buttonText;
   const action = React.useMemo(
     () => resolveSearchPath(searchPath),
     [searchPath]
@@ -153,14 +169,14 @@ export default function SearchPanelForm(props = {}) {
     >
       <label htmlFor={inputId} className="canopy-search-form__label">
         <MagnifyingGlassIcon className="canopy-search-form__icon" />
-        <span className="sr-only">Search</span>
+        <span className="sr-only">{searchLabel}</span>
         <input
           id={inputId}
           type="search"
           name="q"
           inputMode="search"
           data-canopy-search-form-input
-          placeholder={placeholder}
+          placeholder={placeholderText}
           className="canopy-search-form__input"
           ref={inputRef}
           onChange={handleInputChange}
@@ -174,7 +190,7 @@ export default function SearchPanelForm(props = {}) {
           onClick={handleClear}
           onPointerDown={(event) => event.stopPropagation()}
           onKeyDown={handleClearKey}
-          aria-label={clearLabel}
+          aria-label={clearText}
           data-canopy-search-form-clear
         >
           ×
