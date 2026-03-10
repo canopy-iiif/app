@@ -34,17 +34,17 @@ The Nez Percé, or Nimíipuu, lived across what is now Idaho, Oregon, and Washin
 
 Canopy auto-loads React components from `app/components/mdx.tsx`. Export any component you want to use and it becomes available inside every MDX file.
 
-```tsx filename="app/components/Callout.tsx"
+```tsx filename="app/components/Tip.tsx"
 import type {ReactNode} from 'react';
 
-export default function Callout({children}: {children?: ReactNode}) {
-  return <article className="custom-callout">{children}</article>;
+export default function Tip({children}: {children?: ReactNode}) {
+  return <article className="custom-tip">{children}</article>;
 }
 ```
 
 ```tsx filename="app/components/mdx.tsx"
 export const components = {
-  Callout: './Callout.tsx',
+  Tip: './Tip.tsx',
 };
 ```
 
@@ -55,9 +55,9 @@ export const components = {
 Once a component is exported, use it directly in content:
 
 ```mdx
-<Callout>
+<Tip>
   <p>The Canopy builder hydrates everything automatically.</p>
-</Callout>
+</Tip>
 ```
 
 ## Included helpers

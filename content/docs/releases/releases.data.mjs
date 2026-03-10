@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.9.14",
+    "date": "2026-03-10",
+    "summary": "Remove legacy callout component.",
+    "highlights": []
+  },
+  {
     "version": "1.9.13",
     "date": "2026-03-10",
     "summary": "Update i18n template collection.",
