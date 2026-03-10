@@ -1,0 +1,5 @@
+navigation:
+  - href: /es/buscar
+    label: Obras
+  - href: /es/sobre
+    label: Sobre este proyecto

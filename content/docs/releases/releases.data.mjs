@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.9.10",
+    "date": "2026-03-10",
+    "summary": "Introduce i18n template.",
+    "highlights": []
+  },
+  {
     "version": "1.9.9",
     "date": "2026-03-09",
     "summary": "Map site title to modal headers.",

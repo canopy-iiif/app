@@ -1,0 +1,31 @@
+---
+title: Sobre este proyecto bilingüe
+description: Repasa los archivos principales que habilitan la internacionalización.
+lang: es
+---
+
+import {Callout} from "@canopy-iiif/app/ui/server";
+
+# Sobre este proyecto
+
+Este template agrega los archivos mínimos para publicar Canopy en varios idiomas. La configuración de colecciones, manifiestos y estilos sigue igual; la diferencia es que aquí puedes estudiar una implementación real de i18n.
+
+<Callout>
+  ✅ El contenido en inglés vive en `content/…`, mientras que el contenido en español vive en `content/es/…` y comparte la misma estructura.
+</Callout>
+
+## Archivos clave
+
+1. **`canopy.yml`** declara los locales y mantiene el inglés como idioma predeterminado.
+2. **`content/_app.mdx`** muestra `<LanguageToggle />` en el pie de página y oculta el control automático del encabezado.
+3. **`content/es/index.mdx` + `content/es/sobre.mdx`** son copias traducidas de las páginas principales.
+4. **`content/es/locale.yml`** traduce las cadenas de la interfaz y personaliza `routes.search`/`routes.works`.
+5. **`content/es/navigation.yml`** contiene el menú principal en español.
+
+## Próximos pasos
+
+- Agrega nuevas carpetas por idioma (`content/fr`, `content/pt-BR`, etc.) y actualiza `canopy.yml`.
+- Cuando falte una traducción, Canopy usará automáticamente la versión del idioma predeterminado.
+- Reutiliza `<LanguageToggle variant="chips" />` o cualquier otro `variant` para integrar el selector donde lo necesites.
+
+Consulta la [documentación oficial](https://canopy-iiif.github.io/app/docs/i18n/) para obtener instrucciones detalladas.

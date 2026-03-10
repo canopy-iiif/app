@@ -1,0 +1,55 @@
+---
+title: Ejemplo de inicio bilingüe
+description: Portada en español para el template i18n.
+image: https://iiif.dc.library.northwestern.edu/iiif/3/138a94b0-175a-4152-98c7-df58661ce7d5/950,520,7100,4740/!1200,630/0/default.jpg
+lang: es
+---
+
+import {LanguageToggle} from "@canopy-iiif/app/ui/server";
+
+<Interstitials.Hero
+  headline="Comienza en inglés y publica en español"
+  description="Este proyecto demuestra cómo emparejar contenido, navegación y rutas entre idiomas usando el selector de Canopy."
+  background="theme"
+  random={true}
+  links={[
+    {
+      href: "/es/sobre",
+      title: "Leer la guía",
+      type: "primary",
+    },
+    {
+      href: "https://canopy-iiif.github.io/app/es/docs/i18n/",
+      title: "Documentación",
+      type: "secondary",
+    },
+  ]}
+/>
+
+<Container>
+
+## Bienvenida
+
+Canopy renderiza cada idioma a partir de los mismos datos IIIF y la misma estructura de carpetas. El inglés vive directamente bajo `content/`, mientras que los demás idiomas (como `es`) viven en `content/<lang>/`. Cuando las rutas y los nombres de archivo coinciden, el selector de idioma puede descubrir qué versión mostrar.
+
+### Extiende los locales
+
+1. Edita `canopy.yml` para declarar los idiomas en `locales` y marca `default: true` para el idioma principal.
+2. Usa códigos BCP 47 (por ejemplo `es` o `pt-BR`) y etiquetas legibles.
+3. Reinicia `npm run dev` o vuelve a ejecutar `npm run build` para aplicar los cambios.
+
+### Refleja el contenido
+
+- Traduce los archivos MDX en `content/<lang>/…` usando los mismos nombres (`content/index.mdx` ⇄ `content/es/index.mdx`).
+- Si falta una traducción, Canopy usa el contenido del idioma predeterminado, así que puedes traducir gradualmente.
+- Usa frontmatter para fijar títulos o `lang` propios.
+
+### Localiza la interfaz
+
+- Copia `content/locale.yml` hacia `content/<lang>/locale.yml` y traduce los textos.
+- Ajusta `routes.search` y `routes.works` para cambiar las rutas (`/buscar`, `/obras`).
+- Traduce el menú en `content/<lang>/navigation.yml`.
+
+<LanguageToggle />
+
+</Container>

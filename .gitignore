@@ -4,6 +4,7 @@ node_modules/
 # canopy specific
 site/
 .template-build/
+.template-i18n-build/
 .org-build/
 
 # remove this if you would like to commit the cache

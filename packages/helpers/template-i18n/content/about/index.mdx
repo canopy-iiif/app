@@ -1,0 +1,31 @@
+---
+title: About this bilingual starter
+description: Learn how to mirror pages and translations across locales.
+lang: en
+---
+
+import {Callout} from "@canopy-iiif/app/ui/server";
+
+# About this starter
+
+This repository expands on the base Canopy template by adding the minimum files needed for a multilingual deployment. You still configure collections, manifests, and theming the same way—this starter simply layers on i18n conventions so you can copy/paste the working pieces into your own project.
+
+<Callout>
+  ✅ English content lives at `content/…`, Spanish lives at `content/es/…`, and both share the same navigation + layout shell.
+</Callout>
+
+## Files to review
+
+1. **`canopy.yml`** sets up the `locales` array and keeps English as the default.
+2. **`content/_app.mdx`** disables the header's built-in language toggle so you can see the `<LanguageToggle />` rendered in the footer.
+3. **`content/es/index.mdx` + `content/es/sobre.mdx`** mirror their English counterparts and demonstrate how frontmatter inherits when omitted.
+4. **`content/es/locale.yml`** overrides `routes.search`/`routes.works` to expose `/es/buscar` and `/es/obras` in the URLs.
+5. **`content/es/navigation.yml`** localizes menu labels and links to the translated slugs.
+
+## Next steps
+
+- Add more languages by creating additional `content/<lang>/` directories and appending entries to `canopy.yml → locales`.
+- Override per-directory layouts using `_layout.mdx` if a section needs different typography or components per language.
+- When fanning out beyond English and Spanish, consider using `lang` frontmatter plus `<Html lang="…" dir="…">` wrappers in `_app.mdx`.
+
+Need a deeper reference? The source of truth for internationalization is documented at [content/docs/i18n](https://canopy-iiif.github.io/app/docs/i18n/).

@@ -1,0 +1,55 @@
+---
+title: Bilingual homepage example
+description: English homepage for the i18n template.
+image: https://iiif.dc.library.northwestern.edu/iiif/3/138a94b0-175a-4152-98c7-df58661ce7d5/950,520,7100,4740/!1200,630/0/default.jpg
+lang: en
+---
+
+import {LanguageToggle} from "@canopy-iiif/app/ui/server";
+
+<Interstitials.Hero
+  headline="Start with English, expand with Spanish"
+  description="This template shows how to match English and Spanish content, translate navigation, and wire the built-in language toggle."
+  background="theme"
+  random={true}
+  links={[
+    {
+      href: "/about",
+      title: "See the playbook",
+      type: "primary",
+    },
+    {
+      href: "https://canopy-iiif.github.io/app/docs/i18n/",
+      title: "Read the i18n guide",
+      type: "secondary",
+    },
+  ]}
+/>
+
+<Container>
+
+## Welcome
+
+Canopy renders every locale from the same IIIF data and content tree. English lives at `content/` while any additional locale (Spanish in this repo) lives under `content/<lang>/`. Matching file paths lets Canopy infer which translation to load when visitors switch languages.
+
+### Extend locales
+
+1. Edit `canopy.yml` and add entries under `locales`. Mark one locale as `default: true`.
+2. Each locale should include a `label` (used by the toggle) and the BCP 47 `lang` code that matches your content.
+3. Save and rerun `npm run dev`/`npm run build` so the builder reloads the config.
+
+### Mirror content
+
+- Translate MDX pages under `content/<lang>/…` using the same file names as the default locale (`content/index.mdx` ⇄ `content/es/index.mdx`).
+- When a localized file is missing, Canopy falls back to English, so you can add translations incrementally.
+- Use frontmatter to override `title`, `description`, or `lang` per locale.
+
+### Localize UI strings
+
+- Copy `content/locale.yml` to `content/<lang>/locale.yml` and translate the values.
+- Update `routes.search` or `routes.works` to change slug segments such as `/buscar` or `/obras`.
+- Update `content/<lang>/navigation.yml` to translate menu labels or point links at localized paths.
+
+<LanguageToggle />
+
+</Container>

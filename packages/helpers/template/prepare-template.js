@@ -7,6 +7,16 @@ const OUTPUT_ROOT = path.resolve(
   process.env.TEMPLATE_OUT_DIR || '.template-build'
 );
 
+function resolveTemplateRoot() {
+  const provided = process.env.TEMPLATE_SOURCE_DIR;
+  if (!provided) return __dirname;
+  const rooted = path.resolve(process.cwd(), provided);
+  if (!fs.existsSync(rooted)) {
+    throw new Error(`TEMPLATE_SOURCE_DIR not found: ${rooted}`);
+  }
+  return rooted;
+}
+
 function rmrf(p) {
   try { fs.rmSync(p, { recursive: true, force: true }); } catch (_) {}
 }
@@ -67,24 +77,24 @@ function regeneratePackageLock() {
   rmrf(path.join(OUTPUT_ROOT, 'node_modules'));
 }
 
-function applyTemplateOverrides() {
+function applyTemplateOverrides(templateRoot) {
   const distRoot = OUTPUT_ROOT;
-  const templateRoot = __dirname;
+  const resolvedTemplateRoot = templateRoot || resolveTemplateRoot();
 
-  const templateContentDir = path.join(templateRoot, 'content');
+  const templateContentDir = path.join(resolvedTemplateRoot, 'content');
   const distContentDir = path.join(distRoot, 'content');
   mkdirp(distContentDir);
   if (fs.existsSync(templateContentDir) && fs.statSync(templateContentDir).isDirectory()) {
     copyDirContents(templateContentDir, distContentDir);
   }
 
-  const templateAssetsDir = path.join(templateRoot, 'assets');
+  const templateAssetsDir = path.join(resolvedTemplateRoot, 'assets');
   const distAssetsDir = path.join(distRoot, 'assets');
   if (fs.existsSync(templateAssetsDir) && fs.statSync(templateAssetsDir).isDirectory()) {
     copyDirContents(templateAssetsDir, distAssetsDir);
   }
 
-  const templateAppPath = path.join(templateRoot, '_app.mdx');
+  const templateAppPath = path.join(resolvedTemplateRoot, '_app.mdx');
   if (fs.existsSync(templateAppPath)) {
     const destAppPath = path.join(distRoot, 'content', '_app.mdx');
     mkdirp(path.dirname(destAppPath));
@@ -100,16 +110,22 @@ function applyTemplateOverrides() {
   const tsconfigPath = path.join(distRoot, 'tsconfig.json');
   rmrf(tsconfigPath);
 
-  const templateReadme = path.join(templateRoot, 'README.md');
+  const templateReadme = path.join(resolvedTemplateRoot, 'README.md');
   if (fs.existsSync(templateReadme)) {
     const destReadme = path.join(distRoot, 'README.md');
     fs.copyFileSync(templateReadme, destReadme);
   }
 
-  const templateAgents = path.join(templateRoot, 'AGENTS.md');
+  const templateAgents = path.join(resolvedTemplateRoot, 'AGENTS.md');
   if (fs.existsSync(templateAgents)) {
     const destAgents = path.join(distRoot, 'AGENTS.md');
     fs.copyFileSync(templateAgents, destAgents);
+  }
+
+  const templateCanopy = path.join(resolvedTemplateRoot, 'canopy.yml');
+  if (fs.existsSync(templateCanopy)) {
+    const destCanopy = path.join(distRoot, 'canopy.yml');
+    fs.copyFileSync(templateCanopy, destCanopy);
   }
 }
 
@@ -226,12 +242,13 @@ module.exports = defineCanopyTailwindConfig(pathToFileURL(__filename).href);
   }
 }
 
-function main() {
+function main(templateRoot) {
   const appVersion = process.env.APP_VERSION || '';
+  const resolvedTemplateRoot = templateRoot || resolveTemplateRoot();
   rmrf(OUTPUT_ROOT);
   mkdirp(OUTPUT_ROOT);
   copyRepoToTemplate();
-  applyTemplateOverrides();
+  applyTemplateOverrides(resolvedTemplateRoot);
   rewritePackageJson(appVersion);
   regeneratePackageLock();
   const writeTemplateDeploy = require('./write-template-deploy');
