@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.9.19",
+    "date": "2026-03-11",
+    "summary": "Update i18n language; refine <code> css.",
+    "highlights": []
+  },
+  {
     "version": "1.9.18",
     "date": "2026-03-11",
     "summary": "Define locale routes more clearly.",

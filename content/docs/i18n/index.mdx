@@ -84,7 +84,7 @@ The default `content/locale.yml` defines strings for search labels, filter copy,
 
 #### Route slugs
 
-Each locale file can override the default routes so slugs like `/search` and `/works` can be translated per language. Set `routes.search` and `routes.works` (and any future route keys) inside every `content/<lang>/locale.yml`. These values are concatenated with the locale-aware base path, so `/es/` + `routes.search: buscar` becomes `/es/buscar`. When a locale omits a route key, the builder inherits the slug from the default locale.
+Each locale file can override the default routes so slugs like `/search` and `/works` can be translated per language. When a locale omits a route key, the builder inherits the slug from the default locale.
 
 ```yaml filename="content/es/locale.yml" copy
 routes:
