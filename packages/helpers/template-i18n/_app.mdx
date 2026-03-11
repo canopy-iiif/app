@@ -23,11 +23,13 @@ export function Head() {
 export function App({children}) {
   return (
     <>
-      <CanopyHeader logo={Logo} languageToggle={false} />
+      <CanopyHeader logo={Logo} />
       <main>{children}</main>
       <CanopyFooter>
         <LanguageToggle variant="list" />
-        <p>Copyright 2025 Bilingual Site, MIT License. A Canopy IIIF project.</p>
+        <p>
+          Copyright 2025 Bilingual Site, MIT License. A Canopy IIIF project.
+        </p>
       </CanopyFooter>
     </>
   );

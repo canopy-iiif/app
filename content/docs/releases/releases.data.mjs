@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.9.17",
+    "date": "2026-03-10",
+    "summary": "Enable header toggle in i18n template.",
+    "highlights": []
+  },
+  {
     "version": "1.9.16",
     "date": "2026-03-10",
     "summary": "Hotfix useLocale import issues.",
