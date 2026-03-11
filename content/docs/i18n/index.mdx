@@ -30,7 +30,21 @@ locales:
     label: Español
 ```
 
-You may also drop English entirely when another locale should be primary. You do not need to declare more than one locale in this case. To do this, simply start with a different language and mark it as default:
+### Non-English defaults
+
+If you want to use a different default language, simply mark that entry as `default: true`. For example, to make Spanish the default language with English as a secondary locale, your `canopy.yml` would look like this:
+
+```yaml filename="canopy.yml"
+title: Título del sitio
+locales:
+  - lang: es
+    label: Español
+    default: true
+  - lang: en
+    label: English
+```
+
+You may also drop English entirely when another locale should be the primary language. You do not need to declare more than one locale in this case. To do this, simply define a language and mark it as default:
 
 ```yaml filename="canopy.yml"
 title: Título del sitio
@@ -68,6 +82,16 @@ At each locale level, you may also choose to customize the user interface and na
 
 The default `content/locale.yml` defines strings for search labels, filter copy, error notices, and the language toggle. Create `content/<lang>/locale.yml` to override keys. Update `routes` for `search` and `works` if you need translated slugs. If any key is undefined, entries continue to inherit from the English source. If `content/locale.yml` and/or `content/<lang>/locale.yml` is missing, the user interface will automatically fall back to hardcoded English terms.
 
+#### Route slugs
+
+Each locale file can override the default routes so slugs like `/search` and `/works` can be translated per language. Set `routes.search` and `routes.works` (and any future route keys) inside every `content/<lang>/locale.yml`. These values are concatenated with the locale-aware base path, so `/es/` + `routes.search: buscar` becomes `/es/buscar`. When a locale omits a route key, the builder inherits the slug from the default locale.
+
+```yaml filename="content/es/locale.yml" copy
+routes:
+  search: /es/buscar
+  works: /es/obras
+```
+
 #### English fallback snapshot
 
 When `content/locale.yml` is absent, Canopy reads `packages/app/lib/default-locale.js` to keep rendering English copy. This file is generated directly from your checked-in `content/locale.yml`, so updating that single YAML file keeps both sources synchronized. After editing the English locale, run `npm run sync:locale` (which executes `packages/helpers/locales/sync-default-locale.js`) to refresh the baked-in fallback before committing.
@@ -75,6 +99,9 @@ When `content/locale.yml` is absent, Canopy reads `packages/app/lib/default-loca
 Example base locale (`content/locale.yml`):
 
 ```yaml filename="content/locale.yml" copy
+routes:
+  search: /search
+  works: /works
 common:
   actions:
     open: "Open"
@@ -141,14 +168,15 @@ common:
     next: "Next"
   misc:
     referenced_by: "Referenced by"
-routes:
-  search: search
-  works: works
+    on_this_page: "On this page"
 ```
 
 Example translated locale (`content/es/locale.yml`):
 
 ```yaml filename="content/es/locale.yml" copy
+routes:
+  search: /es/buscar
+  works: /es/obras
 common:
   actions:
     open: "Abrir"
@@ -215,9 +243,7 @@ common:
     next: "Siguiente"
   misc:
     referenced_by: "Referenciado por"
-routes:
-  search: buscar
-  works: obras
+    on_this_page: "En esta página"
 ```
 
 ### navigation.yml

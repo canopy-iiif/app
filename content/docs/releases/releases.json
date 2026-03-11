@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.9.18",
+    "date": "2026-03-11",
+    "summary": "Define locale routes more clearly.",
+    "highlights": []
+  },
+  {
     "version": "1.9.17",
     "date": "2026-03-10",
     "summary": "Enable header toggle in i18n template.",

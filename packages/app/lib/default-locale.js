@@ -3,6 +3,10 @@
  * Run `node packages/helpers/locales/sync-default-locale.js` after updating locale copy.
  */
 module.exports = {
+  routes: {
+    search: 'search',
+    works: 'works'
+  },
   common: {
     actions: {
       open: 'Open',

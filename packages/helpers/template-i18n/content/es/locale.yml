@@ -1,3 +1,6 @@
+routes:
+  search: /es/buscar
+  works: /es/obras
 common:
   actions:
     open: "Abrir"
@@ -69,6 +72,3 @@ common:
   misc:
     referenced_by: "Referenciado por"
     on_this_page: "En esta página"
-routes:
-  search: buscar
-  works: obras
