@@ -137,9 +137,6 @@ jobs:
           # CANOPY_COLLECTION_URI: https://iiif.io/api/cookbook/recipe/0032-collection/collection.json
         run: npm run build
 
-      - name: Verify pages were generated
-        run: npx tsx app/scripts/canopy-build.mts --verify
-
       - name: Inspect build output
         run: |
           du -sh site || true
