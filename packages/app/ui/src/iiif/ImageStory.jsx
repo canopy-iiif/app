@@ -55,29 +55,91 @@ export const ImageStory = (props = {}) => {
   useEffect(() => {
     const node = containerRef.current;
     if (!node) return undefined;
+
     let cleanup = null;
     let cancelled = false;
+    let mounted = false;
+    let resizeObserver = null;
+    let pollId = null;
+
     const payload = sanitizeImageStoryProps({
       iiifContent,
       disablePanAndZoom,
       pointOfInterestSvgUrl,
       viewerOptions,
     });
-    mountImageStory(node, payload).then((destroy) => {
-      if (cancelled) {
-        destroy && destroy();
-        return;
-      }
-      cleanup = typeof destroy === "function" ? destroy : null;
-    });
-    return () => {
-      cancelled = true;
+
+    const destroyCleanup = () => {
       if (cleanup) {
         try {
           cleanup();
         } catch (_) {}
         cleanup = null;
       }
+    };
+
+    const disconnectWatchers = () => {
+      if (resizeObserver) {
+        try {
+          resizeObserver.disconnect();
+        } catch (_) {}
+        resizeObserver = null;
+      }
+      if (pollId) {
+        window.clearTimeout(pollId);
+        pollId = null;
+      }
+    };
+
+    const hasUsableSize = () => {
+      if (!node) return false;
+      const rect = node.getBoundingClientRect();
+      const width = rect?.width || node.offsetWidth || node.clientWidth;
+      const height = rect?.height || node.offsetHeight || node.clientHeight;
+      return width > 2 && height > 2;
+    };
+
+    const mountViewer = () => {
+      if (!node || mounted || cancelled) return false;
+      if (!hasUsableSize()) return false;
+      mounted = true;
+      disconnectWatchers();
+      mountImageStory(node, payload).then((destroy) => {
+        if (cancelled) {
+          destroy && destroy();
+          return;
+        }
+        cleanup = typeof destroy === "function" ? destroy : null;
+      });
+      return true;
+    };
+
+    if (!mountViewer()) {
+      if (typeof window !== "undefined" && typeof window.ResizeObserver === "function") {
+        resizeObserver = new window.ResizeObserver(() => {
+          if (mounted || cancelled) return;
+          mountViewer();
+        });
+        try {
+          resizeObserver.observe(node);
+        } catch (_) {}
+      }
+      const schedulePoll = () => {
+        if (mounted || cancelled) return;
+        pollId = window.setTimeout(() => {
+          pollId = null;
+          if (!mountViewer()) {
+            schedulePoll();
+          }
+        }, 200);
+      };
+      schedulePoll();
+    }
+
+    return () => {
+      cancelled = true;
+      disconnectWatchers();
+      destroyCleanup();
     };
   }, [iiifContent, disablePanAndZoom, pointOfInterestSvgUrl, viewerOptions]);
 

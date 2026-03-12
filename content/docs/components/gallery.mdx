@@ -83,17 +83,171 @@ Use it when you want to highlight favorite works, curate a mini exhibit, or gath
 </Gallery>
 ```
 
+## Organizing Gallery content
+
+Implementers can organize gallery popups with any MDX content, but the `<GalleryContent>` component provides a simple wrapper to apply consistent gutters and an optional layout for side-by-side media and text. In the example below, we use `flex={true}` to place an ImageStory next to a descriptive aside, but you can mix and match Viewers, Maps, markdown, or any custom components as needed.
+
+<Gallery>
+  <Gallery.Item
+    referencedManifests="https://api.dc.library.northwestern.edu/api/v2/works/009e37b7-5c36-4451-bafb-f1217f45877f?as=iiif"
+    caption="An Indian woman burning herself on the death of her husband"
+    title="An Indian woman burning herself on the death of her husband"
+    description="An Indian woman is powerfully poised over her deceased husband’s burning pyre, with a fist raised as part of the funeral ritual, suttee. For a Hindu widow, suttee was considered an honorable death, sparing societal disapproval and the loss of certain social liberties."
+  >
+    <GalleryContent flex={true}>
+      <ImageStory
+        iiifContent="https://manifest.storiiies-editor.cogapp.com/v3/c083t"
+        height="850"
+      />
+      <aside>
+        <dl>
+          <dt>Date</dt>
+          <dd>c. 1778</dd>
+          <dt>Creators</dt>
+          <dd>Artist, Samuel Wale (1721-1786), British</dd>
+          <dd>Engraver, Charles Grignion (1721-1810), British</dd>
+          <dt>Medium</dt>
+          <dd>Etching and Engraving</dd>
+          <dt>Image Size</dt>
+          <dd>29 x 17 cm</dd>
+          <dt>Sheet size</dt>
+          <dd>37 x 24 cm</dd>
+          <dt>Attribution</dt>
+          <dd>
+            Courtesy of Charles Deering McCormick Library of Special
+            Collections, Northwestern University.
+          </dd>
+          <dt>Call number</dt>
+          <dd>Special Collections, L2 Prints W169i</dd>
+        </dl>
+      </aside>
+    </GalleryContent>
+  </Gallery.Item>
+  <Gallery.Item
+    manifest="https://api.dc.library.northwestern.edu/api/v2/works/bf59dad4-76f9-4567-b0e2-3c6050663e2d?as=iiif"
+    caption="A Suttee: Preparing for the Immolation of a Hindoo Widow"
+    title="A Suttee: Preparing for the Immolation of a Hindoo Widow"
+    description="A bare-breasted woman draped in a white garment prepares for sati–a sacrifice in which a widow burns herself upon the death of her husband–amongst a crowd of Hindu worshippers at the ghats of river Vishwamitri against a backdrop of temples and shrines in the city of Baroda (present-day Vadodara). Although both British and Indian people had pushed for sati’s abolition, colonial powers often cited the brutal nature of the ritual as justification for their rule. The British government officially outlawed sati in 1829."
+  >
+    <GalleryContent flex={true}>
+      <ImageStory
+        iiifContent="https://manifest.storiiies-editor.cogapp.com/v3/0583o"
+        height="850"
+      />
+      <aside>
+        <dl>
+          <dt>Date</dt>
+          <dd>1844</dd>
+          <dt>Creators</dt>
+          <dd>Artist, Captain Robert Melville Grindlay (1786-1877), British</dd>
+          <dd>Engraver, James Redaway (1797-1858), British</dd>
+          <dt>Medium</dt>
+          <dd>Engraving</dd>
+          <dt>Image size</dt>
+          <dd>12.1 x 18.8 cm</dd>
+          <dt>Sheet size</dt>
+          <dd>21.1 (20.2) x 27.2 cm</dd>
+          <dt>Attribution</dt>
+          <dd>
+            Courtesy of Charles Deering McCormick Library of Special
+            Collections, Northwestern University.
+          </dd>
+          <dt>Call number</dt>
+          <dd>Special Collections, L1 Prints R3128s</dd>
+        </dl>
+      </aside>
+    </GalleryContent>
+  </Gallery.Item>
+</Gallery>
+
+```mdx copy {8-35, 43-72}
+<Gallery>
+  <Gallery.Item
+    referencedManifests="https://api.dc.library.northwestern.edu/api/v2/works/009e37b7-5c36-4451-bafb-f1217f45877f?as=iiif"
+    caption="An Indian woman burning herself on the death of her husband"
+    title="An Indian woman burning herself on the death of her husband"
+    description="An Indian woman is powerfully poised over her deceased husband’s burning pyre, with a fist raised as part of the funeral ritual, suttee. For a Hindu widow, suttee was considered an honorable death, sparing societal disapproval and the loss of certain social liberties."
+  >
+    <GalleryContent flex={true}>
+      <ImageStory
+        iiifContent="https://manifest.storiiies-editor.cogapp.com/v3/c083t"
+        height="850"
+      />
+      <aside>
+        <dl>
+          <dt>Date</dt>
+          <dd>c. 1778</dd>
+          <dt>Creators</dt>
+          <dd>Artist, Samuel Wale (1721-1786), British</dd>
+          <dd>Engraver, Charles Grignion (1721-1810), British</dd>
+          <dt>Medium</dt>
+          <dd>Etching and Engraving</dd>
+          <dt>Image Size</dt>
+          <dd>29 x 17 cm</dd>
+          <dt>Sheet size</dt>
+          <dd>37 x 24 cm</dd>
+          <dt>Attribution</dt>
+          <dd>
+            Courtesy of Charles Deering McCormick Library of Special
+            Collections, Northwestern University.
+          </dd>
+          <dt>Call number</dt>
+          <dd>Special Collections, L2 Prints W169i</dd>
+        </dl>
+      </aside>
+    </GalleryContent>
+  </Gallery.Item>
+  <Gallery.Item
+    manifest="https://api.dc.library.northwestern.edu/api/v2/works/bf59dad4-76f9-4567-b0e2-3c6050663e2d?as=iiif"
+    caption="A Suttee: Preparing for the Immolation of a Hindoo Widow"
+    title="A Suttee: Preparing for the Immolation of a Hindoo Widow"
+    description="A bare-breasted woman draped in a white garment prepares for sati–a sacrifice in which a widow burns herself upon the death of her husband–amongst a crowd of Hindu worshippers at the ghats of river Vishwamitri against a backdrop of temples and shrines in the city of Baroda (present-day Vadodara). Although both British and Indian people had pushed for sati’s abolition, colonial powers often cited the brutal nature of the ritual as justification for their rule. The British government officially outlawed sati in 1829."
+  >
+    <GalleryContent flex={true}>
+      <ImageStory
+        iiifContent="https://manifest.storiiies-editor.cogapp.com/v3/0583o"
+        height="850"
+      />
+      <aside>
+        <dl>
+          <dt>Date</dt>
+          <dd>1844</dd>
+          <dt>Creators</dt>
+          <dd>Artist, Captain Robert Melville Grindlay (1786-1877), British</dd>
+          <dd>Engraver, James Redaway (1797-1858), British</dd>
+          <dt>Medium</dt>
+          <dd>Engraving</dd>
+          <dt>Image size</dt>
+          <dd>12.1 x 18.8 cm</dd>
+          <dt>Sheet size</dt>
+          <dd>21.1 (20.2) x 27.2 cm</dd>
+          <dt>Attribution</dt>
+          <dd>
+            Courtesy of Charles Deering McCormick Library of Special
+            Collections, Northwestern University.
+          </dd>
+          <dt>Call number</dt>
+          <dd>Special Collections, L1 Prints R3128s</dd>
+          <dt>Curator</dt>
+          <dd>Divya Chandrasekran</dd>
+        </dl>
+      </aside>
+    </GalleryContent>
+  </Gallery.Item>
+</Gallery>
+```
+
 ## API
 
 ### Gallery
 
-| Prop          | Type                        | Required | Notes                                                           |
-| ------------- | --------------------------- | -------- | --------------------------------------------------------------- |
-| `title`       | string                      |          | Optional heading rendered above the grid.                       |
-| `description` | string                      |          | Short intro paragraph under the heading.                        |
-| `popupSize`   | `'full' &#124; 'medium'`    |          | Toggle fullscreen vs. windowed popup layout (default `'full'`). |
-| `order`       | `'default' &#124; 'random'` |          | Control figure ordering; random shuffles once during the build. |
-| `children`    | nodes                       | ✅       | One or more `<Gallery.Item>` entries.                           |
+| Prop          | Type                  | Required | Notes                                                           |
+| ------------- | --------------------- | -------- | --------------------------------------------------------------- |
+| `title`       | string                |          | Optional heading rendered above the grid.                       |
+| `description` | string                |          | Short intro paragraph under the heading.                        |
+| `popupSize`   | `'full', 'medium'`    |          | Toggle fullscreen vs. windowed popup layout (default `'full'`). |
+| `order`       | `'default', 'random'` |          | Control figure ordering; random shuffles once during the build. |
+| `children`    | nodes                 | ✅       | One or more `<Gallery.Item>` entries.                           |
 
 ### Gallery Item
 
@@ -112,15 +266,7 @@ Use it when you want to highlight favorite works, curate a mini exhibit, or gath
 | `popupDescription`                    | string · node     |          | Override the popup description; falls back to `summary`/`description`.                                 |
 | `children`                            | nodes             | ✅       | Modal body content. Accepts any MDX component (Viewer, Map, ImageStory, markdown, etc).                |
 
-> Preview tiles now render a standard `<img>` element sourced from `thumbnail`/`src`/`media` string props to keep the markup predictable.
-
-> Popup navigation is fully static: the component uses hash targets (`#gallery-modal-*`) for open/close/next/prev, so no hydration is required. The close target is scoped per gallery, making multiple galleries on the same page safe.
-
-> `summary`, `description`, and `popupDescription` accept JSX nodes, so you can pass React fragments or custom HTML when you need richer formatting.
-
 ### Gallery Content
-
-Wrap popup bodies with `<GalleryContent>` (or `Gallery.Content`) to reuse the default gutters and the optional flex layout.
 
 | Prop       | Type    | Required | Notes                                                                 |
 | ---------- | ------- | -------- | --------------------------------------------------------------------- |
