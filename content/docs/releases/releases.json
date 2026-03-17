@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.10.1",
+    "date": "2026-03-17",
+    "summary": "Refine gallery item and image story initializer.",
+    "highlights": []
+  },
+  {
     "version": "1.10.0",
     "date": "2026-03-17",
     "summary": "Introduce custom layouts.",

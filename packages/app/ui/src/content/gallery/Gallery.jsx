@@ -1,4 +1,6 @@
 import React from "react";
+import Button from "../../layout/Button.jsx";
+import {useLocale} from "../../locale/index.js";
 import {
   useReferencedManifestMap,
   resolveReferencedManifests,
@@ -19,6 +21,23 @@ const INLINE_SCRIPT = `(() => {
   const NAV_SELECTOR = '[data-canopy-gallery-nav]';
   const NAV_OPTION_SELECTOR = '[data-canopy-gallery-nav-option]';
   const NAV_ITEM_SELECTOR = '[data-canopy-gallery-nav-item]';
+
+  function emitModalState(modal, state) {
+    if (!modal || typeof window === 'undefined') return;
+    const detail = { modalId: modal.id || '', modal, state };
+    try {
+      const EventCtor = window.CustomEvent || CustomEvent;
+      if (typeof EventCtor === 'function') {
+        window.dispatchEvent(new EventCtor('canopy:gallery:modal-change', { detail }));
+        return;
+      }
+    } catch (_) {}
+    try {
+      const fallback = document.createEvent('CustomEvent');
+      fallback.initCustomEvent('canopy:gallery:modal-change', true, true, detail);
+      window.dispatchEvent(fallback);
+    } catch (_) {}
+  }
 
   function isVisible(node) {
     return !!(node && (node.offsetWidth || node.offsetHeight || node.getClientRects().length));
@@ -150,6 +169,7 @@ const INLINE_SCRIPT = `(() => {
         lockScroll();
         document.addEventListener('keydown', handleKeydown, true);
       } else if (activeModal !== modal) {
+        emitModalState(activeModal, 'close');
         activeModal.removeAttribute('data-canopy-gallery-active');
       }
       activeModal = modal;
@@ -158,6 +178,7 @@ const INLINE_SCRIPT = `(() => {
       if (!focusActiveNav(modal)) {
         focusInitial(modal);
       }
+      emitModalState(modal, 'open');
       return;
     }
     if (!activeModal) return;
@@ -191,6 +212,7 @@ const INLINE_SCRIPT = `(() => {
         }
       });
     }
+    emitModalState(previous, 'close');
   }
 
   function modalFromHash() {
@@ -737,6 +759,7 @@ function buildCaptionContent(itemProps) {
 }
 
 function GalleryModal({item, closeTargetId, navItems, navGroupName}) {
+  const {getString, formatString} = useLocale();
   const {
     props,
     modalId,
@@ -755,6 +778,12 @@ function GalleryModal({item, closeTargetId, navItems, navGroupName}) {
     null;
   const modalTitle =
     props.popupTitle || props.modalTitle || props.title || `Item ${index + 1}`;
+  const closeButtonText = getString("common.actions.close", "Close");
+  const closeButtonLabel = formatString(
+    "common.phrases.close_content",
+    "Close {content}",
+    {content: modalTitle},
+  );
   return (
     <div
       id={modalId}
@@ -774,13 +803,13 @@ function GalleryModal({item, closeTargetId, navItems, navGroupName}) {
             activeModalId={modalId}
             groupName={`${navGroupName || "canopy-gallery"}-${modalId}`}
           />
-          <a
+          <Button
             className="canopy-gallery__modal-close"
             href={`#${closeTargetId}`}
-            aria-label={`Close popup for ${modalTitle}`}
-          >
-            X
-          </a>
+            label={closeButtonText}
+            aria-label={closeButtonLabel}
+            variant="secondary"
+          />
         </div>
         <div className="canopy-gallery__modal-panel">
           <button

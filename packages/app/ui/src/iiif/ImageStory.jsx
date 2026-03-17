@@ -7,6 +7,7 @@ import {
 
 const DEFAULT_IMAGE_STORY_HEIGHT = 600;
 const NUMERIC_HEIGHT_PATTERN = /^[+-]?(?:\d+|\d*\.\d+)$/;
+const SIZE_EPSILON = 1;
 
 function resolveContainerHeight(value) {
   if (typeof value === "number" && Number.isFinite(value)) {
@@ -61,6 +62,7 @@ export const ImageStory = (props = {}) => {
     let mounted = false;
     let resizeObserver = null;
     let pollId = null;
+    let lastKnownSize = null;
 
     const payload = sanitizeImageStoryProps({
       iiifContent,
@@ -91,12 +93,41 @@ export const ImageStory = (props = {}) => {
       }
     };
 
-    const hasUsableSize = () => {
-      if (!node) return false;
+    const measureSize = () => {
+      if (!node) return null;
       const rect = node.getBoundingClientRect();
-      const width = rect?.width || node.offsetWidth || node.clientWidth;
-      const height = rect?.height || node.offsetHeight || node.clientHeight;
-      return width > 2 && height > 2;
+      const width = rect?.width || node.offsetWidth || node.clientWidth || 0;
+      const height = rect?.height || node.offsetHeight || node.clientHeight || 0;
+      return {width, height};
+    };
+
+    const hasUsableSize = () => {
+      const size = measureSize();
+      if (!size) return false;
+      const usable = size.width > 2 && size.height > 2;
+      if (usable) {
+        lastKnownSize = size;
+      }
+      return usable;
+    };
+
+    const hasMeaningfulSizeChange = () => {
+      const size = measureSize();
+      if (!size) return false;
+      if (size.width <= 2 || size.height <= 2) {
+        return true;
+      }
+      if (!lastKnownSize) {
+        lastKnownSize = size;
+        return true;
+      }
+      const widthDelta = Math.abs(size.width - lastKnownSize.width);
+      const heightDelta = Math.abs(size.height - lastKnownSize.height);
+      if (widthDelta > SIZE_EPSILON || heightDelta > SIZE_EPSILON) {
+        lastKnownSize = size;
+        return true;
+      }
+      return false;
     };
 
     const mountViewer = () => {
@@ -114,8 +145,13 @@ export const ImageStory = (props = {}) => {
       return true;
     };
 
-    if (!mountViewer()) {
-      if (typeof window !== "undefined" && typeof window.ResizeObserver === "function") {
+    const scheduleWatchers = () => {
+      if (mounted || cancelled) return;
+      if (
+        !resizeObserver &&
+        typeof window !== "undefined" &&
+        typeof window.ResizeObserver === "function"
+      ) {
         resizeObserver = new window.ResizeObserver(() => {
           if (mounted || cancelled) return;
           mountViewer();
@@ -133,13 +169,55 @@ export const ImageStory = (props = {}) => {
           }
         }, 200);
       };
-      schedulePoll();
+      if (!pollId) {
+        schedulePoll();
+      }
+    };
+
+    const beginMounting = () => {
+      if (!mountViewer()) {
+        scheduleWatchers();
+      }
+    };
+
+    const remountViewer = () => {
+      if (cancelled) return;
+      if (mounted) {
+        mounted = false;
+        destroyCleanup();
+      }
+      beginMounting();
+    };
+
+    beginMounting();
+
+    const handleGalleryModalChange = (event) => {
+      if (!node || !event || typeof document === "undefined") return;
+      const detail = event.detail || {};
+      if (detail.state !== "open") return;
+      const modal =
+        detail.modal || (detail.modalId ? document.getElementById(detail.modalId) : null);
+      if (!modal || !modal.contains(node)) return;
+      if (!mounted) return;
+      if (hasMeaningfulSizeChange()) {
+        remountViewer();
+      }
+    };
+
+    if (typeof window !== "undefined" && window.addEventListener) {
+      window.addEventListener("canopy:gallery:modal-change", handleGalleryModalChange);
     }
 
     return () => {
       cancelled = true;
       disconnectWatchers();
       destroyCleanup();
+      if (typeof window !== "undefined" && window.removeEventListener) {
+        window.removeEventListener(
+          "canopy:gallery:modal-change",
+          handleGalleryModalChange,
+        );
+      }
     };
   }, [iiifContent, disablePanAndZoom, pointOfInterestSvgUrl, viewerOptions]);
 
