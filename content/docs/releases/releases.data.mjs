@@ -1,5 +1,15 @@
 const releases = [
   {
+    "version": "1.10.0",
+    "date": "2026-03-17",
+    "summary": "Introduce custom layouts.",
+    "highlights": [
+      "Export sub and content navigation.",
+      "Retain content navigation stickiness.",
+      "Document custom layouts."
+    ]
+  },
+  {
     "version": "1.9.21",
     "date": "2026-03-16",
     "summary": "Resolve deep merge issue on Viewer crossOrigin undefined.",

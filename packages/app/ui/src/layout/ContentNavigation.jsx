@@ -1,6 +1,10 @@
 import React from "react";
 import NavigationTree from "./NavigationTree.jsx";
 import {useLocale} from "../locale/index.js";
+import {buildHeadingTree} from "./headingUtils.js";
+import getPageContext from "./pageContext.js";
+
+const PageContext = typeof getPageContext === "function" ? getPageContext() : null;
 
 const SCROLL_OFFSET_REM = 1.618;
 const MAX_HEADING_DEPTH = 3;
@@ -20,37 +24,73 @@ function buildNodeKey(id, parentKey, index) {
 }
 
 export default function ContentNavigation({
-  items = [],
+  items: itemsProp = [],
   className = "",
   style = {},
   heading,
   headingId,
   pageTitle,
   ariaLabel,
+  collapsible = false,
 }) {
   const {getString, formatString} = useLocale();
+  const context = PageContext ? React.useContext(PageContext) : null;
+  const contextHeadings = React.useMemo(() => {
+    const headings = context && context.page ? context.page.headings : null;
+    return Array.isArray(headings) ? headings : [];
+  }, [context]);
+  const resolvedItems = React.useMemo(() => {
+    if (itemsProp && itemsProp.length) return itemsProp;
+    return buildHeadingTree(contextHeadings);
+  }, [itemsProp, contextHeadings]);
+  const topHeading = React.useMemo(() => {
+    return (
+      contextHeadings.find((entry) => {
+        const depth = entry && (entry.depth || entry.level);
+        return depth === 1;
+      }) || null
+    );
+  }, [contextHeadings]);
+  const resolvedHeadingId =
+    headingId || (topHeading && topHeading.id) || null;
+  const resolvedPageTitle =
+    pageTitle || (context && context.page ? context.page.title : null) || null;
+  const inferredHeading =
+    (topHeading && (topHeading.title || topHeading.text)) || null;
   const isBrowser =
     typeof window !== "undefined" && typeof document !== "undefined";
   const savedDepthsRef = React.useRef(null);
-  const [isExpanded, setIsExpanded] = React.useState(false);
+  const [internalExpanded, setInternalExpanded] = React.useState(
+    collapsible ? false : true,
+  );
+
+  React.useEffect(() => {
+    setInternalExpanded(collapsible ? false : true);
+  }, [collapsible]);
 
   const handleToggle = React.useCallback(() => {
-    setIsExpanded((prev) => !prev);
-  }, []);
+    if (!collapsible) return;
+    setInternalExpanded((prev) => !prev);
+  }, [collapsible]);
 
-  if ((!items || !items.length) && !headingId) return null;
+  const isExpanded = collapsible ? internalExpanded : true;
+
+  if ((!resolvedItems || !resolvedItems.length) && !resolvedHeadingId)
+    return null;
 
   const combinedClassName = [
     "canopy-sub-navigation canopy-content-navigation",
     isExpanded
       ? "canopy-content-navigation--expanded"
       : "canopy-content-navigation--collapsed",
+    !collapsible ? "canopy-content-navigation--static" : null,
     className,
   ]
     .filter(Boolean)
     .join(" ");
 
-  const effectiveHeading = heading || pageTitle || null;
+  const effectiveHeading =
+    heading || inferredHeading || resolvedPageTitle || null;
   const fallbackNavLabel = getString(
     "common.nouns.section_navigation",
     "Section navigation",
@@ -104,8 +144,8 @@ export default function ContentNavigation({
   const headingEntries = React.useMemo(() => {
     const entries = [];
     const seen = new Set();
-    if (headingId) {
-      const topId = String(headingId);
+    if (resolvedHeadingId) {
+      const topId = String(resolvedHeadingId);
       entries.push({id: topId, depth: 1});
       seen.add(topId);
     }
@@ -125,13 +165,13 @@ export default function ContentNavigation({
         if (node.children && node.children.length) pushNodes(node.children);
       });
     };
-    pushNodes(items);
+    pushNodes(resolvedItems);
     return entries;
-  }, [headingId, items, getSavedDepth]);
+  }, [resolvedHeadingId, resolvedItems, getSavedDepth]);
 
   const fallbackId = headingEntries.length
     ? headingEntries[0].id
-    : headingId || null;
+    : resolvedHeadingId || null;
   const [activeId, setActiveId] = React.useState(fallbackId);
   const activeIdRef = React.useRef(activeId);
   React.useEffect(() => {
@@ -261,7 +301,7 @@ export default function ContentNavigation({
       const nextId =
         targetId && targetId !== "top"
           ? targetId
-          : headingEntries[0]?.id || headingId || null;
+          : headingEntries[0]?.id || resolvedHeadingId || null;
       if (nextId) {
         activeIdRef.current = nextId;
         setActiveId(nextId);
@@ -272,7 +312,7 @@ export default function ContentNavigation({
         window.scrollTo(0, top);
       }
     },
-    [computeOffsetPx, headingEntries, headingId, isBrowser],
+    [computeOffsetPx, headingEntries, resolvedHeadingId, isBrowser],
   );
 
   const navTreeRoot = React.useMemo(() => {
@@ -310,13 +350,19 @@ export default function ContentNavigation({
         .filter(Boolean);
     }
 
-    const nodes = mapNodes(items, "section");
+    const nodes = mapNodes(resolvedItems, "section");
     return {
       slug: "content-nav-root",
-      title: effectiveHeading || pageTitle || onThisPageLabel,
+      title: effectiveHeading || resolvedPageTitle || onThisPageLabel,
       children: nodes,
     };
-  }, [items, effectiveHeading, pageTitle, activeId, getSavedDepth]);
+  }, [
+    resolvedItems,
+    effectiveHeading,
+    resolvedPageTitle,
+    activeId,
+    getSavedDepth,
+  ]);
 
   return (
     <nav
@@ -325,78 +371,80 @@ export default function ContentNavigation({
       aria-label={navLabel}
       data-canopy-content-nav="true"
     >
-      <button
-        type="button"
-        className={`canopy-content-navigation__toggle ${toggleStateClass}`}
-        aria-expanded={isExpanded}
-        aria-label={toggleSrLabel}
-        title={toggleSrLabel}
-        onClick={handleToggle}
-        data-canopy-content-nav-toggle="true"
-        data-show-label={toggleShowLabel}
-        data-hide-label={toggleHideLabel}
-        data-show-full-label={showContentNavLabel}
-        data-hide-full-label={hideContentNavLabel}
-      >
-        <span
-          className="canopy-content-navigation__toggle-icon"
-          aria-hidden="true"
+      {collapsible ? (
+        <button
+          type="button"
+          className={`canopy-content-navigation__toggle ${toggleStateClass}`}
+          aria-expanded={isExpanded}
+          aria-label={toggleSrLabel}
+          title={toggleSrLabel}
+          onClick={handleToggle}
+          data-canopy-content-nav-toggle="true"
+          data-show-label={toggleShowLabel}
+          data-hide-label={toggleHideLabel}
+          data-show-full-label={showContentNavLabel}
+          data-hide-full-label={hideContentNavLabel}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="ionicon"
-            viewBox="0 0 512 512"
+          <span
+            className="canopy-content-navigation__toggle-icon"
+            aria-hidden="true"
           >
-            <path
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="50"
-              d="M160 144h288M160 256h288M160 368h288"
-            />
-            <circle
-              cx="80"
-              cy="144"
-              r="16"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="32"
-            />
-            <circle
-              cx="80"
-              cy="256"
-              r="16"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="32"
-            />
-            <circle
-              cx="80"
-              cy="368"
-              r="16"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="32"
-            />
-          </svg>
-        </span>
-        <span
-          className="canopy-content-navigation__toggle-label"
-          data-canopy-content-nav-toggle-label="true"
-        >
-          <span className="sr-only">{toggleSrLabel}</span>
-        </span>
-        <span className="sr-only" data-canopy-content-nav-toggle-sr="true">
-          {toggleSrLabel}
-        </span>
-      </button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="ionicon"
+              viewBox="0 0 512 512"
+            >
+              <path
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="50"
+                d="M160 144h288M160 256h288M160 368h288"
+              />
+              <circle
+                cx="80"
+                cy="144"
+                r="16"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="32"
+              />
+              <circle
+                cx="80"
+                cy="256"
+                r="16"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="32"
+              />
+              <circle
+                cx="80"
+                cy="368"
+                r="16"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="32"
+              />
+            </svg>
+          </span>
+          <span
+            className="canopy-content-navigation__toggle-label"
+            data-canopy-content-nav-toggle-label="true"
+          >
+            <span className="sr-only">{toggleSrLabel}</span>
+          </span>
+          <span className="sr-only" data-canopy-content-nav-toggle-sr="true">
+            {toggleSrLabel}
+          </span>
+        </button>
+      ) : null}
       <NavigationTree
         root={navTreeRoot}
         includeRoot={false}

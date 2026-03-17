@@ -1,0 +1,68 @@
+---
+title: Custom layouts
+description: Compose section and content navigation manually inside `_layout.mdx` files.
+---
+
+# Custom layouts
+
+`<Layout />` is the fastest way to render the documentation chrome, but some sections need a bespoke shell. When that happens you can import the same navigation primitives directly into a directory-level `_layout.mdx` file and arrange them however you like.
+
+## Navigation components
+
+Import the components from inside your MDX layout or scope it globally via `app/components/mdx.tsx`:
+
+- **`<SubNavigation />`** renders the navigation tree. It automatically reads the current directory, page context, and `content/navigation.yml` to build the sidebar. Pass `navigation`, `heading`, or `ariaLabel` props to override the defaults when needed.
+- **`<ContentNavigation />`** outputs the on-page table of contents. When you omit the `items` prop, it resolves the heading tree from the current page context so `_layout.mdx` authors don’t have to wire anything manually. You can still pass `items`, `heading`, or `headingId` to customize the entries. Pass `collapsible` if you want to reuse the built-in expand/collapse toggle—otherwise it renders as a static outline.
+- **`<ContentNavigationScript />`** attaches the floating/expandable behavior to every element marked with `data-canopy-content-nav-root`. Include it once per page (typically right after the navigation markup); it injects the sentinel/placeholder helpers automatically and will mark the parent element when the attribute is missing.
+
+`ContentNavigationScript` automatically injects helpers it needs to keep the table of contents sticky, so the markup above is all you need. Adjust the surrounding classes to suit your layout. `<ContentNavigation />` hydrates itself from the heading metadata produced during the MDX build. As long as your pages include `## H2` or deeper headings, the component renders a structured table of contents in custom layouts exactly like `<Layout />` does. When the page is short or you want to scope the contents manually, pass your own `items` array and the component will render that tree instead.
+
+Remember to add `<ContentNavigationScript />` anywhere the on-page navigation appears so the collapse/expand button, floating state, and active-heading tracking work without hydrating React on the client.
+
+## Example `_layout.mdx`
+
+```mdx filename="content/docs/content/custom-layout/_layout.mdx" copy
+import {
+  SubNavigation,
+  ContentNavigation,
+  ContentNavigationScript,
+} from "@canopy-iiif/app/ui/server";
+
+<style>
+  {`
+    .custom-layout-example {
+        display: grid;
+        grid-template-columns: minmax(16rem, 20rem) minmax(0, 1fr);
+        gap: 2rem;
+        align-items: flex-start;
+        padding: 2rem;
+    }
+
+    .custom-layout-example__sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    .custom-layout-example__sidebar nav {
+      padding: 1rem;
+      background: var(--color-accent-100);
+      border: 1px solid var(--color-accent-200);
+    }
+
+    .custom-layout-example__content {
+        min-width: 0;
+    }
+`}
+</style>
+
+<div className="custom-layout-example">
+  <aside className="custom-layout-example__sidebar">
+    <SubNavigation />
+    <ContentNavigation />
+  </aside>
+  <div className="custom-layout-example__content">{props.children}</div>
+</div>
+
+<ContentNavigationScript />
+```

@@ -1,0 +1,43 @@
+import {
+  SubNavigation,
+  ContentNavigation,
+  ContentNavigationScript,
+} from "@canopy-iiif/app/ui/server";
+
+<style>
+  {`
+    .custom-layout-example {
+        display: grid;
+        grid-template-columns: minmax(16rem, 20rem) minmax(0, 1fr);
+        gap: 2rem;
+        align-items: flex-start;
+        padding: 2rem;
+    }
+
+    .custom-layout-example__sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    .custom-layout-example__sidebar nav {
+      padding: 1rem;
+      background: var(--color-accent-100);
+      border: 1px solid var(--color-accent-200);
+    }
+
+    .custom-layout-example__content {
+        min-width: 0;
+    }
+`}
+</style>
+
+<div className="custom-layout-example">
+  <aside className="custom-layout-example__sidebar">
+    <SubNavigation />
+    <ContentNavigation />
+  </aside>
+  <div className="custom-layout-example__content">{props.children}</div>
+</div>
+
+<ContentNavigationScript />
