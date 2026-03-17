@@ -38,6 +38,14 @@ export const Viewer = (props) => {
     DEFAULT_VIEWER_OPTIONS,
     props && props.options
   );
+  const crossOriginExplicitlyUndefined =
+    props &&
+    props.options &&
+    Object.prototype.hasOwnProperty.call(props.options, "crossOrigin") &&
+    props.options.crossOrigin === undefined;
+  if (crossOriginExplicitlyUndefined) {
+    mergedOptions.crossOrigin = null;
+  }
 
   useEffect(() => {
     let mounted = true;

@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.9.21",
+    "date": "2026-03-16",
+    "summary": "Resolve deep merge issue on Viewer crossOrigin undefined.",
+    "highlights": []
+  },
+  {
     "version": "1.9.20",
     "date": "2026-03-12",
     "summary": "Refine gallery docs; ImageStory initializer.",
