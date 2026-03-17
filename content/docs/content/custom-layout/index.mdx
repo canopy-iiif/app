@@ -5,19 +5,19 @@ description: Compose section and content navigation manually inside `_layout.mdx
 
 # Custom layouts
 
-`<Layout />` is the fastest way to render the documentation chrome, but some sections need a bespoke shell. When that happens you can import the same navigation primitives directly into a directory-level `_layout.mdx` file and arrange them however you like.
+`<Layout />` gives you a full doc shell, but some sections deserve custom framing. When you need to steer the markup yourself, import the primitives below inside `_layout.mdx` and arrange them however you like.
 
 ## Navigation components
 
-Import the components from inside your MDX layout or scope it globally via `app/components/mdx.tsx`:
+Import these helpers directly in the layout (or wire them globally through `app/components/mdx.tsx`):
 
-- **`<SubNavigation />`** renders the navigation tree. It automatically reads the current directory, page context, and `content/navigation.yml` to build the sidebar. Pass `navigation`, `heading`, or `ariaLabel` props to override the defaults when needed.
-- **`<ContentNavigation />`** outputs the on-page table of contents. When you omit the `items` prop, it resolves the heading tree from the current page context so `_layout.mdx` authors don’t have to wire anything manually. You can still pass `items`, `heading`, or `headingId` to customize the entries. Pass `collapsible` if you want to reuse the built-in expand/collapse toggle—otherwise it renders as a static outline.
-- **`<ContentNavigationScript />`** attaches the floating/expandable behavior to every element marked with `data-canopy-content-nav-root`. Include it once per page (typically right after the navigation markup); it injects the sentinel/placeholder helpers automatically and will mark the parent element when the attribute is missing.
+- **`<SubNavigation />`** reads the current directory, page context, and `content/navigation.yml` to build a sidebar tree. Override the defaults with `navigation`, `heading`, or `ariaLabel` when you need a custom label or data source.
+- **`<ContentNavigation />`** prints an on-page table of contents. With no props it derives headings from the current page. Pass `items`, `heading`, or `headingId` to take over the outline, and add `collapsible` if you want the built-in expand/collapse control. Leave it off for a static list.
+- **`<ContentNavigationScript />`** handles sticky positioning, collapse state, and active-heading tracking. Include it once per layout (usually right after the nav markup). The script tags parent wrappers and injects any helper nodes it needs, so the HTML stays lean.
 
-`ContentNavigationScript` automatically injects helpers it needs to keep the table of contents sticky, so the markup above is all you need. Adjust the surrounding classes to suit your layout. `<ContentNavigation />` hydrates itself from the heading metadata produced during the MDX build. As long as your pages include `## H2` or deeper headings, the component renders a structured table of contents in custom layouts exactly like `<Layout />` does. When the page is short or you want to scope the contents manually, pass your own `items` array and the component will render that tree instead.
+`ContentNavigationScript` runs once and keeps the navigation sticky, so the markup above is all you need. `<ContentNavigation />` hydrates from the heading metadata captured during the MDX build; if the page has `##` headings (or deeper) it will mirror the default `<Layout />`. When a page is short—or you need to curate the outline—pass your own `items` array.
 
-Remember to add `<ContentNavigationScript />` anywhere the on-page navigation appears so the collapse/expand button, floating state, and active-heading tracking work without hydrating React on the client.
+Remember to render `<ContentNavigationScript />` anywhere the TOC appears so the floating behavior works without hydrating React.
 
 ## Example `_layout.mdx`
 
