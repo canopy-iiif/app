@@ -296,6 +296,11 @@ async function buildSearchPageForEntry(routeEntry) {
     if (!require('../common').fs.existsSync(searchLayoutPath)) {
       throw new Error('Missing required file: content/search/_layout.mdx');
     }
+    const searchLayoutDataPath = path
+      .relative(process.cwd(), searchLayoutPath)
+      .split(path.sep)
+      .join('/')
+      .replace(/^\.?\/+/, '');
     const mdx = require('../build/mdx');
     const normalizedRoute = routeBase ? routeBase.replace(/^\/+|\/+$/g, '') : '';
     const fileHref = rootRelativeHref(relativeOutput.split(path.sep).join('/'));
@@ -384,7 +389,10 @@ async function buildSearchPageForEntry(routeEntry) {
       }
     } catch (_) {}
     const bodyClass = canopyBodyClassForType('search');
-    let html = htmlShell({ title: pageTitle, body, cssHref: null, scriptHref: jsRel, headExtra, bodyClass, lang: pageLocale });
+    const htmlAttributes = {
+      'data-canopy-path': searchLayoutDataPath || 'content/search/_layout.mdx',
+    };
+    let html = htmlShell({ title: pageTitle, body, cssHref: null, scriptHref: jsRel, headExtra, bodyClass, lang: pageLocale, htmlAttributes });
     try { html = require('../common').applyBaseToHtml(html); } catch (_) {}
     await fsp.writeFile(outPath, html, 'utf8');
     console.log('Search: Built', path.relative(process.cwd(), outPath));

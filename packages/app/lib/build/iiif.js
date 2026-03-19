@@ -1890,6 +1890,11 @@ async function buildIiifCollectionPages(CONFIG) {
       "IIIF build requires content/works/_layout.mdx. Create the layout instead of relying on generated output.",
     );
   }
+  const worksLayoutDataPath = path
+    .relative(process.cwd(), worksLayoutPath)
+    .split(path.sep)
+    .join("/")
+    .replace(/^\.?\/+/, '');
   let WorksLayoutComp = null;
   try {
     WorksLayoutComp = await mdx.compileMdxToComponent(worksLayoutPath);
@@ -2387,6 +2392,9 @@ async function buildIiifCollectionPages(CONFIG) {
           const headExtra = headSegments.join("");
           const pageType = (pageDetails && pageDetails.type) || "work";
           const bodyClass = canopyBodyClassForType(pageType);
+          const htmlAttributes = {
+            'data-canopy-path': worksLayoutDataPath || 'content/works/_layout.mdx',
+          };
           let html = htmlShell({
             title,
             body: pageBody,
@@ -2395,6 +2403,7 @@ async function buildIiifCollectionPages(CONFIG) {
             headExtra,
             bodyClass,
             lang: pageLocale,
+            htmlAttributes,
           });
           try {
             html = require("../common").applyBaseToHtml(html);

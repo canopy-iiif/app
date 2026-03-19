@@ -434,7 +434,7 @@ function canopyBodyClassForType(type) {
   return `canopy-type-${slug}`;
 }
 
-function htmlShell({ title, body, cssHref, scriptHref, headExtra, bodyClass, lang }) {
+function htmlShell({ title, body, cssHref, scriptHref, headExtra, bodyClass, lang, htmlAttributes }) {
   const scriptTag = scriptHref ? `<script defer src="${scriptHref}"></script>` : '';
   const extra = headExtra ? String(headExtra) : '';
   const cssTag = cssHref ? `<link rel="stylesheet" href="${cssHref}">` : '';
@@ -443,6 +443,17 @@ function htmlShell({ title, body, cssHref, scriptHref, headExtra, bodyClass, lan
   const htmlAttrs = [];
   if (appearance === 'dark') htmlAttrs.push('class="dark"');
   htmlAttrs.push(`data-accent="${accent || 'indigo'}"`);
+  if (htmlAttributes && typeof htmlAttributes === 'object') {
+    const attrEntries = Object.entries(htmlAttributes);
+    for (const [key, rawValue] of attrEntries) {
+      if (!key) continue;
+      const attrName = String(key).trim();
+      if (!attrName) continue;
+      const valueString = rawValue == null ? '' : String(rawValue);
+      const escaped = valueString.replace(/"/g, '&quot;');
+      htmlAttrs.push(`${attrName}="${escaped}"`);
+    }
+  }
   const htmlAttr = htmlAttrs.length ? ` ${htmlAttrs.join(' ')}` : '';
   const hasCustomTitle = /<title\b/i.test(extra);
   const titleTag = hasCustomTitle ? '' : `<title>${title}</title>`;

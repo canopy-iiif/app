@@ -1,0 +1,4 @@
+interface:
+  display_name: "Canopy Frontend Aesthetic"
+  short_description: "Keep Canopy IIIF colors, typography, and layout cohesive."
+  default_prompt: "Use Canopy theme tokens, serif-forward typography, and grid spacing rules when designing or reviewing UI."

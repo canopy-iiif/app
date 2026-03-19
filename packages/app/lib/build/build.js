@@ -21,6 +21,7 @@ const {logLine} = require("./log");
 const navigation = require("../components/navigation");
 const referenced = require("../components/referenced");
 const bibliography = require("../components/bibliography");
+const studio = require("../../studio");
 
 // hold records between builds if skipping IIIF
 let iiifRecordsCache = [];
@@ -285,6 +286,19 @@ async function build(options = {}) {
       underscore: true,
     });
     await copyAssets();
+  });
+
+  await timeStage("Prepare Canopy Studio workspace", stageTimings, async () => {
+    logLine("\nPrepare Canopy Studio workspace", "magenta", {
+      bright: true,
+      underscore: true,
+    });
+    try {
+      await studio.deployStudioPrototype({pageRecords});
+    } catch (e) {
+      const message = e && e.message ? e.message : String(e);
+      logLine(`• Studio prototype skipped: ${message}`, "yellow", {dim: true});
+    }
   });
 
   const totalMs = nowMs() - buildStart;

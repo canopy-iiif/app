@@ -206,9 +206,12 @@ async function collectMdxPageRecords() {
         const fm = mdx.parseFrontmatter(src);
         const titleRaw = mdx.extractTitle(src);
         const title = typeof titleRaw === 'string' ? titleRaw.trim() : '';
-        const rel = path.relative(CONTENT_DIR, p).replace(/\.mdx$/i, '.html');
+        const relativeSourcePath = path.relative(CONTENT_DIR, p);
+        const normalizedSourcePath = relativeSourcePath.split(path.sep).join('/');
+        const rel = relativeSourcePath.replace(/\.mdx$/i, '.html');
+        const normalizedOutputPath = rel.split(path.sep).join('/');
         if (base !== 'sitemap.mdx') {
-          const href = rootRelativeHref(rel.split(path.sep).join('/'));
+          const href = rootRelativeHref(normalizedOutputPath);
           const plainText = mdx.extractPlainText(src);
           const markdownSummary = mdx.extractMarkdownSummary(src);
           const summary = plainText || '';
@@ -232,6 +235,8 @@ async function collectMdxPageRecords() {
           pages.push({
             title,
             href,
+            sourcePath: normalizedSourcePath,
+            outputPath: normalizedOutputPath,
             searchInclude: include && !!trimmedType,
             searchType: trimmedType || undefined,
             searchSummary: summary,

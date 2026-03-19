@@ -48,6 +48,7 @@
   },
   "files": [
     "lib/**",
+    "studio/**",
     "ui/dist/**",
     "ui/styles/**",
     "ui/tailwind-canopy-iiif-plugin.js",

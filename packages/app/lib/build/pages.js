@@ -100,6 +100,10 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
   const source = typeof sourceRaw === 'string' ? sourceRaw : String(sourceRaw || '');
   const title = mdx.extractTitle(source);
   const relContentPath = path.relative(CONTENT_DIR, filePath);
+  const normalizedContentPath = relContentPath.replace(/\\+/g, '/');
+  const dataCanopyPath = normalizedContentPath
+    ? `content/${normalizedContentPath.replace(/^\/+/, '')}`
+    : 'content';
   const relOutputPath = relContentPath.replace(/\.mdx$/i, '.html');
   const normalizedRel = navigation.normalizeRelativePath(relContentPath);
   const pageInfo = navigation.getPageInfo(normalizedRel);
@@ -376,6 +380,7 @@ async function renderContentMdxToHtml(filePath, outPath, extraProps = {}, source
     headExtra,
     bodyClass,
     lang: pageLocale,
+    htmlAttributes: { 'data-canopy-path': dataCanopyPath },
   });
   const { applyBaseToHtml } = require('../common');
   return applyBaseToHtml(html);
