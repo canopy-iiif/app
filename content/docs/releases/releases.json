@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.10.3",
+    "date": "2026-03-25",
+    "summary": "Update CI workflow.",
+    "highlights": []
+  },
+  {
     "version": "1.10.2",
     "date": "2026-03-25",
     "summary": "Refine timeline; add align and scale props.",
