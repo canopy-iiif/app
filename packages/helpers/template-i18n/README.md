@@ -18,4 +18,8 @@ This variant of the Canopy template mirrors the primary starter while giving you
 4. Add or translate files under `content/<lang>/`—keep filenames and folder structure aligned between locales so the toggle can resolve matching routes.
 5. Customize `content/<lang>/locale.yml` for UI copy, `content/<lang>/navigation.yml` for menu items, and drop translated MDX pages anywhere under that locale folder.
 
+## Preview from the monorepo
+
+From `canopy-iiif/app`, run `npm run preview:template-i18n` to stage this variant into `.template-i18n-preview/`, install dependencies, and launch `npm run dev` so you can iterate locally.
+
 Refer to https://canopy-iiif.github.io/app/docs/i18n/ for the full internationalization guide, including optional layouts, language toggle variants, and notes on inheriting navigation or locale entries per directory.

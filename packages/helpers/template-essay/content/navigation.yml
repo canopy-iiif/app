@@ -1,0 +1,9 @@
+navigation:
+  - href: /
+    label: Essay
+  - href: /works
+    label: Works
+  - href: /search
+    label: Search
+  - href: /notes
+    label: Notes & Credits

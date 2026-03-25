@@ -122,6 +122,20 @@ Additional copy beneath the heading encourages readers to linger: outline curato
   />
 </Timeline>
 
+Uniform spacing offers another editorial option when you want each beat to occupy the same amount of vertical space regardless of its date. Set `scale="uniform"` on the wrapper to keep the layout steady while still labeling points with their real timestamps.
+
+<Timeline
+  title="Curatorial milestones"
+  description="Museum-side checkpoints without proportional spacing."
+  scale="uniform"
+  height="420px"
+>
+  <TimelinePoint date="1932" title="Acquisition" summary="Collection enters the museum holdings." />
+  <TimelinePoint date="1979" title="Restoration" summary="Conservation team stabilizes fragile pigments." />
+  <TimelinePoint date="1996" title="Loan" summary="Travels internationally for a focused exhibition." />
+  <TimelinePoint date="2022" title="Digitization" summary="Captured as IIIF with new interpretation." />
+</Timeline>
+
 ### Slider
 
 Sliders turn IIIF Collections or generated facet feeds into swipeable strips of cards that link back to work pages, perfect for highlighting themes without overwhelming the layout. They shine in sections where you want to highlight parallels—perhaps comparing textiles, portraits, or cartographic plates across decades—without building a bespoke gallery.

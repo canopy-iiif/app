@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.10.2",
+    "date": "2026-03-25",
+    "summary": "Refine timeline; add align and scale props.",
+    "highlights": []
+  },
+  {
     "version": "1.10.1",
     "date": "2026-03-17",
     "summary": "Refine gallery item and image story initializer.",

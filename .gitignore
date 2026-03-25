@@ -5,6 +5,10 @@ node_modules/
 site/
 .template-build/
 .template-i18n-build/
+.template-preview/
+.template-i18n-preview/
+.template-essay-build/
+.template-essay-preview/
 .org-build/
 
 # remove this if you would like to commit the cache

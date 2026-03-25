@@ -1,6 +1,6 @@
 ---
 title: Create a Timeline
-description: Build an interactive, proportionally-spaced timeline to visualize events alongside your narrative.
+description: Build an interactive timeline—either proportional or uniform—to visualize events alongside your narrative.
 referencedManifests:
   - https://api.dc.library.northwestern.edu/api/v2/works/20f1cd93-7851-4646-af07-0b544661569f?as=iiif
 ---
@@ -12,7 +12,8 @@ events chronologically.
 
 The `<Timeline>` component provides a vertical, time-scaled view of events, positioning them relative to one another
 within a defined date range. Closely occurring events remain clustered, while larger temporal gaps are clearly
-represented.
+represented. When you want evenly spaced beats regardless of dates, switch to `scale="uniform"` so each point
+receives equal vertical space while still showing its timestamps.
 
 This guide walks through building a timeline from scratch using the `<Timeline>` component.
 
@@ -127,7 +128,42 @@ Mark pivotal moments with the `highlight` prop. Highlighted points render in you
   />
 </Timeline>
 
-## 4. Relate events to works in your collection
+## 4. Pick your spacing style
+
+Most timelines should keep `scale="time"` (the default) so the layout reinforces chronology. For editorial or
+exhibition copy where each milestone deserves equal weight, set `scale="uniform"` on the wrapper. The dates still
+render normally—the change only affects spacing.
+
+```mdx
+<Timeline
+  title="Installation Day"
+  description="Even pacing for morning, matinee, and evening events."
+  scale="uniform"
+  height="360px"
+>
+  <TimelinePoint date="2024-05-01" title="Uncrate" summary="Art handlers stage works for review." />
+  <TimelinePoint date="2024-06-14" title="Lighting focus" summary="Finalize the sightlines for each gallery." />
+  <TimelinePoint date="2024-09-02" title="Opening" summary="Ribbon cutting with donors and press." />
+</Timeline>
+```
+
+<Timeline
+  title="Installation Day"
+  description="Even pacing for morning, matinee, and evening events."
+  scale="uniform"
+  height="360px"
+>
+  <TimelinePoint date="2024-05-01" title="Uncrate" summary="Art handlers stage works for review." />
+  <TimelinePoint date="2024-06-14" title="Lighting focus" summary="Finalize the sightlines for each gallery." />
+  <TimelinePoint date="2024-09-02" title="Opening" summary="Ribbon cutting with donors and press." />
+</Timeline>
+
+While you're adjusting the wrapper, consider whether the vertical spine should stay centered or hug an edge. Set
+`align="left"` (or `"right"`) to slide the spine flush against that side so every card fills the opposite column—handy
+for narrow layouts or when you have long copy that benefits from consistent alignment. Passing `align` overrides each
+point's `side` prop, so you only need to set it once.
+
+## 5. Relate events to works in your collection
 
 Connect a point to related works in your collection with `referencedManifests`:
 
@@ -164,7 +200,7 @@ Connect a point to related works in your collection with `referencedManifests`:
   />
 </Timeline>
 
-## 5. Intermix your content with a map
+## 6. Intermix your content with a map
 
 While the `<Timeline>` component situates events chronologically, many narratives also benefit from geographic context.
 By intermixing `<Timeline>` with the `<Map>` component, the same events can be explored across both time and space.

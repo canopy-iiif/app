@@ -6,6 +6,10 @@ This repository offers a trimmed down starting point for new Canopy IIIF project
 
 Walk through the [Quick Start guide](https://canopy-iiif.github.io/app/docs/user-guides/canopy-get-started.html) to stand up your new digital project, configure `canopy.yml` using IIIF collections and manifests, and add pages and layouts under `content/`.
 
+## Preview from the monorepo
+
+Working inside `canopy-iiif/app`? Run `npm run preview:template` to stage this starter into `.template-preview/`, install its dependencies, and launch `npm run dev`. Stop the script with `Ctrl+C` when you are done.
+
 ## Updates
 
 Keep your project current by running `npm install @canopy-iiif/app@latest @samvera/clover-iiif@latest` whenever a new release ships, or trigger the _Update Canopy App_ GitHub action (Actions tab → _Update Canopy App_ → _Run workflow_) and let it open a pull request that bumps both dependencies for you. Read the [Developer documentation](https://canopy-iiif.github.io/app/docs/developers) for more information.

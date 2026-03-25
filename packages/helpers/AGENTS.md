@@ -12,6 +12,7 @@ Key Scripts
 - `run-changeset.js`, `version-bump.js`: Wrap Changesets commands with local conventions.
 - `template/`: Logic for preparing the GitHub Pages template repo during releases.
 - `template-i18n/`: Assets + overrides for the bilingual template (`en` default, `es` secondary) published by the `template-i18n` job.
+- `template-essay/`: Long-form starter content plus overrides published by the `template-essay` job.
 - `org/`: Prepares the canopy-iiif.github.io repository (rewrites `sitemap*.xml`, renders the landing page assets into `.org-build/`, and pushes the result).
 
 Invariants
@@ -45,3 +46,4 @@ Logbook
 - 2025-10-20 / chatgpt: Template workflow now deletes any stale `package-lock.json`, runs `npm install --package-lock-only --ignore-scripts`, and keeps the regenerated lockfile so template repos always track the rewritten dependencies.
 - 2026-02-02 / chatgpt: Added `org/prepare-org-site.js` + `org/push-org-site.js`; helper now rewrites `sitemap*.xml(.gz)` `<loc>` entries to `CANOPY_BASE_URL`, renders `root/index.mdx` (+ `_app.mdx`) to HTML, copies only README/robots/CSS, and publishes a minimal `.org-build/` (no `/app` directory) before pushing to `canopy-iiif.github.io`.
 - 2026-03-14 / chatgpt: Introduced the template-i18n source directory plus `TEMPLATE_SOURCE_DIR` override so the release workflow can publish `canopy-iiif/template-i18n` alongside the default starter.
+- 2026-03-30 / chatgpt: Added the essay template variant plus a reusable preview helper so any template can be staged locally (`npm run preview:template*`).

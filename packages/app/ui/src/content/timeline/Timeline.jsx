@@ -11,6 +11,16 @@ import ReferencedManifestCard from "../../layout/ReferencedManifestCard.jsx";
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_TRACK_HEIGHT = 640;
 const MIN_HEIGHT_PER_POINT = 220;
+const SCALE_MODES = {
+  TIME: "time",
+  UNIFORM: "uniform",
+};
+
+const ALIGN_OPTIONS = {
+  CENTER: "center",
+  LEFT: "left",
+  RIGHT: "right",
+};
 
 function getThresholdMs(threshold, granularity) {
   const value = Number(threshold);
@@ -262,6 +272,8 @@ export default function Timeline({
   locale: localeProp = "en-US",
   height = DEFAULT_TRACK_HEIGHT,
   threshold: thresholdProp = null,
+  scale = SCALE_MODES.TIME,
+  align = ALIGN_OPTIONS.CENTER,
   steps = null,
   points: pointsProp,
   __canopyTimeline: payload = null,
@@ -302,6 +314,21 @@ export default function Timeline({
 
   const spanStart = effectiveRange.startDate.getTime();
   const span = effectiveRange.span;
+  const scaleValue =
+    scale === SCALE_MODES.UNIFORM ? SCALE_MODES.UNIFORM : SCALE_MODES.TIME;
+  const useUniformSpacing = scaleValue === SCALE_MODES.UNIFORM;
+  const alignValue =
+    align === ALIGN_OPTIONS.LEFT
+      ? ALIGN_OPTIONS.LEFT
+      : align === ALIGN_OPTIONS.RIGHT
+        ? ALIGN_OPTIONS.RIGHT
+        : ALIGN_OPTIONS.CENTER;
+  const enforcedSide =
+    alignValue === ALIGN_OPTIONS.LEFT
+      ? "right"
+      : alignValue === ALIGN_OPTIONS.RIGHT
+        ? "left"
+        : null;
 
   const pointsWithPosition = React.useMemo(() => {
     if (!sanitizedPoints.length) return [];
@@ -309,17 +336,20 @@ export default function Timeline({
       const timestamp = point.meta.timestamp;
       const fallbackProgress =
         sanitizedPoints.length > 1 ? index / (sanitizedPoints.length - 1) : 0;
-      const progress = Number.isFinite(timestamp)
-        ? clampProgress((timestamp - spanStart) / span)
-        : fallbackProgress;
-      const side = point.side || (index % 2 === 0 ? "left" : "right");
+      const progress = useUniformSpacing
+        ? fallbackProgress
+        : Number.isFinite(timestamp)
+            ? clampProgress((timestamp - spanStart) / span)
+            : fallbackProgress;
+      const side =
+        enforcedSide || point.side || (index % 2 === 0 ? "left" : "right");
       return {
         ...point,
         progress,
         side,
       };
     });
-  }, [sanitizedPoints, spanStart, span]);
+  }, [sanitizedPoints, spanStart, span, useUniformSpacing, enforcedSide]);
 
   const [activeId, setActiveId] = React.useState(() =>
     getActivePointId(pointsWithPosition)
@@ -388,7 +418,11 @@ export default function Timeline({
   }, []);
 
   const trackHeight = resolveTrackHeight(height, pointsWithPosition.length);
-  const containerClasses = ["canopy-timeline", className]
+  const containerClasses = [
+    "canopy-timeline",
+    alignValue ? `canopy-timeline--align-${alignValue}` : "",
+    className,
+  ]
     .filter(Boolean)
     .join(" ");
   const rangeLabel = formatRangeLabel(effectiveRange);
