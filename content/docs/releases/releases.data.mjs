@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.10.4",
+    "date": "2026-03-26",
+    "summary": "Update popupSize window option on Gallery.",
+    "highlights": []
+  },
+  {
     "version": "1.10.3",
     "date": "2026-03-25",
     "summary": "Update CI workflow.",

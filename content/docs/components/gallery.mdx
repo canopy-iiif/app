@@ -83,6 +83,42 @@ Use it when you want to highlight favorite works, curate a mini exhibit, or gath
 </Gallery>
 ```
 
+## Windowed popups
+
+In some cases, you may want to the gallery to open popups in a smaller window rather than taking over the full screen. Set `popupSize="window"` to switch to a more compact layout that still provides ample room for rich content, but allows readers to keep the page context visible as they explore. This is especially useful for galleries with a large number of items, or when the popups are expected to be more lightweight.
+
+<Gallery popupSize="window">
+  <Gallery.Item
+    manifest="https://api.dc.library.northwestern.edu/api/v2/works/b2ea19ef-f805-44d7-a29a-38f8de504906?as=iiif"
+    summary="Parasol bearer painted on mica."
+  >
+    <Viewer iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/b2ea19ef-f805-44d7-a29a-38f8de504906?as=iiif" />
+  </Gallery.Item>
+  <Gallery.Item
+    manifest="https://api.dc.library.northwestern.edu/api/v2/works/2826e1b9-d38c-413d-b46f-4cd28d916b6d?as=iiif"
+    summary="Traveling musician balancing his sarangi."
+  >
+    <Viewer iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/2826e1b9-d38c-413d-b46f-4cd28d916b6d?as=iiif" />
+  </Gallery.Item>
+</Gallery>
+
+```mdx copy {1}
+<Gallery popupSize="window">
+  <Gallery.Item
+    manifest="https://api.dc.library.northwestern.edu/api/v2/works/b2ea19ef-f805-44d7-a29a-38f8de504906?as=iiif"
+    summary="Parasol bearer painted on mica."
+  >
+    <Viewer iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/b2ea19ef-f805-44d7-a29a-38f8de504906?as=iiif" />
+  </Gallery.Item>
+  <Gallery.Item
+    manifest="https://api.dc.library.northwestern.edu/api/v2/works/2826e1b9-d38c-413d-b46f-4cd28d916b6d?as=iiif"
+    summary="Traveling musician balancing his sarangi."
+  >
+    <Viewer iiifContent="https://api.dc.library.northwestern.edu/api/v2/works/2826e1b9-d38c-413d-b46f-4cd28d916b6d?as=iiif" />
+  </Gallery.Item>
+</Gallery>
+```
+
 ## Organizing Gallery content
 
 Implementers can organize gallery popups with any MDX content, but the `<GalleryContent>` component provides a simple wrapper to apply consistent gutters and an optional layout for side-by-side media and text. In the example below, we use `flex={true}` to place an ImageStory next to a descriptive aside, but you can mix and match Viewers, Maps, markdown, or any custom components as needed.
@@ -245,7 +281,7 @@ Implementers can organize gallery popups with any MDX content, but the `<Gallery
 | ------------- | --------------------- | -------- | --------------------------------------------------------------- |
 | `title`       | string                |          | Optional heading rendered above the grid.                       |
 | `description` | string                |          | Short intro paragraph under the heading.                        |
-| `popupSize`   | `'full', 'medium'`    |          | Toggle fullscreen vs. windowed popup layout (default `'full'`). |
+| `popupSize`   | `'full', 'window'`    |          | Toggle fullscreen vs. windowed popup layout (default `'full'`). |
 | `order`       | `'default', 'random'` |          | Control figure ordering; random shuffles once during the build. |
 | `children`    | nodes                 | ✅       | One or more `<Gallery.Item>` entries.                           |
 

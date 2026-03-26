@@ -215,6 +215,55 @@ const INLINE_SCRIPT = `(() => {
     emitModalState(previous, 'close');
   }
 
+  function closeModalFromBackground(modal) {
+    if (!modal) return;
+    const closeId = modal.getAttribute('data-canopy-gallery-close');
+    const targetHash = closeId ? '#' + closeId : '';
+    if (targetHash) {
+      if (window.location.hash === targetHash) {
+        try {
+          window.location.hash = targetHash;
+        } catch (_) {}
+      } else {
+        window.location.hash = targetHash;
+      }
+    } else {
+      window.location.hash = '';
+    }
+  }
+
+  function shouldCloseFromBackground(event, modal) {
+    if (!event || !modal) return false;
+    const target = event.target;
+    if (!target) return false;
+    const panel = modal.querySelector('.canopy-gallery__modal-panel');
+    if (panel && panel.contains(target)) return false;
+    const actions = modal.querySelector('.canopy-gallery__modal-actions');
+    if (actions && actions.contains(target)) return false;
+    if (target === modal) return true;
+    const scrim = modal.querySelector('.canopy-gallery__modal-scrim');
+    if (scrim && scrim.contains(target)) return true;
+    return false;
+  }
+
+  function bindModalDismissal(modal) {
+    if (!modal || modal.getAttribute('data-canopy-gallery-dismiss-bound') === '1') {
+      return;
+    }
+    modal.setAttribute('data-canopy-gallery-dismiss-bound', '1');
+    modal.addEventListener('click', function (event) {
+      if (!shouldCloseFromBackground(event, modal)) return;
+      event.preventDefault();
+      closeModalFromBackground(modal);
+    });
+  }
+
+  function bindModalDismissals() {
+    const modals = document.querySelectorAll('[data-canopy-gallery-modal]');
+    if (!modals || !modals.length) return;
+    Array.prototype.forEach.call(modals, bindModalDismissal);
+  }
+
   function modalFromHash() {
     const id = window.location.hash.replace(/^#/, '');
     if (!id) return null;
@@ -498,10 +547,12 @@ const INLINE_SCRIPT = `(() => {
   window.addEventListener('pageshow', function () {
     syncFromHash();
     bindGalleryNavs();
+    bindModalDismissals();
     refreshGalleryNavs({reveal: true});
   });
   syncFromHash();
   bindGalleryNavs();
+  bindModalDismissals();
   refreshGalleryNavs({reveal: true});
 })()`;
 
@@ -984,7 +1035,7 @@ GalleryItem.displayName = "GalleryItem";
 
 function normalizePopupSize(value) {
   const normalized = String(value || "full").toLowerCase();
-  return normalized === "medium" ? "medium" : "full";
+  return normalized === "window" ? "window" : "full";
 }
 
 export default function Gallery({
@@ -1013,8 +1064,8 @@ export default function Gallery({
   const orderedItems = orderMode === "random" ? shuffleItems(items) : items;
   const rootClassName = [
     "canopy-gallery",
-    popupMode === "medium"
-      ? "canopy-gallery--popup-medium"
+    popupMode === "window"
+      ? "canopy-gallery--popup-window"
       : "canopy-gallery--popup-full",
     className,
   ]
