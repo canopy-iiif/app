@@ -7,6 +7,10 @@ import {
 } from "./date-utils.js";
 import TeaserCard from "../../layout/TeaserCard.jsx";
 import ReferencedManifestCard from "../../layout/ReferencedManifestCard.jsx";
+import {
+  buildKeyLegend,
+  normalizeKeyLegendEntries,
+} from "../../utils/keyLegend.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_TRACK_HEIGHT = 640;
@@ -166,6 +170,7 @@ function sanitizePoints(points) {
           label: meta.label || "",
           timestamp: Number.isFinite(timestamp) ? timestamp : null,
         },
+        keyValue: point.keyValue ? String(point.keyValue).trim() : "",
         manifests,
         resources,
       };
@@ -199,7 +204,7 @@ function resolveTrackHeight(height, pointCount) {
   return fallback;
 }
 
-function TimelineConnector({side, isActive, highlight}) {
+function TimelineConnector({side, isActive, highlight, color}) {
   const connectorClasses = [
     "canopy-timeline__connector",
     side === "left"
@@ -214,8 +219,11 @@ function TimelineConnector({side, isActive, highlight}) {
   ]
     .filter(Boolean)
     .join(" ");
+  const connectorStyle = color
+    ? {"--canopy-timeline-point-color": color}
+    : undefined;
   return (
-    <span className={connectorClasses} aria-hidden="true">
+    <span className={connectorClasses} aria-hidden="true" style={connectorStyle}>
       {side === "left" ? (
         <>
           <span className="canopy-timeline__connector-line" />
@@ -276,6 +284,9 @@ export default function Timeline({
   align = ALIGN_OPTIONS.CENTER,
   steps = null,
   points: pointsProp,
+  keyConfig = [],
+  timelineKey = [],
+  legend = [],
   __canopyTimeline: payload = null,
   ...rest
 }) {
@@ -290,6 +301,39 @@ export default function Timeline({
   const sanitizedPoints = React.useMemo(
     () => sanitizePoints(rawPoints),
     [rawPoints]
+  );
+
+  const resolvedKeyInput = React.useMemo(() => {
+    if (Array.isArray(keyConfig) && keyConfig.length) return keyConfig;
+    if (Array.isArray(timelineKey) && timelineKey.length) return timelineKey;
+    if (Array.isArray(legend) && legend.length) return legend;
+    return [];
+  }, [keyConfig, timelineKey, legend]);
+
+  const normalizedLegendConfig = React.useMemo(
+    () => normalizeKeyLegendEntries(resolvedKeyInput),
+    [resolvedKeyInput]
+  );
+
+  const timelineKeyData = React.useMemo(
+    () => buildKeyLegend(normalizedLegendConfig),
+    [normalizedLegendConfig]
+  );
+  const timelineKeyGroups = timelineKeyData.groups;
+  const timelineKeyLookup = timelineKeyData.lookup;
+
+  const getLegendMeta = React.useCallback(
+    (value) => {
+      if (!value || !timelineKeyLookup || typeof timelineKeyLookup.get !== "function") {
+        return null;
+      }
+      try {
+        return timelineKeyLookup.get(value) || null;
+      } catch (_) {
+        return null;
+      }
+    },
+    [timelineKeyLookup]
   );
 
   const localeValue = payload && payload.locale ? payload.locale : localeProp;
@@ -343,13 +387,22 @@ export default function Timeline({
             : fallbackProgress;
       const side =
         enforcedSide || point.side || (index % 2 === 0 ? "left" : "right");
+      const keyMeta = point.keyValue ? getLegendMeta(point.keyValue) : null;
       return {
         ...point,
         progress,
         side,
+        keyMeta,
       };
     });
-  }, [sanitizedPoints, spanStart, span, useUniformSpacing, enforcedSide]);
+  }, [
+    sanitizedPoints,
+    spanStart,
+    span,
+    useUniformSpacing,
+    enforcedSide,
+    getLegendMeta,
+  ]);
 
   const [activeId, setActiveId] = React.useState(() =>
     getActivePointId(pointsWithPosition)
@@ -426,6 +479,7 @@ export default function Timeline({
     .filter(Boolean)
     .join(" ");
   const rangeLabel = formatRangeLabel(effectiveRange);
+  const hasKeyLegend = timelineKeyGroups.length > 0;
 
   function renderPointEntry(point) {
     if (!point) return null;
@@ -445,11 +499,13 @@ export default function Timeline({
     ]
       .filter(Boolean)
       .join(" ");
+    const pointColor = point.keyMeta && point.keyMeta.color ? point.keyMeta.color : null;
     const connector = (
       <TimelineConnector
         side={point.side}
         isActive={point.id === activeId}
         highlight={point.highlight}
+        color={pointColor}
       />
     );
 
@@ -506,11 +562,23 @@ export default function Timeline({
     const wrapperStyle = {top: `${entry.progress * 100}%`};
     const isExpanded = expandedGroupIds.has(entry.id);
     const hasActivePoint = entry.points.some((point) => point.id === activeId);
+    const groupKeyMeta = (() => {
+      if (!entry.points || !entry.points.length) return null;
+      const firstPoint = entry.points[0];
+      if (!firstPoint || !firstPoint.keyValue) return null;
+      const sameKey = entry.points.every(
+        (point) => point && point.keyValue === firstPoint.keyValue
+      );
+      if (!sameKey) return null;
+      return firstPoint.keyMeta || getLegendMeta(firstPoint.keyValue);
+    })();
+    const groupColor = groupKeyMeta && groupKeyMeta.color ? groupKeyMeta.color : null;
     const connector = (
       <TimelineConnector
         side={entry.side}
         isActive={hasActivePoint}
         highlight={hasActivePoint}
+        color={groupColor}
       />
     );
     const groupClasses = [
@@ -618,6 +686,25 @@ export default function Timeline({
           })}
         </div>
       </div>
+      {hasKeyLegend ? (
+        <div className="canopy-timeline__key" aria-label="Timeline key">
+          <ul className="canopy-timeline__key-list">
+            {timelineKeyGroups.map((group) => (
+              <li
+                key={group.keyValue || group.label}
+                className="canopy-timeline__key-item"
+              >
+                <span
+                  className="canopy-timeline__key-dot"
+                  aria-hidden="true"
+                  style={{backgroundColor: group.color || undefined}}
+                />
+                <span className="canopy-timeline__key-label">{group.label}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </section>
   );
 }

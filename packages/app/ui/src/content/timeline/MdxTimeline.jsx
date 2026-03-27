@@ -11,6 +11,15 @@ import {
   resolveReferencedManifests,
 } from "../../utils/manifestReferences.js";
 
+function normalizeReactKey(value) {
+  if (value == null) return "";
+  const str = String(value);
+  if (/^\.[0-9]+$/.test(str)) return "";
+  if (str.startsWith(".$")) return str.slice(2);
+  if (str.startsWith(".")) return str.slice(1);
+  return str;
+}
+
 function normalizeResource(resource, index) {
   if (!resource) return null;
   const href = resource.href || resource.id || "";
@@ -31,6 +40,18 @@ function normalizePoint(child, index, options) {
     return null;
   const props = child.props || {};
   const id = props.id || `timeline-point-${index}`;
+  const normalizedNodeKey = normalizeReactKey(child.key);
+  const keyValueProp =
+    props.timelineKey ??
+    props.pointKey ??
+    props.keyValue ??
+    props.group ??
+    props.category ??
+    null;
+  const normalizedKeyValue =
+    keyValueProp != null && keyValueProp !== ""
+      ? String(keyValueProp).trim()
+      : normalizedNodeKey;
   const granularity =
     props.precision ||
     props.granularity ||
@@ -83,6 +104,7 @@ function normalizePoint(child, index, options) {
     detailsHtml,
     resources,
     manifests,
+    keyValue: normalizedKeyValue,
   };
 }
 

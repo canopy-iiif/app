@@ -89,6 +89,72 @@ Below is a scrolling demo that covers 1750–1900. `range` keeps each point prop
 </Timeline>
 ```
 
+### Keyed legend
+
+Pair the new `timelineKey` prop with matching `key` values on each `<TimelinePoint>` to color-code entries and print a legend beneath the track. Colors auto-rotate from your accent palette, so you can focus on labeling the categories.
+
+<Timeline
+  title="A commission lifecycle"
+  description="Follow the work from patron letter to gallery opening."
+  range={{start: "1880", end: "1892", granularity: "year"}}
+  timelineKey={[
+    {id: "commission", label: "Commission"},
+    {id: "research", label: "Research"},
+    {id: "studio", label: "Studio"},
+  ]}
+>
+  <TimelinePoint
+    date="1880"
+    key="commission"
+    title="Patron secured"
+    summary="Agrees to fund a new atlas of the subcontinent."
+  />
+  <TimelinePoint
+    date="1882"
+    key="research"
+    title="Survey camp"
+    summary="Cartographers collect on-site sketches."
+  />
+  <TimelinePoint
+    date="1887"
+    key="studio"
+    title="Studio proofs"
+    summary="Engravers deliver the first colored sheets."
+  />
+</Timeline>
+
+```mdx
+<Timeline
+  title="A commission lifecycle"
+  description="Follow the work from patron letter to gallery opening."
+  range={{start: "1880", end: "1892", granularity: "year"}}
+  timelineKey={[
+    {id: "commission", label: "Commission"},
+    {id: "research", label: "Research"},
+    {id: "studio", label: "Studio"},
+  ]}
+>
+  <TimelinePoint
+    date="1880"
+    key="commission"
+    title="Patron secured"
+    summary="Agrees to fund a new atlas of the subcontinent."
+  />
+  <TimelinePoint
+    date="1882"
+    key="research"
+    title="Survey camp"
+    summary="Cartographers collect on-site sketches."
+  />
+  <TimelinePoint
+    date="1887"
+    key="studio"
+    title="Studio proofs"
+    summary="Engravers deliver the first colored sheets."
+  />
+</Timeline>
+```
+
 ## API
 
 ### Timeline
@@ -104,6 +170,7 @@ Below is a scrolling demo that covers 1750–1900. `range` keeps each point prop
 | `steps`       | number                            |          | Draw evenly spaced tick marks along the spine.                                                                                 |
 | `height`      | string or number                  |          | Scrolling viewport height. Numbers are treated as pixels.                                                                      |
 | `locale`      | string                            |          | Locale tag used for formatted dates.                                                                                           |
+| `timelineKey` | `Array<{ id, label }>`            |          | Optional legend configuration. Accepts `{id, label}` entries (also via `keyConfig` or `legend`) and colors matching points.    |
 | `children`    | nodes                             | ✅       | One or more `<TimelinePoint>` elements.                                                                                        |
 
 ### TimelinePoint
@@ -116,6 +183,7 @@ Below is a scrolling demo that covers 1750–1900. `range` keeps each point prop
 | `description`         | string               |          | Long-form copy shown inside the detail panel.                          |
 | `side`                | `'left'` · `'right'` |          | Pin the marker to a side; otherwise it alternates.                     |
 | `highlight`           | boolean              |          | Draw the point with the accent color.                                  |
+| `key` / `timelineKey` | string               |          | Match a `timelineKey` entry on `<Timeline>` to color the connector + legend dot. |
 | `referencedManifests` | array                |          | List of manifest IDs to resolve into teaser cards.                     |
 | `iiifResources`       | array                |          | Provide `{href, label}` entries for non-manifest resources.            |
 | `children`            | nodes                |          | Additional markup rendered in the detail drawer.                       |

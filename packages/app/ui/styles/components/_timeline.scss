@@ -165,26 +165,62 @@
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
+  --canopy-timeline-point-color: var(--color-accent-default);
 }
 
 .canopy-timeline__connector-line {
   width: var(--canopy-timeline-connector-length);
   height: 0.125rem;
-  background: var(--color-accent-default);
+  background: var(--canopy-timeline-point-color);
 }
 
 .canopy-timeline__connector-dot {
   width: 0.618rem;
   height: 0.618rem;
-  background: var(--color-accent-default);
-  border: 2px solid var(--color-accent-default);
+  background: var(--canopy-timeline-point-color);
+  border: 2px solid var(--canopy-timeline-point-color);
 }
 
 .canopy-timeline__connector-dot.is-active {
   width: 1rem;
   height: 1rem;
+  background: var(--canopy-timeline-point-color);
+  border-color: var(--canopy-timeline-point-color);
+}
+
+.canopy-timeline__key {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.canopy-timeline__key-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  justify-content: center;
+}
+
+.canopy-timeline__key-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.382rem;
+  font-size: 0.9222rem;
+  color: var(--color-gray-800);
+}
+
+.canopy-timeline__key-dot {
+  width: 0.618rem;
+  height: 0.618rem;
+  border-radius: 999px;
   background: var(--color-accent-default);
-  border-color: var(--color-accent-default);
+}
+
+.canopy-timeline__key-label {
+  font-weight: 500;
 }
 
 .canopy-timeline__resources {

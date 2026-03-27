@@ -128,7 +128,73 @@ Mark pivotal moments with the `highlight` prop. Highlighted points render in you
   />
 </Timeline>
 
-## 4. Pick your spacing style
+## 4. Color-code categories
+
+Use `timelineKey` when you want the timeline to double as a legend. Provide `{id, label}` pairs on `<Timeline>` and set the matching `key` on each `<TimelinePoint>`. Both the connectors and the legend inherit the generated colors.
+
+```mdx
+<Timeline
+  title="Escape routes and allies"
+  description="Differentiate milestones and supporting figures."
+  height="340px"
+  timelineKey={[
+    {id: "escape", label: "Escape"},
+    {id: "allies", label: "Allies"},
+    {id: "settle", label: "Settlement"},
+  ]}
+>
+  <TimelinePoint
+    date="1838-09-03"
+    key="escape"
+    title="Escape from slavery"
+    summary="Boards the Philadelphia, Wilmington and Baltimore Railroad."
+  />
+  <TimelinePoint
+    date="1838-09-09"
+    key="allies"
+    title="Allies in New York"
+    summary="Contacts the Vigilance Committee for shelter and funds."
+  />
+  <TimelinePoint
+    date="1838-09-18"
+    key="settle"
+    title="Arrival in New Bedford"
+    summary="Douglass and Anna move into the Johnson household."
+  />
+</Timeline>
+```
+
+<Timeline
+  title="Escape routes and allies"
+  description="Differentiate milestones and supporting figures."
+  height="340px"
+  timelineKey={[
+    {id: "escape", label: "Escape"},
+    {id: "allies", label: "Allies"},
+    {id: "settle", label: "Settlement"},
+  ]}
+>
+  <TimelinePoint
+    date="1838-09-03"
+    key="escape"
+    title="Escape from slavery"
+    summary="Boards the Philadelphia, Wilmington and Baltimore Railroad."
+  />
+  <TimelinePoint
+    date="1838-09-09"
+    key="allies"
+    title="Allies in New York"
+    summary="Contacts the Vigilance Committee for shelter and funds."
+  />
+  <TimelinePoint
+    date="1838-09-18"
+    key="settle"
+    title="Arrival in New Bedford"
+    summary="Douglass and Anna move into the Johnson household."
+  />
+</Timeline>
+
+## 5. Pick your spacing style
 
 Most timelines should keep `scale="time"` (the default) so the layout reinforces chronology. For editorial or
 exhibition copy where each milestone deserves equal weight, set `scale="uniform"` on the wrapper. The dates still
@@ -163,7 +229,7 @@ While you're adjusting the wrapper, consider whether the vertical spine should s
 for narrow layouts or when you have long copy that benefits from consistent alignment. Passing `align` overrides each
 point's `side` prop, so you only need to set it once.
 
-## 5. Relate events to works in your collection
+## 6. Relate events to works in your collection
 
 Connect a point to related works in your collection with `referencedManifests`:
 
@@ -200,7 +266,7 @@ Connect a point to related works in your collection with `referencedManifests`:
   />
 </Timeline>
 
-## 6. Intermix your content with a map
+## 7. Intermix your content with a map
 
 While the `<Timeline>` component situates events chronologically, many narratives also benefit from geographic context.
 By intermixing `<Timeline>` with the `<Map>` component, the same events can be explored across both time and space.
