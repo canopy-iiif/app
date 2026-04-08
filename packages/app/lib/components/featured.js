@@ -4,6 +4,9 @@ const yaml = require('js-yaml');
 const { rootRelativeHref } = require('../common');
 const { resolveCanopyConfigPath } = require('../config-path');
 
+const IIIF_MANIFESTS_DIR = path.resolve('.cache/iiif/manifests');
+const SLUG_MEMO = new Map();
+
 function firstLabelString(label) {
   if (!label) return 'Untitled';
   if (typeof label === 'string') return label;
@@ -67,12 +70,11 @@ function readJson(p) {
 
 function findSlugByIdFromDiskSync(nid) {
   try {
-    const dir = path.resolve('.cache/iiif/manifests');
-    if (!fs.existsSync(dir)) return null;
-    const names = fs.readdirSync(dir);
+    if (!fs.existsSync(IIIF_MANIFESTS_DIR)) return null;
+    const names = fs.readdirSync(IIIF_MANIFESTS_DIR);
     for (const name of names) {
       if (!name || !name.toLowerCase().endsWith('.json')) continue;
-      const fp = path.join(dir, name);
+      const fp = path.join(IIIF_MANIFESTS_DIR, name);
       try {
         const obj = readJson(fp);
         const mid = normalizeIiifId(String((obj && (obj.id || obj['@id'])) || ''));
@@ -80,6 +82,75 @@ function findSlugByIdFromDiskSync(nid) {
       } catch (_) {}
     }
   } catch (_) {}
+  return null;
+}
+
+function manifestPathFromSlug(slug) {
+  try {
+    const normalized = String(slug || '').trim();
+    if (!normalized || /[\\/]/.test(normalized)) return '';
+    return path.resolve(IIIF_MANIFESTS_DIR, `${normalized}.json`);
+  } catch (_) {
+    return '';
+  }
+}
+
+function manifestExistsForSlug(slug) {
+  const fp = manifestPathFromSlug(slug);
+  if (!fp) return false;
+  try {
+    return fs.existsSync(fp);
+  } catch (_) {
+    return false;
+  }
+}
+
+function readManifestBySlug(slug) {
+  const fp = manifestPathFromSlug(slug);
+  if (!fp) return null;
+  return readJson(fp);
+}
+
+function resolveSlugForFeaturedEntry(rawId, byId) {
+  if (rawId == null) return null;
+  const rawValue = String(rawId).trim();
+  if (!rawValue) return null;
+  if (!/^https?:\/\//i.test(rawValue) && manifestExistsForSlug(rawValue)) {
+    const entry = Array.isArray(byId)
+      ? byId.find((candidate) => candidate && candidate.slug === rawValue)
+      : null;
+    return {slug: rawValue, entry};
+  }
+  const normalizedId = normalizeIiifId(rawValue);
+  if (!normalizedId) return null;
+  const memoSlug = SLUG_MEMO.get(normalizedId);
+  if (memoSlug && manifestExistsForSlug(memoSlug)) {
+    const memoEntry = Array.isArray(byId)
+      ? byId.find((candidate) => candidate && candidate.slug === memoSlug)
+      : null;
+    return {slug: memoSlug, entry: memoEntry};
+  }
+  const entry = byId.find(
+    (candidate) =>
+      candidate && candidate.type === 'Manifest' && equalIiifId(candidate.id, normalizedId)
+  );
+  if (entry && entry.slug && manifestExistsForSlug(entry.slug)) {
+    SLUG_MEMO.set(normalizedId, entry.slug);
+    return {slug: entry.slug, entry};
+  }
+  const fallbackSlug = findSlugByIdFromDiskSync(normalizedId);
+  if (fallbackSlug && manifestExistsForSlug(fallbackSlug)) {
+    SLUG_MEMO.set(normalizedId, fallbackSlug);
+    const fallbackEntry = Array.isArray(byId)
+      ? byId.find(
+          (candidate) =>
+            candidate &&
+            candidate.type === 'Manifest' &&
+            (candidate.slug === fallbackSlug || equalIiifId(candidate.id, normalizedId))
+        )
+      : null;
+    return {slug: fallbackSlug, entry: fallbackEntry};
+  }
   return null;
 }
 
@@ -93,13 +164,13 @@ function readFeaturedFromCacheSync() {
     const byId = Array.isArray(idx && idx.byId) ? idx.byId : [];
     const out = [];
     for (const id of featured) {
-      const nid = normalizeIiifId(id);
       if (debug) { try { console.log('[featured] id:', id); } catch (_) {} }
-      const entry = byId.find((e) => e && e.type === 'Manifest' && equalIiifId(e.id, nid));
-      const slug = entry && entry.slug ? String(entry.slug) : findSlugByIdFromDiskSync(nid);
+      const resolved = resolveSlugForFeaturedEntry(id, byId);
+      const slug = resolved && resolved.slug ? resolved.slug : '';
+      const entry = resolved && resolved.entry ? resolved.entry : null;
       if (debug) { try { console.log('[featured]  - slug:', slug || '(none)'); } catch (_) {} }
       if (!slug) continue;
-      const m = readJson(path.resolve('.cache/iiif/manifests', slug + '.json'));
+      const m = readManifestBySlug(slug);
       if (!m) continue;
       const rec = {
         title: firstLabelString(m && m.label),

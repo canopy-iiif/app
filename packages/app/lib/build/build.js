@@ -174,9 +174,13 @@ async function build(options = {}) {
     } catch (_) {}
     if (!skipIiif && hasIiifSources && currentManifestIds.length) {
       try {
+        const featuredKeepIds = Array.isArray(CONFIG?.featured)
+          ? CONFIG.featured
+          : [];
         await iiif.cleanupIiifCache({
           allowedManifestIds: currentManifestIds,
           allowedCollectionIds: currentCollectionIds,
+          keepManifestIds: featuredKeepIds,
         });
       } catch (_) {}
     }

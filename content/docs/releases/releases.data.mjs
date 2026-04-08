@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.10.6",
+    "date": "2026-04-08",
+    "summary": "Address build timeout issues.",
+    "highlights": []
+  },
+  {
     "version": "1.10.5",
     "date": "2026-03-27",
     "summary": "Add key and legend to Timeline.",

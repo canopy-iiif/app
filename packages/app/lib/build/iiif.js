@@ -82,6 +82,7 @@ const IIIF_CACHE_INDEX_MANIFESTS = path.join(
 const DEFAULT_THUMBNAIL_SIZE = 400;
 const DEFAULT_CHUNK_SIZE = 10;
 const DEFAULT_FETCH_CONCURRENCY = 1;
+const DEFAULT_FEATURED_FETCH_TIMEOUT_MS = 15000;
 const HERO_THUMBNAIL_SIZE = 800;
 const HERO_IMAGE_SIZES_ATTR = "(min-width: 1024px) 1280px, 100vw";
 const OG_IMAGE_WIDTH = 1200;
@@ -873,13 +874,27 @@ function extractCollectionEntries(collection) {
 }
 
 async function readJsonFromUri(uri, options = {log: false}) {
+  const opts = options && typeof options === "object" ? options : {};
+  const shouldLog = Boolean(opts.log);
+  const fetchSignal = opts.signal;
   try {
     if (/^https?:\/\//i.test(uri)) {
       if (typeof fetch !== "function") return null;
-      const res = await fetch(uri, {
-        headers: {Accept: "application/json"},
-      }).catch(() => null);
-      if (options && options.log) {
+      let res = null;
+      try {
+        const fetchOptions = {headers: {Accept: "application/json"}};
+        if (fetchSignal) fetchOptions.signal = fetchSignal;
+        res = await fetch(uri, fetchOptions);
+      } catch (error) {
+        if (shouldLog) {
+          try {
+            const code = error && error.name === "AbortError" ? "ABORT" : "ERR";
+            logLine(`⊘ ${String(uri)} → ${code}`, "red", {bright: true});
+          } catch (_) {}
+        }
+        return null;
+      }
+      if (shouldLog) {
         try {
           if (res && res.ok) {
             logLine(`↓ ${String(uri)} → ${res.status}`, "yellow", {
@@ -1235,14 +1250,53 @@ async function ensureFeaturedInCache(cfg) {
     if (!featured.length) return;
     const {size: thumbSize, unsafe: unsafeThumbs} =
       resolveThumbnailPreferences();
+    const fetchTimeoutMs = resolvePositiveInteger(
+      process.env.CANOPY_FEATURED_FETCH_TIMEOUT_MS,
+      DEFAULT_FEATURED_FETCH_TIMEOUT_MS,
+      {allowZero: true},
+    );
+    const canAbortFetches =
+      typeof AbortController === "function" && Number(fetchTimeoutMs) > 0;
     for (const rawId of featured) {
       const id = normalizeIiifId(String(rawId || ""));
       if (!id) continue;
       let manifest = await loadCachedManifestById(id);
       if (!manifest) {
-        const m = await readJsonFromUri(id).catch(() => null);
-        if (!m) continue;
-        const upgraded = await upgradeIiifResource(m);
+        let controller = null;
+        let timeoutId = null;
+        let fetched = null;
+        try {
+          if (canAbortFetches) {
+            controller = new AbortController();
+            timeoutId = setTimeout(
+              () => controller.abort(),
+              Math.max(1, fetchTimeoutMs),
+            );
+          }
+          fetched = await readJsonFromUri(id, {
+            log: true,
+            signal: controller ? controller.signal : undefined,
+          });
+        } catch (_) {
+          fetched = null;
+        } finally {
+          if (timeoutId) clearTimeout(timeoutId);
+        }
+        if (!fetched) {
+          if (controller && controller.signal && controller.signal.aborted) {
+            try {
+              logLine(
+                `[iiif] Featured manifest timed out after ${formatDurationMs(
+                  fetchTimeoutMs,
+                )}: ${id}`,
+                "red",
+                {dim: true},
+              );
+            } catch (_) {}
+          }
+          continue;
+        }
+        const upgraded = await upgradeIiifResource(fetched);
         if (!upgraded || !upgraded.id) continue;
         manifest = (await saveCachedManifest(upgraded, id, "")) || upgraded;
         manifest = (await loadCachedManifestById(id)) || manifest;
@@ -1522,11 +1576,18 @@ async function cleanupIiifCache(options = {}) {
   const allowedCollectionIds = Array.isArray(options.allowedCollectionIds)
     ? options.allowedCollectionIds
     : [];
+  const keepManifestIds = Array.isArray(options.keepManifestIds)
+    ? options.keepManifestIds
+    : [];
   const manifestSet = new Set(
     allowedManifestIds
       .map((id) => normalizeIiifId(String(id || "")))
       .filter(Boolean),
   );
+  for (const keepId of keepManifestIds) {
+    const normalized = normalizeIiifId(String(keepId || ""));
+    if (normalized) manifestSet.add(normalized);
+  }
   const collectionSet = new Set(
     allowedCollectionIds
       .map((id) => normalizeIiifId(String(id || "")))
