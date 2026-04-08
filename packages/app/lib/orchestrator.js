@@ -185,6 +185,7 @@ async function orchestrate(options = {}) {
   await prepareUi(mode, env);
 
   const api = loadLibraryApi();
+  let exitAfterBuild = false;
   try {
     if (mode === 'dev') {
       attachSignalHandlers();
@@ -196,10 +197,19 @@ async function orchestrate(options = {}) {
         await api.build();
       }
       log('Build complete');
+      exitAfterBuild = true;
     }
   } finally {
     if (uiWatcherChild && !uiWatcherChild.killed) {
       try { uiWatcherChild.kill(); } catch (_) {}
+    }
+  }
+
+  if (exitAfterBuild) {
+    try {
+      if (!process.exitCode || process.exitCode === 0) process.exit(0);
+    } catch (_) {
+      process.exit(0);
     }
   }
 }

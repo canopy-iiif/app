@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.10.7",
+    "date": "2026-04-08",
+    "summary": "Safe exit build processes in production.",
+    "highlights": []
+  },
+  {
     "version": "1.10.6",
     "date": "2026-04-08",
     "summary": "Address build timeout issues.",
