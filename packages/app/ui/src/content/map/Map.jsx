@@ -310,7 +310,7 @@ function buildClusterOptions(leaflet, maxClusterRadius) {
   const anchor = CUSTOM_MARKER_RADIUS;
   return {
     chunkedLoading: true,
-    maxClusterRadius: typeof maxClusterRadius === "number" ? maxClusterRadius : undefined,
+    maxClusterRadius: typeof maxClusterRadius === "number" ? maxClusterRadius : 160,
     iconCreateFunction: (cluster) => {
       const count = cluster && typeof cluster.getChildCount === "function"
         ? cluster.getChildCount()
