@@ -1861,6 +1861,47 @@ async function buildIiifCollectionPages(CONFIG) {
           await gatherFromCollection(entry.raw || entryId, collectionKey);
         }
       }
+      // Handle IIIF Presentation 2 paged collections (first/next pattern).
+      // The root of a paged v2 collection carries a `first` link instead of
+      // embedding items; each page carries a `next` link to the following page.
+      const resolvePageUrl = (val) => {
+        if (!val) return "";
+        if (typeof val === "string") return val.trim();
+        const id = val["@id"] || val.id;
+        return typeof id === "string" ? id.trim() : "";
+      };
+      // Start from `first` if present (root collection), otherwise `next` (current is a page).
+      let pageUrl =
+        resolvePageUrl(col && col.first) ||
+        resolvePageUrl(ncol && ncol.first) ||
+        resolvePageUrl(col && col.next) ||
+        resolvePageUrl(ncol && ncol.next);
+      while (pageUrl) {
+        const pageKey = norm(pageUrl) || pageUrl;
+        if (visitedCollections.has(pageKey)) break;
+        visitedCollections.add(pageKey);
+        const page = await readJsonFromUri(pageUrl, {log: true});
+        if (!page) break;
+        const npage = await upgradeIiifResource(page);
+        const pageEntries = extractCollectionEntries(npage);
+        for (const entry of pageEntries) {
+          const entryId = entry && entry.id;
+          if (!entryId) continue;
+          const entryType = normalizeIiifType(entry.type || entry.fallback || "");
+          const dedupeKey = norm(entryId) || String(entryId || "");
+          if (!dedupeKey) continue;
+          if (entryType === "manifest") {
+            if (queuedManifestIds.has(dedupeKey)) continue;
+            queuedManifestIds.add(dedupeKey);
+            tasks.push({id: entryId, parent: collectionKey});
+            manifestTasksFromCollections += 1;
+          } else if (entryType === "collection") {
+            await gatherFromCollection(entry.raw || entryId, collectionKey);
+          }
+        }
+        // Advance to the next page.
+        pageUrl = resolvePageUrl((page && page.next) || (npage && npage.next));
+      }
       // Traverse strictly by parent/child hierarchy (Presentation 3): items → Manifest or Collection
     } catch (_) {}
   }

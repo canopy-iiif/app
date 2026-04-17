@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.10.8",
+    "date": "2026-04-17",
+    "summary": "Define map cluster defaults; handle 2.0 collection paging.",
+    "highlights": []
+  },
+  {
     "version": "1.10.7",
     "date": "2026-04-08",
     "summary": "Safe exit build processes in production.",
