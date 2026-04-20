@@ -54,7 +54,7 @@ Recommended scripts in `package.json`:
 
 ## Security & Configuration Tips
 - Secrets: never commit credentials; use `.env` and document required variables.
-- Node version: pin with `.nvmrc` (e.g., `18`); run `nvm use`.
+- Node version: Node 24+ required (`>=24.0.0`). A `.nvmrc` is included; run `nvm use`.
 - Dependencies: review with `npm audit` and update regularly.
 
 ## Interactive Components (SSR + Hydration)

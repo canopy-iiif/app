@@ -14,6 +14,12 @@ Create fast, light digital projects from IIIF collections. Canopy IIIF helps lib
 
 Follow the [Get Started](https://canopy-iiif.github.io/app/about/get-started) to deploy a lightweight digital project to GitHub Pages in minutes.
 
+## Requirements
+
+- **Node.js** `>=24.0.0`
+- **npm** `>=10.0.0`
+- nvm users: a `.nvmrc` is included — run `nvm use`
+
 ## Local development
 
 - `npm install`

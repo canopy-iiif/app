@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.10.9",
+    "date": "2026-04-20",
+    "summary": "Add node and npm requirements.",
+    "highlights": []
+  },
+  {
     "version": "1.10.8",
     "date": "2026-04-17",
     "summary": "Define map cluster defaults; handle 2.0 collection paging.",
