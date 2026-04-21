@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.10.10",
+    "date": "2026-04-21",
+    "summary": "Add missing React hooks to esbuild shims.",
+    "highlights": []
+  },
+  {
     "version": "1.10.9",
     "date": "2026-04-20",
     "summary": "Add node and npm requirements.",

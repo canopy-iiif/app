@@ -1197,6 +1197,12 @@ function createReactShimPlugin() {
     export const useContext = React.useContext;
     export const useReducer = React.useReducer;
     export const useId = React.useId;
+    export const useImperativeHandle = React.useImperativeHandle;
+    export const useTransition = React.useTransition;
+    export const useDeferredValue = React.useDeferredValue;
+    export const useDebugValue = React.useDebugValue;
+    export const useSyncExternalStore = React.useSyncExternalStore;
+    export const useInsertionEffect = React.useInsertionEffect;
   `;
   const rdomShim = `
     const ReactDOM = (typeof window !== 'undefined' && window.ReactDOM) || {};
@@ -1751,6 +1757,12 @@ async function ensureTimelineRuntime() {
     export const useContext = React.useContext;
     export const useReducer = React.useReducer;
     export const useId = React.useId;
+    export const useImperativeHandle = React.useImperativeHandle;
+    export const useTransition = React.useTransition;
+    export const useDeferredValue = React.useDeferredValue;
+    export const useDebugValue = React.useDebugValue;
+    export const useSyncExternalStore = React.useSyncExternalStore;
+    export const useInsertionEffect = React.useInsertionEffect;
   `;
   const rdomShim = `
     const ReactDOM = (typeof window !== 'undefined' && window.ReactDOM) || {};
@@ -1868,6 +1880,12 @@ async function ensureMapRuntime() {
     export const useContext = React.useContext;
     export const useReducer = React.useReducer;
     export const useId = React.useId;
+    export const useImperativeHandle = React.useImperativeHandle;
+    export const useTransition = React.useTransition;
+    export const useDeferredValue = React.useDeferredValue;
+    export const useDebugValue = React.useDebugValue;
+    export const useSyncExternalStore = React.useSyncExternalStore;
+    export const useInsertionEffect = React.useInsertionEffect;
   `;
   const rdomShim = `
     const ReactDOM = (typeof window !== 'undefined' && window.ReactDOM) || {};
