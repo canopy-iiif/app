@@ -2088,6 +2088,28 @@ async function buildIiifCollectionPages(CONFIG) {
             lns.push([`⊘ ${String(id)} → ERR`, "red"]);
             continue;
           }
+        } else if (!/^[a-zA-Z][a-zA-Z0-9+\-.]*:/.test(String(id || ""))) {
+          // Relative or bare file path (no scheme) — resolve against cwd
+          try {
+            const local = await readJsonFromUri(String(id), {log: false});
+            if (!local) {
+              lns.push([`⊘ ${String(id)} → ERR`, "red"]);
+              continue;
+            }
+            manifest = await upgradeIiifResource(local);
+            const saved = await saveCachedManifest(
+              manifest,
+              String(id),
+              String(it.parent || ""),
+            );
+            manifest = saved || manifest;
+            const cached = await loadCachedManifestById(String(id));
+            if (cached) manifest = cached;
+            lns.push([`↓ ${String(id)} → Cached`, "yellow"]);
+          } catch (_) {
+            lns.push([`⊘ ${String(id)} → ERR`, "red"]);
+            continue;
+          }
         } else {
           lns.push([`⊘ ${String(id)} → SKIP`, "red"]);
           continue;

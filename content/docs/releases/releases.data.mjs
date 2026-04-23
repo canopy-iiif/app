@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.11.0",
+    "date": "2026-04-23",
+    "summary": "Allow build load of collection and manifests from file.",
+    "highlights": []
+  },
+  {
     "version": "1.10.10",
     "date": "2026-04-21",
     "summary": "Add missing React hooks to esbuild shims.",
