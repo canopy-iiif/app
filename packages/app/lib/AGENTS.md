@@ -60,6 +60,7 @@ Logbook Template
 
 Logbook
 -------
+- 2026-04-26 / mat: Added local file path support to the manifest fetch worker in `build/iiif.js`. Previously, the worker branched on `https?://` and `file://` and SKIPped everything else; relative paths (e.g., `assets/iiif/example.json`) were silently dropped. Added a third branch that catches any value with no URI scheme (regex: no `[scheme]:` prefix) and routes it through `readJsonFromUri()`, which already resolves relative paths against `process.cwd()`. Collection-root URIs were already handled correctly via `readJsonFromUri()`; only the manifest worker needed the fix.
 - 2025-09-26 / chatgpt: Hardened runtime bundlers to throw when esbuild or source compilation fails and required `content/works/_layout.mdx`; build now aborts instead of silently writing placeholder assets.
 - 2025-09-26 / chatgpt: Replaced the legacy command runtime stub with an esbuild-bundled runtime (`search/search-form-runtime.js`); `prepareSearchFormRuntime()` now builds `site/scripts/canopy-search-form.js` and fails if esbuild is missing.
 - 2025-09-27 / chatgpt: Documented Tailwind token flow in `app/styles/tailwind.config.mts`, compiled UI Sass variables during config load, and exposed `stylesheetHref`/`Stylesheet` helpers via `@canopy-iiif/app/head` so `_app.mdx` can reference the generated CSS directly.

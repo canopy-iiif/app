@@ -146,6 +146,13 @@ Goal: Allow authors to fully compose the search page via MDX, while the builder 
 - Enable IIIF work page generation by adding `content/works/_layout.mdx`. The layout receives `props.manifest` (normalized to IIIF Presentation 3 when possible).
 - Collection URIs are configured via `canopy.yml` (`collection`, either a string or an array). When omitted, `CANOPY_COLLECTION_URI` can supply a single fallback URI.
 - When a project needs to stitch together standalone Manifests, list them under `canopy.yml → manifest` (or `manifests`). These URIs are fetched after traversing configured collections, and the build can rely solely on this list when no collections are provided.
+- Local file paths are supported for both `collection` and `manifest` entries. Paths are resolved relative to the working directory at build time. Use a bare relative path (e.g., `assets/iiif/example-collection.json`) or a `file://` URI. Example:
+  ```yaml
+  collection:
+    - assets/iiif/example-collection.json
+  manifest:
+    - assets/iiif/example-manifest.json
+  ```
 - Output pages are written to `site/works/<slug>.html`.
 - Performance tuning: set `CANOPY_CHUNK_SIZE` (default `10`) and `CANOPY_FETCH_CONCURRENCY` (default `1`, use `0` for auto/unbounded fetch workers).
 - Thumbnails:

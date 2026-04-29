@@ -1,5 +1,11 @@
 const releases = [
   {
+    "version": "1.11.1",
+    "date": "2026-04-29",
+    "summary": "Update Clover dependency to slimmer version.",
+    "highlights": []
+  },
+  {
     "version": "1.11.0",
     "date": "2026-04-23",
     "summary": "Allow build load of collection and manifests from file.",
